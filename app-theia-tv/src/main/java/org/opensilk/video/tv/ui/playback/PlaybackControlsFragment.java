@@ -49,7 +49,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.apache.commons.lang3.StringUtils;
-import org.opensilk.common.core.dagger2.DaggerService;
+import org.opensilk.common.dagger.DaggerService;
 import org.opensilk.common.core.util.BundleHelper;
 import org.opensilk.video.data.VideoDescInfo;
 import org.opensilk.video.playback.PlaybackService;

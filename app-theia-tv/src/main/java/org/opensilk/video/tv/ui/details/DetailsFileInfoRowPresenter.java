@@ -22,7 +22,7 @@ import android.support.v17.leanback.widget.RowPresenter;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.R;
 import org.opensilk.video.databinding.DetailsFileInfoRowBinding;
 

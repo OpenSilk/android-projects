@@ -24,7 +24,7 @@ import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 
-import org.opensilk.common.core.dagger2.DaggerService;
+import org.opensilk.common.dagger.DaggerService;
 import org.opensilk.video.R;
 import org.opensilk.video.data.FoldersLoader;
 import org.opensilk.video.data.MoviesLoader;

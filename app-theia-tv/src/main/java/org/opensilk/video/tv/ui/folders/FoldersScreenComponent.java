@@ -19,7 +19,7 @@ package org.opensilk.video.tv.ui.folders;
 
 import android.media.browse.MediaBrowser;
 
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ScreenScope;
 
 import dagger.Subcomponent;
 

@@ -20,7 +20,7 @@ package org.opensilk.video.tv.ui.common;
 import android.support.v17.leanback.widget.PresenterSelector;
 import android.support.v17.leanback.widget.SinglePresenterSelector;
 
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ScreenScope;
 
 import javax.inject.Named;
 

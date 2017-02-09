@@ -17,7 +17,7 @@
 
 package org.opensilk.video.tv.ui.details;
 
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ScreenScope;
 
 import dagger.Subcomponent;
 

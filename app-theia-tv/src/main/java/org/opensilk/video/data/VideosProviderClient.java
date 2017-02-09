@@ -30,7 +30,7 @@ import android.support.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.opensilk.common.core.dagger2.ForApplication;
+import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.tmdb.api.model.Image;
 import org.opensilk.tmdb.api.model.ImageList;
 import org.opensilk.tmdb.api.model.Movie;

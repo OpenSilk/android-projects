@@ -17,7 +17,7 @@
 
 package org.opensilk.video.data;
 
-import org.opensilk.common.core.dagger2.ServiceScope;
+import org.opensilk.common.dagger.ServiceScope;
 import org.opensilk.tmdb.api.ApiKeyInterceptor;
 import org.opensilk.tmdb.api.TMDb;
 

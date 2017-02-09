@@ -34,7 +34,7 @@ import com.bumptech.glide.load.model.MultiModelLoaderFactory;
 import com.bumptech.glide.module.GlideModule;
 import com.bumptech.glide.util.ContentLengthInputStream;
 
-import org.opensilk.common.core.dagger2.DaggerService;
+import org.opensilk.common.dagger.DaggerService;
 import org.opensilk.video.util.Utils;
 
 import java.io.File;

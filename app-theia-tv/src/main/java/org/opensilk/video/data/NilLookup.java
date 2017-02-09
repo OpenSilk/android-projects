@@ -19,7 +19,7 @@ package org.opensilk.video.data;
 
 import android.media.browse.MediaBrowser;
 
-import org.opensilk.common.core.dagger2.ServiceScope;
+import org.opensilk.common.dagger.ServiceScope;
 
 import javax.inject.Inject;
 

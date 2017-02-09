@@ -21,7 +21,7 @@ import android.media.browse.MediaBrowser;
 import android.support.v17.leanback.widget.Action;
 import android.support.v17.leanback.widget.SparseArrayObjectAdapter;
 
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.data.DataService;
 import org.opensilk.video.data.MediaMetaExtras;
 import org.opensilk.video.util.Utils;

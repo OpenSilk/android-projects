@@ -25,7 +25,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
-import org.opensilk.common.core.dagger2.ForApplication;
+import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.tmdb.api.model.Movie;
 import org.opensilk.tvdb.api.model.Episode;
 import org.opensilk.video.playback.VLCInstance;

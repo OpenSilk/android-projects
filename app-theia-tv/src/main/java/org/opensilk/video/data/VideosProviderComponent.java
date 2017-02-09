@@ -17,7 +17,7 @@
 
 package org.opensilk.video.data;
 
-import org.opensilk.common.core.dagger2.ProviderScope;
+import org.opensilk.common.dagger.ProviderScope;
 
 import dagger.Subcomponent;
 

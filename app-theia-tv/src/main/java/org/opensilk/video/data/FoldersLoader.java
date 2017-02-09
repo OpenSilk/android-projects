@@ -21,8 +21,8 @@ import android.content.Context;
 import android.media.MediaDescription;
 import android.media.browse.MediaBrowser;
 
-import org.opensilk.common.core.dagger2.ActivityScope;
-import org.opensilk.common.core.dagger2.ForApplication;
+import org.opensilk.common.dagger.ActivityScope;
+import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.common.core.rx.RxListLoader;
 import org.opensilk.video.R;
 

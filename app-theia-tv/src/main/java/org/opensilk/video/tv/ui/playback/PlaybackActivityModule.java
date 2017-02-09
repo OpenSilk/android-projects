@@ -19,7 +19,7 @@ package org.opensilk.video.tv.ui.playback;
 
 import android.media.browse.MediaBrowser;
 
-import org.opensilk.common.core.dagger2.ActivityScope;
+import org.opensilk.common.dagger.ActivityScope;
 import org.opensilk.video.ConfigModule;
 
 import dagger.Module;

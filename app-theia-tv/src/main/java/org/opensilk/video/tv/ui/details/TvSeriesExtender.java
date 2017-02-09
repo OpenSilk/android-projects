@@ -24,7 +24,7 @@ import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.PresenterSelector;
 
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.data.DataService;
 import org.opensilk.video.data.MediaMetaExtras;
 import org.opensilk.video.tv.ui.common.MediaItemClickListener;

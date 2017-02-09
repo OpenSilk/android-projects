@@ -29,8 +29,8 @@ import android.support.v17.leanback.widget.OnActionClickedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.PresenterSelector;
 
-import org.opensilk.common.core.dagger2.ForActivity;
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ForActivity;
+import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.data.DataService;
 import org.opensilk.video.data.MediaItemUtil;
 import org.opensilk.video.data.MediaMetaExtras;

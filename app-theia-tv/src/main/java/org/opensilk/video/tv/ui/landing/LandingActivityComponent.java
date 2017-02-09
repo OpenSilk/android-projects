@@ -17,7 +17,7 @@
 
 package org.opensilk.video.tv.ui.landing;
 
-import org.opensilk.common.core.dagger2.ActivityScope;
+import org.opensilk.common.dagger.ActivityScope;
 import org.opensilk.video.VideoAppComponent;
 
 import dagger.Component;

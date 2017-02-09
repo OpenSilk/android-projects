@@ -32,7 +32,7 @@ import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.ObjectAdapter;
 import android.support.v17.leanback.widget.SpeechRecognitionCallback;
 
-import org.opensilk.common.core.dagger2.DaggerService;
+import org.opensilk.common.dagger.DaggerService;
 import org.opensilk.video.data.MovieSearchLoader;
 import org.opensilk.video.data.TvSeriesSearchLoader;
 import org.opensilk.video.tv.ui.common.MediaItemClickListener;

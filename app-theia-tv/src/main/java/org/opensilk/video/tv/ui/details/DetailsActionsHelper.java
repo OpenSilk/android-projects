@@ -23,8 +23,8 @@ import android.content.Intent;
 import android.media.browse.MediaBrowser;
 import android.support.v17.leanback.widget.Action;
 
-import org.opensilk.common.core.dagger2.ForActivity;
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ForActivity;
+import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.tv.ui.playback.PlaybackActivity;
 
 import javax.inject.Inject;

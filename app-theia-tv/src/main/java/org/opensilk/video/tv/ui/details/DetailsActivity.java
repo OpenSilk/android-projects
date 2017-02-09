@@ -22,7 +22,7 @@ import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 
 import org.opensilk.common.core.app.ScopedActivity;
-import org.opensilk.common.core.dagger2.DaggerService;
+import org.opensilk.common.dagger.DaggerService;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoAppComponent;
 import org.opensilk.video.data.MediaItemUtil;

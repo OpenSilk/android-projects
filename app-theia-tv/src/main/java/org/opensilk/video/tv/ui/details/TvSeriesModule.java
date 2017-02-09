@@ -26,7 +26,7 @@ import android.support.v17.leanback.widget.ObjectAdapter;
 import android.support.v17.leanback.widget.OnActionClickedListener;
 import android.support.v17.leanback.widget.SparseArrayObjectAdapter;
 
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.tv.ui.common.CardPresenterModule;
 
 import javax.inject.Named;

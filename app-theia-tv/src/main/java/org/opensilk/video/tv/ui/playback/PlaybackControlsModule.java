@@ -22,8 +22,8 @@ import android.media.MediaDescription;
 import android.media.browse.MediaBrowser;
 import android.support.v17.leanback.app.PlaybackOverlayFragment;
 
-import org.opensilk.common.core.dagger2.ForActivity;
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ForActivity;
+import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.data.DataService;
 import org.opensilk.video.data.VideoDescInfo;
 

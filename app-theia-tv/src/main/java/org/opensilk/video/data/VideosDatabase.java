@@ -22,8 +22,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
-import org.opensilk.common.core.dagger2.ForApplication;
-import org.opensilk.common.core.dagger2.ProviderScope;
+import org.opensilk.common.dagger.ForApplication;
+import org.opensilk.common.dagger.ProviderScope;
 
 import javax.inject.Inject;
 

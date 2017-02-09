@@ -21,7 +21,7 @@ import android.media.browse.MediaBrowser;
 import android.support.v17.leanback.widget.VerticalGridPresenter;
 
 import org.apache.commons.lang3.StringUtils;
-import org.opensilk.common.core.dagger2.ScreenScope;
+import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.data.DataService;
 import org.opensilk.video.data.MediaMetaExtras;
 

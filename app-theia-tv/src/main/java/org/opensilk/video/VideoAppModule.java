@@ -19,7 +19,7 @@ package org.opensilk.video;
 
 import android.content.Context;
 
-import org.opensilk.common.core.dagger2.ForApplication;
+import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.video.util.Utils;
 
 import javax.inject.Singleton;

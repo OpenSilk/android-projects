@@ -22,8 +22,8 @@ import android.database.ContentObserver;
 import android.media.browse.MediaBrowser;
 import android.net.Uri;
 
-import org.opensilk.common.core.dagger2.ActivityScope;
-import org.opensilk.common.core.dagger2.ForApplication;
+import org.opensilk.common.dagger.ActivityScope;
+import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.common.core.rx.RxListLoader;
 
 import java.util.List;

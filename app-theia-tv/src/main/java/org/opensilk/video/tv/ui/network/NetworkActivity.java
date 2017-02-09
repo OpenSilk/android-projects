@@ -20,7 +20,7 @@ package org.opensilk.video.tv.ui.network;
 import android.os.Bundle;
 
 import org.opensilk.common.core.app.ScopedActivity;
-import org.opensilk.common.core.dagger2.DaggerService;
+import org.opensilk.common.dagger.DaggerService;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoAppComponent;
 

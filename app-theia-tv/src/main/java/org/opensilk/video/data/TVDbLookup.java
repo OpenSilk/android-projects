@@ -22,7 +22,7 @@ import android.media.browse.MediaBrowser;
 import android.support.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
-import org.opensilk.common.core.dagger2.ServiceScope;
+import org.opensilk.common.dagger.ServiceScope;
 import org.opensilk.tvdb.api.TVDb;
 import org.opensilk.tvdb.api.model.AllZipped;
 import org.opensilk.tvdb.api.model.Banner;

@@ -17,8 +17,8 @@
 
 package org.opensilk.video;
 
-import org.opensilk.common.core.dagger2.AppContextComponent;
-import org.opensilk.common.core.dagger2.AppContextModule;
+import org.opensilk.common.dagger.AppContextComponent;
+import org.opensilk.common.dagger.AppContextModule;
 import org.opensilk.video.data.DataService;
 import org.opensilk.video.data.ScannerServiceComponent;
 import org.opensilk.video.data.VideosProviderComponent;

@@ -23,7 +23,7 @@ import android.preference.PreferenceManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.opensilk.common.core.dagger2.ForApplication;
+import org.opensilk.common.dagger.ForApplication;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

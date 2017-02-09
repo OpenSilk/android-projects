@@ -42,8 +42,8 @@ import com.bumptech.glide.request.FutureTarget;
 import com.bumptech.glide.request.RequestOptions;
 
 import org.apache.commons.lang3.StringUtils;
-import org.opensilk.common.core.dagger2.ActivityScope;
-import org.opensilk.common.core.dagger2.ForApplication;
+import org.opensilk.common.dagger.ActivityScope;
+import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.common.core.util.BundleHelper;
 import org.opensilk.video.VideoAppPreferences;
 import org.opensilk.video.data.DataService;

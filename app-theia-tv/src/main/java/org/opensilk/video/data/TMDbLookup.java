@@ -22,7 +22,7 @@ import android.media.browse.MediaBrowser;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.opensilk.common.core.dagger2.ServiceScope;
+import org.opensilk.common.dagger.ServiceScope;
 import org.opensilk.tmdb.api.TMDb;
 import org.opensilk.tmdb.api.model.ImageList;
 import org.opensilk.tmdb.api.model.Movie;
