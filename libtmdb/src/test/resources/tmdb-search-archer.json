@@ -1,0 +1,102 @@
+{
+   "page" : 1,
+   "results" : [
+      {
+         "vote_average" : 7.93,
+         "name" : "Archer",
+         "original_name" : "Archer",
+         "origin_country" : [
+            "US"
+         ],
+         "poster_path" : "/swCHJglRufH6rjmVYIXApRtCEPx.jpg",
+         "overview" : "Sterling Archer is the world's most daunting spy. He works for ISIS, a spy agency run by his mother. In between dealing with his boss and his co-workers - one of whom is his ex-girlfriend - Archer manages to annoy or seduce everyone that crosses his path. His antics are only excusable because at the end of the day, he still somehow always manages to thwart whatever crises was threatening mankind.",
+         "id" : 10283,
+         "backdrop_path" : "/AnPYfNKssFVdL74Mducz25FTp2q.jpg",
+         "popularity" : 8.122171,
+         "first_air_date" : "2009-09-17",
+         "genre_ids" : [
+            10759,
+            16,
+            18,
+            35
+         ],
+         "original_language" : "en",
+         "vote_count" : 53
+      },
+      {
+         "name" : "Archer",
+         "vote_average" : 10,
+         "overview" : "Archer is a short-lived American crime drama series starring Brian Keith and John P. Ryan that aired on NBC in 1975.",
+         "origin_country" : [
+            "US"
+         ],
+         "poster_path" : "/oJ3rAaz9ORxoVh6V4BUNlAoTHSK.jpg",
+         "original_name" : "Archer",
+         "genre_ids" : [
+            18,
+            80
+         ],
+         "first_air_date" : "1975-01-30",
+         "backdrop_path" : null,
+         "id" : 26529,
+         "popularity" : 1.000002,
+         "vote_count" : 1,
+         "original_language" : "en"
+      },
+      {
+         "name" : "Spanish Archer",
+         "vote_average" : 0,
+         "overview" : "Spanish Archer was a talent show hosted by Rhodri Williams and occasionally Ruth Madoc. It was produced by L!VE TV and filmed at the station's headquarters at Canary Wharf in London.\n\nThe title for the show derives from the phrase meaning rejection, where \"Spanish Archer\" would be said to translate to \"El Bow\", hence \"Given the elbow\". The TV show deliberately took this in a very literal manner, and expanded the joke as far as it possibly could.",
+         "poster_path" : null,
+         "origin_country" : [],
+         "original_name" : "Spanish Archer",
+         "genre_ids" : [],
+         "first_air_date" : "",
+         "id" : 19665,
+         "popularity" : 1,
+         "backdrop_path" : null,
+         "vote_count" : 0,
+         "original_language" : "en"
+      },
+      {
+         "original_language" : "en",
+         "vote_count" : 0,
+         "first_air_date" : "1954-04-02",
+         "id" : 21505,
+         "backdrop_path" : "/8iohpHjJYxXwTCpo67iLtItK9rJ.jpg",
+         "popularity" : 1.001182,
+         "genre_ids" : [
+            35
+         ],
+         "original_name" : "Meet Corliss Archer",
+         "overview" : "Meet Corliss Archer is an American sitcom that aired in syndication from April to December 1954. The series stars Ann Baker in the title role. The program was an adaptation of the radio series of the same name, which was based on a series of short stories by F. Hugh Herbert.",
+         "origin_country" : [
+            "US"
+         ],
+         "poster_path" : null,
+         "vote_average" : 0,
+         "name" : "Meet Corliss Archer"
+      },
+      {
+         "original_name" : "Archer's Goon",
+         "poster_path" : null,
+         "origin_country" : [
+            "GB"
+         ],
+         "overview" : "",
+         "vote_average" : 0,
+         "name" : "Archer's Goon",
+         "original_language" : "en",
+         "vote_count" : 0,
+         "popularity" : 1.027338,
+         "backdrop_path" : null,
+         "id" : 37184,
+         "first_air_date" : "",
+         "genre_ids" : [
+            10765
+         ]
+      }
+   ],
+   "total_results" : 5,
+   "total_pages" : 1
+}

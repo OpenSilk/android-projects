@@ -10,6 +10,8 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/common-core" />
             <option value="$PROJECT_DIR$/common-dagger-core" />
+            <option value="$PROJECT_DIR$/libtmdb" />
+            <option value="$PROJECT_DIR$/libtvdb" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

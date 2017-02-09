@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Actors>
+<Actor>
+  <id>17720</id>
+  <Image>actors/17720.jpg</Image>
+  <Name>Richard Dean Anderson</Name>
+  <Role>Col./Gen. Jack O'Neill</Role>
+  <SortOrder>0</SortOrder>
+</Actor>
+<Actor>
+  <id>17723</id>
+  <Image>actors/17723.jpg</Image>
+  <Name>Michael Shanks</Name>
+  <Role>Dr. Daniel Jackson</Role>
+  <SortOrder>1</SortOrder>
+</Actor>
+<Actor>
+  <id>17722</id>
+  <Image>actors/17722.jpg</Image>
+  <Name>Amanda Tapping</Name>
+  <Role>Capt./Maj. Samantha Carter</Role>
+  <SortOrder>1</SortOrder>
+</Actor>
+<Actor>
+  <id>17721</id>
+  <Image>actors/17721.jpg</Image>
+  <Name>Don S. Davis</Name>
+  <Role>Gen. George S. Hammond </Role>
+  <SortOrder>1</SortOrder>
+</Actor>
+<Actor>
+  <id>77848</id>
+  <Image>actors/77848.jpg</Image>
+  <Name>Gary Jones</Name>
+  <Role>Walter Harriman</Role>
+  <SortOrder>2</SortOrder>
+</Actor>
+<Actor>
+  <id>218251</id>
+  <Image>actors/218251.jpg</Image>
+  <Name>Tony Amendola</Name>
+  <Role>Master Bra'tac</Role>
+  <SortOrder>2</SortOrder>
+</Actor>
+<Actor>
+  <id>218241</id>
+  <Image>actors/218241.jpg</Image>
+  <Name>Carmen Argenziano</Name>
+  <Role>Jacob Carter|Selmac</Role>
+  <SortOrder>2</SortOrder>
+</Actor>
+<Actor>
+  <id>17726</id>
+  <Image>actors/17726.jpg</Image>
+  <Name>Christopher Judge</Name>
+  <Role>Teal'c</Role>
+  <SortOrder>2</SortOrder>
+</Actor>
+<Actor>
+  <id>17725</id>
+  <Image>actors/17725.jpg</Image>
+  <Name>Ben Browder</Name>
+  <Role>Lt. Col. Cameron Mitchell</Role>
+  <SortOrder>2</SortOrder>
+</Actor>
+<Actor>
+  <id>17724</id>
+  <Image>actors/17724.jpg</Image>
+  <Name>Corin Nemec</Name>
+  <Role>Jonas Quinn</Role>
+  <SortOrder>2</SortOrder>
+</Actor>
+<Actor>
+  <id>17719</id>
+  <Image>actors/17719.jpg</Image>
+  <Name>Beau Bridges</Name>
+  <Role>Maj. Gen. Henry &quot;Hank&quot; Landry</Role>
+  <SortOrder>2</SortOrder>
+</Actor>
+<Actor>
+  <id>77847</id>
+  <Image>actors/77847.jpg</Image>
+  <Name>Teryl Rothery</Name>
+  <Role>Dr./Maj. Janet Fraiser</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>77720</id>
+  <Image>actors/77720.jpg</Image>
+  <Name>Claudia Black</Name>
+  <Role>Vala Mal Doran</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>309804</id>
+  <Image>actors/309804.jpg</Image>
+  <Name>Colin Cunningham</Name>
+  <Role>Major Paul Davis</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>309677</id>
+  <Image>actors/309677.jpg</Image>
+  <Name>Julian Sands</Name>
+  <Role>Doci (Leader of the Priors)</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>309676</id>
+  <Image>actors/309676.jpg</Image>
+  <Name>Morena Baccarin</Name>
+  <Role>Adria</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>309674</id>
+  <Image>actors/309674.jpg</Image>
+  <Name>Tim Guinee</Name>
+  <Role>Tomin (Commander Ori Army)</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>309673</id>
+  <Image>actors/309673.jpg</Image>
+  <Name>Anna-Louise Plowman</Name>
+  <Role>Sarah Gardner (Goa'uld Osiris)</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>309672</id>
+  <Image>actors/309672.jpg</Image>
+  <Name>Vince Crestejo</Name>
+  <Role>Goa'uld Yu-huang Shang Ti</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>309671</id>
+  <Image>actors/309671.jpg</Image>
+  <Name></Name>
+  <Role></Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>309670</id>
+  <Image>actors/309670.jpg</Image>
+  <Name>Cliff Simon</Name>
+  <Role>Goa'uld Ba'al</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>293429</id>
+  <Image>actors/293429.jpg</Image>
+  <Name>David Hewlett</Name>
+  <Role>Dr. Rodney McKay</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+<Actor>
+  <id>293427</id>
+  <Image>actors/293427.jpg</Image>
+  <Name>Robert Picardo</Name>
+  <Role>Richard Woolsey</Role>
+  <SortOrder>3</SortOrder>
+</Actor>
+</Actors>

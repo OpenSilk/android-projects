@@ -1,0 +1,275 @@
+{
+   "overview" : "",
+   "episodes" : [
+      {
+         "overview" : "Archer is in trouble with his Mother and the Comptroller because his expense account is way out of proportion to his actual expenses. So he creates the idea that a Mole has breached ISIS and he needs to get into the mainframe to hunt him down (so he can cover his tracks!). All this leads to a surprising ending.",
+         "vote_average" : 0,
+         "crew" : [
+            {
+               "credit_id" : "5257ff1b760ee36aaa745a70",
+               "department" : "Directing",
+               "profile_path" : null,
+               "job" : "Director",
+               "name" : "Mack Williams",
+               "id" : 1242554
+            },
+            {
+               "name" : "Adam Reed",
+               "id" : 1215644,
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "department" : "Writing",
+               "profile_path" : null,
+               "job" : "Writer"
+            }
+         ],
+         "episode_number" : 1,
+         "name" : "Mole Hunt",
+         "guest_stars" : [],
+         "vote_count" : 0,
+         "still_path" : "/mLsGWwqTOwWTfg1XhLEbShNDbST.jpg",
+         "air_date" : "2009-09-17",
+         "production_code" : null,
+         "season_number" : 1,
+         "id" : 422183
+      },
+      {
+         "episode_number" : 2,
+         "name" : "Training Day",
+         "guest_stars" : [],
+         "vote_count" : 0,
+         "overview" : "Lana's residual lust for Archer prompts Malory to promote Cyril to field agent. Archer then trains his new competition as only he can, whilst Malory frets over her own past and her son's future.",
+         "vote_average" : 0,
+         "crew" : [
+            {
+               "name" : "Adam Reed",
+               "id" : 1215644,
+               "department" : "Writing",
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "job" : "Writer",
+               "profile_path" : null
+            }
+         ],
+         "production_code" : null,
+         "season_number" : 1,
+         "id" : 422196,
+         "still_path" : "/e22L3pas4D9NIGD0oOVwhEbtyD7.jpg",
+         "air_date" : "2010-01-14"
+      },
+      {
+         "crew" : [
+            {
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "department" : "Writing",
+               "profile_path" : null,
+               "job" : "Writer",
+               "name" : "Adam Reed",
+               "id" : 1215644
+            }
+         ],
+         "vote_average" : 0,
+         "overview" : "Owing to a rash of agent deaths (the result of Sterling's carelessness), ISIS can't meet government diversity standards. Enter the gruffly elegant Conway Stern, an \"onyx\" agent who wears a Star of David around his neck. Conway is \"a diversity double whammy,\" gushes Malory, but that and his secret-agent skills aren't the only reasons she hired him.",
+         "vote_count" : 0,
+         "guest_stars" : [
+            {
+               "profile_path" : "/pdXnmZkrLiHVybdEpwKiCNrGMo8.jpg",
+               "credit_id" : "5257ff1c760ee36aaa745abe",
+               "character" : "",
+               "order" : 0,
+               "id" : 102775,
+               "name" : "Coby Bell"
+            }
+         ],
+         "name" : "Diversity Hire",
+         "episode_number" : 3,
+         "air_date" : "2010-01-21",
+         "still_path" : "/youYb3bE9CbCrmt1SDYWNTTi2Mf.jpg",
+         "id" : 422197,
+         "season_number" : 1,
+         "production_code" : null
+      },
+      {
+         "air_date" : "2010-01-28",
+         "still_path" : "/2zEW8RaLwToReNghdcfpmYjQbwl.jpg",
+         "id" : 422200,
+         "production_code" : null,
+         "season_number" : 1,
+         "crew" : [
+            {
+               "department" : "Writing",
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "job" : "Writer",
+               "profile_path" : null,
+               "name" : "Adam Reed",
+               "id" : 1215644
+            }
+         ],
+         "overview" : "Malory hosts a dinner party for the UN intelligence chairman, Torvald Utne, in an effort to get a new weapons contract for ISIS. Unfortunately, a group of rival assassins have targeted Mr. Utne for elimination.",
+         "vote_average" : 0,
+         "vote_count" : 0,
+         "name" : "Killing Utne",
+         "guest_stars" : [
+            {
+               "credit_id" : "5257ff1c760ee36aaa745b3c",
+               "character" : "",
+               "order" : 0,
+               "profile_path" : "/eAF43tqzBqq7Lgi7jG27BBUZ6Bp.jpg",
+               "name" : "Rene Auberjonois",
+               "id" : 9807
+            },
+            {
+               "profile_path" : "/zavDMLHU3QpZOLlMlq1mobhzNG0.jpg",
+               "character" : "",
+               "order" : 1,
+               "credit_id" : "5257ff1c760ee36aaa745bc6",
+               "id" : 4175,
+               "name" : "Jeffrey Tambor"
+            }
+         ],
+         "episode_number" : 4
+      },
+      {
+         "vote_average" : 0,
+         "overview" : "Malory's career is threatened when a sensitive videotape falls into the hands of a rogue (and roguish) Cuban agent, so she calls on Archer’s expertise in seduction to turn the tables on her blackmailer.",
+         "crew" : [],
+         "episode_number" : 5,
+         "guest_stars" : [],
+         "name" : "Honeypot",
+         "vote_count" : 0,
+         "still_path" : "/vKcJK6zQNSteMXOjltRoQwH9vLS.jpg",
+         "air_date" : "2010-02-04",
+         "production_code" : null,
+         "season_number" : 1,
+         "id" : 422205
+      },
+      {
+         "id" : 422206,
+         "production_code" : null,
+         "season_number" : 1,
+         "still_path" : "/azQCl8XvyuIrTIXbGh3KBkxH2kk.jpg",
+         "air_date" : "2010-02-11",
+         "name" : "Skorpio",
+         "guest_stars" : [],
+         "episode_number" : 6,
+         "vote_count" : 0,
+         "vote_average" : 0,
+         "overview" : "Archer must rescue Lana from the clutches of Skorpio, the infamous arms dealer. Meanwhile, Cyril fears not only for his girlfriend's life, but her succumbing to the seductive nature of Archer's heroics.",
+         "crew" : [
+            {
+               "name" : "Adam Reed",
+               "id" : 1215644,
+               "department" : "Writing",
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "job" : "Writer",
+               "profile_path" : null
+            }
+         ]
+      },
+      {
+         "air_date" : "2010-02-18",
+         "still_path" : "/pc4VjXFGeOv84ck2cikVaj1Q4jm.jpg",
+         "season_number" : 1,
+         "production_code" : null,
+         "id" : 422209,
+         "crew" : [
+            {
+               "name" : "Adam Reed",
+               "id" : 1215644,
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "department" : "Writing",
+               "profile_path" : null,
+               "job" : "Writer"
+            }
+         ],
+         "vote_average" : 0,
+         "overview" : "When a bomb threat jeopardizes the maiden voyage of the luxury airship Excelsior, Archer and the ISIS crew must battle the clock (and each other) to avert disaster.",
+         "vote_count" : 0,
+         "episode_number" : 7,
+         "name" : "Skytanic",
+         "guest_stars" : []
+      },
+      {
+         "vote_count" : 0,
+         "guest_stars" : [],
+         "name" : "The Rock",
+         "episode_number" : 8,
+         "crew" : [
+            {
+               "profile_path" : null,
+               "job" : "Writer",
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "department" : "Writing",
+               "id" : 1215644,
+               "name" : "Adam Reed"
+            }
+         ],
+         "overview" : "After ISIS loses yet another lucrative contract to rival agency ODIN, Malory assigns Archer and Lana to embarrass ODIN by stealing a priceless diamond from their biggest client.",
+         "vote_average" : 0,
+         "id" : 422210,
+         "production_code" : null,
+         "season_number" : 1,
+         "air_date" : "2010-03-04",
+         "still_path" : "/8NZaGU2AzAeKmLPYKKOD0UxqBQF.jpg"
+      },
+      {
+         "still_path" : "/9AePazOeL2j7d6HlwcUuvHeC9WQ.jpg",
+         "air_date" : "2010-03-11",
+         "id" : 422212,
+         "production_code" : null,
+         "season_number" : 1,
+         "vote_average" : 0,
+         "overview" : "When Archer takes a higher-paying job at rival agency ODIN, Malory will stop at nothing to get him back.",
+         "crew" : [
+            {
+               "name" : "Adam Reed",
+               "id" : 1215644,
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "department" : "Writing",
+               "profile_path" : null,
+               "job" : "Writer"
+            }
+         ],
+         "name" : "Job Offer",
+         "guest_stars" : [
+            {
+               "id" : 74339,
+               "name" : "Dave Willis",
+               "profile_path" : "/gbeaDdhuwT2ycm0CMkGBBqEsF2b.jpg",
+               "credit_id" : "5257ff1c760ee36aaa745c6a",
+               "order" : 0,
+               "character" : ""
+            }
+         ],
+         "episode_number" : 9,
+         "vote_count" : 0
+      },
+      {
+         "still_path" : "/rr1gghBYFrRBBdSDXPgRYq3cNnF.jpg",
+         "air_date" : "2010-03-18",
+         "season_number" : 1,
+         "production_code" : null,
+         "id" : 422213,
+         "overview" : "Questions about the identity of Archer's real father lead him into a perilous trap... and an explosive confrontation with Malory.",
+         "vote_average" : 0,
+         "crew" : [
+            {
+               "name" : "Adam Reed",
+               "id" : 1215644,
+               "credit_id" : "5257ff1a760ee36aaa745a49",
+               "department" : "Writing",
+               "profile_path" : null,
+               "job" : "Writer"
+            }
+         ],
+         "episode_number" : 10,
+         "guest_stars" : [],
+         "name" : "Dial M for Mother",
+         "vote_count" : 0
+      }
+   ],
+   "name" : "Season 1",
+   "_id" : "5257ff1a760ee36aaa745985",
+   "air_date" : "2009-09-17",
+   "season_number" : 1,
+   "poster_path" : "/tcsthnA75wNgd9jwt4a48MNSuhG.jpg",
+   "id" : 20314
+}

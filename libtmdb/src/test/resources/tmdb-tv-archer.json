@@ -1,0 +1,133 @@
+{
+   "vote_count" : 53,
+   "first_air_date" : "2009-09-17",
+   "number_of_seasons" : 7,
+   "production_companies" : [
+      {
+         "id" : 36424,
+         "name" : "Radical Axis"
+      },
+      {
+         "name" : "FX Productions",
+         "id" : 40054
+      },
+      {
+         "name" : "Floyd County Productions",
+         "id" : 40055
+      }
+   ],
+   "poster_path" : "/swCHJglRufH6rjmVYIXApRtCEPx.jpg",
+   "episode_run_time" : [
+      20,
+      30
+   ],
+   "overview" : "Sterling Archer is the world's most daunting spy. He works for ISIS, a spy agency run by his mother. In between dealing with his boss and his co-workers - one of whom is his ex-girlfriend - Archer manages to annoy or seduce everyone that crosses his path. His antics are only excusable because at the end of the day, he still somehow always manages to thwart whatever crises was threatening mankind.",
+   "type" : "Scripted",
+   "origin_country" : [
+      "US"
+   ],
+   "status" : "Returning Series",
+   "last_air_date" : "2016-04-14",
+   "created_by" : [
+      {
+         "name" : "Adam Reed",
+         "id" : 1215644,
+         "profile_path" : "/vayA3K27rquN1ov7FP2eLKuX9hq.jpg"
+      }
+   ],
+   "id" : 10283,
+   "seasons" : [
+      {
+         "id" : 20316,
+         "episode_count" : 4,
+         "poster_path" : "/5O0WaDlzsVLInrdfmbxM33vf3gJ.jpg",
+         "season_number" : 0,
+         "air_date" : "2011-09-14"
+      },
+      {
+         "season_number" : 1,
+         "episode_count" : 10,
+         "poster_path" : "/tcsthnA75wNgd9jwt4a48MNSuhG.jpg",
+         "air_date" : "2009-09-17",
+         "id" : 20314
+      },
+      {
+         "id" : 20315,
+         "air_date" : "2011-01-27",
+         "season_number" : 2,
+         "poster_path" : "/6PitbJqWCeiF059hH3v5S80Y2d2.jpg",
+         "episode_count" : 13
+      },
+      {
+         "id" : 20317,
+         "season_number" : 3,
+         "poster_path" : "/3wdIrnn0gMOdiX9h8AvIj43l4oM.jpg",
+         "episode_count" : 13,
+         "air_date" : "2011-09-15"
+      },
+      {
+         "episode_count" : 13,
+         "poster_path" : "/cRskWJ40TFWLDMn697XJvuSejge.jpg",
+         "season_number" : 4,
+         "air_date" : "2013-01-17",
+         "id" : 20312
+      },
+      {
+         "id" : 20313,
+         "poster_path" : "/kHaJPovWoqAeD07T8Gbk0nj2Eyf.jpg",
+         "episode_count" : 13,
+         "season_number" : 5,
+         "air_date" : "2014-01-13"
+      },
+      {
+         "id" : 63509,
+         "season_number" : 6,
+         "episode_count" : 13,
+         "poster_path" : "/jPcF4tmMgDMWlUYIQfG2YektMu6.jpg",
+         "air_date" : "2015-01-08"
+      },
+      {
+         "id" : 75938,
+         "poster_path" : "/oSepdI3UyMOv1rihNqV0SNscKw0.jpg",
+         "episode_count" : 3,
+         "season_number" : 7,
+         "air_date" : "2016-03-31"
+      }
+   ],
+   "languages" : [
+      "en"
+   ],
+   "original_language" : "en",
+   "homepage" : "http://www.fxnetworks.com/shows/archer",
+   "popularity" : 7.122171,
+   "number_of_episodes" : 78,
+   "name" : "Archer",
+   "genres" : [
+      {
+         "id" : 10759,
+         "name" : "Action & Adventure"
+      },
+      {
+         "id" : 16,
+         "name" : "Animation"
+      },
+      {
+         "name" : "Drama",
+         "id" : 18
+      },
+      {
+         "name" : "Comedy",
+         "id" : 35
+      }
+   ],
+   "original_name" : "Archer",
+   "vote_average" : 7.9,
+   "networks" : [
+      {
+         "name" : "FX",
+         "id" : 88
+      }
+   ],
+   "in_production" : true,
+   "backdrop_path" : "/AnPYfNKssFVdL74Mducz25FTp2q.jpg"
+}

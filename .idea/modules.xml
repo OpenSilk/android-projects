@@ -5,6 +5,8 @@
       <module fileurl="file://$PROJECT_DIR$/android-projects.iml" filepath="$PROJECT_DIR$/android-projects.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-core/common-core.iml" filepath="$PROJECT_DIR$/common-core/common-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-dagger-core/common-dagger-core.iml" filepath="$PROJECT_DIR$/common-dagger-core/common-dagger-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libtmdb/libtmdb.iml" filepath="$PROJECT_DIR$/libtmdb/libtmdb.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libtvdb/libtvdb.iml" filepath="$PROJECT_DIR$/libtvdb/libtvdb.iml" />
     </modules>
   </component>
 </project>

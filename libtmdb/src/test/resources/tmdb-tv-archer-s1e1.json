@@ -1,0 +1,31 @@
+{
+   "production_code" : null,
+   "crew" : [
+      {
+         "profile_path" : null,
+         "job" : "Director",
+         "name" : "Mack Williams",
+         "department" : "Directing",
+         "id" : 1242554,
+         "credit_id" : "5257ff1b760ee36aaa745a70"
+      },
+      {
+         "job" : "Writer",
+         "profile_path" : null,
+         "department" : "Writing",
+         "id" : 1215644,
+         "name" : "Adam Reed",
+         "credit_id" : "5257ff1a760ee36aaa745a49"
+      }
+   ],
+   "season_number" : 1,
+   "episode_number" : 1,
+   "still_path" : "/mLsGWwqTOwWTfg1XhLEbShNDbST.jpg",
+   "air_date" : "2009-09-17",
+   "guest_stars" : [],
+   "overview" : "Archer is in trouble with his Mother and the Comptroller because his expense account is way out of proportion to his actual expenses. So he creates the idea that a Mole has breached ISIS and he needs to get into the mainframe to hunt him down (so he can cover his tracks!). All this leads to a surprising ending.",
+   "vote_average" : 0,
+   "vote_count" : 0,
+   "name" : "Mole Hunt",
+   "id" : 422183
+}
