@@ -81,6 +81,7 @@ dependencies {
     compile 'org.apache.commons:commons-collections4:4.1'
 
     compile project(':common-core')
+    compile project(':common-media')
     compile project(':libtvdb')
     compile project(':libtmdb')
 
