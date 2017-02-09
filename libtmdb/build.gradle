@@ -40,9 +40,10 @@ android {
 }
 
 dependencies {
-    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
     testCompile 'com.squareup.okhttp3:mockwebserver:3.2.0'
-    testCompile 'org.assertj:assertj-core:3.4.0'
+    testCompile 'org.assertj:assertj-core:1.7.1'
+
     compile "io.reactivex:rxjava:$rxJavaVersion"
     compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
     compile "com.squareup.retrofit2:converter-moshi:$retrofitVersion"

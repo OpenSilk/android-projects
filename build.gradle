@@ -7,6 +7,7 @@ buildscript {
         targetSdkVersion = 23
         buildToolsVersion = "25.0.2"
         gradleToolsVersion = "2.2.3"
+
         supportLibVersion = "24.2.0"
         dagger2Version = "2.4"
         rxJavaVersion = "1.1.1"
@@ -20,6 +21,8 @@ buildscript {
         commonsIOVersion = "2.5"
         rxKotlinVersion = '0.60.0'
         ankoVersion = '0.9'
+
+        test_robolectricVersion = "3.1"
     }
     repositories {
         jcenter()
