@@ -1,0 +1,103 @@
+/*
+ * Copyright (c) 2016 OpenSilk Productions LLC.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        applicationId "org.opensilk.video"
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+
+    packagingOptions {
+        exclude 'META-INF/beans.xml'
+        exclude 'META-INF/LICENSE.txt'
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    //inject api keys
+    try {
+        defaultConfig.buildConfigField("String", "TMDB_API_KEY", String.format("\"%s\"", (String) TMDB_API_KEY))
+        defaultConfig.buildConfigField("String", "TVDB_API_KEY", String.format("\"%s\"", (String) TVDB_API_KEY))
+    } catch (MissingPropertyException e) {
+        printf("Api keys not configured. Did you setup the gradle.properties file? \n%s", e)
+        defaultConfig.buildConfigField("String", "TMDB_API_KEY", "\"NOKEY\"")
+        defaultConfig.buildConfigField("String", "TVDB_API_KEY", "\"NOKEY\"")
+    }
+}
+
+kapt {
+    generateStubs = true
+}
+
+dependencies {
+    kapt 'com.google.guava:guava:19.0'
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.android.databinding:compiler:$gradleToolsVersion"
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+//    compile 'com.android.support:leanback-v17:23.2.1'
+    compile project(':leanback')
+    compile 'com.github.bumptech.glide:glide:4.0.0-SNAPSHOT'
+//    compile 'com.github.bumptech.glide:okhttp3-integration:4.0.0-SNAPSHOT'
+
+    compile 'org.videolan.libvlc:libvlc-x86:3.0.0-SNAPSHOT@aar'
+
+    compile "org.apache.commons:commons-lang3:$commonsLangVersion"
+    compile 'org.apache.commons:commons-collections4:4.1'
+
+    compile project(':common-core')
+    compile project(':libtvdb')
+    compile project(':libtmdb')
+
+    //hax
+
+    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.2.0'
+    testCompile 'org.assertj:assertj-core:3.4.0'
+}
+
+repositories {
+    maven { url "file:///Users/drew/workspace/Opensilk/m2/repository" }
+}
+
+configurations.all {
+    // check for updates every build (to avoid this use offline mode)
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+

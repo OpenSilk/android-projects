@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2016 OpenSilk Productions LLC.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <import type="android.view.View"/>
+        <variable
+            name="info"
+            type="org.opensilk.video.data.VideoFileInfo"/>
+    </data>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:clipToPadding="false"
+        android:clipChildren="false"
+        >
+
+        <!--LinearLayout will not fill parent for some reason-->
+        <RelativeLayout
+            android:id="@+id/info_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:layout_marginStart="@dimen/lb_browse_padding_start"
+            android:layout_marginEnd="@dimen/lb_browse_padding_end"
+            android:background="?defaultBrandColor">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:textAppearanceLarge"
+                android:gravity="center_vertical"
+                android:layout_marginStart="24dp"
+                android:layout_marginBottom="16dp"
+                android:text="@{info.title}"
+                tools:text="some title"/>
+
+            <TextView
+                android:id="@+id/duration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/title"
+                android:drawableStart="@drawable/timer_48dp"
+                android:gravity="center_vertical"
+                android:text="@{info.durationString}"
+                android:textAppearance="?android:textAppearanceMedium"
+                tools:text="1h10m"/>
+
+            <TextView
+                android:id="@+id/size"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/duration"
+                android:drawableStart="@drawable/harddisk_48dp"
+                android:gravity="center_vertical"
+                android:text="@{info.sizeString}"
+                android:visibility="@{info.sizeBytes == 0 ? View.GONE : View.VISIBLE}"
+                android:textAppearance="?android:textAppearanceMedium"
+                tools:text="200Mb" />
+
+            <TextView
+                android:id="@+id/first_video_track"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/size"
+                android:drawableStart="@drawable/filmstrip_48dp"
+                android:gravity="center_vertical"
+                android:text="@{info.firstVideoTrack}"
+                android:textAppearance="?android:textAppearanceMedium"
+                />
+
+            <TextView
+                android:id="@+id/first_audio_track"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/first_video_track"
+                android:drawableStart="@drawable/speaker_48dp"
+                android:gravity="center_vertical"
+                android:text="@{info.firstAudioTrack}"
+                android:textAppearance="?android:textAppearanceMedium"
+                />
+
+            <TextView
+                android:id="@+id/second_audio_track"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/first_audio_track"
+                android:drawableStart="@drawable/speaker_48dp"
+                android:gravity="center_vertical"
+                android:text="@{info.secondAudioTrack}"
+                android:visibility="@{info.secondAudioTrack == null ? View.GONE : View.VISIBLE}"
+                android:textAppearance="?android:textAppearanceMedium"
+                />
+
+        </RelativeLayout>
+    </FrameLayout>
+</layout>

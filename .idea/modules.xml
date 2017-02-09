@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/android-projects.iml" filepath="$PROJECT_DIR$/android-projects.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app-theia-tv/app-theia-tv.iml" filepath="$PROJECT_DIR$/app-theia-tv/app-theia-tv.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-core/common-core.iml" filepath="$PROJECT_DIR$/common-core/common-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-dagger-core/common-dagger-core.iml" filepath="$PROJECT_DIR$/common-dagger-core/common-dagger-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/leanback/leanback.iml" filepath="$PROJECT_DIR$/leanback/leanback.iml" />

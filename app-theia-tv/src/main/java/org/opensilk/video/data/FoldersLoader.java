@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2016 OpenSilk Productions LLC.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.opensilk.video.data;
+
+import android.content.Context;
+import android.media.MediaDescription;
+import android.media.browse.MediaBrowser;
+
+import org.opensilk.common.core.dagger2.ActivityScope;
+import org.opensilk.common.core.dagger2.ForApplication;
+import org.opensilk.common.core.rx.RxListLoader;
+import org.opensilk.video.R;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+
+import rx.Observable;
+
+/**
+ * Created by drew on 4/10/16.
+ */
+@ActivityScope
+public class FoldersLoader implements RxListLoader<MediaBrowser.MediaItem> {
+
+    final Context mContext;
+
+    @Inject
+    public FoldersLoader(@ForApplication Context mContext) {
+        this.mContext = mContext;
+    }
+
+    @Override
+    public Observable<List<MediaBrowser.MediaItem>> getListObservable() {
+        return Observable.create(subscriber -> {
+            List<MediaBrowser.MediaItem> list = new ArrayList<>();
+            list.add(getNetworkItem());
+            if (!subscriber.isUnsubscribed()) {
+                subscriber.onNext(list);
+            }
+        });
+    }
+
+    MediaBrowser.MediaItem getNetworkItem() {
+        MediaDescription.Builder builder = new MediaDescription.Builder();
+        MediaMetaExtras metaExtras = MediaMetaExtras.special();
+        builder.setMediaId("special:network_folders");
+        builder.setTitle("Local Network");
+        metaExtras.setIconResource(R.drawable.server_network_48dp);
+        builder.setExtras(metaExtras.getBundle());
+        return new MediaBrowser.MediaItem(builder.build(), MediaBrowser.MediaItem.FLAG_BROWSABLE);
+    }
+}

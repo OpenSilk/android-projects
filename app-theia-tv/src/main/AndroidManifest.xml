@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2016 OpenSilk Productions LLC.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="org.opensilk.video">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false"/>
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="true"/>
+
+    <application
+        android:name=".VideoApp"
+        android:allowBackup="true"
+        android:banner="@drawable/silk_video_banner"
+        android:icon="@drawable/silk_video_banner"
+        android:label="@string/app_name"
+        android:logo="@drawable/silk_video_banner"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Leanback">
+        <activity
+            android:name=".tv.ui.landing.LandingActivity"
+            android:icon="@drawable/silk_video_banner"
+            android:label="@string/app_name"
+            android:logo="@drawable/silk_video_banner"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.Leanback.Browse">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".tv.ui.details.DetailsActivity"
+            android:theme="@style/DetailsTheme"/>
+        <activity
+            android:name=".tv.ui.folders.FoldersActivity"
+            android:parentActivityName=".tv.ui.landing.LandingActivity"
+            android:theme="@style/FoldersTheme"/>
+        <activity
+            android:name=".tv.ui.network.NetworkActivity"
+            android:theme="@style/NetworkTheme"/>
+        <activity
+            android:name=".tv.ui.playback.PlaybackActivity"
+            android:launchMode="singleTop"
+            android:theme="@style/PlaybackTheme"/>
+        <activity
+            android:name=".tv.ui.search.SearchActivity"
+            android:theme="@style/SearchTheme"/>
+
+        <receiver android:name=".playback.MediaButtonReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".data.BootCompleteReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name=".data.VideosProvider"
+            android:authorities="@string/videos_authority"
+            android:exported="true"/>
+
+        <service android:name=".data.ScannerService"/>
+        <service
+            android:name=".data.ScannerJobService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <meta-data
+            android:name="org.opensilk.video.GlideConfig"
+            android:value="GlideModule"/>
+
+        <activity android:name=".tv.ui.playback2.Playback2Activity">
+        </activity>
+    </application>
+
+</manifest>
