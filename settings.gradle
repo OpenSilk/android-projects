@@ -1,2 +1,3 @@
 include ':common-core', 'common-dagger-core'
 include ':libtmdb', ':libtvdb'
+include ':leanback'
