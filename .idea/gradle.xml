@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/app-theia-tv" />
             <option value="$PROJECT_DIR$/common-core" />
             <option value="$PROJECT_DIR$/common-dagger-core" />
+            <option value="$PROJECT_DIR$/common-media" />
             <option value="$PROJECT_DIR$/leanback" />
             <option value="$PROJECT_DIR$/libtmdb" />
             <option value="$PROJECT_DIR$/libtvdb" />
