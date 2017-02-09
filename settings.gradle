@@ -1,1 +1,1 @@
-include ':common-core'
+include ':common-core', 'common-dagger-core'
