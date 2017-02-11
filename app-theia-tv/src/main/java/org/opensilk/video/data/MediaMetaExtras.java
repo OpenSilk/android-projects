@@ -19,10 +19,15 @@ package org.opensilk.video.data;
 
 import android.media.MediaDescription;
 import android.media.browse.MediaBrowser;
+import android.media.tv.TvContract;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.webkit.MimeTypeMap;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.opensilk.common.media.MediaMeta;
+import org.opensilk.common.media.MediaMetaKt;
 
 import java.util.HashSet;
 import java.util.Locale;
@@ -33,18 +38,8 @@ import timber.log.Timber;
 /**
  * Created by drew on 3/21/16.
  */
+@Deprecated
 public class MediaMetaExtras {
-
-    public interface KEY {
-        //todo rename these
-        String KEY_MEDIA_TYPE = "meta_media_type";
-        String KEY_SERVER_ID = "meta_server_id";
-        String KEY_PARENT_ID = "meta_parent_id";
-        String KEY_PARENT_URI = "meta_parent_uri";
-        String IS_INDEXED = "meta_is_indexed";
-        String KEY_MEDIA_TITLE = "media_media_title";
-        String KEY_MEDIA_URI = "media_media_uri";
-    }
 
     public interface MEDIA_TYPE {
         int UNKNOWN = 0;
@@ -56,14 +51,14 @@ public class MediaMetaExtras {
         int SPECIAL = 6;
     }
 
-    private final Bundle meta;
+    private final MediaMeta meta;
 
     private MediaMetaExtras() {
         this(null);
     }
 
-    private MediaMetaExtras(Bundle meta) {
-        this.meta = meta != null ? meta : new Bundle();
+    private MediaMetaExtras(MediaMeta meta) {
+        this.meta = meta != null ? meta : MediaMeta.empty();
     }
 
     public static MediaMetaExtras tvSeries() {
@@ -95,16 +90,7 @@ public class MediaMetaExtras {
     }
 
     public static MediaMetaExtras from(MediaDescription description) {
-        Bundle b = description.getExtras();
-        if (b == null) {
-            throw new RuntimeException(String.format(Locale.US,
-                    "Description [%s] did not have extras this is an error!!", description.getTitle()));
-        }
-        return new MediaMetaExtras(b);
-    }
-
-    public static MediaMetaExtras from(Bundle bundle) {
-        return new MediaMetaExtras(bundle);
+        return new MediaMetaExtras(MediaMeta.from(description));
     }
 
     public static MediaMetaExtras from(MediaBrowser.MediaItem mediaItem) {
@@ -112,16 +98,52 @@ public class MediaMetaExtras {
     }
 
     public Bundle getBundle() {
-        return meta;
+        return MediaMetaKt.getBundle(meta);
     }
 
     public MediaMetaExtras setMediaType(int type) {
-        meta.putInt(KEY.KEY_MEDIA_TYPE, type);
+        switch (type) {
+            case MEDIA_TYPE.UNKNOWN:
+                meta.setMimeType("application/unknown");
+                break;
+            case MEDIA_TYPE.MOVIE:
+                meta.setMimeType("vnd.opensilk.org/movie");
+                break;
+            case MEDIA_TYPE.TV_SERIES:
+                meta.setMimeType(TvContract.Programs.CONTENT_TYPE);
+                break;
+            case MEDIA_TYPE.TV_EPISODE:
+                meta.setMimeType(TvContract.Programs.CONTENT_ITEM_TYPE);
+                break;
+            case MEDIA_TYPE.DIRECTORY:
+                meta.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
+                break;
+            case MEDIA_TYPE.VIDEO:
+                meta.setMimeType("video/unknown");
+                break;
+            case MEDIA_TYPE.SPECIAL:
+                meta.setMimeType("vnd.opensilk.org/special");
+                break;
+        }
         return this;
     }
 
     public int getMediaType() {
-        return meta.getInt(KEY.KEY_MEDIA_TYPE);
+        if (meta.isMovie()) {
+            return MEDIA_TYPE.MOVIE;
+        } else if (meta.isTvSeries()) {
+            return MEDIA_TYPE.TV_SERIES;
+        } else if (meta.isTvEpisode()) {
+            return MEDIA_TYPE.TV_EPISODE;
+        } else if (meta.isDirectory()) {
+            return MEDIA_TYPE.DIRECTORY;
+        } else if (meta.isVideo()) {
+            return MEDIA_TYPE.VIDEO;
+        } else if (meta.getMimeType().equals("vnd.opensilk.org/special")) {
+            return MEDIA_TYPE.SPECIAL;
+        } else {
+            return MEDIA_TYPE.UNKNOWN;
+        }
     }
 
     public boolean isTvSeries() {
@@ -129,63 +151,62 @@ public class MediaMetaExtras {
     }
 
     public boolean isTvEpisode() {
-        return getMediaType() == MEDIA_TYPE.TV_EPISODE;
+        return meta.isTvEpisode();
     }
 
     public boolean isMovie() {
-        return getMediaType() == MEDIA_TYPE.MOVIE;
+        return meta.isMovie();
     }
 
     public boolean isVideo() {
-        return getMediaType() == MEDIA_TYPE.VIDEO;
+        return meta.isVideo();
     }
 
     public boolean isDirectory() {
-        return getMediaType() == MEDIA_TYPE.DIRECTORY;
+        return meta.isDirectory();
     }
 
     public boolean isUnknown() {
-        return getMediaType() == MEDIA_TYPE.UNKNOWN;
+        return meta.getMimeType().equals("application/unknown");
     }
 
     public boolean isSpecial() {
-        return getMediaType() == MEDIA_TYPE.SPECIAL;
+        return meta.getMimeType().equals("vnd.opensilk.org/special");
     }
 
     public boolean isVideoFile() {
-        return isTvEpisode() || isMovie() || isVideo();
+        return isVideo();
     }
 
     public MediaMetaExtras setServerId(String id) {
-        meta.putString(KEY.KEY_SERVER_ID, id);
+        meta.set__internal4(id);
         return this;
     }
 
     public String getServerId() {
-        return meta.getString(KEY.KEY_SERVER_ID);
+        return meta.get__internal4();
     }
 
     public MediaMetaExtras setParentId(String id) {
-        meta.putString(KEY.KEY_PARENT_ID, id);
+        meta.setParentMediaId(id);
         return this;
     }
 
     public String getParentId() {
-        Timber.e("getParentId() Dont use this its not implemented in database");
-        return meta.getString(KEY.KEY_PARENT_ID);
+        return meta.getParentMediaId();
     }
 
     public MediaMetaExtras setParentUri(Uri uri) {
-        meta.putParcelable(KEY.KEY_PARENT_URI, uri);
+        meta.setParentMediaId(uri.toString());
         return this;
     }
 
     public Uri getParentUri() {
-        return meta.getParcelable(KEY.KEY_PARENT_URI);
+        return Uri.parse(meta.getParentMediaId());
     }
 
     public MediaMetaExtras setIndexed(boolean yes) {
-        meta.putBoolean(KEY.IS_INDEXED, yes);
+        meta.setParsed(yes);
         return this;
     }
 
@@ -194,11 +215,11 @@ public class MediaMetaExtras {
      *          for videos this means they have metadata from the lookup service
      */
     public boolean isIndexed() {
-        return meta.getBoolean(KEY.IS_INDEXED, false);
+        return meta.isParsed();
     }
 
     public MediaMetaExtras setMediaTitle(CharSequence title) {
-        meta.putCharSequence(KEY.KEY_MEDIA_TITLE, title);
+        meta.setDisplayName(title.toString());
         return this;
     }
 
@@ -208,11 +229,11 @@ public class MediaMetaExtras {
      *          that can be used for lookups.
      */
     public String getMediaTitle() {
-        return meta.getCharSequence(KEY.KEY_MEDIA_TITLE, "").toString();
+        return meta.getDisplayName();
     }
 
     public MediaMetaExtras setMediaUri(Uri mediaUri) {
-        meta.putParcelable(KEY.KEY_MEDIA_URI, mediaUri);
+        meta.setMediaUri(mediaUri);
         return this;
     }
 
@@ -220,102 +241,102 @@ public class MediaMetaExtras {
      * @return media uri, used on API < 23 where {@link MediaDescription#getMediaUri()} doesnt exist
      */
     public Uri getMediaUri() {
-        return meta.getParcelable(KEY.KEY_MEDIA_URI);
+        return meta.getMediaUri();
     }
 
     public MediaMetaExtras setEpisodeId(long id) {
-        meta.putLong("meta_episode_id", id);
+        meta.set__internal1(String.valueOf(id));
         return this;
     }
 
     public long getEpisodeId() {
-        return meta.getLong("meta_episode_id");
+        return Long.valueOf(meta.get__internal1());
     }
 
     public MediaMetaExtras setSeriesId(long id) {
-        meta.putLong("meta_series_id", id);
+        meta.set__internal2(String.valueOf(id));
         return this;
     }
 
     public long getSeriesId() {
-        return meta.getLong("meta_series_id");
+        return Long.valueOf(meta.get__internal2());
     }
 
     public MediaMetaExtras setMovieId(long id) {
-        meta.putLong("meta_movie_id", id);
+        meta.set__internal3(String.valueOf(id));
         return this;
     }
 
     public long getMovieId() {
-        return meta.getLong("meta_movie_id");
+        return Long.valueOf(meta.get__internal3());
     }
 
     public MediaMetaExtras setBackdropUri(Uri backdropUri) {
-        meta.putParcelable("meta_backdrop_uri", backdropUri);
+        meta.setBackdropUri(backdropUri);
         return this;
     }
 
     public Uri getBackdropUri() {
-        return meta.getParcelable("meta_backdrop_uri");
+        return meta.getBackdropUri();
     }
 
     public MediaMetaExtras setDate(String date){
-        meta.putString("meta_date", date);
+        meta.setReleaseDate(date);
         return this;
     }
 
     public String getDate() {
-        return meta.getString("meta_date");
+        return meta.getReleaseDate();
     }
 
     public MediaMetaExtras setNumSeasons(int numSeasons) {
-        meta.putInt("meta_num_seasons", numSeasons);
+        meta.setSeasonCount(numSeasons);
         return this;
     }
 
     public int getNumSeasons() {
-        return meta.getInt("meta_num_seasons");
+        return meta.getSeasonCount();
     }
 
     public MediaMetaExtras setSeasonNumber(int seasonNumber) {
-        meta.putInt("meta_season_number", seasonNumber);
+        meta.setSeasonNumber(seasonNumber);
         return this;
     }
 
     public int getSeasonNumber() {
-        return meta.getInt("meta_season_number");
+        return meta.getSeasonNumber();
     }
 
     public MediaMetaExtras setEpisodeNumber(int episodeNumber){
-        meta.putInt("meta_episode_number", episodeNumber);
+        meta.setEpisodeNumber(episodeNumber);
         return this;
     }
 
     public int getEpisodeNumber() {
-        return meta.getInt("meta_episode_number");
+        return meta.getEpisodeNumber();
     }
 
     public MediaMetaExtras setLastPosition(long pos) {
-        meta.putLong("meta_last_position", pos);
+        meta.setLastPlaybackPosition(pos);
         return this;
     }
 
     public long getLastPosition() {
-        return meta.getLong("meta_last_position", -1);
+        return meta.getLastPlaybackPosition();
     }
 
     public MediaMetaExtras setDuration(long dur) {
-        meta.putLong("meta_duration", dur);
+        meta.setDuration(dur);
         return this;
     }
 
     public long getDuration() {
-        return meta.getLong("meta_duration", -1);
+        return meta.getDuration();
     }
 
 
     public MediaMetaExtras setIconResource(int res){
-        meta.putInt("meta_icon_res", res);
+        meta.setArtworkResourceId(res);
         return this;
     }
 
@@ -323,34 +344,12 @@ public class MediaMetaExtras {
      * @return resource id to use if there is no icon uri (glide wont load vector drawables)
      */
     public int getIconResource(){
-        return meta.getInt("meta_icon_res", -1);
-    }
-
-    public MediaMetaExtras setDirty(boolean dirty) {
-        meta.putBoolean("meta_is_dirty", dirty);
-        return this;
-    }
-
-    /**
-     * @return true if mediaitem was updated and no longer reflects what is in the database
-     */
-    public boolean isDirty() {
-        return meta.getBoolean("meta_is_dirty");
+        return meta.getArtworkResourceId();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MediaMetaExtras that = (MediaMetaExtras) o;
-        Set<String> keys = new HashSet<>(meta.keySet());
-        Set<String> thatKeys = new HashSet<>(that.meta.keySet());
-        //TODO its possible for one of us to have extra keys that are null so this isnt right
-        if (ObjectUtils.notEqual(keys, thatKeys)) return false;
-        for (String key : keys) {
-            if (ObjectUtils.notEqual(meta.get(key), that.meta.get(key))) return false;
-        }
-        return true;
+        return meta.equals(o);
     }
 
     @Override

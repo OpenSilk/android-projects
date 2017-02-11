@@ -51,7 +51,7 @@ public class MediaItemClickListener implements OnItemViewClickedListener {
         if (item instanceof MediaBrowser.MediaItem) {
 
             MediaBrowser.MediaItem mediaItem = (MediaBrowser.MediaItem) item;
-            MediaMetaExtras metaExtras = MediaMetaExtras.from(mediaItem.getDescription().getExtras());
+            MediaMetaExtras metaExtras = MediaMetaExtras.from(mediaItem.getDescription());
 
             if (metaExtras.isSpecial()) {
                 Intent intent = null;

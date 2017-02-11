@@ -1,13 +1,16 @@
 package org.opensilk.common.media
 
+import android.graphics.Movie
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
+import android.media.tv.TvContract
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import android.provider.DocumentsContract
 import android.provider.MediaStore
+import android.webkit.MimeTypeMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
@@ -46,12 +49,12 @@ private constructor(
      *
      */
     val isDirectory: Boolean
-        get() = mimeType == DocumentsContract.Document.MIME_TYPE_DIR;
+        get() = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
     /**
      *
      */
     val isAudio: Boolean
-        get() = mimeType.startsWith("audio") || mimeType.contains("flag") || mimeType.contains("ogg")
+        get() = mimeType.startsWith("audio") || mimeType.contains("flac") || mimeType.contains("ogg")
     /**
      *
      */
@@ -75,7 +78,27 @@ private constructor(
     /**
      *
      */
-    val isParsed: Boolean by BoolVal
+    val isTvSeries: Boolean
+        get() = mimeType == TvContract.Programs.CONTENT_TYPE
+    /**
+     *
+     */
+    val isTvEpisode: Boolean
+        get() = mimeType == TvContract.Programs.CONTENT_ITEM_TYPE
+    /**
+     *
+     */
+    val isMovie: Boolean
+        get() = mimeType == "vnd.org.opensilk/movie"
+    /**
+     *
+     */
+    val isVideo: Boolean
+        get() = mimeType.startsWith("video")
+    /**
+     *
+     */
+    var isParsed: Boolean by BoolVal
     /**
      * whether item is browsable, playable or both
      */
@@ -88,7 +111,7 @@ private constructor(
             MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE -> {
                 MediaBrowser.MediaItem.FLAG_BROWSABLE or MediaBrowser.MediaItem.FLAG_PLAYABLE
             }
-            else -> if (isAudio) MediaBrowser.MediaItem.FLAG_PLAYABLE else 0
+            else -> if (isAudio || isVideo) MediaBrowser.MediaItem.FLAG_PLAYABLE else 0
         }
     /**
      * [android.provider.DocumentsContract.Document.COLUMN_SIZE]
@@ -132,6 +155,10 @@ private constructor(
      */
     var releaseYear: Int by IntVal
     /**
+     * String: human friendly release date
+     */
+    var releaseDate: String by StringVal
+    /**
      * Long: Bitrate of track
      */
     var bitrate: Long by LongVal
@@ -148,17 +175,29 @@ private constructor(
      */
     var trackNumber: Int by IntVal
     /**
+     * Int: total number of tracks (on disk or playlist or whatever)
+     */
+    var trackCount: Int by IntVal
+    /**
      * Int: disc number for track (defaults to 1)
      */
     var discNumber: Int by IntVal
+    /**
+     * Int: total number of discs
+     */
+    var discCount: Int by IntVal
     /**
      * Uri: (any scheme) where jpg/png/etc can be fetched containing cover art
      */
     var artworkUri: Uri by UriVal
     /**
-     * Uri: (any scheme) where jpg/png/etc can be fetched containing image of artist or group
+     * Int: android resource id
      */
-    var artistArtworkUri: Uri by UriVal
+    var artworkResourceId: Int by IntVal
+    /**
+     * Uri: (any scheme) where jpg/png/etc can be fetched containing image of artist or group or whatever
+     */
+    var backdropUri: Uri by UriVal
     /**
      * Uri: media uri
      */
@@ -175,7 +214,51 @@ private constructor(
      * Long: (internal use) ms since epoch item was added to index
      */
     var dateAdded: Long by LongVal
+    /**
+     * Long: last saved playback position
+     */
+    var lastPlaybackPosition: Long by LongVal
+    /**
+     * Int: season number
+     */
+    var seasonNumber: Int by IntVal
+    /**
+     * Int: total number of seasons
+     */
+    var seasonCount: Int by IntVal
+    /**
+     * Int: episode number
+     */
+    var episodeNumber: Int by IntVal
+    /**
+     * Int: total number of episodes (in season)
+     */
+    var episodeCount: Int by IntVal
+    /*
+     * Scratch space until better solution are found
+     */
+    /**
+     * episode id
+     */
+    var __internal1: String by StringVal
+    /**
+     * season id
+     */
+    var __internal2: String by StringVal
+    /**
+     * movie id
+     */
+    var __internal3: String by StringVal
+    /**
+     * server id
+     */
+    var __internal4: String by StringVal
 
+}
+
+@Deprecated("Temp until usages in MediaMetaExtras are fixed")
+fun MediaMeta.getBundle(): Bundle {
+    return meta
 }
 
 fun MediaDescription.Builder._setMediaMeta(mediaMeta: MediaMeta): MediaDescription.Builder {

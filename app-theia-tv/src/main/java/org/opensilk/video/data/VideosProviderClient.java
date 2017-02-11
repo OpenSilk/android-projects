@@ -103,7 +103,7 @@ public class VideosProviderClient {
     public boolean insertMedia(MediaBrowser.MediaItem mediaItem) {
         ContentValues cv = new ContentValues(10);
         MediaDescription description = mediaItem.getDescription();
-        MediaMetaExtras metaExtras = MediaMetaExtras.from(description.getExtras());
+        MediaMetaExtras metaExtras = MediaMetaExtras.from(description);
         Uri mediaUri = MediaDescriptionUtil.getMediaUri(description);
         cv.put("_display_name", metaExtras.getMediaTitle());
         String descriptionTitle = description.getTitle() != null ?

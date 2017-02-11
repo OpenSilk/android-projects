@@ -59,7 +59,7 @@ public class DetailsScreenFragment extends android.support.v17.leanback.app.Deta
         super.onCreate(savedInstanceState);
         final DetailsActivityComponent activityComponent = DaggerService.getDaggerComponent(getContext());
         final MediaMetaExtras extras = MediaMetaExtras.from(
-                activityComponent.mediaItem().getDescription().getExtras());
+                activityComponent.mediaItem().getDescription());
         final DetailsScreenModule screenModule = new DetailsScreenModule(getContext());
         if (extras.isTvSeries()) {
             mComponent = activityComponent.newTvSeriesComponent(screenModule);
