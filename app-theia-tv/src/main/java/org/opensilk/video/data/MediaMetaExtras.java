@@ -97,6 +97,10 @@ public class MediaMetaExtras {
         return from(mediaItem.getDescription());
     }
 
+    public static MediaMetaExtras from(MediaMeta meta) {
+        return new MediaMetaExtras(meta);
+    }
+
     public Bundle getBundle() {
         return MediaMetaKt.getBundle(meta);
     }

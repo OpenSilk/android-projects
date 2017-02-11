@@ -21,7 +21,9 @@ import android.content.Context
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.media.browse.MediaBrowser.MediaItem
+import android.media.tv.TvContract
 import android.net.Uri
+import android.provider.DocumentsContract
 
 import org.apache.commons.lang3.StringUtils
 import org.opensilk.common.dagger.ForApplication
@@ -49,7 +51,7 @@ import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import org.opensilk.common.media._getMediaUri
+import org.opensilk.common.media.*
 import rx.Observable
 import rx.Scheduler
 import rx.Single
@@ -57,6 +59,8 @@ import rx.Subscription
 import rx.android.schedulers.AndroidSchedulers
 import rx.exceptions.Exceptions
 import rx.functions.Action1
+import rx.functions.Func1
+import rx.functions.Func2
 import rx.schedulers.Schedulers
 import rx.subjects.PublishSubject
 import timber.log.Timber
@@ -76,7 +80,6 @@ constructor(
 
     private val sSubscribeOn = Schedulers.from(Executors.newFixedThreadPool(16))
 
-
     fun getMediaItem(mediaItem: MediaBrowser.MediaItem): Observable<MediaBrowser.MediaItem> {
         return getMediaItem(mediaItem.description)
     }
@@ -86,28 +89,21 @@ constructor(
      */
     fun getMediaItem(description: MediaDescription): Observable<MediaBrowser.MediaItem> {
         val mediaUri = description._getMediaUri()
-        val metaExtras = MediaMetaExtras.from(description)
+        val metaExtras = description._getMediaMeta()
         val observable: Observable<MediaBrowser.MediaItem>
-        if (mediaUri == null) {
-            if (metaExtras.isTvSeries) {
-                observable = getTvSeriesInternal(description.mediaId)
-            } else {
-                observable = Observable.error<MediaItem>(Exception("Unimplemented mediaType=" + metaExtras.mediaType))
-            }
+        if (metaExtras.isTvSeries) {
+            observable = getTvSeriesInternal(description.mediaId)
         } else {
-            //TODO the lookup causes a notify which results in a second (redundant) emission
-            observable = getMediaInternal(mediaUri).flatMap<MediaItem>({ item ->
-                val extas = MediaMetaExtras.from(item)
-                if (!item.isPlayable() || extas.isIndexed()) {
-                    return@getMediaInternal mediaUri.flatMap Observable . just < MediaItem >(item)
+            observable = getMediaInternal(mediaUri).flatMap({ item ->
+                val extras = item._getMediaMeta()
+                if (!item.isPlayable || extras.isParsed) {
+                    return@flatMap Observable.just(item)
                 }
-                Observable.using<MediaBrowser.MediaItem, ScannerService.Connection>({
-                    try {
-                        return@Observable.< MediaBrowser . MediaItem, ScannerService.Connection>using ScannerService.bindService(mAppContext)
-                    } catch (e: InterruptedException) {
-                        throw Exceptions.propagate(e)
-                    }
-                }, { connection -> connection.client.scan(item) }) { connection -> connection.close() }
+                return@flatMap Observable.using<MediaBrowser.MediaItem, ScannerService.Connection>({
+                    ScannerService.bindService(mAppContext)
+                }, {
+                    connection -> connection.client.scan(item)
+                }, ScannerService.Connection::close).startWith(item)
             })
         }
         return observable.subscribeOn(sSubscribeOn).observeOn(sObserveOn)
@@ -118,8 +114,7 @@ constructor(
      * Used to update the list views.
      */
     fun getMediaItemOnChange(mediaItem: MediaBrowser.MediaItem): rx.Observable<MediaBrowser.MediaItem> {
-        val mediaUri = MediaItemUtil.getMediaUri(mediaItem) ?: return rx.Observable.error<MediaBrowser.MediaItem>(NullPointerException("Null media uri title=" + MediaItemUtil.getMediaTitle(mediaItem)))
-        return getMediaItemOnChange(mediaUri)
+        return getMediaItemOnChange(mediaItem._getMediaUri())
     }
 
     /**
@@ -127,7 +122,7 @@ constructor(
      * If lastUpdated is less than last recorded change an item will be emitted immediately
      */
     fun getMediaItemOnChange(mediaItem: MediaBrowser.MediaItem, lastUpdated: Long): rx.Observable<MediaBrowser.MediaItem> {
-        val mediaUri = MediaItemUtil.getMediaUri(mediaItem) ?: return rx.Observable.error<MediaBrowser.MediaItem>(NullPointerException("Null media uri title=" + MediaItemUtil.getMediaTitle(mediaItem)))
+        val mediaUri = mediaItem._getMediaUri()
         val changeTime = mLastChanged[mediaUri]
         //if media has changed since they were updated send an item immediately
         if (changeTime != null && lastUpdated > 0 && changeTime > lastUpdated) {
@@ -139,16 +134,16 @@ constructor(
 
     fun getMediaItemOnChange(mediaUri: Uri): Observable<MediaBrowser.MediaItem> {
         return getMediaUriChanges(mediaUri)
-                .map<Any>({ uri -> mDbClient.getMedia(mediaUri) })
+                .map<MediaItem>( Func1 { uri -> mDbClient.getMedia(mediaUri) })
                 .observeOn(sObserveOn)
     }
 
     fun getMediaItemSingle(description: MediaDescription): Single<MediaBrowser.MediaItem> {
-        val mediaUri = MediaDescriptionUtil.getMediaUri(description)
+        val mediaUri = description._getMediaUri()
         return Single.create<MediaBrowser.MediaItem> { subscriber ->
             val item = mDbClient.getMedia(mediaUri)
             if (subscriber.isUnsubscribed) {
-                return@Single.< MediaBrowser . MediaItem > create
+                return@create
             }
             if (item != null) {
                 subscriber.onSuccess(item)
@@ -160,10 +155,10 @@ constructor(
 
     internal fun getMediaInternal(mediaUri: Uri): Observable<MediaBrowser.MediaItem> {
         return Observable.create<MediaBrowser.MediaItem> { subscriber ->
-            subscriber.add(registerMediaUriChanges(mediaUri, { uri ->
+            subscriber.add(registerMediaUriChanges(mediaUri, Action1 { uri ->
                 val item1 = mDbClient.getMedia(mediaUri)
                 if (subscriber.isUnsubscribed) {
-                    return@registerMediaUriChanges
+                    return@Action1
                 }
                 if (item1 != null) {
                     subscriber.onNext(item1)
@@ -173,7 +168,7 @@ constructor(
             }))
             val item = mDbClient.getMedia(mediaUri)
             if (subscriber.isUnsubscribed) {
-                return@Observable.< MediaBrowser . MediaItem > create
+                return@create
             }
             if (item != null) {
                 subscriber.onNext(item)
@@ -186,10 +181,10 @@ constructor(
     internal fun getTvSeriesInternal(mediaId: String): Observable<MediaBrowser.MediaItem> {
         return Observable.create<MediaBrowser.MediaItem> { subscriber ->
             val id = java.lang.Long.valueOf(mediaId.substring(mediaId.indexOf(':') + 1))!!
-            subscriber.add(registerMediaUriChanges(mDbClient.uris().tvSeries(id), { uri ->
+            subscriber.add(registerMediaUriChanges(mDbClient.uris().tvSeries(id), Action1 { uri ->
                 val item1 = mDbClient.tvdb().getTvSeries(id)
                 if (subscriber.isUnsubscribed) {
-                    return@registerMediaUriChanges
+                    return@Action1
                 }
                 if (item1 != null) {
                     subscriber.onNext(item1)
@@ -197,7 +192,7 @@ constructor(
             }))
             val item = mDbClient.tvdb().getTvSeries(mediaId)
             if (subscriber.isUnsubscribed) {
-                return@Observable.create
+                return@create
             }
             if (item != null) {
                 subscriber.onNext(item)
@@ -214,7 +209,7 @@ constructor(
         val mediaUri = MediaDescriptionUtil.getMediaUri(mediaItem.description)
         val description = mediaItem.description
         return Observable.using<VideoFileInfo.Builder, Media>({ Media(mVlcInstance.get(), mediaUri) }, { media ->
-            Observable.create<Any> { subscriber ->
+            Observable.create<VideoFileInfo.Builder> { subscriber ->
                 val timeout = Observable.timer(30, TimeUnit.SECONDS)
                         .subscribe { l ->
                             if (!subscriber.isUnsubscribed) {
@@ -248,14 +243,14 @@ constructor(
                                 }
                             }
                             if (subscriber.isUnsubscribed) {
-                                return@media.setEventListener
+                                return@setEventListener
                             }
                             subscriber.onNext(bob)
                             subscriber.onCompleted()
                         }
                         else -> {
                             if (subscriber.isUnsubscribed) {
-                                return@media.setEventListener
+                                return@setEventListener
                             }
                             subscriber.onError(Exception("unexpected event"))
                         }
@@ -267,7 +262,9 @@ constructor(
         }) { media ->
             media.setEventListener(null)
             media.release()
-        }.zipWith<Long, VideoFileInfo>(getFileSize(mediaItem).toObservable(), { builder, size -> builder.setSize(size!!).build() }) //no observeon as media callback is posted to main thread.
+        }.zipWith<Long, VideoFileInfo>(
+                getFileSize(mediaItem).toObservable(),
+                Func2 { builder, size -> builder.setSize(size!!).build() }) //no observeon as media callback is posted to main thread.
     }
 
     fun getFileSize(mediaItem: MediaBrowser.MediaItem?): Single<Long> {
@@ -314,14 +311,14 @@ constructor(
             val builder = VideoDescInfo.builder()
                     .setTitle(mediaItem.description.title)
                     .setSubtitle(mediaItem.description.subtitle)
-            val metaExtras = MediaMetaExtras.from(mediaItem)
+            val metaExtras = mediaItem._getMediaMeta()
             if (metaExtras.isTvEpisode) {
-                val e = mDbClient.tvdb().getEpisode(metaExtras.episodeId)
+                val e = mDbClient.tvdb().getEpisode(metaExtras.__internal1.toLong())
                 if (e != null && e.overview != null) {
                     builder.setOverview(e.overview)
                 }
             } else if (metaExtras.isMovie) {
-                val m = mDbClient.moviedb().getMovie(metaExtras.movieId)
+                val m = mDbClient.moviedb().getMovie(metaExtras.__internal3.toLong())
                 if (m != null && m.overview != null) {
                     builder.setOverview(m.overview)
                 }
@@ -332,13 +329,13 @@ constructor(
     }
 
     fun getChildren(parentItem: MediaBrowser.MediaItem): Observable<List<MediaBrowser.MediaItem>> {
-        val metaExtras = MediaMetaExtras.from(parentItem.description)
+        val metaExtras = parentItem._getMediaMeta()
         if (metaExtras.isTvSeries) {
             return getTvSeriesChildren(parentItem)
         } else if (metaExtras.isDirectory) {
             return getDirectoryChildren(parentItem)
         }
-        Timber.d("Unimplemented mediatype=%d", metaExtras.mediaType)
+        Timber.e("Unimplemented mediatype=%d", metaExtras.mimeType)
         return Observable.empty<List<MediaBrowser.MediaItem>>()
     }
 
@@ -362,7 +359,7 @@ constructor(
         return getMediaUriChanges(parentMediaUri)
                 .startWith(parentMediaUri)
                 //ignore uri and use passed mediaitem
-                .flatMap<Any>({ uri -> getDirectoryChildrenList(parentItem) })
+                .flatMap<List<MediaItem>>( Func1 { uri -> getDirectoryChildrenList(parentItem) })
                 .subscribeOn(sSubscribeOn).observeOn(sObserveOn)
     }
 
@@ -372,20 +369,23 @@ constructor(
      */
     fun getDirectoryChildrenList(
             parentItem: MediaBrowser.MediaItem): rx.Observable<List<MediaBrowser.MediaItem>> {
-        return Observable.using({ org.videolan.libvlc.util.MediaBrowser(mVlcInstance.get(), null) }, { browser ->
-            val parentUri = MediaItemUtil.getMediaUri(parentItem)
+        return Observable.using({
+            org.videolan.libvlc.util.MediaBrowser(mVlcInstance.get(), null)
+        }, { browser ->
+            val parentUri = parentItem._getMediaUri()
             val future = VLCBrowserBrowseFuture.from(browser, parentUri)
             Observable.from(future)
-        }) { browser -> browser.release() }.map<Any>({ medias ->
+        }, org.videolan.libvlc.util.MediaBrowser::release
+        ).map<List<MediaItem>>( Func1 { medias ->
             val indexedItems = mDbClient.getChildren(parentItem)
             Timber.d("getDirectoryChildrenList.Map(%s) mediassize=%d indexedsize=%d",
-                    MediaItemUtil.getMediaTitle(parentItem), medias.size, indexedItems.size)
+                    parentItem._getMediaTitle(), medias.size, indexedItems.size)
             val mediaItems = ArrayList<MediaBrowser.MediaItem>(medias.size)
             for (media in medias) {
                 var childItem: MediaBrowser.MediaItem? = null
                 for (mediaItem in indexedItems) {
-                    val uri = MediaItemUtil.getMediaUri(mediaItem)
-                    if (media.getUri() == uri) {
+                    val uri = mediaItem._getMediaUri()
+                    if (media.uri == uri) {
                         childItem = reconcileMedia(media, mediaItem)
                         break
                     }
@@ -395,14 +395,14 @@ constructor(
                 }
                 mediaItems.add(childItem)
             }
-            mediaItems
+            return@Func1 mediaItems
         }).doOnNext { mediaItems ->
             for (mediaItem in mediaItems) {
-                val extras = MediaMetaExtras.from(mediaItem)
+                val extras = mediaItem._getMediaMeta()
                 //If new or on change do a lookup
-                if (!extras.isIndexed() || extras.isDirty()) {
+                if (!extras.isParsed) {
                     mDbClient.insertMedia(mediaItem)
-                    if (extras.isVideoFile()) {
+                    if (extras.isVideo) {
                         ScannerService.scan(mAppContext, mediaItem)
                     }
                 }
@@ -418,7 +418,7 @@ constructor(
     //for changes on items currently bound to a view. this provides a reference
     //so we can push a change to a newly bound view if the item has been updated
     //since the presenter was initially created.
-    internal val mLastChanged: MutableMap<Uri, Long> = Collections.synchronizedMap(HashMap<Any, Any>())
+    internal val mLastChanged: MutableMap<Uri, Long> = Collections.synchronizedMap(mutableMapOf())
     internal val mChangeObservable = mChangeBus.doOnNext { uri -> mLastChanged.put(uri, System.currentTimeMillis()) }
 
     fun getMediaUriChanges(mediaUri: Uri): Observable<Uri> {
@@ -445,18 +445,17 @@ constructor(
 
         //mostly for directories minidlna may reuse an id and we get stuck with the old one
         private fun reconcileMedia(media: Media, mediaItem: MediaBrowser.MediaItem): MediaBrowser.MediaItem {
-            val metaExtras = MediaMetaExtras.from(mediaItem)
+            val metaExtras = mediaItem._getMediaMeta()
             val mediaTitle = media.getMeta(Media.Meta.Title)
-            val itemMediaTitle = metaExtras.mediaTitle
-            if (!StringUtils.isEmpty(mediaTitle) && !StringUtils.equals(mediaTitle, itemMediaTitle)) {
-                metaExtras.isDirty = true
-                metaExtras.setMediaTitle(mediaTitle)
-                val bob = MediaDescriptionUtil.newBuilder(mediaItem.description)
+            val itemMediaTitle = metaExtras.displayName
+            if (mediaTitle != itemMediaTitle) {
+                metaExtras.isParsed = false
+                metaExtras.displayName = mediaTitle
+                val bob = mediaItem.description._newBuilder()
                 if (metaExtras.isDirectory) {
                     bob.setTitle(mediaTitle)
                 }
-                bob.setExtras(metaExtras.bundle)
-                val newItem = MediaBrowser.MediaItem(bob.build(), mediaItem.flags)
+                val newItem = mediaItem._copy(bob, metaExtras)
                 Timber.i("Updating mediaTitle %s -> %s", itemMediaTitle, mediaTitle)
                 return newItem
             } else {
@@ -471,44 +470,39 @@ constructor(
             val title = media.getMeta(Media.Meta.Title)
             val metaExtras = guessMediaType(media)
             if (parentMediaItem != null) {
-                metaExtras.parentId = parentMediaItem.mediaId
-                metaExtras.parentUri = MediaItemUtil.getMediaUri(parentMediaItem)
-                val parentExtras = MediaMetaExtras.from(parentMediaItem)
-                metaExtras.serverId = parentExtras.serverId
-                metaExtras.setMediaTitle(title)
+                metaExtras.parentMediaId = parentMediaItem.mediaId
+                val parentExtras = parentMediaItem._getMediaMeta()
+                metaExtras.__internal4 = parentExtras.__internal4
+                metaExtras.displayName = title
             }
             val builder = MediaDescription.Builder()
                     .setTitle(title)
                     .setMediaId("media:" + media.uri)
-            MediaDescriptionUtil.setMediaUri(builder, metaExtras, media.uri)
-            builder.setExtras(metaExtras.bundle)
-            var flags = 0
-            if (metaExtras.isDirectory) {
-                flags = MediaBrowser.MediaItem.FLAG_BROWSABLE
-            } else if (!metaExtras.isUnknown) {
-                flags = MediaBrowser.MediaItem.FLAG_PLAYABLE
-            }
-            return MediaBrowser.MediaItem(builder.build(), flags)
+            builder._setMediaUri(metaExtras, media.uri)
+            builder._setMediaMeta(metaExtras)
+            return MediaBrowser.MediaItem(builder.build(), metaExtras.mediaItemFlags)
         }
 
-        private fun guessMediaType(media: Media): MediaMetaExtras {
+        private fun guessMediaType(media: Media): MediaMeta {
             val extras = defineMediaType(media)
             if (extras.isVideo) {
                 val title = media.getMeta(Media.Meta.Title)
                 if (Utils.matchesTvEpisode(title)) {
-                    return MediaMetaExtras.tvEpisode()
+                    extras.mimeType = TvContract.Programs.CONTENT_ITEM_TYPE
                 } else if (Utils.matchesMovie(title)) {
-                    return MediaMetaExtras.movie()
+                    extras.mimeType = "vnd.opensilk.org/movie"
                 }
             }
             return extras
         }
 
-        private fun defineMediaType(media: Media): MediaMetaExtras {
+        private fun defineMediaType(media: Media): MediaMeta {
+            val meta = MediaMeta()
             val type = media.type
 
             if (type == Media.Type.Directory) {
-                return MediaMetaExtras.directory()
+                meta.mimeType = DocumentsContract.Document.MIME_TYPE_DIR
+                return meta
             }
 
             val title = media.getMeta(Media.Meta.Title)
@@ -519,7 +513,9 @@ constructor(
             if (dotIndex != -1) {
                 val fileExt = title!!.substring(dotIndex).toLowerCase(Locale.ENGLISH)
                 if (Extensions.VIDEO.contains(fileExt)) {
-                    return MediaMetaExtras.video()
+                    //TODO extract real mime from extension
+                    meta.mimeType = "video/unknown"
+                    return meta
                 }
             }
 
@@ -535,12 +531,14 @@ constructor(
             if (dotIndex != -1) {
                 val fileExt = location.substring(dotIndex).toLowerCase(Locale.ENGLISH)
                 if (Extensions.VIDEO.contains(fileExt)) {
-                    return MediaMetaExtras.video()
+                    meta.mimeType = "video/unknown"
+                    return meta
                 }
             }
 
             //not a video file
-            return MediaMetaExtras.unknown()
+            meta.mimeType = "application/unknown"
+            return meta
         }
     }
 

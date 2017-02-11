@@ -18,7 +18,7 @@ import kotlin.reflect.KProperty
  * Created by drew on 6/26/16.
  */
 data class MediaMeta
-private constructor(
+constructor(
         internal val meta: Bundle = Bundle()
 )
 {
@@ -267,6 +267,10 @@ fun MediaDescription.Builder._setMediaMeta(mediaMeta: MediaMeta): MediaDescripti
 
 fun MediaBrowser.MediaItem._getMediaMeta(): MediaMeta {
     return MediaMeta.from(this.description)
+}
+
+fun MediaDescription._getMediaMeta(): MediaMeta {
+    return MediaMeta.from(this)
 }
 
 private object StringVal {
