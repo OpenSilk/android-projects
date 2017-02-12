@@ -23,7 +23,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion rootProject.ext.compileSdkVersion
         applicationId "org.opensilk.video"
         versionCode 1
