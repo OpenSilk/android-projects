@@ -133,13 +133,13 @@ public class FoldersScreenFragment extends VerticalGridFragment {
                     return;
                 }
                 if (mIsIndexed) {
-                    ScannerService.remove(getContext(), mComponent.mediaItem());
+                    ScannerService.Companion.remove(getContext(), mComponent.mediaItem());
                     CharSequence title = mComponent.mediaItem().getDescription().getTitle();
                     Toast.makeText(getContext(), String.format(Locale.US, "Removing %s from index",
                             title), Toast.LENGTH_LONG).show();
                 } else {
                     mScanning = true;
-                    ScannerService.scan(getContext(), mComponent.mediaItem());
+                    ScannerService.Companion.scan(getContext(), mComponent.mediaItem());
                     CharSequence title = mComponent.mediaItem().getDescription().getTitle();
                     Toast.makeText(getContext(), String.format(Locale.US, "Started scan on %s",
                             title), Toast.LENGTH_LONG).show();
@@ -162,7 +162,7 @@ public class FoldersScreenFragment extends VerticalGridFragment {
                     return;
                 }
                 mScanning = true;
-                ScannerService.scan(getContext(), mComponent.mediaItem());
+                ScannerService.Companion.scan(getContext(), mComponent.mediaItem());
                 CharSequence title = mComponent.mediaItem().getDescription().getTitle();
                 Toast.makeText(getContext(), String.format(Locale.US, "Started scan on %s",
                         title), Toast.LENGTH_LONG).show();
