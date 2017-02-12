@@ -31,6 +31,8 @@ import javax.inject.Named;
 
 import dagger.Module;
 import dagger.Provides;
+import rx.Observable;
+import rx.functions.Func1;
 import rx.subjects.PublishSubject;
 import rx.subjects.Subject;
 
@@ -64,18 +66,28 @@ public class PlaybackControlsModule {
 
     @Provides @ScreenScope @Named("itemChange")
     public rx.Observable<MediaBrowser.MediaItem> provideMediaItemObservable(
-            DataService dataService,
+            final DataService dataService,
             @Named("itemChangeSubject") Subject<MediaDescription, MediaDescription> overviewSubject
     ) {
-        return overviewSubject.flatMap(desc -> dataService.getMediaItemSingle(desc).toObservable());
+        return overviewSubject.flatMap(new Func1<MediaDescription, Observable<MediaBrowser.MediaItem>>() {
+            @Override
+            public Observable<MediaBrowser.MediaItem> call(MediaDescription desc) {
+                return dataService.getMediaItemSingle(desc).toObservable();
+            }
+        });
     }
 
     @Provides @ScreenScope @Named("itemOverview")
     public rx.Observable<VideoDescInfo> provideVideoDescChanges(
             @Named("itemChange") rx.Observable<MediaBrowser.MediaItem> itemObservable,
-            DataService dataService
+            final DataService dataService
     ) {
-        return itemObservable.flatMap(dataService::getVideoDescription);
+        return itemObservable.flatMap(new Func1<MediaBrowser.MediaItem, Observable<VideoDescInfo>>() {
+            @Override
+            public Observable<VideoDescInfo> call(MediaBrowser.MediaItem item) {
+                return dataService.getVideoDescription(item);
+            }
+        });
     }
 
 }

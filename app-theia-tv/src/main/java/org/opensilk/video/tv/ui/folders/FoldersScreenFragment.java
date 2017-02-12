@@ -17,6 +17,7 @@
 
 package org.opensilk.video.tv.ui.folders;
 
+import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 import android.support.v17.leanback.app.VerticalGridFragment;
 import android.support.v17.leanback.widget.SearchOrbView;
@@ -24,12 +25,13 @@ import android.support.v17.leanback.widget.VerticalGridPresenter;
 import android.view.View;
 import android.widget.Toast;
 
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.data.ChildrenLoader;
 import org.opensilk.video.data.ScannerService;
 import org.opensilk.video.tv.ui.common.MediaItemClickListener;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +41,7 @@ import javax.inject.Named;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
@@ -62,7 +65,7 @@ public class FoldersScreenFragment extends VerticalGridFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FoldersActivityComponent activityComponent = DaggerService.getDaggerComponent(getActivity());
+        FoldersActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
         mComponent = activityComponent.newScreenComponent();
         mSubscriptions = new CompositeSubscription();
         mComponent.inject(this);
@@ -79,8 +82,11 @@ public class FoldersScreenFragment extends VerticalGridFragment {
         }
         // After 500ms, start the animation to transition the cards into view.
         Subscription s = rx.Observable.timer(500, TimeUnit.MILLISECONDS, AndroidSchedulers.mainThread())
-                .subscribe((l) -> {
-                    startEntranceTransition();
+                .subscribe(new Action1<Long>() {
+                    @Override
+                    public void call(Long aLong) {
+                        startEntranceTransition();
+                    }
                 });
         mSubscriptions.add(s);
     }
@@ -189,26 +195,38 @@ public class FoldersScreenFragment extends VerticalGridFragment {
 
     private void subscribeList() {
         Subscription s = mListLoader.getListObservable()
-                .subscribe(list -> {
-                    mGridAdapter.swap(list);
-                }, e -> {
-                    Timber.w(e, "listItems");
-                    //TODO show an actual error message
-                    Toast.makeText(getContext(), "There was an error getting the items",
-                            Toast.LENGTH_LONG).show();
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> mediaItems) {
+                        mGridAdapter.swap(mediaItems);
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable e) {
+                        Timber.w(e, "listItems");
+                        //TODO show an actual error message
+                        Toast.makeText(getContext(), "There was an error getting the items",
+                                Toast.LENGTH_LONG).show();
+                    }
                 });
         mSubscriptions.add(s);
     }
 
     private void subscribeIndexedChanges(){
         Subscription s = mIndexedObservable
-                .subscribe(indexed -> {
-                    mIsIndexed = indexed;
-                    mScanning = false;
-                    updateAction1Icon();
-                    updateAction2Visiblity();
-                }, e -> {
-                    Timber.w(e, "Subscribe isIndexed");
+                .subscribe(new Action1<Boolean>() {
+                    @Override
+                    public void call(Boolean indexed) {
+                        mIsIndexed = indexed;
+                        mScanning = false;
+                        updateAction1Icon();
+                        updateAction2Visiblity();
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable e) {
+                        Timber.w(e, "Subscribe isIndexed");
+                    }
                 });
         mSubscriptions.add(s);
     }

@@ -17,14 +17,16 @@
 
 package org.opensilk.video.tv.ui.landing;
 
+import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
+import android.view.View;
 
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.data.FoldersLoader;
 import org.opensilk.video.data.MoviesLoader;
@@ -33,10 +35,12 @@ import org.opensilk.video.tv.ui.common.MediaItemClickListener;
 import org.opensilk.video.tv.ui.search.SearchActivity;
 
 import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Inject;
 
 import rx.Subscription;
+import rx.functions.Action1;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
@@ -62,7 +66,7 @@ public class LandingScreenFragment extends BrowseFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LandingActivityComponent activityComponent = DaggerService.getDaggerComponent(getActivity());
+        LandingActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
         LandingScreenModule screenModule = new LandingScreenModule();
         mComponent = activityComponent.newLandingScreenComponent(screenModule);
         mSubscriptions = new CompositeSubscription();
@@ -71,8 +75,11 @@ public class LandingScreenFragment extends BrowseFragment {
         setupUIElements();
         loadRows();
         setOnItemViewClickedListener(new MediaItemClickListener());
-        setOnSearchClickedListener(v -> {
-            SearchActivity.start(getActivity());
+        setOnSearchClickedListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SearchActivity.start(getActivity());
+            }
         });
     }
 
@@ -94,32 +101,35 @@ public class LandingScreenFragment extends BrowseFragment {
         HeaderItem tvShowsHeader = new HeaderItem("TV Shows");
         rowsAdapter.add(new ListRow(tvShowsHeader, mTvSeriesAdapter));
         Subscription seriesSubscription = mTvSeriesLoader.getListObservable()
-                .subscribe(list -> {
-                    Collections.shuffle(list);
-                    mTvSeriesAdapter.swap(list);
-                }, e -> {
-                    Timber.w(e, "Failed loading tv series");
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> list) {
+                        Collections.shuffle(list);
+                        mTvSeriesAdapter.swap(list);
+                    }
                 });
         mSubscriptions.add(seriesSubscription);
 
         HeaderItem moviesHeader = new HeaderItem("Movies");
         rowsAdapter.add(new ListRow(moviesHeader, mMoviesAdapter));
         Subscription moviesSubscription = mMoviesLoader.getListObservable()
-                .subscribe(list -> {
-                    Collections.shuffle(list);
-                    mMoviesAdapter.swap(list);
-                }, e -> {
-                    Timber.w(e, "movieSubscription");
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> list) {
+                        Collections.shuffle(list);
+                        mMoviesAdapter.swap(list);
+                    }
                 });
         mSubscriptions.add(moviesSubscription);
 
         HeaderItem foldersHeader = new HeaderItem("Folders");
         rowsAdapter.add(new ListRow(foldersHeader, mFoldersAdapter));
         Subscription foldersSubscription = mFoldersLoader.getListObservable()
-                .subscribe(list -> {
-                    mFoldersAdapter.swap(list);
-                }, e -> {
-                    Timber.w(e, "foldersSubscription");
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> list) {
+                        mFoldersAdapter.swap(list);
+                    }
                 });
         mSubscriptions.add(foldersSubscription);
 

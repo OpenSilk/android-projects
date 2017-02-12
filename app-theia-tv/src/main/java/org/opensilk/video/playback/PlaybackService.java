@@ -29,6 +29,7 @@ import android.media.browse.MediaBrowser;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -637,100 +638,103 @@ public class PlaybackService {
 
     class MediaPlayerEventListener implements MediaPlayer.EventListener {
         @Override
-        public void onEvent(MediaPlayer.Event event) {
-            mPlaybackHandler.post(() -> {
-                switch (event.type) {
-                    case MediaPlayer.Event.Opening:
-                        Timber.i("MediaPlayer.Event.Opening");
-                        updateState(STATE_BUFFERING);
-                        break;
-                    case MediaPlayer.Event.MediaChanged:
-                        Timber.i("MediaPlayer.Event.MediaChanged");
-                        mLoadingNext = false;
+        public void onEvent(final MediaPlayer.Event event) {
+            mPlaybackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    switch (event.type) {
+                        case MediaPlayer.Event.Opening:
+                            Timber.i("MediaPlayer.Event.Opening");
+                            updateState(STATE_BUFFERING);
+                            break;
+                        case MediaPlayer.Event.MediaChanged:
+                            Timber.i("MediaPlayer.Event.MediaChanged");
+                            mLoadingNext = false;
 //                        updateMetadata();
-                        break;
-                    case MediaPlayer.Event.Playing:
-                        Timber.i("MediaPlayer.Event.Playing");
-                        if (mCurrentState != STATE_PLAYING) {
-                            updateState(STATE_PLAYING);
-                        }
+                            break;
+                        case MediaPlayer.Event.Playing:
+                            Timber.i("MediaPlayer.Event.Playing");
+                            if (mCurrentState != STATE_PLAYING) {
+                                updateState(STATE_PLAYING);
+                            }
 //                        updateCurrentItemDuration(mMediaPlayer.getLength());
 //                        updateMetadata();//to get duration
-                        break;
-                    case MediaPlayer.Event.Paused:
-                        Timber.i("MediaPlayer.Event.Paused");
-                        if (mCurrentState != STATE_PAUSED) {
-                            updateState(STATE_PAUSED);
-                        }
-                        break;
-                    case MediaPlayer.Event.Stopped:
-                        Timber.i("MediaPlayer.Event.Stopped");
-                        if (!mLoadingNext && mCurrentState != STATE_STOPPED) {
-                            updateState(STATE_STOPPED);
-                        }
-                        break;
-                    case MediaPlayer.Event.EndReached:
-                        Timber.i("MediaPlayer.Event.EndReached");
-                        updateCurrentItemLastPosition(mMediaPlayer.getLength());
-                        MediaSession.QueueItem queueItem = mQueue.getNext();
-                        if (queueItem != null) {
-                            mLoadingNext = true;
-                            loadQueueItem(queueItem);
-                            mMediaSessionCallback.onPlay();
-                        }
-                        break;
-                    case MediaPlayer.Event.EncounteredError:
-                        Timber.i("MediaPlayer.Event.EncounteredError");
-                        break;
-                    case MediaPlayer.Event.TimeChanged:
-//                        Timber.i("MediaPlayer.Event.TimeChanged time=%d", event.getTimeChanged());
-                        if (mCurrentState == STATE_BUFFERING) {
-                            Timber.i("MediaPlayer.Event.TimeChanged time=%d", event.getTimeChanged());
-                            updateState(mStateBeforeSeek);
-                        }
-                        break;
-                    case MediaPlayer.Event.PositionChanged:
-//                    Timber.i("MediaPlayer.Event.PositionChanged pos=%.2f", event.getPositionChanged());
-                        break;
-                    case MediaPlayer.Event.Vout:
-                        Timber.i("MediaPlayer.Event.Vout count=%d", event.getVoutCount());
-                        break;
-                    case MediaPlayer.Event.ESAdded:
-                        Timber.i("MediaPlayer.Event.ESAdded");
-                        break;
-                    case MediaPlayer.Event.ESDeleted:
-                        Timber.i("MediaPlayer.Event.ESDeleted");
-                        break;
-                    case MediaPlayer.Event.PausableChanged:
-                        Timber.i("MediaPlayer.Event.PausableChanged pausable=%s", event.getPausable());
-                        updateCurrentItemDuration(mMediaPlayer.getLength());
-                        updateMetadata();//to get duration
-                        break;
-                    case MediaPlayer.Event.SeekableChanged:
-                        Timber.i("MediaPlayer.Event.SeekableChanged seekable=%s", event.getSeekable());
-                        if (event.getSeekable() && mSeekOnMedia > 0) {
-                            mMediaSessionCallback.onSeekTo(mSeekOnMedia);
-                        } else {
-                            mForceSeekDuringLoad = false;
-                        }
-                        mSeekOnMedia = -1;
-                        updateCurrentItemDuration(mMediaPlayer.getLength());
-                        updateMetadata();//to get duration
-                        break;
-                    default:
-                        try {
-                            Field[] eventFields = MediaPlayer.Event.class.getDeclaredFields();
-                            for (Field f : eventFields) {
-                                int val = f.getInt(null);
-                                if (val == event.type) {
-                                    Timber.w("onEvent(%s)[Unhandled]", f.getName());
-                                    return;
-                                }
+                            break;
+                        case MediaPlayer.Event.Paused:
+                            Timber.i("MediaPlayer.Event.Paused");
+                            if (mCurrentState != STATE_PAUSED) {
+                                updateState(STATE_PAUSED);
                             }
-                            Timber.e("onEvent(%d)[Unknown]", event.type);
-                        } catch (Exception e) {
-                            Timber.w(e, "onEvent");
-                        }
+                            break;
+                        case MediaPlayer.Event.Stopped:
+                            Timber.i("MediaPlayer.Event.Stopped");
+                            if (!mLoadingNext && mCurrentState != STATE_STOPPED) {
+                                updateState(STATE_STOPPED);
+                            }
+                            break;
+                        case MediaPlayer.Event.EndReached:
+                            Timber.i("MediaPlayer.Event.EndReached");
+                            updateCurrentItemLastPosition(mMediaPlayer.getLength());
+                            MediaSession.QueueItem queueItem = mQueue.getNext();
+                            if (queueItem != null) {
+                                mLoadingNext = true;
+                                loadQueueItem(queueItem);
+                                mMediaSessionCallback.onPlay();
+                            }
+                            break;
+                        case MediaPlayer.Event.EncounteredError:
+                            Timber.i("MediaPlayer.Event.EncounteredError");
+                            break;
+                        case MediaPlayer.Event.TimeChanged:
+//                        Timber.i("MediaPlayer.Event.TimeChanged time=%d", event.getTimeChanged());
+                            if (mCurrentState == STATE_BUFFERING) {
+                                Timber.i("MediaPlayer.Event.TimeChanged time=%d", event.getTimeChanged());
+                                updateState(mStateBeforeSeek);
+                            }
+                            break;
+                        case MediaPlayer.Event.PositionChanged:
+//                    Timber.i("MediaPlayer.Event.PositionChanged pos=%.2f", event.getPositionChanged());
+                            break;
+                        case MediaPlayer.Event.Vout:
+                            Timber.i("MediaPlayer.Event.Vout count=%d", event.getVoutCount());
+                            break;
+                        case MediaPlayer.Event.ESAdded:
+                            Timber.i("MediaPlayer.Event.ESAdded");
+                            break;
+                        case MediaPlayer.Event.ESDeleted:
+                            Timber.i("MediaPlayer.Event.ESDeleted");
+                            break;
+                        case MediaPlayer.Event.PausableChanged:
+                            Timber.i("MediaPlayer.Event.PausableChanged pausable=%s", event.getPausable());
+                            updateCurrentItemDuration(mMediaPlayer.getLength());
+                            updateMetadata();//to get duration
+                            break;
+                        case MediaPlayer.Event.SeekableChanged:
+                            Timber.i("MediaPlayer.Event.SeekableChanged seekable=%s", event.getSeekable());
+                            if (event.getSeekable() && mSeekOnMedia > 0) {
+                                mMediaSessionCallback.onSeekTo(mSeekOnMedia);
+                            } else {
+                                mForceSeekDuringLoad = false;
+                            }
+                            mSeekOnMedia = -1;
+                            updateCurrentItemDuration(mMediaPlayer.getLength());
+                            updateMetadata();//to get duration
+                            break;
+                        default:
+                            try {
+                                Field[] eventFields = MediaPlayer.Event.class.getDeclaredFields();
+                                for (Field f : eventFields) {
+                                    int val = f.getInt(null);
+                                    if (val == event.type) {
+                                        Timber.w("onEvent(%s)[Unhandled]", f.getName());
+                                        return;
+                                    }
+                                }
+                                Timber.e("onEvent(%d)[Unknown]", event.type);
+                            } catch (Exception e) {
+                                Timber.w(e, "onEvent");
+                            }
+                    }
                 }
             });
         }

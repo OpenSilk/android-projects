@@ -49,7 +49,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.apache.commons.lang3.StringUtils;
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.common.core.util.BundleHelper;
 import org.opensilk.video.data.VideoDescInfo;
 import org.opensilk.video.playback.PlaybackService;
@@ -62,6 +62,7 @@ import javax.inject.Named;
 
 import rx.Observable;
 import rx.Subscription;
+import rx.functions.Action1;
 import rx.subjects.Subject;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
@@ -112,7 +113,7 @@ public class PlaybackControlsFragment extends PlaybackOverlayFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        PlaybackActivityComponent activityComponent = DaggerService.getDaggerComponent(getActivity());
+        PlaybackActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
         mComponent = activityComponent.newPlaybackControlsComponent(new PlaybackControlsModule(getActivity(), this));
         mComponent.inject(this);
 
@@ -157,10 +158,11 @@ public class PlaybackControlsFragment extends PlaybackOverlayFragment {
         presenterSelector.addClassPresenter(PlaybackOverviewRow.class, overviewRowPresenter);
         mAdapter.set(OVERVIEW_ROW, mOverviewRow);
         Subscription overviewSub = mOverviewObservable
-                .subscribe(info -> {
-                    mOverviewRow.setItem(info);
-                }, e -> {
-                    Timber.w("videoDescription");
+                .subscribe(new Action1<VideoDescInfo>() {
+                    @Override
+                    public void call(VideoDescInfo info) {
+                        mOverviewRow.setItem(info);
+                    }
                 });
         mSubscriptions.add(overviewSub);
 
@@ -188,14 +190,15 @@ public class PlaybackControlsFragment extends PlaybackOverlayFragment {
         setOnItemViewClickedListener(new ItemClickListener());
 
         //on new items update the activity result
-        Subscription resultSub = mMediaItemObservable.subscribe(item -> {
-            Activity activity = getActivity();
-            if (activity != null) {
-                Intent result = new Intent().putExtra(DetailsActivity.MEDIA_ITEM, item);
-                activity.setResult(Activity.RESULT_FIRST_USER + 12, result);
+        Subscription resultSub = mMediaItemObservable.subscribe(new Action1<MediaBrowser.MediaItem>() {
+            @Override
+            public void call(MediaBrowser.MediaItem item) {
+                Activity activity = getActivity();
+                if (activity != null) {
+                    Intent result = new Intent().putExtra(DetailsActivity.MEDIA_ITEM, item);
+                    activity.setResult(Activity.RESULT_FIRST_USER + 12, result);
+                }
             }
-        }, e -> {
-            Timber.w(e, "setResult()");
         });
         mSubscriptions.add(resultSub);
     }

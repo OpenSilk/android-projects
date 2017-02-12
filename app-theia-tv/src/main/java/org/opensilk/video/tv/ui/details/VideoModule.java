@@ -47,16 +47,19 @@ public class VideoModule {
 
     @Provides @ScreenScope
     public OnActionClickedListener getActionsClickListener(
-            @ForActivity Context activityContext,
-            MediaBrowser.MediaItem mediaItem) {
-        return action -> {
-            if (action.getId() == DetailsActions.PLAY)  {
-                Intent intent = new Intent(activityContext, PlaybackActivity.class);
-                intent.setAction(PlaybackActivity.ACTION_PLAY);
-                intent.putExtra(DetailsActivity.MEDIA_ITEM, mediaItem);
-                activityContext.startActivity(intent);
-            } else {
-                Toast.makeText(activityContext, "UNIMPLEMENTED", Toast.LENGTH_SHORT).show();
+            final @ForActivity Context activityContext,
+            final MediaBrowser.MediaItem mediaItem) {
+        return new OnActionClickedListener() {
+            @Override
+            public void onActionClicked(Action action) {
+                if (action.getId() == DetailsActions.PLAY)  {
+                    Intent intent = new Intent(activityContext, PlaybackActivity.class);
+                    intent.setAction(PlaybackActivity.ACTION_PLAY);
+                    intent.putExtra(DetailsActivity.MEDIA_ITEM, mediaItem);
+                    activityContext.startActivity(intent);
+                } else {
+                    Toast.makeText(activityContext, "UNIMPLEMENTED", Toast.LENGTH_SHORT).show();
+                }
             }
         };
     }

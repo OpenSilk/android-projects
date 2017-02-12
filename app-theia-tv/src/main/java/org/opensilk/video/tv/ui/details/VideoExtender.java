@@ -24,6 +24,7 @@ import android.support.v17.leanback.widget.SparseArrayObjectAdapter;
 import org.opensilk.common.dagger.ScreenScope;
 import org.opensilk.video.data.DataService;
 import org.opensilk.video.data.MediaMetaExtras;
+import org.opensilk.video.data.VideoFileInfo;
 import org.opensilk.video.util.Utils;
 
 import java.util.Locale;
@@ -33,6 +34,8 @@ import javax.inject.Named;
 
 import rx.Observable;
 import rx.Subscription;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
@@ -63,14 +66,24 @@ class VideoExtender implements DetailsScreenExtender {
 
     @Override
     public void onCreate(DetailsScreenFragment fragment) {
-        Subscription fileSub = mediaItemObservable.flatMap(dataService::getVideoFileInfo)
-                .subscribe(fileInfoRow::setItem, e -> {
-                    Timber.w(e, "videoFileInfoSubscription");
-                });
+        Subscription fileSub = mediaItemObservable.flatMap(new Func1<MediaBrowser.MediaItem, Observable<VideoFileInfo>>() {
+            @Override
+            public Observable<VideoFileInfo> call(MediaBrowser.MediaItem item) {
+                return dataService.getVideoFileInfo(item);
+            }
+        }).subscribe(new Action1<VideoFileInfo>() {
+            @Override
+            public void call(VideoFileInfo videoFileInfo) {
+                fileInfoRow.setItem(videoFileInfo);
+            }
+        });
         subscriptions.add(fileSub);
         Subscription actionSub = mediaItemObservable
-                .subscribe(this::updateVideoActions, e -> {
-                    Timber.w(e, "movieActionsSubscription");
+                .subscribe(new Action1<MediaBrowser.MediaItem>() {
+                    @Override
+                    public void call(MediaBrowser.MediaItem item) {
+                        updateVideoActions(item);
+                    }
                 });
         subscriptions.add(actionSub);
     }

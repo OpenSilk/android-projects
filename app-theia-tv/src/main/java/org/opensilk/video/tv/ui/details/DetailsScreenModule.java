@@ -43,6 +43,8 @@ import javax.inject.Named;
 
 import dagger.Module;
 import dagger.Provides;
+import rx.Observable;
+import rx.functions.Func1;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
@@ -70,13 +72,16 @@ public class DetailsScreenModule {
 
     @Provides @ScreenScope @Named("mediaItem")
     public rx.Observable<MediaBrowser.MediaItem> provideMediaItemObservable(
-            DataService dataService, MediaBrowser.MediaItem mediaItem
+            DataService dataService, final MediaBrowser.MediaItem mediaItem
     ) {
         return dataService.getMediaItem(mediaItem)
-                .onErrorReturn(throwable -> {
-                    Timber.e(throwable, "Failure retrieving mediaItem %s",
-                            MediaItemUtil.getMediaTitle(mediaItem));
-                    return mediaItem;
+                .onErrorReturn(new Func1<Throwable, MediaBrowser.MediaItem>() {
+                    @Override
+                    public MediaBrowser.MediaItem call(Throwable throwable) {
+                        Timber.e(throwable, "Failure retrieving mediaItem %s",
+                                MediaItemUtil.getMediaTitle(mediaItem));
+                        return mediaItem;
+                    }
                 })
                 .replay(1).refCount();
     }
@@ -85,27 +90,40 @@ public class DetailsScreenModule {
     public rx.Observable<Uri> provideIconImageObservable(
             @Named("mediaItem") rx.Observable<MediaBrowser.MediaItem> mediaItemObservable
     ) {
-        return mediaItemObservable.map(item -> item.getDescription().getIconUri());
+        return mediaItemObservable.map(new Func1<MediaBrowser.MediaItem, Uri>() {
+            @Override
+            public Uri call(MediaBrowser.MediaItem item) {
+                return item.getDescription().getIconUri();
+            }
+        });
     }
 
     @Provides @ScreenScope @Named("backgroundImage")
     public rx.Observable<Uri> provideBackgroundImageUri(
             @Named("mediaItem") rx.Observable<MediaBrowser.MediaItem> mediaItemObservable
     ) {
-        return mediaItemObservable.map(item -> {
-            MediaMetaExtras metaExtras = MediaMetaExtras.from(item.getDescription());
-            return metaExtras.getBackdropUri();
+        return mediaItemObservable.map(new Func1<MediaBrowser.MediaItem, Uri>() {
+            @Override
+            public Uri call(MediaBrowser.MediaItem item) {
+                MediaMetaExtras metaExtras = MediaMetaExtras.from(item.getDescription());
+                return metaExtras.getBackdropUri();
+            }
         });
     }
 
     @Provides @ScreenScope @Named("detailsOverview")
     public rx.Observable<VideoDescInfo> provideVideoDescChanges(
             @Named("mediaItem") rx.Observable<MediaBrowser.MediaItem> mediaItemObservable,
-            DataService dataService
+            final DataService dataService
 
     ) {
         //overview is not included in mediaItem so we must fetch from database
-        return mediaItemObservable.flatMap(dataService::getVideoDescription);
+        return mediaItemObservable.flatMap(new Func1<MediaBrowser.MediaItem, Observable<VideoDescInfo>>() {
+            @Override
+            public Observable<VideoDescInfo> call(MediaBrowser.MediaItem item) {
+                return dataService.getVideoDescription(item);
+            }
+        });
     }
 
     @Provides @ScreenScope

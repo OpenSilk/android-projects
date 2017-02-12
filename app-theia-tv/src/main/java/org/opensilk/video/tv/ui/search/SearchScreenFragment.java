@@ -23,6 +23,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 import android.support.v17.leanback.app.SearchFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
@@ -32,14 +33,17 @@ import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.ObjectAdapter;
 import android.support.v17.leanback.widget.SpeechRecognitionCallback;
 
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.data.MovieSearchLoader;
 import org.opensilk.video.data.TvSeriesSearchLoader;
 import org.opensilk.video.tv.ui.common.MediaItemClickListener;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import rx.Subscription;
+import rx.functions.Action1;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
@@ -66,7 +70,7 @@ public class SearchScreenFragment extends SearchFragment implements SearchFragme
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        SearchActivityComponent activityComponent = DaggerService.getDaggerComponent(getActivity());
+        SearchActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
         SearchScreenModule module = new SearchScreenModule();
         mComponent = activityComponent.newSearchScreenComponent(module);
         mComponent.inject(this);
@@ -84,11 +88,14 @@ public class SearchScreenFragment extends SearchFragment implements SearchFragme
             // SpeechRecognitionCallback is not required and if not provided recognition will be
             // handled using internal speech recognizer, in which case you must have RECORD_AUDIO
             // permission
-            setSpeechRecognitionCallback(() -> {
-                try {
-                    startActivityForResult(getRecognizerIntent(), REQUEST_SPEECH);
-                } catch (ActivityNotFoundException e) {
-                    Timber.e(e, "Cannot find activity for speech recognizer");
+            setSpeechRecognitionCallback(new SpeechRecognitionCallback() {
+                @Override
+                public void recognizeSpeech() {
+                    try {
+                        startActivityForResult(getRecognizerIntent(), REQUEST_SPEECH);
+                    } catch (ActivityNotFoundException e) {
+                        Timber.e(e, "Cannot find activity for speech recognizer");
+                    }
                 }
             });
         }
@@ -156,20 +163,22 @@ public class SearchScreenFragment extends SearchFragment implements SearchFragme
 
     void subscribeSeriesLoader() {
         Subscription s = mTvSeriesSearchLoader.getListObservable()
-                .subscribe(list -> {
-                    mTvSeriesAdapter.swap(list);
-                }, e -> {
-                    Timber.w(e, "subscribeSeriesLoader");
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> list) {
+                        mTvSeriesAdapter.swap(list);
+                    }
                 });
         mSubscriptions.add(s);
     }
 
     void subscribeMovieLoader() {
         Subscription s = mMovieSearchLoader.getListObservable()
-                .subscribe(list -> {
-                    mMovieAdapter.swap(list);
-                }, e -> {
-                    Timber.w(e, "subscribeMovieLoader");
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> list) {
+                        mMovieAdapter.swap(list);
+                    }
                 });
         mSubscriptions.add(s);
     }

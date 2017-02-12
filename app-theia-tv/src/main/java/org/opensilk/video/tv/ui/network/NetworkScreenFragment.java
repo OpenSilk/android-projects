@@ -17,6 +17,7 @@
 
 package org.opensilk.video.tv.ui.network;
 
+import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
@@ -24,14 +25,17 @@ import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.data.IndexedFoldersLoader;
 import org.opensilk.video.data.UpnpDevicesLoader;
 import org.opensilk.video.tv.ui.common.MediaItemClickListener;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import rx.Subscription;
+import rx.functions.Action1;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
@@ -51,7 +55,7 @@ public class NetworkScreenFragment extends BrowseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        NetworkActivityComponent activityComponent = DaggerService.getDaggerComponent(getActivity());
+        NetworkActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
         NetworkScreenModule module = new NetworkScreenModule();
         mComponent = activityComponent.newNetworkScreenComponent(module);
         mSubscriptions = new CompositeSubscription();
@@ -79,20 +83,22 @@ public class NetworkScreenFragment extends BrowseFragment {
         HeaderItem networkHeader = new HeaderItem("Indexed Folders");
         rowsAdapter.add(new ListRow(networkHeader, mFoldersAdapter));
         Subscription foldersSubscription = mFoldersLoader.getListObservable()
-                .subscribe(list -> {
-                    mFoldersAdapter.swap(list);
-                }, e -> {
-                    Timber.w(e, "foldersSubscription");
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> list) {
+                        mFoldersAdapter.swap(list);
+                    }
                 });
         mSubscriptions.add(foldersSubscription);
 
         HeaderItem favoritesHeader = new HeaderItem("Content Directories");
         rowsAdapter.add(new ListRow(favoritesHeader, mUpnpAdapter));
         Subscription upnpSubscription = mUpnpLoader.getObservable()
-                .subscribe(item -> {
-                    mUpnpAdapter.add(item);
-                }, e -> {
-                    Timber.w(e, "upnpSubscription");
+                .subscribe(new Action1<MediaBrowser.MediaItem>() {
+                    @Override
+                    public void call(MediaBrowser.MediaItem item) {
+                        mUpnpAdapter.add(item);
+                    }
                 });
         mSubscriptions.add(upnpSubscription);
 

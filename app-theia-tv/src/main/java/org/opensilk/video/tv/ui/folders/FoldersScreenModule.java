@@ -30,6 +30,7 @@ import javax.inject.Named;
 import dagger.Module;
 import dagger.Provides;
 import rx.Observable;
+import rx.functions.Func1;
 
 /**
  * Created by drew on 3/22/16.
@@ -63,9 +64,12 @@ public class FoldersScreenModule {
             DataService dataService
     ) {
         return dataService.getMediaItem(mediaItem)
-                .map(item -> {
-                    MediaMetaExtras metaExtras = MediaMetaExtras.from(item.getDescription());
-                    return metaExtras.isIndexed();
+                .map(new Func1<MediaBrowser.MediaItem, Boolean>() {
+                    @Override
+                    public Boolean call(MediaBrowser.MediaItem item) {
+                        MediaMetaExtras metaExtras = MediaMetaExtras.from(item.getDescription());
+                        return metaExtras.isIndexed();
+                    }
                 });
     }
 

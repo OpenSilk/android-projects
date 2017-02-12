@@ -41,6 +41,7 @@ import org.opensilk.video.databinding.FoldersListCardBinding;
 import javax.inject.Inject;
 
 import rx.Subscription;
+import rx.functions.Action1;
 import timber.log.Timber;
 
 /**
@@ -95,17 +96,23 @@ public class FoldersListCardPresenter extends Presenter {
             return binding;
         }
 
-        void registerChanges(MediaBrowser.MediaItem mediaItem) {
+        void registerChanges(final MediaBrowser.MediaItem mediaItem) {
             RxUtils.unsubscribe(subscriptions);
             subscriptions = mDataService.getMediaItemOnChange(mediaItem, mCreatedAt)
-                    .subscribe(item -> {
-                        if (item == null) {
-                            return;
+                    .subscribe(new Action1<MediaBrowser.MediaItem>() {
+                        @Override
+                        public void call(MediaBrowser.MediaItem item) {
+                            if (item == null) {
+                                return;
+                            }
+                            MediaMetaExtras extras = MediaMetaExtras.from(item);
+                            setMediaItem(item);
                         }
-                        MediaMetaExtras extras = MediaMetaExtras.from(item);
-                        setMediaItem(item);
-                    }, e -> {
-                        Timber.w(e, "Progress changes for %s", MediaItemUtil.getMediaTitle(mediaItem));
+                    }, new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable e) {
+                            Timber.w(e, "Progress changes for %s", MediaItemUtil.getMediaTitle(mediaItem));
+                        }
                     });
         }
 

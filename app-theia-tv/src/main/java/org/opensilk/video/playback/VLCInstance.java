@@ -23,7 +23,7 @@ package org.opensilk.video.playback;
 import android.content.Context;
 import android.widget.Toast;
 
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.video.VideoAppComponent;
 import org.videolan.libvlc.LibVLC;
@@ -49,8 +49,11 @@ public class VLCInstance {
             throw new RuntimeException(err);
         }
         libVLC = new LibVLC(VLCOptions.getLibOptions(context));
-        LibVLC.setOnNativeCrashListener(() -> {
-            Timber.e("TODO handle native crash");
+        LibVLC.setOnNativeCrashListener(new LibVLC.OnNativeCrashListener() {
+            @Override
+            public void onNativeCrash() {
+                Timber.e("TODO handle native crash");
+            }
         });
     }
 
@@ -61,7 +64,7 @@ public class VLCInstance {
     /** A set of utility functions for the VLC application */
     @Deprecated
     public synchronized static LibVLC get(final Context context) throws IllegalStateException {
-        VideoAppComponent appComponent = DaggerService.getDaggerComponent(context);
+        VideoAppComponent appComponent = DaggerFuncsKt.getDaggerComponent(context);
         return appComponent.vlcInstance().get();
     }
 

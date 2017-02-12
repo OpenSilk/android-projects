@@ -19,6 +19,7 @@ package org.opensilk.video.tv.ui.details;
 
 import android.graphics.drawable.Drawable;
 import android.media.MediaDescription;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.widget.DetailsOverviewRow;
@@ -31,9 +32,10 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.data.MediaMetaExtras;
+import org.opensilk.video.data.VideoDescInfo;
 
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +44,7 @@ import rx.Scheduler;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
+import rx.functions.Action1;
 import timber.log.Timber;
 
 /**
@@ -57,7 +60,7 @@ public class DetailsScreenFragment extends android.support.v17.leanback.app.Deta
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final DetailsActivityComponent activityComponent = DaggerService.getDaggerComponent(getContext());
+        final DetailsActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getContext());
         final MediaMetaExtras extras = MediaMetaExtras.from(
                 activityComponent.mediaItem().getDescription());
         final DetailsScreenModule screenModule = new DetailsScreenModule(getContext());
@@ -94,30 +97,36 @@ public class DetailsScreenFragment extends android.support.v17.leanback.app.Deta
         final Drawable defaultBackground = getContext().getDrawable(R.drawable.default_background);
         backgroundManager.setDrawable(defaultBackground);
         final Subscription backgroundImageLoad = mComponent.backgroundImageUriObservable()
-                .subscribe(uri -> {
-                    Timber.d("Got new background uri %s", uri);
-                    if (uri == null) {
-                        backgroundManager.setDrawable(defaultBackground);
-                        return;
-                    }
-                    final DisplayMetrics metrics = new DisplayMetrics();
-                    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    final RequestOptions options = new RequestOptions()
-                            .fitCenter(getContext())
-                            .placeholder(defaultBackground);
-                    final Target<Drawable> target = new SimpleTarget<Drawable>(metrics.widthPixels, metrics.heightPixels) {
-                        @Override
-                        public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
-                            backgroundManager.setDrawable(resource);
+                .subscribe(new Action1<Uri>() {
+                    @Override
+                    public void call(Uri uri) {
+                        Timber.d("Got new background uri %s", uri);
+                        if (uri == null) {
+                            backgroundManager.setDrawable(defaultBackground);
+                            return;
                         }
-                    };
-                    Glide.with(getContext())
-                            .asDrawable()
-                            .apply(options)
-                            .load(uri)
-                            .into(target);
-                }, e -> {
-                    backgroundManager.setDrawable(defaultBackground);
+                        final DisplayMetrics metrics = new DisplayMetrics();
+                        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                        final RequestOptions options = new RequestOptions()
+                                .fitCenter(getContext())
+                                .placeholder(defaultBackground);
+                        final Target<Drawable> target = new SimpleTarget<Drawable>(metrics.widthPixels, metrics.heightPixels) {
+                            @Override
+                            public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
+                                backgroundManager.setDrawable(resource);
+                            }
+                        };
+                        Glide.with(getContext())
+                                .asDrawable()
+                                .apply(options)
+                                .load(uri)
+                                .into(target);
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        backgroundManager.setDrawable(defaultBackground);
+                    }
                 });
         mComponent.subscriptions().add(backgroundImageLoad);
     }
@@ -132,56 +141,71 @@ public class DetailsScreenFragment extends android.support.v17.leanback.app.Deta
                 DetailsActivity.SHARED_ELEMENT_NAME);
         mComponent.detailsOverviewPresenter().setListener(sharedElementHelper);
         Subscription s = mComponent.iconImageUriObservable()
-                .subscribe(uri -> {
-                    Timber.d("Got new icon uri %s", uri);
-                    if (uri == null) {
-                        return;
-                    }
-                    final int width = getResources().getDimensionPixelSize(R.dimen.detail_thumb_width);
-                    final int height = getResources().getDimensionPixelSize(R.dimen.detail_thumb_height);
-                    final RequestOptions options = new RequestOptions()
-                            .centerInside(getContext())
-                            .fallback(defaultIcon);
-                    final Target<Drawable> target = new SimpleTarget<Drawable>(width, height) {
-                        @Override
-                        public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
-                            overviewRow.setImageDrawable(resource);
+                .subscribe(new Action1<Uri>() {
+                    @Override
+                    public void call(final Uri uri) {
+                        Timber.d("Got new icon uri %s", uri);
+                        if (uri == null) {
+                            return;
                         }
-                    };
-                    Action0 loadAction = () -> {
-                        Glide.with(getContext())
-                                .asDrawable()
-                                .apply(options)
-                                .load(uri)
-                                .into(target);
-                    };
-                    if (mBeforeTransition) {
+                        final int width = getResources().getDimensionPixelSize(R.dimen.detail_thumb_width);
+                        final int height = getResources().getDimensionPixelSize(R.dimen.detail_thumb_height);
+                        final RequestOptions options = new RequestOptions()
+                                .centerInside(getContext())
+                                .fallback(defaultIcon);
+                        final Target<Drawable> target = new SimpleTarget<Drawable>(width, height) {
+                            @Override
+                            public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
+                                overviewRow.setImageDrawable(resource);
+                            }
+                        };
+                        final Action0 loadAction = new Action0() {
+                            @Override
+                            public void call() {
+                                Glide.with(getContext())
+                                        .asDrawable()
+                                        .apply(options)
+                                        .load(uri)
+                                        .into(target);
+                            }
+                        };
+                        if (mBeforeTransition) {
+                            mBeforeTransition = false;
+                            mTransitionStart = System.currentTimeMillis();
+                            loadAction.call();
+                        } else {
+                            //try not to mess up the entrance transition
+                            long wait = mTransitionStart + transitionWindow - System.currentTimeMillis();
+                            final Scheduler.Worker worker = AndroidSchedulers.mainThread().createWorker();
+                            worker.schedule(new Action0() {
+                                @Override
+                                public void call() {
+                                    loadAction.call();
+                                    worker.unsubscribe();
+                                }
+                            }, wait > 0 ? wait : 0, TimeUnit.MILLISECONDS);
+                        }
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
                         mBeforeTransition = false;
                         mTransitionStart = System.currentTimeMillis();
-                        loadAction.call();
-                    } else {
-                        //try not to mess up the entrance transition
-                        long wait = mTransitionStart + transitionWindow - System.currentTimeMillis();
-                        final Scheduler.Worker worker = AndroidSchedulers.mainThread().createWorker();
-                        worker.schedule(() -> {
-                            loadAction.call();
-                            worker.unsubscribe();
-                        }, wait > 0 ? wait : 0, TimeUnit.MILLISECONDS);
+                        overviewRow.setImageDrawable(defaultIcon);
                     }
-                }, e -> {
-                    mBeforeTransition = false;
-                    mTransitionStart = System.currentTimeMillis();
-                    overviewRow.setImageDrawable(defaultIcon);
                 });
         mComponent.subscriptions().add(s);
         //failsafe incase we don't get an icon uri
         Subscription transitionStart = Observable.timer(250, TimeUnit.MILLISECONDS, AndroidSchedulers.mainThread())
-                .subscribe(t -> {
-                    if (mBeforeTransition) {
-                        mBeforeTransition = false;
-                        mTransitionStart = System.currentTimeMillis();
-                        Timber.d("Image took too long to load; continuing with default");
-                        overviewRow.setImageDrawable(defaultIcon);
+                .subscribe(new Action1<Long>() {
+                    @Override
+                    public void call(Long aLong) {
+                        if (mBeforeTransition) {
+                            mBeforeTransition = false;
+                            mTransitionStart = System.currentTimeMillis();
+                            Timber.d("Image took too long to load; continuing with default");
+                            overviewRow.setImageDrawable(defaultIcon);
+                        }
                     }
                 });
         mComponent.subscriptions().add(transitionStart);
@@ -189,10 +213,16 @@ public class DetailsScreenFragment extends android.support.v17.leanback.app.Deta
 
     private void subscribeDetailsChanges() {
         Subscription s = mComponent.detailsOverviewChanges()
-                .subscribe(desc -> {
-                    mComponent.detailsOverviewRow().setItem(desc);
-                }, e -> {
-                    Timber.w(e, "detailsChanges");
+                .subscribe(new Action1<VideoDescInfo>() {
+                    @Override
+                    public void call(VideoDescInfo desc) {
+                        mComponent.detailsOverviewRow().setItem(desc);
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable e) {
+                        Timber.w(e, "detailsChanges");
+                    }
                 });
         mComponent.subscriptions().add(s);
     }

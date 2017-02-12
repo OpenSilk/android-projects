@@ -45,12 +45,15 @@ public class MovieModule {
 
     @Provides @ScreenScope
     public OnActionClickedListener getActionsClickListener(
-            DetailsActionsHelper helper,
-            @ForActivity Context activityContext
+            final DetailsActionsHelper helper,
+            @ForActivity final Context activityContext
     ) {
-        return action -> {
-            if (!helper.handle(action)) {
-                Toast.makeText(activityContext, "UNIMPLEMENTED", Toast.LENGTH_SHORT).show();
+        return new OnActionClickedListener() {
+            @Override
+            public void onActionClicked(Action action) {
+                if (!helper.handle(action)) {
+                    Toast.makeText(activityContext, "UNIMPLEMENTED", Toast.LENGTH_SHORT).show();
+                }
             }
         };
     }

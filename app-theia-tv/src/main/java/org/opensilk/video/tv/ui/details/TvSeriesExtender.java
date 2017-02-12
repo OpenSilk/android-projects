@@ -31,6 +31,7 @@ import org.opensilk.video.tv.ui.common.MediaItemClickListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -41,6 +42,8 @@ import javax.inject.Named;
 
 import rx.Observable;
 import rx.Subscription;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.observables.ConnectableObservable;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
@@ -76,11 +79,18 @@ class TvSeriesExtender implements DetailsScreenExtender {
 
     @Override
     public void onCreate(DetailsScreenFragment fragment) {
-        listObservable = mediaItemObservable.flatMap(dataService::getChildren)
-                //toSortedList wont work since we dont terminate.
-                .map((list) -> {
-                    List<MediaBrowser.MediaItem> items = new ArrayList<>(list);
-                    Collections.sort(items, (left, right) -> {
+        listObservable = mediaItemObservable.flatMap(new Func1<MediaBrowser.MediaItem, Observable<List<MediaBrowser.MediaItem>>>() {
+            @Override
+            public Observable<List<MediaBrowser.MediaItem>> call(MediaBrowser.MediaItem item) {
+                return dataService.getChildren(item);
+            } //toSortedList wont work since we dont terminate.
+        }).map(new Func1<List<MediaBrowser.MediaItem>, List<MediaBrowser.MediaItem>>() {
+            @Override
+            public List<MediaBrowser.MediaItem> call(List<MediaBrowser.MediaItem> list) {
+                List<MediaBrowser.MediaItem> items = new ArrayList<>(list);
+                Collections.sort(items, new Comparator<MediaBrowser.MediaItem>() {
+                    @Override
+                    public int compare(MediaBrowser.MediaItem left, MediaBrowser.MediaItem right) {
                         MediaMetaExtras leftE = MediaMetaExtras.from(left.getDescription());
                         MediaMetaExtras rightE = MediaMetaExtras.from(right.getDescription());
                         if (leftE.getSeasonNumber() == rightE.getSeasonNumber()) {
@@ -88,15 +98,20 @@ class TvSeriesExtender implements DetailsScreenExtender {
                         } else {
                             return leftE.getSeasonNumber() - rightE.getSeasonNumber();
                         }
-                    });
-                    return items;
-                }).replay(1);
+                    }
+                });
+                return items;
+            }
+        }).replay(1);
         addSeasons();
         subscriptions.add(listObservable.connect());
         fragment.setOnItemViewClickedListener(new MediaItemClickListener());
         Subscription actionSub = mediaItemObservable
-                .subscribe(this::updateActions, e -> {
-                    Timber.e(e,"actionsObservable");
+                .subscribe(new Action1<MediaBrowser.MediaItem>() {
+                    @Override
+                    public void call(MediaBrowser.MediaItem item) {
+                        updateActions(item);
+                    }
                 });
         subscriptions.add(actionSub);
     }
@@ -109,22 +124,23 @@ class TvSeriesExtender implements DetailsScreenExtender {
     void addSeasons() {
         Timber.d("addSeasons()");
         Subscription seasonNumSub = listObservable
-                .subscribe(list -> {
-                    Set<Integer> seasons = new TreeSet<>(); //auto sort
-                    for (MediaBrowser.MediaItem mediaItem : list) {
-                        MediaMetaExtras metaExtras = MediaMetaExtras.from(mediaItem.getDescription());
-                        seasons.add(metaExtras.getSeasonNumber());
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> list) {
+                        Set<Integer> seasons = new TreeSet<>(); //auto sort
+                        for (MediaBrowser.MediaItem mediaItem : list) {
+                            MediaMetaExtras metaExtras = MediaMetaExtras.from(mediaItem.getDescription());
+                            seasons.add(metaExtras.getSeasonNumber());
+                        }
+                        for (Integer season : seasons) {
+                            addSeasonRow(season);
+                        }
                     }
-                    for (Integer season : seasons) {
-                        addSeasonRow(season);
-                    }
-                }, e -> {
-                    Timber.w(e, "Getting seasons");
                 });
         subscriptions.add(seasonNumSub);
     }
 
-    void addSeasonRow(int season) {
+    void addSeasonRow(final int season) {
         Timber.d("addSeasonRow(%d)", season);
         if (season < 0) {
             addUnknownRow();
@@ -136,15 +152,16 @@ class TvSeriesExtender implements DetailsScreenExtender {
         seriesAdapter.add(row);
         //TODO need to unsubscribe when parent adpter is cleared
         Subscription seasonSub = listObservable
-                .subscribe(list -> {
-                    for (MediaBrowser.MediaItem item : list) {
-                        MediaMetaExtras metaExtras = MediaMetaExtras.from(item.getDescription());
-                        if (metaExtras.getSeasonNumber() == season) {
-                            seasonAdapter.add(item);
+                .subscribe(new Action1<List<MediaBrowser.MediaItem>>() {
+                    @Override
+                    public void call(List<MediaBrowser.MediaItem> list) {
+                        for (MediaBrowser.MediaItem item : list) {
+                            MediaMetaExtras metaExtras = MediaMetaExtras.from(item.getDescription());
+                            if (metaExtras.getSeasonNumber() == season) {
+                                seasonAdapter.add(item);
+                            }
                         }
                     }
-                }, e -> {
-                    Timber.w(e, "Loading season %d", season);
                 });
         subscriptions.add(seasonSub);
     }
