@@ -18,13 +18,10 @@
 package org.opensilk.video.data
 
 import android.content.Context
-import android.database.Cursor
 import android.media.browse.MediaBrowser
 
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.ForApplication
-
-import java.util.ArrayList
 
 import javax.inject.Inject
 
@@ -34,39 +31,43 @@ import rx.Observable
  * Created by drew on 4/14/16.
  */
 @ActivityScope
-class MovieSearchLoader
+class TvSeriesSearchLoader
 @Inject
-constructor(@ForApplication context: Context, mClient: VideosProviderClient) : SearchLoader(context, mClient) {
+constructor(
+        @ForApplication context: Context,
+        mClient: VideosProviderClient
+) : SearchLoader(context, mClient) {
 
     override fun makeObservable(): Observable<MediaBrowser.MediaItem> {
         return Observable.create<String> { s ->
-            mContentResolver.query(mClient.uris().movieSearch(),
-                    arrayOf("rowid"), "title MATCH ?", arrayOf(mQuery), null)?.use { c ->
-                if (c.moveToFirst()) {
-                    val sb = StringBuilder((c.count * 2) + 20)
-                    sb.append("movie_id IN (").append(c.getString(0))
-                    while (c.moveToNext()) {
-                        sb.append(",").append(c.getString(0))
-                    }
-                    sb.append(")")
-                    s.onNext(sb.toString())
-                }
-                s.onCompleted()
-            } ?: s.onError(NullPointerException("Cursor was null"))
-        }.flatMap { q -> makeMovieObservable(q) }
+             mContentResolver.query(mClient.uris().tvSeriesSearch(),
+                     arrayOf("rowid"), "title MATCH ?", arrayOf(mQuery), null)?.use { c ->
+                 if (c.moveToFirst()) {
+                     val sb = StringBuilder((c.count * 2) + 10)
+                     sb.append("_id IN (").append(c.getString(0))
+                     while (c.moveToNext()) {
+                         sb.append(",").append(c.getString(0))
+                     }
+                     sb.append(")")
+                     s.onNext(sb.toString())
+                 }
+                 s.onCompleted()
+             } ?: s.onError(NullPointerException("Cursor was null"))
+        }.flatMap { q -> makeTvSeriesObservable(q) }
     }
 
-    internal fun makeMovieObservable(selection: String): Observable<MediaBrowser.MediaItem> {
+    internal fun makeTvSeriesObservable(selection: String): Observable<MediaBrowser.MediaItem> {
         return Observable.create { s ->
-            mContentResolver.query(mClient.uris().media(),
-                    VideosProviderClient.MEDIA_PROJ, "media_type=? AND " + selection,
-                    arrayOf(MediaMetaExtras.MEDIA_TYPE.MOVIE.toString()), "_title")?.use { c2 ->
+            mContentResolver.query(mClient.uris().tvSeries(),
+                    mClient.tvdb().TV_SERIES_PROJ, selection, null, "_display_name")?.use { c2 ->
                 if (c2.moveToFirst()) {
                     do {
-                        s.onNext(mClient.buildMedia(c2))
-                    } while (c2.moveToNext())                }
+                        s.onNext(mClient.tvdb().buildTvSeries(c2))
+                    } while (c2.moveToNext())
+                }
                 s.onCompleted()
             } ?: s.onError(NullPointerException("Cursor was null"))
         }
     }
+
 }

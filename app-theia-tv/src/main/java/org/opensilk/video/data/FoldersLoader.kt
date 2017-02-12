@@ -42,6 +42,7 @@ class FoldersLoader
 @Inject
 constructor(@ForApplication internal val mContext: Context) : RxListLoader<MediaBrowser.MediaItem> {
 
+    //never completes
     override fun getListObservable(): Observable<List<MediaBrowser.MediaItem>> {
         return Observable.create<List<MediaBrowser.MediaItem>> { subscriber ->
             val list = ArrayList<MediaBrowser.MediaItem>()
