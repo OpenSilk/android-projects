@@ -7,3 +7,6 @@
 /build
 /captures
 .externalNativeBuild
+
+app-orpheus/src/androidTest/assets
+app-orpheus/src/test/resources
