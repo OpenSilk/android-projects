@@ -27,5 +27,5 @@ android {
 
 dependencies {
     compile "com.android.support:appcompat-v7:$supportLibVersion"
-    compile project(":common-core")
+    compile project(':common')
 }
