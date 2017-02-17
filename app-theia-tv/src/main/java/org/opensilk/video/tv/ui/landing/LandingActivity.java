@@ -20,8 +20,8 @@ package org.opensilk.video.tv.ui.landing;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import org.opensilk.common.core.app.ScopedActivity;
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.app.ScopedActivity;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoApp;
 import org.opensilk.video.VideoAppComponent;
@@ -36,10 +36,10 @@ public class LandingActivity extends ScopedActivity {
 
     @Override
     protected void onCreateScope(MortarScope.Builder builder) {
-        VideoAppComponent parentComponent = DaggerService.getDaggerComponent(getApplicationContext());
+        VideoAppComponent parentComponent = DaggerFuncsKt.getDaggerComponent(getApplicationContext());
         LandingActivityModule module = new LandingActivityModule();
         LandingActivityComponent component = LandingActivityComponent.FACTORY.call(parentComponent, module);
-        builder.withService(DaggerService.DAGGER_SERVICE, component);
+        DaggerFuncsKt.withDaggerComponent(builder, component);
     }
 
     @Override

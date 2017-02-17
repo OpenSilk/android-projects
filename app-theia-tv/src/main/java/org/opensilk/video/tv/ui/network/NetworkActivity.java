@@ -19,8 +19,8 @@ package org.opensilk.video.tv.ui.network;
 
 import android.os.Bundle;
 
-import org.opensilk.common.core.app.ScopedActivity;
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.app.ScopedActivity;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoAppComponent;
 
@@ -33,10 +33,10 @@ public class NetworkActivity extends ScopedActivity {
 
     @Override
     protected void onCreateScope(MortarScope.Builder builder) {
-        VideoAppComponent parentComponent = DaggerService.getDaggerComponent(getApplicationContext());
+        VideoAppComponent parentComponent = DaggerFuncsKt.getDaggerComponent(getApplicationContext());
         NetworkActivityModule module = new NetworkActivityModule();
         NetworkActivityComponent component = NetworkActivityComponent.FACTORY.call(parentComponent, module);
-        builder.withService(DaggerService.DAGGER_SERVICE, component);
+        DaggerFuncsKt.withDaggerComponent(builder, component);
     }
 
     @Override

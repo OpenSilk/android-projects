@@ -21,8 +21,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import org.opensilk.common.core.app.ScopedActivity;
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.app.ScopedActivity;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoAppComponent;
 
@@ -39,10 +39,10 @@ public class SearchActivity extends ScopedActivity {
 
     @Override
     protected void onCreateScope(MortarScope.Builder builder) {
-        VideoAppComponent appComponent = DaggerService.getDaggerComponent(getApplicationContext());
+        VideoAppComponent appComponent = DaggerFuncsKt.getDaggerComponent(getApplicationContext());
         SearchActivityModule module = new SearchActivityModule();
-        builder.withService(DaggerService.DAGGER_SERVICE,
-                SearchActivityComponent.FACTORY.call(appComponent, module));
+        SearchActivityComponent component = SearchActivityComponent.FACTORY.call(appComponent, module);
+        DaggerFuncsKt.withDaggerComponent(builder, component);
     }
 
     @Override

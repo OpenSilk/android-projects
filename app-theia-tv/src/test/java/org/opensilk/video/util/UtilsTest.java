@@ -17,8 +17,6 @@
 
 package org.opensilk.video.util;
 
-import org.assertj.core.api.Assertions;
-import org.assertj.core.util.Compatibility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

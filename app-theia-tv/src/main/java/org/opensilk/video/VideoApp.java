@@ -20,7 +20,7 @@ package org.opensilk.video;
 import android.content.Context;
 
 import org.opensilk.common.core.app.BaseApp;
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 
 import mortar.MortarScope;
 
@@ -48,7 +48,7 @@ public class VideoApp extends BaseApp {
     }
 
     public static VideoAppPreferences getPreferences(Context context) {
-        return DaggerService.<VideoAppComponent>getDaggerComponent(context.getApplicationContext()).preferences();
+        return DaggerFuncsKt.<VideoAppComponent>getDaggerComponent(context.getApplicationContext()).preferences();
     }
 
     public static boolean hasTMDBKey() {

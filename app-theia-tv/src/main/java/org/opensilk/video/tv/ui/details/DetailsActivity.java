@@ -21,8 +21,8 @@ import android.content.Intent;
 import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 
-import org.opensilk.common.core.app.ScopedActivity;
-import org.opensilk.common.dagger.DaggerService;
+import org.opensilk.common.app.ScopedActivity;
+import org.opensilk.common.core.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoAppComponent;
 import org.opensilk.video.data.MediaItemUtil;
@@ -40,10 +40,10 @@ public class DetailsActivity extends ScopedActivity {
 
     @Override
     protected void onCreateScope(MortarScope.Builder builder) {
-        VideoAppComponent appComponent = DaggerService.getDaggerComponent(getApplicationContext());
+        VideoAppComponent appComponent = DaggerFuncsKt.getDaggerComponent(getApplicationContext());
         DetailsActivityModule activityModule = new DetailsActivityModule(getMediaItem());
         DetailsActivityComponent activityComponent = DetailsActivityComponent.FACTORY.call(appComponent, activityModule);
-        builder.withService(DaggerService.DAGGER_SERVICE, activityComponent);
+        DaggerFuncsKt.withDaggerComponent(builder, activityComponent);
     }
 
     @Override
