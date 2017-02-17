@@ -19,8 +19,8 @@ package org.opensilk.video;
 
 import android.content.Context;
 
-import org.opensilk.common.core.app.BaseApp;
-import org.opensilk.common.core.dagger2.DaggerFuncsKt;
+import org.opensilk.common.app.BaseApp;
+import org.opensilk.common.dagger2.DaggerFuncsKt;
 
 import mortar.MortarScope;
 

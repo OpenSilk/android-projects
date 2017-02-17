@@ -32,7 +32,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 
-import org.opensilk.common.core.dagger2.DaggerFuncsKt;
+import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.data.MediaMetaExtras;
 import org.opensilk.video.data.VideoDescInfo;

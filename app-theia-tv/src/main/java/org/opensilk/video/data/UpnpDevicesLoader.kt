@@ -23,7 +23,7 @@ import android.net.Uri
 
 import org.apache.commons.lang3.StringUtils
 import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.core.rx.RxLoader2
+import org.opensilk.common.rx.RxLoader2
 import org.opensilk.video.playback.VLCInstance
 import org.videolan.libvlc.Media
 

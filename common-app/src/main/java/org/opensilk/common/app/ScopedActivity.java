@@ -19,8 +19,8 @@ package org.opensilk.common.app;
 import android.app.Activity;
 import android.os.Bundle;
 
-import org.opensilk.common.core.mortar.HasScope;
-import org.opensilk.common.core.util.ObjectUtils;
+import org.opensilk.common.mortar.HasScope;
+import org.opensilk.common.util.ObjectUtils;
 
 import java.util.UUID;
 

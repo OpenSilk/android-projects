@@ -33,7 +33,6 @@ import android.support.v17.leanback.app.PlaybackOverlayFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.ClassPresenterSelector;
 import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnItemViewClickedListener;
@@ -49,8 +48,8 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.apache.commons.lang3.StringUtils;
-import org.opensilk.common.core.dagger2.DaggerFuncsKt;
-import org.opensilk.common.core.util.BundleHelper;
+import org.opensilk.common.dagger2.DaggerFuncsKt;
+import org.opensilk.common.util.BundleHelper;
 import org.opensilk.video.data.VideoDescInfo;
 import org.opensilk.video.playback.PlaybackService;
 import org.opensilk.video.tv.ui.details.DetailsActivity;

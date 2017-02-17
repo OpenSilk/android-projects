@@ -46,7 +46,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
-import org.opensilk.common.core.dagger2.getDaggerComponent
+import org.opensilk.common.dagger2.getDaggerComponent
 import timber.log.Timber
 
 /**

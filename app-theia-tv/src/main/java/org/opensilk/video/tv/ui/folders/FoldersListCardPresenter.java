@@ -29,7 +29,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 
 import org.opensilk.common.dagger.ScreenScope;
-import org.opensilk.common.core.rx.RxUtils;
+import org.opensilk.common.rx.RxUtils;
 import org.opensilk.video.R;
 import org.opensilk.video.data.DataService;
 import org.opensilk.video.data.MediaItemUtil;

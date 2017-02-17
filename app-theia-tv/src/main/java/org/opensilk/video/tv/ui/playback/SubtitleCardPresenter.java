@@ -19,13 +19,11 @@ package org.opensilk.video.tv.ui.playback;
 
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.support.v17.leanback.widget.BaseCardView;
 import android.support.v17.leanback.widget.Presenter;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 
-import org.opensilk.common.core.util.BundleHelper;
+import org.opensilk.common.util.BundleHelper;
 import org.opensilk.video.R;
 import org.opensilk.video.databinding.SubtitleCardBinding;
 

@@ -22,7 +22,7 @@ import android.net.Uri;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.opensilk.common.core.util.VersionUtils;
+import org.opensilk.common.util.VersionUtils;
 
 import timber.log.Timber;
 

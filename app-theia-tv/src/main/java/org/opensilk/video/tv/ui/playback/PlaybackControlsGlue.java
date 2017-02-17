@@ -18,7 +18,6 @@
 package org.opensilk.video.tv.ui.playback;
 
 import android.content.Context;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
@@ -34,12 +33,11 @@ import android.support.v17.leanback.widget.PlaybackControlsRowPresenter;
 import android.support.v17.leanback.widget.PresenterSelector;
 import android.support.v17.leanback.widget.SparseArrayObjectAdapter;
 
-import org.opensilk.common.core.util.BundleHelper;
+import org.opensilk.common.util.BundleHelper;
 import org.opensilk.video.R;
 import org.opensilk.video.playback.PlaybackService;
 import org.opensilk.video.util.MediaMetadataHelper;
 import org.opensilk.video.util.PlaybackStateHelper;
-import org.videolan.libvlc.Media;
 
 import java.util.List;
 

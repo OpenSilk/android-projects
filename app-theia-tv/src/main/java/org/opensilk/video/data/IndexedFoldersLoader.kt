@@ -24,7 +24,7 @@ import android.net.Uri
 
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.common.core.rx.RxListLoader
+import org.opensilk.common.rx.RxListLoader
 import java.util.concurrent.TimeUnit
 
 import javax.inject.Inject

@@ -25,7 +25,7 @@ import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 
-import org.opensilk.common.core.dagger2.DaggerFuncsKt;
+import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.data.IndexedFoldersLoader;
 import org.opensilk.video.data.UpnpDevicesLoader;
 import org.opensilk.video.tv.ui.common.MediaItemClickListener;
@@ -37,7 +37,6 @@ import javax.inject.Inject;
 import rx.Subscription;
 import rx.functions.Action1;
 import rx.subscriptions.CompositeSubscription;
-import timber.log.Timber;
 
 /**
  * Created by drew on 4/10/16.

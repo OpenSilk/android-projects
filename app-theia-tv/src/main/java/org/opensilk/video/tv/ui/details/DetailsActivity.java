@@ -22,13 +22,11 @@ import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 
 import org.opensilk.common.app.ScopedActivity;
-import org.opensilk.common.core.dagger2.DaggerFuncsKt;
+import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoAppComponent;
-import org.opensilk.video.data.MediaItemUtil;
 
 import mortar.MortarScope;
-import timber.log.Timber;
 
 /**
  * Created by drew on 3/15/16.

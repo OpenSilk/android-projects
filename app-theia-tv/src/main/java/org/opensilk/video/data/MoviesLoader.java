@@ -24,7 +24,7 @@ import android.support.annotation.Nullable;
 
 import org.opensilk.common.dagger.ActivityScope;
 import org.opensilk.common.dagger.ForApplication;
-import org.opensilk.common.core.rx.RxCursorListLoader;
+import org.opensilk.common.rx.RxCursorListLoader;
 
 import javax.inject.Inject;
 

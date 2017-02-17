@@ -28,7 +28,7 @@ import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.*
 
-import org.opensilk.common.core.app.ScopedService
+import org.opensilk.common.app.ScopedService
 import org.opensilk.video.VideoApp
 import org.opensilk.video.VideoAppComponent
 import org.opensilk.video.util.Utils
@@ -42,8 +42,8 @@ import java.util.concurrent.LinkedBlockingQueue
 import javax.inject.Inject
 
 import mortar.MortarScope
-import org.opensilk.common.core.dagger2.getDaggerComponent
-import org.opensilk.common.core.dagger2.withDaggerComponent
+import org.opensilk.common.dagger2.getDaggerComponent
+import org.opensilk.common.dagger2.withDaggerComponent
 import org.opensilk.common.dagger.AppContextComponent
 import rx.Observable
 import rx.Scheduler

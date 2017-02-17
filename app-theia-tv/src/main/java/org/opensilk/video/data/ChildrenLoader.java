@@ -20,7 +20,7 @@ package org.opensilk.video.data;
 import android.media.browse.MediaBrowser;
 
 import org.opensilk.common.dagger.ActivityScope;
-import org.opensilk.common.core.rx.RxListLoader;
+import org.opensilk.common.rx.RxListLoader;
 
 import java.util.List;
 

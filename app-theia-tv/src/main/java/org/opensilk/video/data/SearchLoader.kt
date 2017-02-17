@@ -22,8 +22,8 @@ import android.content.Context
 import android.media.browse.MediaBrowser
 
 import org.apache.commons.lang3.StringUtils
-import org.opensilk.common.core.rx.RxListLoader
-import org.opensilk.common.core.rx.RxUtils
+import org.opensilk.common.rx.RxListLoader
+import org.opensilk.common.rx.RxUtils
 
 import rx.Observable
 import rx.Scheduler

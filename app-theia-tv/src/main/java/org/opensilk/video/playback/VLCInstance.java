@@ -23,7 +23,7 @@ package org.opensilk.video.playback;
 import android.content.Context;
 import android.widget.Toast;
 
-import org.opensilk.common.core.dagger2.DaggerFuncsKt;
+import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.video.VideoAppComponent;
 import org.videolan.libvlc.LibVLC;
