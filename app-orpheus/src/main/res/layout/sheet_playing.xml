@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools" >
+    <data>
+
+    </data>
+    <RelativeLayout
+        android:id="@+id/playing_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/bottom_sheet_behavior"
+        app:behavior_peekHeight="64dp"
+        android:elevation="6dp"
+        android:background="@color/yellow_500"
+        android:clickable="true">
+
+        <LinearLayout
+            android:id="@+id/playing_peek"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true">
+
+            <ImageView
+                android:id="@+id/peek_thumbnail"
+                android:layout_height="48dp"
+                android:layout_width="48dp"
+                android:layout_marginBottom="6dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                android:src="@drawable/ic_music_note_circle_black_48dp"
+                />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/peek_title"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    tools:text="Track Title"
+                    android:textAppearance="?android:textAppearanceMedium"
+                    android:ellipsize="marquee"
+                    android:textStyle="bold"
+                    android:singleLine="true"/>
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/peek_playpause"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginBottom="6dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                android:clickable="true"
+                style="?footerPlayStyle"
+                tools:tint="@color/black"
+                />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</layout>

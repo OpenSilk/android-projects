@@ -1,0 +1,87 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        applicationId "org.opensilk.music"
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    dexOptions {
+        javaMaxHeapSize "2g"
+    }
+
+    dataBinding {
+        enabled = true
+    }
+}
+
+kapt {
+    generateStubs = true
+}
+
+dependencies {
+    kapt 'com.google.guava:guava:19.0'
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.android.databinding:compiler:$gradleToolsVersion"
+
+    compile "com.google.dagger:dagger:$dagger2Version"
+    //not needed as compile but prevents having to add it as provided for all modules
+//    compile 'javax.annotation:jsr250-api:1.0'
+    compile "javax.annotation:javax.annotation-api:1.2"
+
+    compile "io.reactivex:rxjava:$rxJavaVersion"
+    compile "io.reactivex:rxkotlin:$rxKotlinVersion"
+    compile "io.reactivex:rxandroid:$rxAndroidVersion"
+
+    compile "com.jakewharton.timber:timber:$timberVersion"
+    compile "com.squareup.mortar:mortar:$mortarVersion"
+
+    compile "com.android.support:support-v4:$supportLibVersion"
+    compile "com.android.support:appcompat-v7:$supportLibVersion"
+    compile "com.android.support:design:$supportLibVersion"
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    compile "org.apache.commons:commons-lang3:$commonsLangVersion"
+    compile "commons-io:commons-io:$commonsIOVersion"
+
+    compile project(':common-glide')
+    compile project(':common-dagger-core')
+
+    androidTestCompile "com.android.support:support-annotations:$supportLibVersion"
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile 'org.assertj:assertj-core:1.7.1'
+    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.2.0'
+    androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
+
+    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile 'org.assertj:assertj-core:1.7.1'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.2.0'
+
+}
+repositories {
+    mavenCentral()
+}
+
+

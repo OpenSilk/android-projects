@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="org.opensilk.music">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application
+        android:name="org.opensilk.music.TestApp">
+    </application>
+
+</manifest>

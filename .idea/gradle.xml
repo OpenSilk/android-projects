@@ -8,6 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app-orpheus" />
             <option value="$PROJECT_DIR$/app-theia-tv" />
             <option value="$PROJECT_DIR$/common-app" />
             <option value="$PROJECT_DIR$/common-core" />
