@@ -12,7 +12,7 @@
             <option value="$PROJECT_DIR$/app-theia-tv" />
             <option value="$PROJECT_DIR$/common" />
             <option value="$PROJECT_DIR$/common-app" />
-            <option value="$PROJECT_DIR$/common-dagger-core" />
+            <option value="$PROJECT_DIR$/common-dagger" />
             <option value="$PROJECT_DIR$/common-glide" />
             <option value="$PROJECT_DIR$/common-media" />
             <option value="$PROJECT_DIR$/leanback" />
