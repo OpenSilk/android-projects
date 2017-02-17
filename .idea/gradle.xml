@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/common-app" />
             <option value="$PROJECT_DIR$/common-core" />
             <option value="$PROJECT_DIR$/common-dagger-core" />
+            <option value="$PROJECT_DIR$/common-glide" />
             <option value="$PROJECT_DIR$/common-media" />
             <option value="$PROJECT_DIR$/leanback" />
             <option value="$PROJECT_DIR$/libtmdb" />
