@@ -8,7 +8,7 @@ buildscript {
         buildToolsVersion = "25.0.2"
         gradleToolsVersion = "2.2.3"
 
-        supportLibVersion = "24.2.0"
+        supportLibVersion = "25.1.1"
         dagger2Version = "2.4"
         rxJavaVersion = "1.1.1"
         rxAndroidVersion = "1.1.0"
