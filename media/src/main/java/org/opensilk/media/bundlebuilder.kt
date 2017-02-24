@@ -1,4 +1,4 @@
-package org.opensilk.common.media
+package org.opensilk.media
 
 import android.os.Bundle
 import android.os.Parcelable

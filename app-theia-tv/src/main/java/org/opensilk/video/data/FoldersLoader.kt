@@ -24,8 +24,8 @@ import android.media.browse.MediaBrowser
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.RxListLoader
-import org.opensilk.common.media.MediaMeta
-import org.opensilk.common.media._setMediaMeta
+import org.opensilk.media.MediaMeta
+import org.opensilk.media._setMediaMeta
 import org.opensilk.video.R
 
 import java.util.ArrayList

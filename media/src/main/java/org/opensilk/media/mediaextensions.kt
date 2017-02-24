@@ -1,4 +1,4 @@
-package org.opensilk.common.media
+package org.opensilk.media
 
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser

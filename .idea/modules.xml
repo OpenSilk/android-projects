@@ -9,10 +9,10 @@
       <module fileurl="file://$PROJECT_DIR$/common-app/common-app.iml" filepath="$PROJECT_DIR$/common-app/common-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-dagger/common-dagger.iml" filepath="$PROJECT_DIR$/common-dagger/common-dagger.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-glide/common-glide.iml" filepath="$PROJECT_DIR$/common-glide/common-glide.iml" />
-      <module fileurl="file://$PROJECT_DIR$/common-media/common-media.iml" filepath="$PROJECT_DIR$/common-media/common-media.iml" />
       <module fileurl="file://$PROJECT_DIR$/leanback/leanback.iml" filepath="$PROJECT_DIR$/leanback/leanback.iml" />
       <module fileurl="file://$PROJECT_DIR$/libtmdb/libtmdb.iml" filepath="$PROJECT_DIR$/libtmdb/libtmdb.iml" />
       <module fileurl="file://$PROJECT_DIR$/libtvdb/libtvdb.iml" filepath="$PROJECT_DIR$/libtvdb/libtvdb.iml" />
+      <module fileurl="file://$PROJECT_DIR$/media/media.iml" filepath="$PROJECT_DIR$/media/media.iml" />
       <module fileurl="file://$PROJECT_DIR$/media-playback/media-playback.iml" filepath="$PROJECT_DIR$/media-playback/media-playback.iml" />
     </modules>
   </component>

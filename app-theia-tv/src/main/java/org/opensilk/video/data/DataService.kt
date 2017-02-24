@@ -51,7 +51,7 @@ import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import org.opensilk.common.media.*
+import org.opensilk.media.*
 import rx.Observable
 import rx.Scheduler
 import rx.Single

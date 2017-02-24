@@ -1,4 +1,4 @@
-package org.opensilk.common.media
+package org.opensilk.media
 
 import android.graphics.Movie
 import android.media.MediaDescription

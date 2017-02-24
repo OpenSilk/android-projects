@@ -23,17 +23,9 @@ import android.media.tv.TvContract;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
-import android.webkit.MimeTypeMap;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.opensilk.common.media.MediaMeta;
-import org.opensilk.common.media.MediaMetaKt;
-
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
-
-import timber.log.Timber;
+import org.opensilk.media.MediaMeta;
+import org.opensilk.media.MediaMetaKt;
 
 /**
  * Created by drew on 3/21/16.

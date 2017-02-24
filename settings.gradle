@@ -1,4 +1,4 @@
-include ':common', ':common-media', ':common-app', ':common-dagger', ':common-glide', ':media-playback'
+include ':common', ':media', ':common-app', ':common-dagger', ':common-glide', ':media-playback'
 include ':libtmdb', ':libtvdb'
 include ':leanback'
 include ':app-theia-tv', ':app-orpheus'
