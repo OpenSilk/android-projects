@@ -18,6 +18,7 @@
             <option value="$PROJECT_DIR$/leanback" />
             <option value="$PROJECT_DIR$/libtmdb" />
             <option value="$PROJECT_DIR$/libtvdb" />
+            <option value="$PROJECT_DIR$/media-playback" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
