@@ -22,8 +22,17 @@ android {
     }
 }
 
-dependencies {
+kapt {
+    generateStubs = true
+}
 
+dependencies {
+    kapt 'com.google.guava:guava:19.0'
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+
+    compile (group: 'io.reactivex', name: 'rxjava', version: rootProject.ext.rxJavaVersion)
+
+    compile project(':common-dagger')
     compile project(':media')
 
     testCompile 'junit:junit:4.12'
