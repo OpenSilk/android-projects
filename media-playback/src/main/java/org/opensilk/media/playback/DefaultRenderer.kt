@@ -36,8 +36,8 @@ constructor(
         val VOLUME_NORMAL = 1.0f
     }
 
-    private var mCurrentPlayer: MediaPlayer = MediaPlayer()
-    private var mNextPlayer: MediaPlayer = MediaPlayer()
+    protected var mCurrentPlayer: MediaPlayer = MediaPlayer()
+    protected var mNextPlayer: MediaPlayer = MediaPlayer()
     private val mAudioManager: AudioManager = mContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val mAudioSessionId: Int
     private val mAudioBecomingNoisyIntentFilter: IntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
