@@ -4,8 +4,8 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.media.browse.MediaBrowser
 import org.apache.commons.lang3.StringUtils
-import org.opensilk.common.dagger2.ForApplication
-import org.opensilk.common.dagger2.ServiceScope
+import org.opensilk.common.dagger.ForApplication
+import org.opensilk.common.dagger.ServiceScope
 import rx.Single
 import rx.lang.kotlin.single
 import timber.log.Timber

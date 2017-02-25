@@ -21,8 +21,10 @@ package org.opensilk.common.lifecycle
  * Created by drew on 10/12/15.
  */
 enum class Lifecycle {
+    CREATE,
     START,
     RESUME,
     PAUSE,
-    STOP
+    STOP,
+    DESTROY
 }

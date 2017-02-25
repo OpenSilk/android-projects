@@ -10,7 +10,7 @@ import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
-import org.opensilk.common.dagger2.ActivityScope
+import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.common.lifecycle.Lifecycle
 import org.opensilk.common.lifecycle.LifecycleService

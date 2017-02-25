@@ -2,8 +2,8 @@ package org.opensilk.music
 
 import android.content.Context
 import dagger.Component
-import org.opensilk.common.dagger2.AppContextComponent
-import org.opensilk.common.dagger2.AppContextModule
+import org.opensilk.common.dagger.AppContextComponent
+import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.music.data.DataService
 import org.opensilk.music.data.MusicAuthorityModule

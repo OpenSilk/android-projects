@@ -5,7 +5,7 @@ import android.database.ContentObserver
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.provider.DocumentsContract
-import org.opensilk.common.dagger2.ForApplication
+import org.opensilk.common.dagger.ForApplication
 import org.opensilk.music.data.ref.DocumentRef
 import org.opensilk.music.data.ref.MediaRef
 import rx.Observable

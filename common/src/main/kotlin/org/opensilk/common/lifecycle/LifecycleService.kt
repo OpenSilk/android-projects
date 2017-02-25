@@ -17,19 +17,17 @@
 
 package org.opensilk.common.lifecycle
 
-import android.annotation.SuppressLint
 import android.content.Context
 
 import mortar.MortarScope
+import org.opensilk.common.mortar.HasScope
 import rx.Observable
 import rx.exceptions.Exceptions
 import rx.functions.Func1
-import rx.functions.Func2
 import rx.subjects.BehaviorSubject
+import timber.log.Timber
 
-import java.lang.String.format
-
-const val LIFECYCLE_SERVICE: String = "OPENSILK_LIFECYCLE_SERVICE";
+const val LIFECYCLE_SERVICE: String = "OPENSILK_LIFECYCLE_SERVICE"
 
 fun MortarScope.Builder.withLifeCycleService(): MortarScope.Builder {
     return this.withService(LIFECYCLE_SERVICE, LifecycleService())
@@ -40,9 +38,8 @@ fun MortarScope.Builder.withLifeCycleService(): MortarScope.Builder {
  * *
  * @return The Lifecycle associated with this context
  */
-@SuppressLint("WrongConstant")
+@Throws(NoLifecycleServiceException::class)
 fun getLifecycleService(context: Context): LifecycleService {
-    //noinspection ResourceType
     val lifecycleService = context.getSystemService(LIFECYCLE_SERVICE) as? LifecycleService
     if (lifecycleService != null) {
         return lifecycleService
@@ -56,11 +53,20 @@ fun getLifecycleService(context: Context): LifecycleService {
  * *
  * @return The Lifecycle associated with this scope
  */
+@Throws(NoLifecycleServiceException::class)
 fun getLifecycleService(scope: MortarScope): LifecycleService {
     if (scope.hasService(LIFECYCLE_SERVICE)) {
         return scope.getService<Any>(LIFECYCLE_SERVICE) as LifecycleService
     }
     throw NoLifecycleServiceException(scope)
+}
+
+fun HasScope.lifecycleService(): LifecycleService {
+    return if (this.scope.hasService(LIFECYCLE_SERVICE)) {
+        scope.getService(LIFECYCLE_SERVICE)
+    } else {
+        throw NoLifecycleServiceException(this.scope);
+    }
 }
 
 class OutsideLifecycleException internal constructor(detailMessage: String) : IllegalStateException(detailMessage) {
@@ -82,6 +88,27 @@ class NoLifecycleServiceException : IllegalArgumentException {
     }
 }
 
+fun <T> Observable<T>.bindToLifeCycle(context: Context): Observable<T> {
+    return this.compose(LifecycleService.bindLifecycle(context))
+}
+
+fun <T> Observable<T>.terminateOnDestroy(context: Context): Observable<T> {
+    return this.compose(LifecycleService.bindUntilLifecycleEvent(context, Lifecycle.DESTROY))
+}
+
+fun <T> Observable<T>.terminateOnDestroy(lifecycleService: LifecycleService): Observable<T> {
+    return this.compose(lifecycleService.bindUntilEvent(Lifecycle.DESTROY))
+}
+
+fun <T> Observable<T>.connectedToPauseResume(lifecycleService: LifecycleService): Observable<T> {
+    return lifecycleService.lifeCycle
+            //terminate on destroy
+            .takeUntil { it === Lifecycle.DESTROY }
+            //only let resume through
+            .filter { it === Lifecycle.RESUME }
+            .flatMap { this.compose(lifecycleService.bindUntilEvent(Lifecycle.PAUSE)) }
+}
+
 /**
  * Simplified version of trellos RxLifecycle (https://github.com/trello/RxLifecycle)
  * Allows presenters to bind observables to parent lifecycle without knowing who
@@ -91,7 +118,11 @@ class NoLifecycleServiceException : IllegalArgumentException {
  */
 class LifecycleService {
 
-    private val lifeCycle = BehaviorSubject.create<Lifecycle>()
+    internal val lifeCycle = BehaviorSubject.create<Lifecycle>()
+
+    fun onCreate() {
+        lifeCycle.onNext(Lifecycle.CREATE)
+    }
 
     fun onStart() {
         lifeCycle.onNext(Lifecycle.START)
@@ -109,30 +140,28 @@ class LifecycleService {
         lifeCycle.onNext(Lifecycle.STOP)
     }
 
-    private fun <T> bindUntilEvent(event: Lifecycle): Observable.Transformer<in T, out T> {
+    fun onDestroy() {
+        lifeCycle.onNext(Lifecycle.DESTROY)
+    }
+
+    fun <T> bindUntilEvent(event: Lifecycle): Observable.Transformer<in T, out T> {
         return Observable.Transformer<T, T> { source ->
             source.takeUntil(lifeCycle.takeFirst { lifecycleEvent -> lifecycleEvent === event })
         }
     }
 
-    private fun <T> bind(correspondingEvents: Func1<Lifecycle, Lifecycle>): Observable.Transformer<in T, out T> {
-
+    fun <T> bind(): Observable.Transformer<in T, out T> {
         // Make sure we're truly comparing a single stream to itself
         val sharedLifecycle = lifeCycle.asObservable().share()
-
         // Keep emitting from source until the corresponding event occurs in the lifecycle
         return Observable.Transformer<T, T> { source ->
-            source.takeUntil(
-                    Observable.combineLatest(
-                            sharedLifecycle.take(1).map(correspondingEvents),
-                            sharedLifecycle.skip(1)
-                    ) { bindUntilEvent, lifecycleEvent -> lifecycleEvent === bindUntilEvent }
-                            .onErrorReturn(RESUME_FUNCTION)
-                            .takeFirst(SHOULD_COMPLETE)
-            )
+            source.takeUntil(Observable.combineLatest(
+                    sharedLifecycle.take(1).map(CORRESPONDING_EVENTS),
+                    sharedLifecycle.skip(1),
+                    { bindUntilEvent, lifecycleEvent -> lifecycleEvent === bindUntilEvent }
+            ).takeFirst { shouldComplete -> shouldComplete })
         }
     }
-
 
     companion object {
 
@@ -183,32 +212,25 @@ class LifecycleService {
          * * * @return a reusable [Observable.Transformer] that unsubscribes the source during the Activity lifecycle
          */
         fun <T> bindLifecycle(context: Context): Observable.Transformer<in T, out T> {
-            return getLifecycleService(context).bind<T>(LIFECYCLE)
+            return getLifecycleService(context).bind<T>()
         }
 
         /**
          * @see {@link .bindLifecycle
          */
         fun <T> bindLifecycle(scope: MortarScope): Observable.Transformer<in T, out T> {
-            return getLifecycleService(scope).bind<T>(LIFECYCLE)
+            return getLifecycleService(scope).bind<T>()
         }
-
-        private val RESUME_FUNCTION = Func1<kotlin.Throwable, kotlin.Boolean> { throwable ->
-            if (throwable is OutsideLifecycleException) {
-                return@Func1 true
-            }
-            throw Exceptions.propagate(throwable)
-        }
-
-        private val SHOULD_COMPLETE = Func1<kotlin.Boolean, kotlin.Boolean> { shouldComplete -> shouldComplete }
 
         // Figures out which corresponding next lifecycle event in which to unsubscribe
-        private val LIFECYCLE = Func1<Lifecycle, Lifecycle> { lastEvent ->
+        private val CORRESPONDING_EVENTS = Func1<Lifecycle, Lifecycle> { lastEvent ->
             when (lastEvent) {
+                Lifecycle.CREATE -> Lifecycle.DESTROY
                 Lifecycle.START -> Lifecycle.STOP
                 Lifecycle.RESUME -> Lifecycle.PAUSE
                 Lifecycle.PAUSE -> Lifecycle.STOP
-                Lifecycle.STOP -> throw OutsideLifecycleException("Cannot bind to Activity lifecycle when outside of it.")
+                Lifecycle.STOP -> Lifecycle.DESTROY
+                Lifecycle.DESTROY -> throw OutsideLifecycleException("Cannot bind to Activity lifecycle when outside of it.")
                 else -> throw UnsupportedOperationException("Binding to $lastEvent not yet implemented")
             }
         }

@@ -1,7 +1,7 @@
 package org.opensilk.music
 
 import org.opensilk.common.app.BaseApp
-import org.opensilk.common.dagger2.AppContextModule
+import org.opensilk.common.dagger.AppContextModule
 
 /**
  * Created by drew on 6/28/16.

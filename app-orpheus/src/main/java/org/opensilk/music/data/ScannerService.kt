@@ -7,8 +7,8 @@ import android.media.browse.MediaBrowser
 import android.net.ConnectivityManager
 import android.os.*
 import org.opensilk.common.bundle
-import org.opensilk.common.dagger2.AppContextComponent
-import org.opensilk.common.dagger2.ServiceScope
+import org.opensilk.common.dagger.AppContextComponent
+import org.opensilk.common.dagger.ServiceScope
 import org.opensilk.common.dagger2.getDaggerComponent
 import rx.Scheduler
 import rx.Single

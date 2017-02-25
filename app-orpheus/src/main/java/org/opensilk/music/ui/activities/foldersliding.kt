@@ -9,7 +9,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import dagger.Provides
-import org.opensilk.common.dagger2.ActivityScope
+import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.recycler.ItemClickSupport
 import org.opensilk.common.rx.RxListLoader

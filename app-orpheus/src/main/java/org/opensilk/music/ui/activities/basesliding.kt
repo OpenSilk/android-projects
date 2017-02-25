@@ -14,7 +14,7 @@ import android.widget.Toast
 import dagger.Module
 import mortar.ViewPresenter
 import org.opensilk.common.bindLayout
-import org.opensilk.common.dagger2.ActivityScope
+import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.support.app.ScopedAppCompatActivity
 import org.opensilk.music.R
 import org.opensilk.music.data.MusicAuthorityModule

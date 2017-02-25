@@ -16,3 +16,7 @@ fun Context.isConnectedToWifiOrEtherne(): Boolean {
     val ni = connectivityManager().activeNetworkInfo
     return ni != null && (ni.type == ConnectivityManager.TYPE_WIFI || ni.type == ConnectivityManager.TYPE_ETHERNET)
 }
+
+fun Context.connectivityManager(): ConnectivityManager {
+    return getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+}
