@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.opensilk.common.app
+package org.opensilk.common.content
 
 import android.content.SharedPreferences
 import java.util.*
@@ -23,7 +23,10 @@ import java.util.*
 /**
  * Created by drew on 4/30/15.
  */
-abstract class PreferencesWrapper constructor(protected val prefs: SharedPreferences) {
+abstract class PreferencesWrapper
+constructor(
+        protected val prefs: SharedPreferences
+) {
 
     fun putBoolean(key: String, value: Boolean) {
         prefs.edit().putBoolean(key, value).apply()
