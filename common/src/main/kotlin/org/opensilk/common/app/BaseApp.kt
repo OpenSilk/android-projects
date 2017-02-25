@@ -23,13 +23,12 @@ import android.app.Application
 import android.content.Context
 import android.os.StrictMode
 
-import org.opensilk.common.util.VersionUtils
-
 import mortar.MortarScope
 import org.opensilk.common.dagger2.withDaggerComponent
+import org.opensilk.common.isAtLeastJellybean
+import org.opensilk.common.isAtLeastKitkat
 import org.opensilk.common.timber.DebugTreeWithThreadName
 import org.opensilk.common.timber.ReleaseTreeWithThreadName
-import rx.functions.Action1
 import timber.log.Timber
 
 /**
@@ -37,16 +36,14 @@ import timber.log.Timber
  */
 abstract class BaseApp : Application() {
 
-    protected val rootScope: MortarScope
-
-    init {
+    protected val rootScope: MortarScope by lazy {
         val builder = MortarScope.buildRootScope()
                 .withDaggerComponent(rootComponent)
         onBuildRootScope(builder)
-        rootScope = builder.build("ROOT")
+        builder.build("ROOT") //return
     }
 
-    override fun getSystemService(name: String): Any {
+    override fun getSystemService(name: String): Any? {
         if (rootScope.hasService(name)) {
             return rootScope.getService<Any>(name)
         }
@@ -86,9 +83,9 @@ abstract class BaseApp : Application() {
         @TargetApi(19)
         fun isLowEndHardware(context: Context): Boolean {
             val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            if (VersionUtils.hasKitkat()) {
+            if (isAtLeastKitkat) {
                 return am.isLowRamDevice
-            } else if (VersionUtils.hasJellyBean()) {
+            } else if (isAtLeastJellybean) {
                 val mi = ActivityManager.MemoryInfo()
                 am.getMemoryInfo(mi)
                 return mi.totalMem < 512 * 1024 * 1024

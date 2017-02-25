@@ -17,10 +17,8 @@
 
 package org.opensilk.common.timber
 
-import rx.functions.Action1
-
 /**
- * Stubs out v, d, and i logs, the optional Action1 allows sending execption to crash
+ * Stubs out v, d, and i logs, the optional lambda allows sending execption to crash
  * reporter server or whatever.
  *
  * Created by drew on 6/22/16.
