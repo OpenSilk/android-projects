@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package org.opensilk.common.rx
+package org.opensilk.common.loader
 
 import rx.Observable
 
 /**
  * Created by drew on 4/10/16.
  */
-interface RxLoader<T> {
-    /**
-     * @return Not terminating observable
-     */
-    val observable: Observable<T>
+interface RxListLoader<T> {
+    val listObservable: Observable<List<T>>
 }

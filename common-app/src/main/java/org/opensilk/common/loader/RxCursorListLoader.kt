@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.opensilk.common.rx
+package org.opensilk.common.loader
 
 import android.content.Context
 import android.database.ContentObserver
