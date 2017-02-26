@@ -37,9 +37,3 @@ open class BindingPresenter(): Presenter<android.databinding.ViewDataBinding>() 
         lifecycleService = getLifecycleService(scope!!)
     }
 }
-
-fun <T : ViewDataBinding> AppCompatActivity.createBinding(@LayoutRes layout: Int): Lazy<T> {
-    return lazy {
-        DataBindingUtil.setContentView<T>(this, layout)
-    }
-}
