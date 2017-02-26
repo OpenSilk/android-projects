@@ -36,7 +36,9 @@ import rx.Observable
 @ActivityScope
 class MovieSearchLoader
 @Inject
-constructor(@ForApplication context: Context, mClient: VideosProviderClient) : SearchLoader(context, mClient) {
+constructor(
+        @ForApplication context: Context, mClient: VideosProviderClient
+) : SearchLoader(context, mClient) {
 
     override fun makeObservable(): Observable<MediaBrowser.MediaItem> {
         return Observable.create<String> { s ->

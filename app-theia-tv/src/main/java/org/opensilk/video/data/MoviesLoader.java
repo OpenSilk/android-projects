@@ -24,7 +24,7 @@ import android.support.annotation.Nullable;
 
 import org.opensilk.common.dagger.ActivityScope;
 import org.opensilk.common.dagger.ForApplication;
-import org.opensilk.common.rx.RxCursorListLoader;
+import org.opensilk.common.loader.RxCursorListLoader;
 
 import javax.inject.Inject;
 
@@ -41,9 +41,8 @@ public class MoviesLoader extends RxCursorListLoader<MediaBrowser.MediaItem> {
             @ForApplication Context mContext,
             VideosProviderClient mClient
     ) {
-        super(mContext);
+        super(mContext, mClient.uris().media());
         this.mClient = mClient;
-        setUri(mClient.uris().media());
         setProjection(VideosProviderClient.MEDIA_PROJ);
         setSelection("media_category=? AND movie_id IS NOT NULL AND movie_id > 0");
         setSelectionArgs(new String[]{
@@ -54,7 +53,7 @@ public class MoviesLoader extends RxCursorListLoader<MediaBrowser.MediaItem> {
 
     @Nullable
     @Override
-    protected MediaBrowser.MediaItem makeFromCursor(Cursor c) throws Exception {
+    protected MediaBrowser.MediaItem makeFromCursor(Cursor c) {
         return mClient.buildMedia(c);
     }
 }

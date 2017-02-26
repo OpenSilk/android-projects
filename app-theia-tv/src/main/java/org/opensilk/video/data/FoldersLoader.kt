@@ -23,7 +23,7 @@ import android.media.browse.MediaBrowser
 
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.common.rx.RxListLoader
+import org.opensilk.common.loader.RxListLoader
 import org.opensilk.media.MediaMeta
 import org.opensilk.media._setMediaMeta
 import org.opensilk.video.R
@@ -40,18 +40,19 @@ import rx.Observable
 @ActivityScope
 class FoldersLoader
 @Inject
-constructor(@ForApplication internal val mContext: Context) : RxListLoader<MediaBrowser.MediaItem> {
+constructor(
+        @ForApplication internal val mContext: Context
+) : RxListLoader<MediaBrowser.MediaItem> {
 
     //never completes
-    override fun getListObservable(): Observable<List<MediaBrowser.MediaItem>> {
-        return Observable.create<List<MediaBrowser.MediaItem>> { subscriber ->
+    override val listObservable: Observable<List<MediaBrowser.MediaItem>>
+        get() = Observable.create<List<MediaBrowser.MediaItem>> { subscriber ->
             val list = ArrayList<MediaBrowser.MediaItem>()
             list.add(networkItem)
             if (!subscriber.isUnsubscribed) {
                 subscriber.onNext(list)
             }
         }
-    }
 
     internal val networkItem: MediaBrowser.MediaItem
         get() {

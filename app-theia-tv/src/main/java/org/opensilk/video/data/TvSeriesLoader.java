@@ -23,7 +23,7 @@ import android.media.browse.MediaBrowser;
 
 import org.opensilk.common.dagger.ActivityScope;
 import org.opensilk.common.dagger.ForApplication;
-import org.opensilk.common.rx.RxCursorListLoader;
+import org.opensilk.common.loader.RxCursorListLoader;
 
 import javax.inject.Inject;
 
@@ -39,15 +39,14 @@ public class TvSeriesLoader extends RxCursorListLoader<MediaBrowser.MediaItem> {
     public TvSeriesLoader(
             @ForApplication Context context,
             VideosProviderClient mClient) {
-        super(context);
+        super(context, mClient.uris().tvSeries());
         this.mClient = mClient;
-        setUri(mClient.uris().tvSeries());
         setProjection(mClient.tvdb().TV_SERIES_PROJ);
         setSortOrder("_display_name");
     }
 
     @Override
-    protected MediaBrowser.MediaItem makeFromCursor(Cursor c) throws Exception {
+    protected MediaBrowser.MediaItem makeFromCursor(Cursor c) {
         return mClient.tvdb().buildTvSeries(c);
     }
 }

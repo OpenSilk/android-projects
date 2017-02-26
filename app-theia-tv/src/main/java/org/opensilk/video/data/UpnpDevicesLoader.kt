@@ -23,7 +23,7 @@ import android.net.Uri
 
 import org.apache.commons.lang3.StringUtils
 import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.rx.RxLoader2
+import org.opensilk.common.loader.RxLoader
 import org.opensilk.video.playback.VLCInstance
 import org.videolan.libvlc.Media
 
@@ -39,10 +39,10 @@ import timber.log.Timber
 @ActivityScope
 class UpnpDevicesLoader
 @Inject
-constructor(internal val mVlcInstance: VLCInstance) : RxLoader2<MediaBrowser.MediaItem> {
+constructor(internal val mVlcInstance: VLCInstance) : RxLoader<MediaBrowser.MediaItem> {
 
-    override fun getObservable(): Observable<MediaBrowser.MediaItem> {
-        return Observable.using<Media, org.videolan.libvlc.util.MediaBrowser>(
+    override val observable: Observable<MediaBrowser.MediaItem>
+        get() =  Observable.using<Media, org.videolan.libvlc.util.MediaBrowser>(
                 { org.videolan.libvlc.util.MediaBrowser(mVlcInstance.get(), null) },
                 { browser ->
                     Observable.create<Media> { subscriber ->
@@ -79,6 +79,5 @@ constructor(internal val mVlcInstance: VLCInstance) : RxLoader2<MediaBrowser.Med
             }
             MediaBrowser.MediaItem(builder.build(), MediaBrowser.MediaItem.FLAG_BROWSABLE)
         })
-    }
 
 }

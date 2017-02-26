@@ -24,7 +24,7 @@ import android.net.Uri
 
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.common.rx.RxListLoader
+import org.opensilk.common.loader.RxListLoader
 import java.util.concurrent.TimeUnit
 
 import javax.inject.Inject
@@ -50,9 +50,8 @@ constructor(
         internal val mDataService: DataService
 ) : RxListLoader<MediaBrowser.MediaItem> {
 
-    override fun getListObservable(): Observable<List<MediaBrowser.MediaItem>> {
-        return makeObservable().subscribeOn(sSubscribeOn).observeOn(sObserveOn)
-    }
+    override val listObservable: Observable<List<MediaBrowser.MediaItem>>
+        get() = makeObservable().subscribeOn(sSubscribeOn).observeOn(sObserveOn)
 
     //never completes
     private fun makeObservable(): Observable<List<MediaBrowser.MediaItem>> {

@@ -22,7 +22,7 @@ import android.content.Context
 import android.media.browse.MediaBrowser
 
 import org.apache.commons.lang3.StringUtils
-import org.opensilk.common.rx.RxListLoader
+import org.opensilk.common.loader.RxListLoader
 import org.opensilk.common.rx.RxUtils
 
 import rx.Observable
@@ -68,13 +68,12 @@ abstract class SearchLoader(
      * @return Subject bridge, on subscribe will start query if set,
      * * there is no need to resubscribe when changing query, use [.requery]
      */
-    override fun getListObservable(): Observable<List<MediaBrowser.MediaItem>> {
-        return mBridge.doOnUnsubscribe { mSubscription.unsubscribe() }.doOnSubscribe {
+    override val listObservable: Observable<List<MediaBrowser.MediaItem>>
+        get() = mBridge.doOnUnsubscribe { mSubscription.unsubscribe() }.doOnSubscribe {
             //We should only be subscribed to once so
             //im not gonna worry about multiple calls to this
             performSearch()
         }
-    }
 
     internal fun performSearch() {
         mSubscription.unsubscribe()
