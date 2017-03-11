@@ -6,7 +6,7 @@ buildscript {
         compileSdkVersion = 25
         targetSdkVersion = 23
         buildToolsVersion = "25.0.2"
-        gradleToolsVersion = "2.3.0-rc1"
+        gradleToolsVersion = "2.3.0"
 
         supportLibVersion = "25.1.1"
         dagger2Version = "2.4"
