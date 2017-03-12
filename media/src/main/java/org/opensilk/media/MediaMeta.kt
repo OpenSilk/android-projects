@@ -11,6 +11,7 @@ import android.os.Parcelable
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
+import java.util.HashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
@@ -210,6 +211,20 @@ constructor(
      * String: new line separated headers needed for accessing [mediaUri] over http/s
      */
     var mediaHeaders: String by StringVal
+    /**
+     *
+     */
+    val mediaHeadersMap: Map<String, String>
+        get() {
+            if (mediaHeaders.isBlank()) return emptyMap()
+            return mediaHeaders.split("\n").map {
+                it.split(":")
+            }.filter {
+                it.size == 2
+            }.map {
+                Pair(it[0].trim(), it[1].trim())
+            }.toMap()
+        }
     /**
      * Long: (internal use) ms since epoch item was added to index
      */
