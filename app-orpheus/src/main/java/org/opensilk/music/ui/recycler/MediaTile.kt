@@ -4,7 +4,7 @@ import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import org.opensilk.music.R
-import org.opensilk.music.data.MediaMeta
+import org.opensilk.media.MediaMeta
 import org.opensilk.music.data._getMediaMeta
 
 /**

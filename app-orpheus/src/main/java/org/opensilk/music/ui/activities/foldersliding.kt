@@ -153,6 +153,8 @@ class FolderSlidingActivity(): BaseSlidingActivity(), ItemClickSupport.OnItemCli
         val meta = tile.item._getMediaMeta()
         if (meta.isDirectory) {
             startActivity(Intent(this, FolderSlidingActivity::class.java).putExtra(EXTRA_MEDIA_ITEM, tile.item))
+        } else if (meta.isAudio) {
+            TODO()
         } else {
             TODO()
         }
