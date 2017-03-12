@@ -68,6 +68,8 @@ dependencies {
     compile project(':common-glide')
     compile project(':common-app')
     compile project(':common-dagger')
+    compile project(':media')
+    compile project(':media-playback')
 
     androidTestCompile "com.android.support:support-annotations:$supportLibVersion"
     androidTestCompile 'com.android.support.test:runner:0.5'
