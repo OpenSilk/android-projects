@@ -78,7 +78,7 @@ class ScannerJobService : android.app.job.JobService() {
         }
 
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            mConnection = ScannerService.Connection(mService.get(), this, service as ScannerService.Client)
+            mConnection = ScannerService.Connection(mService.get()!!.applicationContext, this, service as ScannerService.Client)
             val subscriber = Subscribers.from(this)
             subscriber.add(Subscriptions.create {
                 if (mConnection != null) {
