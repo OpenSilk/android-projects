@@ -17,6 +17,7 @@
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -56,10 +57,6 @@ android {
         defaultConfig.buildConfigField("String", "TMDB_API_KEY", "\"NOKEY\"")
         defaultConfig.buildConfigField("String", "TVDB_API_KEY", "\"NOKEY\"")
     }
-}
-
-kapt {
-    generateStubs = true
 }
 
 dependencies {

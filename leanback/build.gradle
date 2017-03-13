@@ -35,6 +35,3 @@ dependencies {
     compile "com.android.support:support-v4:$supportLibVersion"
     compile "com.android.support:recyclerview-v7:$supportLibVersion"
 }
-repositories {
-    mavenCentral()
-}

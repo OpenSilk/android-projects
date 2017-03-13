@@ -16,15 +16,7 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -69,8 +61,4 @@ dependencies {
 
     compile project(':common-dagger')
 
-}
-
-kapt {
-    generateStubs = true
 }
