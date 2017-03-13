@@ -20,6 +20,7 @@ import org.robolectric.shadows.ShadowLog
 import timber.log.Timber
 
 import org.assertj.core.api.Assertions.*
+import org.opensilk.media.MediaMeta
 import org.opensilk.music.BuildConfig
 import org.opensilk.music.data.ref.DocumentRef
 import org.opensilk.music.data.ref.MediaRef

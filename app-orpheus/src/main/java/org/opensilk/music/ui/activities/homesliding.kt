@@ -22,7 +22,7 @@ import org.opensilk.common.loader.RxListLoader
 import org.opensilk.music.R
 import org.opensilk.music.RootComponent
 import org.opensilk.music.data.DataService
-import org.opensilk.music.data._getMediaMeta
+import org.opensilk.media._getMediaMeta
 import org.opensilk.music.databinding.RecyclerMediaListArtworkBinding
 import org.opensilk.music.getRootComponent
 import org.opensilk.music.ui.recycler.*

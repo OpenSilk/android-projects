@@ -23,6 +23,7 @@ import java.io.InputStream
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
+import org.opensilk.media._getMediaMeta
 import rx.exceptions.Exceptions
 import rx.schedulers.Schedulers
 import timber.log.Timber

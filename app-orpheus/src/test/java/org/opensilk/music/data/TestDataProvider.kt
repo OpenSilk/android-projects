@@ -13,6 +13,7 @@ import android.util.JsonReader
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers
+import org.opensilk.media.MediaMeta
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.shadows.ShadowContentResolver
 
@@ -135,7 +136,7 @@ class TestDataProvider : DocumentsProvider() {
     }
 
     fun loadTestMeta(jsonReader: JsonReader): MediaMeta {
-        val m = MediaMeta.empty()
+        val m = MediaMeta()
         jsonReader.beginObject()
         while (jsonReader.hasNext()) {
             when (jsonReader.nextName()) {

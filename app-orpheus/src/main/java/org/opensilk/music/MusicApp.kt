@@ -34,7 +34,7 @@ interface RootComponent: AppContextComponent {
  *
  */
 @Module
-interface RootModule {
+class RootModule {
     @Provides @Named("MusicService")
     fun getMusicServiceComponent(@ForApplication context: Context): ComponentName {
         return ComponentName(context, "foo")

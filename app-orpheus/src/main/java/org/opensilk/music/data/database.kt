@@ -16,6 +16,7 @@ import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import org.opensilk.common.dagger2.NoDaggerComponentException
+import org.opensilk.media.*
 import org.opensilk.music.data.ref.DocumentRef
 import org.opensilk.music.data.ref.MediaRef
 import timber.log.Timber
@@ -27,7 +28,7 @@ import javax.inject.Named
  * Created by drew on 6/26/16.
  */
 const val DATABASE_NAME = "music.sqlite"
-const val DATABASE_VERSION = 3
+const val DATABASE_VERSION = 4
 
 val DOCUMENT_COLS = arrayOf(
     DocumentsContract.Document.COLUMN_DOCUMENT_ID,
@@ -59,7 +60,7 @@ val MEDIA_COLS = ROOT_COLS + arrayOf(
         "track_number",
         "disc_number",
         "artwork_uri",
-        "artist_artwork_uri",
+        "backdrop_uri",
         "headers"
 )
 
@@ -85,7 +86,7 @@ fun Cursor.makeDocMediaItem(colMap: Map<String, Int>, parentRef: DocumentRef? = 
     val getInt = { col: String -> if (colMap[col] != null) this.getInt(colMap[col]!!) else null }
     val getString = { col: String -> if (colMap[col] != null) this.getString(colMap[col]!!) else null }
 
-    val mediaMeta = MediaMeta.empty()
+    val mediaMeta = MediaMeta()
     val mbob = MediaDescription.Builder()
 
     mediaMeta.mimeType = getString(DocumentsContract.Document.COLUMN_MIME_TYPE)!!
@@ -183,9 +184,9 @@ fun Cursor.makeDocMediaItem(colMap: Map<String, Int>, parentRef: DocumentRef? = 
         if (discNum != null) {
             mediaMeta.discNumber = discNum
         }
-        val artistUriS = getString("artist_artwork_uri")
+        val artistUriS = getString("backdrop_uri")
         if (artistUriS != null) {
-            mediaMeta.artistArtworkUri = Uri.parse(artistUriS)
+            mediaMeta.backdropUri = Uri.parse(artistUriS)
         }
     }
 
@@ -321,7 +322,7 @@ class MusicProvider() : ContentProvider() {
                 return false
             }
 
-            val parentRef = mediaMeta.parentRef
+            val parentRef = MediaRef.parse(mediaMeta.parentMediaId)
             if (parentRef !is DocumentRef) {
                 Timber.w("Media %s does not have a valid parent id=%s",
                         mediaMeta.displayName, mediaMeta.parentMediaId)
@@ -353,8 +354,8 @@ class MusicProvider() : ContentProvider() {
                 if (mediaMeta.artworkUri != Uri.EMPTY) {
                     cv.put("artwork_uri", mediaMeta.artworkUri.toString())
                 }
-                if (mediaMeta.artistArtworkUri != Uri.EMPTY) {
-                    cv.put("artist_artwork_uri", mediaMeta.artistArtworkUri.toString())
+                if (mediaMeta.backdropUri != Uri.EMPTY) {
+                    cv.put("backdrop_uri", mediaMeta.backdropUri.toString())
                 }
                 cv.put("headers", mediaMeta.mediaHeaders)
             }
@@ -473,7 +474,7 @@ class MusicProvider() : ContentProvider() {
                         "track_number INTEGER DEFAULT 1," +
                         "disc_number INTEGER DEFAULT 1, " +
                         "artwork_uri TEXT," +
-                        "artist_artwork_uri TEXT," +
+                        "backdrop_uri TEXT," +
                         "headers TEXT," +
                 //we will treat the same document under different trees
                 //as different documents

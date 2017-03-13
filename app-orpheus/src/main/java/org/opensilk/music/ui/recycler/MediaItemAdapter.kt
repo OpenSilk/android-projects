@@ -18,7 +18,7 @@ import org.opensilk.common.recycler.RecyclerListAdapter
 import org.opensilk.common.widget.LetterTileDrawable
 import org.opensilk.music.BR
 import org.opensilk.music.R
-import org.opensilk.music.data.MediaMeta
+import org.opensilk.media.MediaMeta
 import org.opensilk.music.databinding.RecyclerMediaGridArtworkBinding
 import org.opensilk.music.databinding.RecyclerMediaListArtworkBinding
 import org.opensilk.music.databinding.RecyclerMediaListArtworkOnelineBinding

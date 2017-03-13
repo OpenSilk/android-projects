@@ -22,7 +22,7 @@ import javax.inject.Singleton
  */
 class PlaybackServiceService: MediaBrowserService() {
 
-    @Inject private lateinit var mService: PlaybackSession
+    @Inject internal lateinit var mService: PlaybackSession
 
     override fun onCreate() {
         super.onCreate()

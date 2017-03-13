@@ -76,7 +76,7 @@ class LifecycleTest {
         mLifecycle.onCreate()
         observable<Int> { s ->
             s.onNext(atomicInt.andIncrement)
-        }.compose(mLifecycle.bind()).subscribe(sub)
+        }.compose<Int>(mLifecycle.bind()).subscribe(sub)
         //subscribe will publish
         assertThat(sub.nextVar).isEqualTo(1)
         mLifecycle.onStart()

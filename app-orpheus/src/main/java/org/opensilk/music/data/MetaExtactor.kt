@@ -6,6 +6,10 @@ import android.media.browse.MediaBrowser
 import org.apache.commons.lang3.StringUtils
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ServiceScope
+import org.opensilk.media._getMediaMeta
+import org.opensilk.media._getMediaUri
+import org.opensilk.media._newBuilder
+import org.opensilk.media.newMediaItem
 import rx.Single
 import rx.lang.kotlin.single
 import timber.log.Timber
@@ -59,7 +63,7 @@ interface MetaExtactor {
         override fun extractMeta(mediaItem: MediaBrowser.MediaItem): Single<MediaBrowser.MediaItem> {
             val doExtract = { mmr: MediaMetadataRetriever -> single<MediaBrowser.MediaItem> { try {
 
-                val mediaUri = mediaItem._getMediaUri();
+                val mediaUri = mediaItem._getMediaUri()
                 if (StringUtils.startsWith(mediaUri.scheme, "http")) {
                     mmr.setDataSource(mediaUri.toString(), BLANK_HEADERS)
                 } else if (StringUtils.equals(mediaUri.scheme, "content")) {

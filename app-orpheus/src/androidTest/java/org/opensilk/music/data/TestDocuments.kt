@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.support.test.InstrumentationRegistry
 import android.util.JsonReader
+import org.opensilk.media.*
 import org.opensilk.music.data.ref.DocumentRef
 import java.io.InputStreamReader
 import java.util.*
@@ -23,7 +24,7 @@ object TestDocuments {
                 val bob = MediaDescription.Builder()
                 when (it["kind"]) {
                     "directory" -> {
-                        val meta = MediaMeta.empty()
+                        val meta = MediaMeta()
                         bob.setMediaId(DocumentRef(sAccessUri, it["document_id"] as String).mediaId)
                         bob.setTitle(it["_display_name"] as String)
                         meta.displayName = it["_display_name"] as String

@@ -42,7 +42,6 @@ fun MediaDescription._getMediaTitle(): String {
     val metaExtras = MediaMeta.from(this)
     var mediaTitle = metaExtras.displayName
     if (mediaTitle == "") {
-        Timber.e("MediaTitle not set in %s", this._getMediaUri())
         mediaTitle = title?.toString() ?: ""
     }
     return mediaTitle
@@ -64,4 +63,8 @@ fun MediaDescription._newBuilder(): MediaDescription.Builder {
 
 fun MediaBrowser.MediaItem._copy(bob: MediaDescription.Builder, meta: MediaMeta): MediaBrowser.MediaItem {
     return MediaBrowser.MediaItem(bob._setMediaMeta(meta).build(), this.flags)
+}
+
+fun newMediaItem(bob: MediaDescription.Builder, meta: MediaMeta): MediaBrowser.MediaItem {
+    return MediaBrowser.MediaItem(bob.setExtras(meta.meta).build(), meta.mediaItemFlags)
 }

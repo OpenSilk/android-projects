@@ -13,6 +13,7 @@ import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.recycler.ItemClickSupport
 import org.opensilk.common.loader.RxListLoader
+import org.opensilk.media._getMediaMeta
 import org.opensilk.music.R
 import org.opensilk.music.RootComponent
 import org.opensilk.music.data.*

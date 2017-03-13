@@ -6,6 +6,10 @@ import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.provider.DocumentsContract
 import org.opensilk.common.dagger.ForApplication
+import org.opensilk.media._getMediaMeta
+import org.opensilk.media._getMediaTitle
+import org.opensilk.media._newBuilder
+import org.opensilk.media.newMediaItem
 import org.opensilk.music.data.ref.DocumentRef
 import org.opensilk.music.data.ref.MediaRef
 import rx.Observable
@@ -114,7 +118,29 @@ constructor(
             for (pulledMedia in pulled) {
                 val cachedMedia = cached.find { it.mediaId == pulledMedia.mediaId }
                 if (cachedMedia != null) {
-                    combined.add(cachedMedia._recocileWith(pulledMedia))
+                    //reconcile cached data with things that might have changed
+                    val bob = cachedMedia.description._newBuilder()
+                    val mom = cachedMedia.description._getMediaMeta()
+                    val omg = pulledMedia._getMediaMeta()
+                    if (pulledMedia.description.title.isNotBlank()) {
+                        bob.setTitle(pulledMedia.description.title)
+                    }
+                    if (pulledMedia.description.subtitle.isNotBlank()) {
+                        bob.setSubtitle(pulledMedia.description.subtitle)
+                    }
+                    if (omg.displayName.isNotBlank()) {
+                        mom.displayName = omg.displayName
+                    }
+                    if (omg.size > 0) {
+                        mom.size = omg.size
+                    }
+                    if (omg.lastModified > 0) {
+                        mom.lastModified = omg.lastModified
+                    }
+                    if (omg.documentFlags != mom.documentFlags) {
+                        mom.documentFlags = omg.documentFlags
+                    }
+                    combined.add(newMediaItem(bob, mom))
                 } else {
                     combined.add(pulledMedia)
                 }
@@ -122,10 +148,7 @@ constructor(
             return@zipWith combined as List<MediaBrowser.MediaItem>
         }.doOnSuccess { items ->
             for (item in items) {
-                val meta = item._getMediaMeta()
-                if (meta.dirty) {
-                    mDBClient.insertMediaDoc(item)
-                }
+                mDBClient.insertMediaDoc(item)
             }
             val itemRefs = items.filter {
                 it._likelyDocument() //ensure cast doesn't fail

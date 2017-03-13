@@ -10,6 +10,7 @@ import org.opensilk.common.bundle
 import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.ServiceScope
 import org.opensilk.common.dagger2.getDaggerComponent
+import org.opensilk.media._getMediaMeta
 import rx.Scheduler
 import rx.Single
 import rx.android.schedulers.AndroidSchedulers
