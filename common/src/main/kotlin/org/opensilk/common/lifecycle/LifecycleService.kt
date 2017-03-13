@@ -89,15 +89,15 @@ class NoLifecycleServiceException : IllegalArgumentException {
 }
 
 fun <T> Observable<T>.bindToLifeCycle(context: Context): Observable<T> {
-    return this.compose(LifecycleService.bindLifecycle(context))
+    return this.compose<T>(LifecycleService.bindLifecycle(context))
 }
 
 fun <T> Observable<T>.terminateOnDestroy(context: Context): Observable<T> {
-    return this.compose(LifecycleService.bindUntilLifecycleEvent(context, Lifecycle.DESTROY))
+    return this.compose<T>(LifecycleService.bindUntilLifecycleEvent(context, Lifecycle.DESTROY))
 }
 
 fun <T> Observable<T>.terminateOnDestroy(lifecycleService: LifecycleService): Observable<T> {
-    return this.compose(lifecycleService.bindUntilEvent(Lifecycle.DESTROY))
+    return this.compose<T>(lifecycleService.bindUntilEvent(Lifecycle.DESTROY))
 }
 
 fun <T> Observable<T>.connectedToPauseResume(lifecycleService: LifecycleService): Observable<T> {
@@ -106,7 +106,7 @@ fun <T> Observable<T>.connectedToPauseResume(lifecycleService: LifecycleService)
             .takeUntil { it === Lifecycle.DESTROY }
             //only let resume through
             .filter { it === Lifecycle.RESUME }
-            .flatMap { this.compose(lifecycleService.bindUntilEvent(Lifecycle.PAUSE)) }
+            .flatMap { this.compose<T>(lifecycleService.bindUntilEvent(Lifecycle.PAUSE)) }
 }
 
 /**
