@@ -33,7 +33,7 @@ import org.opensilk.music.data.ref.MediaRef
 @Config(constants = BuildConfig::class, sdk = intArrayOf(21))
 class MusicProviderTest {
     internal lateinit var mMusicProvider: MusicProvider
-    internal lateinit var mClient: MusicProvider.Client
+    internal lateinit var mClient: MusicProviderClient
 
     @Before
     @Throws(Exception::class)
@@ -49,7 +49,7 @@ class MusicProviderTest {
         attachInfo.invoke(mMusicProvider, RuntimeEnvironment.application, null, true)
 
         val authority = MusicAuthorityModule().provideMusicAuthority(RuntimeEnvironment.application)
-        mClient = MusicProvider.Client(RuntimeEnvironment.application, MusicProvider.Uris(authority))
+        mClient = MusicProviderClient(RuntimeEnvironment.application, MusicProviderUris(authority))
         ShadowContentResolver.registerProvider(authority, mMusicProvider)
 
         TestDataProvider.setup()

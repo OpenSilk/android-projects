@@ -33,8 +33,8 @@ class DataService
 @Inject
 constructor(
         @ForApplication private val mContext: Context,
-        private val mDBClient: MusicProvider.Client,
-        private val mUris: MusicProvider.Uris
+        private val mDBClient: MusicProviderClient,
+        private val mUris: MusicProviderUris
 
     ) {
 

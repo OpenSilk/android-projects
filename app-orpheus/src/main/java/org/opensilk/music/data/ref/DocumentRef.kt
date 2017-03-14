@@ -38,8 +38,7 @@ data class DocumentRef(
     val isRoot: Boolean
         get() = DocumentsContract.getTreeDocumentId(treeUri) == documentId
 
-    internal constructor(map: Map<String, String>):
-    this(Uri.parse(map["axuri"]!!), map["docid"]!!)
+    internal constructor(map: Map<String, String>): this(Uri.parse(map["axuri"]!!), map["docid"]!!)
 
     override val mediaId: String by lazy {
         val map = mapOf(

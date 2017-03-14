@@ -15,6 +15,10 @@ fun MediaBrowser.MediaItem._getMediaRef(): MediaRef {
     return MediaRef.parse(this.mediaId)
 }
 
+fun MediaBrowser.MediaItem._getDocRef(): DocumentRef {
+    return MediaRef.parse(this.mediaId) as DocumentRef
+}
+
 fun MediaBrowser.MediaItem._likelyDocument(): Boolean {
     return MediaRef.extractKind(this.mediaId) == MEDIA_KIND_DOCUMENT
 }
