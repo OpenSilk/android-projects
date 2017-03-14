@@ -32,7 +32,6 @@ constructor(
     private val mMetadataSubject = BehaviorSubject.create<MediaMetadata>()
     private val mQueueSubject = BehaviorSubject.create<List<MediaSession.QueueItem>>()
 
-
     fun play(mediaItem: MediaBrowser.MediaItem) {
         mTransport.playFromMediaId(mediaItem.mediaId, Bundle.EMPTY)
     }
@@ -45,7 +44,7 @@ constructor(
         mTransport.pause()
     }
 
-    fun dispose() {
+    fun release() {
         if (mBrowser.isConnected) mBrowser.disconnect()
     }
 

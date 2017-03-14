@@ -19,6 +19,8 @@ import kotlin.properties.Delegates
 
 /**
  * Created by drew on 2/24/17.
+ *
+ * States used STATE_NONE, STATE_BUFFERING, STATE_PAUSED, STATE_PLAYING
  */
 class DefaultRenderer
 @Inject
