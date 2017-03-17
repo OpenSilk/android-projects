@@ -12,6 +12,8 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.music.data.DataService
 import org.opensilk.music.data.MusicAuthorityModule
+import rx.Scheduler
+import rx.android.schedulers.AndroidSchedulers
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -28,6 +30,7 @@ import javax.inject.Singleton
 )
 interface RootComponent: AppContextComponent {
     fun getDataService(): DataService
+    @Named("MainThread") fun getMainThreadObserveOn(): Scheduler
 }
 
 /**
@@ -38,6 +41,10 @@ class RootModule {
     @Provides @Named("MusicService")
     fun getMusicServiceComponent(@ForApplication context: Context): ComponentName {
         return ComponentName(context, "foo")
+    }
+    @Provides @Singleton @Named("MainThread")
+    fun getObserveOnScheduler(): rx.Scheduler {
+        return AndroidSchedulers.mainThread()
     }
 }
 

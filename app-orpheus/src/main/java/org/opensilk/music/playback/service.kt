@@ -31,6 +31,7 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.android.schedulers.HandlerScheduler
 import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 import kotlin.properties.Delegates
 
@@ -95,7 +96,8 @@ class PlaybackSession
 @Inject
 constructor(
     @ForApplication private val mContext: Context,
-    private val mClient: MusicProviderClient
+    private val mClient: MusicProviderClient,
+    @Named("MainThread") private val mObserveOn: Scheduler
 ) : MediaSession.Callback() {
 
     private val mSession = MediaSession(mContext, "Orpheus")
@@ -128,7 +130,6 @@ constructor(
     private val mQueue = PlaybackQueue()
     private val mWorkerThread = HandlerThread("Orpheus-SessionWorker", Process.THREAD_PRIORITY_MORE_FAVORABLE)
     private val mSubscribeOn: Scheduler
-    private val mObserveOn = AndroidSchedulers.mainThread()
     init {
         mWorkerThread.start()
         mSubscribeOn = HandlerScheduler.from(Handler(mWorkerThread.looper))
