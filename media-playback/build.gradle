@@ -27,7 +27,8 @@ dependencies {
     kapt 'com.google.guava:guava:19.0'
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
-    compile (group: 'io.reactivex', name: 'rxjava', version: rootProject.ext.rxJavaVersion)
+    compile "io.reactivex:rxjava:$rxJavaVersion"
+    compile "io.reactivex:rxandroid:$rxAndroidVersion"
 
     compile project(':common-dagger')
     compile project(':media')

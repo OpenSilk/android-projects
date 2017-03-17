@@ -20,7 +20,14 @@ import kotlin.properties.Delegates
 /**
  * Created by drew on 2/24/17.
  *
- * States used STATE_NONE, STATE_BUFFERING, STATE_PAUSED, STATE_PLAYING
+ * States used STATE_NONE, STATE_BUFFERING, STATE_PAUSED, STATE_PLAYING, STATE_NONE
+ *
+ * State modifiers:
+ * loadMedia()
+ * play()
+ * pause()
+ * seekTo()
+ *
  */
 class DefaultRenderer
 @Inject
@@ -38,8 +45,8 @@ constructor(
         val VOLUME_NORMAL = 1.0f
     }
 
-    protected var mCurrentPlayer: MediaPlayer = MediaPlayer()
-    protected var mNextPlayer: MediaPlayer = MediaPlayer()
+    private var mCurrentPlayer: MediaPlayer = MediaPlayer()
+    private var mNextPlayer: MediaPlayer = MediaPlayer()
     private val mAudioManager: AudioManager = mContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val mAudioSessionId: Int
     private val mAudioBecomingNoisyIntentFilter: IntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
@@ -58,6 +65,7 @@ constructor(
     private var mPlayOnFocusGain: Boolean = false
     private var mSeekOnPrepared: Int = -1
     private val mCurrentPlayerStateChanges: PublishSubject<Int> = PublishSubject.create()
+    var lastError = ""
 
     init {
         mAudioSessionId = mAudioManager.generateAudioSessionId()
@@ -83,32 +91,56 @@ constructor(
         mNextPlayer.setOnCompletionListener(this)
     }
 
+    fun release() {
+        mCurrentPlayer.reset()
+        mCurrentPlayer.release()
+        mNextPlayer.reset()
+        mNextPlayer.release()
+    }
+
+    val state: Int
+        get() = mCurrentPlayerState
+
+    val stateChanges: Observable<Int>
+        get() = mCurrentPlayerStateChanges
+
+    val hasNext: Boolean
+        get() = when (mNextPlayerState) {
+            STATE_BUFFERING, STATE_PLAYING, STATE_PAUSED -> true
+            else -> false
+        }
+
     fun loadMedia(uri: Uri, headers: Map<String, String>) {
         mCurrentPlayer.reset()
-        mCurrentPlayerState = STATE_BUFFERING
-        if (!headers.isEmpty()) {
-            mCurrentPlayer.setDataSource(mContext, uri, headers)
-        } else {
-            mCurrentPlayer.setDataSource(mContext, uri)
+        try {
+            if (!headers.isEmpty()) {
+                mCurrentPlayer.setDataSource(mContext, uri, headers)
+            } else {
+                mCurrentPlayer.setDataSource(mContext, uri)
+            }
+            mCurrentPlayer.prepareAsync()
+            mCurrentPlayerState = STATE_BUFFERING
+        } catch (e: Exception) {
+            lastError = e.message ?: e.toString()
+            mCurrentPlayerState = STATE_ERROR
         }
-        // Starts preparing the media player in the background. When
-        // it's done, it will call our OnPreparedListener (that is,
-        // the onPrepared() method on this class, since we set the
-        // listener to 'this'). Until the media player is prepared,
-        // we *cannot* call start() on it!
-        mCurrentPlayer.prepareAsync()
     }
 
     fun loadNextMedia(uri: Uri, headers: Map<String, String>) {
         mCurrentPlayer.setNextMediaPlayer(null)
         mNextPlayer.reset()
-        mNextPlayerState = STATE_BUFFERING
-        if (!headers.isEmpty()) {
-            mNextPlayer.setDataSource(mContext, uri, headers)
-        } else {
-            mNextPlayer.setDataSource(mContext, uri)
+        try {
+            if (!headers.isEmpty()) {
+                mNextPlayer.setDataSource(mContext, uri, headers)
+            } else {
+                mNextPlayer.setDataSource(mContext, uri)
+            }
+            mNextPlayer.prepareAsync()
+            mNextPlayerState = STATE_BUFFERING
+        } catch (e: Exception) {
+            lastError = e.message ?: e.toString()
+            mNextPlayerState = STATE_ERROR
         }
-        mNextPlayer.prepareAsync()
     }
 
     fun play() {
@@ -118,8 +150,8 @@ constructor(
                         AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
                 if (focus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                     mContext.registerReceiver(mAudioBecomingNoisyReceiver, mAudioBecomingNoisyIntentFilter)
-                    mCurrentPlayerState = STATE_PLAYING
                     mCurrentPlayer.start()
+                    mCurrentPlayerState = STATE_PLAYING
                 } else {
                     TODO("Failed to get audio focus")
                 }
@@ -141,13 +173,10 @@ constructor(
         //we don't use state here in case it is wrong
         //we always want to pause even if our state is screwed up
         if (mCurrentPlayer.isPlaying) {
-            mCurrentPlayerState = STATE_PAUSED
             mCurrentPlayer.pause()
+            mAudioManager.abandonAudioFocus(this)
             mContext.unregisterReceiver(mAudioBecomingNoisyReceiver)
-            val granted = mAudioManager.abandonAudioFocus(this)
-            if (granted != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                TODO("This has never happened before")
-            }
+            mCurrentPlayerState = STATE_PAUSED
         } else {
             Timber.w("TODO ignoring pause() nothing playing")
         }
@@ -158,9 +187,9 @@ constructor(
         when (mCurrentPlayerState) {
             STATE_PAUSED,
             STATE_PLAYING -> {
-                mCurrentPlayerState = STATE_BUFFERING
                 mCurrentPlayer.seekTo(position)
                 mSeekOnPrepared = -1
+                mCurrentPlayerState = STATE_BUFFERING
             }
             STATE_BUFFERING -> {
                 mSeekOnPrepared = position
@@ -170,19 +199,6 @@ constructor(
             }
         }
     }
-
-    fun destroy() {
-        mCurrentPlayer.reset()
-        mCurrentPlayer.release()
-        mNextPlayer.reset()
-        mNextPlayer.release()
-    }
-
-    val state: Int
-        get() = mCurrentPlayerState
-
-    val stateChanges: Observable<Int>
-        get() = mCurrentPlayerStateChanges
 
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
@@ -210,23 +226,25 @@ constructor(
                 mCurrentPlayer.seekTo(mSeekOnPrepared)
                 mSeekOnPrepared = -1
             } else {
-                mCurrentPlayerState = STATE_PAUSED
                 if (mPlayOnFocusGain) {
                     play()
+                } else {
+                    mCurrentPlayerState = STATE_PAUSED
                 }
             }
         }
         if (mp == mNextPlayer) {
-            mNextPlayerState = STATE_PAUSED
             mCurrentPlayer.setNextMediaPlayer(mNextPlayer)
+            mNextPlayerState = STATE_PAUSED
         }
     }
 
     override fun onSeekComplete(mp: MediaPlayer?) {
         if (mp == mCurrentPlayer) {
-            mCurrentPlayerState = STATE_PAUSED
             if (mPlayOnFocusGain) {
                 play()
+            } else {
+                mCurrentPlayerState = STATE_PAUSED
             }
         }
         if (mp == mNextPlayer) {
@@ -237,16 +255,17 @@ constructor(
     override fun onCompletion(mp: MediaPlayer?) {
         if (mp == mCurrentPlayer) {
             if (mNextPlayer.isPlaying) {
-                mCurrentPlayerState = STATE_PLAYING
                 val old = mCurrentPlayer
                 mCurrentPlayer = mNextPlayer
                 mNextPlayer = old
                 mNextPlayer.reset()
-            } else {
-                mCurrentPlayerState = STATE_NONE
-                mCurrentPlayer.reset()
                 mNextPlayerState = STATE_NONE
+                mCurrentPlayerState = STATE_PLAYING
+            } else {
+                mCurrentPlayer.reset()
+                mCurrentPlayerState = STATE_NONE
                 mNextPlayer.reset()
+                mNextPlayerState = STATE_NONE
             }
         }
         if (mp == mNextPlayer) {
