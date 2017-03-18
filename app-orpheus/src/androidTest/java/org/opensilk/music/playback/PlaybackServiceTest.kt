@@ -31,37 +31,25 @@ import rx.schedulers.Schedulers
 class PlaybackServiceTest {
 
     internal lateinit var mPB: PlaybackSession
-    internal lateinit var mController: MediaController
 
     @Before
     fun setUp() {
         Log.e("SETUP", "SETUP")
         Looper.prepare()
         val context = InstrumentationRegistry.getTargetContext()
-        mPB = PlaybackSession(context, MusicProviderClient(context, MusicProviderUris("foo")),
-                Schedulers.immediate())
-        mController = MediaController(context, mPB.sessionToken)
-        mController.registerCallback(mCallback)
+        mPB = PlaybackSession(context, MusicProviderClient(context,
+                MusicProviderUris("foo")), Schedulers.immediate())
     }
 
     @After
     fun tearDown() {
         mPB.release()
-        mController.unregisterCallback(mCallback)
     }
 
     @Test
-    fun dosomething() {
+    fun doSomething() {
         val doc = DocumentRef(DocumentsContract.buildTreeDocumentUri("foo.test.provider", "Music"), "foo")
         mPB.onPlayFromMediaId(doc.mediaId, null)
-    }
-
-    val mCallback = object : MediaController.Callback() {
-        var state: PlaybackState? = null
-        override fun onPlaybackStateChanged(state: PlaybackState?) {
-            super.onPlaybackStateChanged(state)
-            this.state = state
-        }
     }
 
 }

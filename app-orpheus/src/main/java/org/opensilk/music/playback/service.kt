@@ -1,5 +1,8 @@
 package org.opensilk.music.playback
 
+import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.MediaDescription
@@ -11,6 +14,7 @@ import android.media.session.PlaybackState.*
 import android.net.Uri
 import android.os.*
 import android.service.media.MediaBrowserService
+import android.support.v4.content.WakefulBroadcastReceiver
 import dagger.Component
 import dagger.Module
 import org.opensilk.common.dagger.AppContextModule
@@ -60,6 +64,18 @@ class PlaybackServiceModule {
 
 }
 
+/**
+ *
+ */
+class PlaybackMediaButtonReceiver: WakefulBroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        if (Intent.ACTION_MEDIA_BUTTON == intent?.action) {
+            intent.component = ComponentName(context, PlaybackService::class.java)
+            intent.putExtra("orpheus.FROM_MEDIA_BUTTON", true)
+            WakefulBroadcastReceiver.startWakefulService(context, intent)
+        }
+    }
+}
 
 /**
  * Created by drew on 3/12/17.
@@ -82,12 +98,24 @@ class PlaybackService: MediaBrowserService() {
         mService.release()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            Intent.ACTION_MEDIA_BUTTON -> {
+                mService.onMediaButtonEvent(intent)
+                if (intent.hasExtra("orpheus.FROM_MEDIA_BUTTON")) {
+                    WakefulBroadcastReceiver.completeWakefulIntent(intent)
+                }
+            }
+        }
+        return Service.START_STICKY
+    }
+
     override fun onLoadChildren(parentId: String?, result: Result<MutableList<MediaBrowser.MediaItem>>?) {
         TODO("not implemented")
     }
 
     override fun onGetRoot(clientPackageName: String?, clientUid: Int, rootHints: Bundle?): BrowserRoot {
-        TODO("not implemented")
+        return BrowserRoot("0", null)
     }
 }
 
@@ -203,7 +231,7 @@ constructor(
                         TODO()
                     }, {
                         //if they sent us a starting uri we move the queue to that item
-                        extras?.getString("startwith")?.let { firstId ->
+                        extras?.getString("startWithId")?.let { firstId ->
                             mQueue.get().firstOrNull { it.description.mediaId == firstId }?.let {
                                 mQueue.goToItem(it.queueId)
                             }

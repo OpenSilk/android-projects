@@ -122,10 +122,10 @@ constructor(
                     val bob = cachedMedia.description._newBuilder()
                     val mom = cachedMedia.description._getMediaMeta()
                     val omg = pulledMedia._getMediaMeta()
-                    if (pulledMedia.description.title.isNotBlank()) {
+                    if (pulledMedia.description.title?.isNotBlank() ?: false) {
                         bob.setTitle(pulledMedia.description.title)
                     }
-                    if (pulledMedia.description.subtitle.isNotBlank()) {
+                    if (pulledMedia.description.subtitle?.isNotBlank() ?: false) {
                         bob.setSubtitle(pulledMedia.description.subtitle)
                     }
                     if (omg.displayName.isNotBlank()) {

@@ -30,13 +30,13 @@
             android:authorities="${applicationId}.provider.index"
             android:name=".data.MusicProvider"/>
         <service android:name=".data.ScannerService"/>
-        <receiver android:name=".data.ScannerConnectivityReceiver">
-            <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
-            </intent-filter>
-        </receiver>
 
         <service android:name=".playback.PlaybackService"/>
+        <receiver android:name=".playback.PlaybackMediaButtonReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

@@ -35,6 +35,9 @@ import rx.observers.Subscribers
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ *
+ */
 @ActivityScope
 @dagger.Component(
         dependencies = arrayOf(
@@ -48,35 +51,36 @@ interface HomeComponent: BaseComponent {
     fun inject(activity: HomeSlidingActivity)
 }
 
+/**
+ *
+ */
 @dagger.Module(
         includes = arrayOf(
                 BaseModule::class
         )
 )
-class HomeModule {
+class HomeModule
 
-}
-
+/**
+ *
+ */
 fun HomeSlidingActivity.buildComponent(): Lazy<HomeComponent> {
     return lazy {
         DaggerHomeComponent.builder().rootComponent(this.getRootComponent()).build()
     }
 }
 
+/**
+ *
+ */
 @ActivityScope
 class HomePresenter
 @Inject
-constructor(
+constructor(): BasePresenter()
 
-): BasePresenter() {
-
-    override fun onLoad(savedInstanceState: Bundle?) {
-        super.onLoad(savedInstanceState)
-
-    }
-
-}
-
+/**
+ *
+ */
 @ActivityScope
 class HomeLoader
 @Inject
@@ -102,6 +106,9 @@ constructor(
 
 }
 
+/**
+ *
+ */
 class HomeSlidingActivity : BaseSlidingActivity(), ItemClickSupport.OnItemClickListener {
 
     companion object {

@@ -1,7 +1,11 @@
 package org.opensilk.music.ui.activities
 
 import android.app.TaskStackBuilder
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.media.browse.MediaBrowser
+import android.media.session.MediaController
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.NavigationView
@@ -19,18 +23,27 @@ import org.opensilk.common.support.app.ScopedAppCompatActivity
 import org.opensilk.music.R
 import org.opensilk.music.data.MusicAuthorityModule
 import org.opensilk.music.databinding.ActivityDrawerBinding
+import org.opensilk.music.playback.PlaybackService
 import org.opensilk.music.ui.presenters.BindingPresenter
 import org.opensilk.music.ui.presenters.createBinding
 import org.opensilk.music.ui.recycler.MediaErrorAdapter
 import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
 
-interface BaseComponent {
-}
+/**
+ *
+ */
+interface BaseComponent
 
+/**
+ *
+ */
 @dagger.Module
 class BaseModule
 
+/**
+ *
+ */
 open class BasePresenter: BindingPresenter() {
 
     open fun onResume() {
@@ -62,14 +75,14 @@ open class BasePresenter: BindingPresenter() {
 }
 
 /**
+ * delay to launch nav drawer item, to allow close animation to play
+ */
+const private val NAVDRAWER_LAUNCH_DELAY: Long = 250L
+
+/**
  * Created by drew on 6/28/16.
  */
-abstract class BaseSlidingActivity(): ScopedAppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-
-    companion object {
-        // delay to launch nav drawer item, to allow close animation to play
-        const private val NAVDRAWER_LAUNCH_DELAY: Long = 250L
-    }
+abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     protected abstract val selfNavActionId: Int
     protected abstract val mPresenter: BasePresenter
@@ -78,6 +91,26 @@ abstract class BaseSlidingActivity(): ScopedAppCompatActivity(), NavigationView.
     protected val mMainHandler = Handler()
 
     protected val mBinding: ActivityDrawerBinding by createBinding(R.layout.activity_drawer)
+
+    protected val mBrowserCallback = object : MediaBrowser.ConnectionCallback() {
+        override fun onConnected() {
+            super.onConnected()
+        }
+
+        override fun onConnectionSuspended() {
+            if (!mBrowser.isConnected) mBrowser.connect()
+        }
+
+        override fun onConnectionFailed() {
+            super.onConnectionFailed()
+        }
+    }
+    protected val mBrowser: MediaBrowser by lazy {
+        MediaBrowser(this, ComponentName(this, PlaybackService::class.java), mBrowserCallback, null)
+    }
+    protected val mMediaController: MediaController by lazy {
+        MediaController(this, mBrowser.sessionToken)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,6 +132,7 @@ abstract class BaseSlidingActivity(): ScopedAppCompatActivity(), NavigationView.
         mBinding.recycler.setHasFixedSize(true)
 
         mPresenter.takeView(mBinding)
+        mBrowser.connect()
     }
 
     override fun onDestroy() {
@@ -152,10 +186,6 @@ abstract class BaseSlidingActivity(): ScopedAppCompatActivity(), NavigationView.
         val bob = TaskStackBuilder.create(this)
         bob.addNextIntentWithParentStack(intent)
         bob.startActivities()
-    }
-
-    protected fun showErrorToast() {
-        Toast.makeText(this, "AN UNHANDLED ERROR OCCURRED", Toast.LENGTH_LONG).show()
     }
 
 }

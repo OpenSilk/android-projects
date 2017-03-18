@@ -14,6 +14,7 @@ import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.recycler.ItemClickSupport
 import org.opensilk.common.loader.RxListLoader
 import org.opensilk.media._getMediaMeta
+import org.opensilk.media.bundle
 import org.opensilk.music.R
 import org.opensilk.music.RootComponent
 import org.opensilk.music.data.*
@@ -30,7 +31,6 @@ import javax.inject.Inject
 /**
  * Created by drew on 8/1/16.
  */
-
 @ActivityScope
 @dagger.Component(
         dependencies = arrayOf(
@@ -44,6 +44,9 @@ interface FolderComponent: BaseComponent {
     fun inject(activity: FolderSlidingActivity)
 }
 
+/**
+ *
+ */
 @dagger.Module(
         includes = arrayOf(
                 BaseModule::class
@@ -58,6 +61,9 @@ class FolderModule (
     }
 }
 
+/**
+ *
+ */
 fun FolderSlidingActivity.buildComponent(): Lazy<FolderComponent> {
     return lazy {
         val mediaItem: MediaBrowser.MediaItem = intent.getParcelableExtra(EXTRA_MEDIA_ITEM)
@@ -68,13 +74,17 @@ fun FolderSlidingActivity.buildComponent(): Lazy<FolderComponent> {
     }
 }
 
+/**
+ *
+ */
 @ActivityScope
 class FolderPresenter
 @Inject
-constructor(): BasePresenter() {
+constructor(): BasePresenter()
 
-}
-
+/**
+ *
+ */
 @ActivityScope
 class FolderLoader
 @Inject
@@ -110,9 +120,15 @@ constructor(
     }
 }
 
+/**
+ *
+ */
 const val EXTRA_MEDIA_ITEM = "media_item"
 
-class FolderSlidingActivity(): BaseSlidingActivity(), ItemClickSupport.OnItemClickListener {
+/**
+ *
+ */
+class FolderSlidingActivity: BaseSlidingActivity(), ItemClickSupport.OnItemClickListener {
 
     override val selfNavActionId: Int = 0
 
@@ -155,7 +171,8 @@ class FolderSlidingActivity(): BaseSlidingActivity(), ItemClickSupport.OnItemCli
         if (meta.isDirectory) {
             startActivity(Intent(this, FolderSlidingActivity::class.java).putExtra(EXTRA_MEDIA_ITEM, tile.item))
         } else if (meta.isAudio) {
-            TODO()
+            mMediaController.transportControls.playFromMediaId(mMediaItem.mediaId,
+                    bundle("startWithId", tile.item.mediaId))
         } else {
             TODO()
         }
