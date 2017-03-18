@@ -27,8 +27,12 @@ import org.opensilk.music.playback.PlaybackService
 import org.opensilk.music.ui.presenters.BindingPresenter
 import org.opensilk.music.ui.presenters.createBinding
 import org.opensilk.music.ui.recycler.MediaErrorAdapter
+import rx.Scheduler
+import rx.android.schedulers.AndroidSchedulers
 import rx.subscriptions.CompositeSubscription
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.properties.Delegates
 
 /**
  *
@@ -88,33 +92,22 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.On
     protected abstract val mPresenter: BasePresenter
     protected abstract fun injectSelf()
 
-    protected val mMainHandler = Handler()
-
     protected val mBinding: ActivityDrawerBinding by createBinding(R.layout.activity_drawer)
 
-    protected val mBrowserCallback = object : MediaBrowser.ConnectionCallback() {
-        override fun onConnected() {
-            super.onConnected()
-        }
-
-        override fun onConnectionSuspended() {
-            if (!mBrowser.isConnected) mBrowser.connect()
-        }
-
-        override fun onConnectionFailed() {
-            super.onConnectionFailed()
-        }
-    }
-    protected val mBrowser: MediaBrowser by lazy {
-        MediaBrowser(this, ComponentName(this, PlaybackService::class.java), mBrowserCallback, null)
-    }
-    protected val mMediaController: MediaController by lazy {
-        MediaController(this, mBrowser.sessionToken)
-    }
+    protected lateinit var mMainWorker: Scheduler.Worker
+    protected lateinit var mBrowser: MediaBrowser
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         injectSelf()
+
+        mMainWorker = AndroidSchedulers.mainThread().createWorker()
+        mBrowser = MediaBrowser(this, ComponentName(this, PlaybackService::class.java), object : MediaBrowser.ConnectionCallback() {
+            override fun onConnected() {
+                onBrowserConnected()
+            }
+        }, null)
+        mBrowser.connect()
 
         setSupportActionBar(mBinding.toolbar)
 
@@ -132,11 +125,12 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.On
         mBinding.recycler.setHasFixedSize(true)
 
         mPresenter.takeView(mBinding)
-        mBrowser.connect()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        mMainWorker.unsubscribe()
+        mBrowser.disconnect()
         mPresenter.dropView(mBinding)
     }
 
@@ -166,13 +160,17 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.On
 
         when (item.itemId) {
             R.id.nav_folders_root -> {
-                mMainHandler.postDelayed({
+                mMainWorker.schedule({
                     when (item.itemId) {
                         R.id.nav_folders_root -> {
                             createBackStack(Intent(this, HomeSlidingActivity::class.java))
                         }
                     }
-                }, NAVDRAWER_LAUNCH_DELAY)
+                    if (selfNavActionId != 0) {
+                        //change selected item back to our own
+                        mBinding.navView.setCheckedItem(selfNavActionId)
+                    }
+                }, NAVDRAWER_LAUNCH_DELAY, TimeUnit.MILLISECONDS)
                 // change the active item on the list so the user can see the item changed
                 mBinding.navView.setCheckedItem(item.itemId)
             }
@@ -186,6 +184,10 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.On
         val bob = TaskStackBuilder.create(this)
         bob.addNextIntentWithParentStack(intent)
         bob.startActivities()
+    }
+
+    fun onBrowserConnected() {
+        mediaController = MediaController(this, mBrowser.sessionToken)
     }
 
 }
