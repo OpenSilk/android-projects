@@ -146,16 +146,7 @@ constructor(
     fun play() {
         when (mCurrentPlayerState) {
             STATE_PAUSED -> {
-                val focus = mAudioManager.requestAudioFocus(this,
-                        AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
-                if (focus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                    mContext.registerReceiver(mAudioBecomingNoisyReceiver, mAudioBecomingNoisyIntentFilter)
-                    mCurrentPlayer.start()
-                    mCurrentPlayerState = STATE_PLAYING
-                } else {
-                    TODO("Failed to get audio focus")
-                }
-                mPlayOnFocusGain = false
+                startCurrent()
             }
             STATE_BUFFERING -> {
                 mPlayOnFocusGain = true
@@ -200,6 +191,19 @@ constructor(
         }
     }
 
+    private fun startCurrent() {
+        val focus = mAudioManager.requestAudioFocus(this,
+                AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        if (focus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            mContext.registerReceiver(mAudioBecomingNoisyReceiver, mAudioBecomingNoisyIntentFilter)
+            mCurrentPlayer.start()
+            mCurrentPlayerState = STATE_PLAYING
+        } else {
+            TODO("Failed to get audio focus")
+        }
+        mPlayOnFocusGain = false
+    }
+
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
             AudioManager.AUDIOFOCUS_LOSS,
@@ -213,7 +217,7 @@ constructor(
             AudioManager.AUDIOFOCUS_GAIN -> {
                 mCurrentPlayer.setVolume(VOLUME_NORMAL, VOLUME_NORMAL)
                 if (mPlayOnFocusGain) {
-                    play()
+                    startCurrent()
                 }
                 mPlayOnFocusGain = false
             }
@@ -227,7 +231,7 @@ constructor(
                 mSeekOnPrepared = -1
             } else {
                 if (mPlayOnFocusGain) {
-                    play()
+                    startCurrent()
                 } else {
                     mCurrentPlayerState = STATE_PAUSED
                 }
@@ -242,7 +246,7 @@ constructor(
     override fun onSeekComplete(mp: MediaPlayer?) {
         if (mp == mCurrentPlayer) {
             if (mPlayOnFocusGain) {
-                play()
+                startCurrent()
             } else {
                 mCurrentPlayerState = STATE_PAUSED
             }
