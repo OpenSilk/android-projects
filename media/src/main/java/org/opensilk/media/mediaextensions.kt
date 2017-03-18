@@ -1,6 +1,9 @@
 package org.opensilk.media
 
+import android.graphics.Bitmap
 import android.media.MediaDescription
+import android.media.MediaMetadata
+import android.media.MediaMetadata.*
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.Build
@@ -67,4 +70,52 @@ fun MediaBrowser.MediaItem._copy(bob: MediaDescription.Builder, meta: MediaMeta)
 
 fun newMediaItem(bob: MediaDescription.Builder, meta: MediaMeta): MediaBrowser.MediaItem {
     return MediaBrowser.MediaItem(bob.setExtras(meta.meta).build(), meta.mediaItemFlags)
+}
+
+/**
+ * Tries and tries and tries to find a suitable display name
+ */
+fun MediaMetadata._title(): String {
+    return this.getString(METADATA_KEY_DISPLAY_TITLE) ?:
+            this.getString(METADATA_KEY_TITLE) ?:
+            this.description.title?.toString() ?:
+            this.description._getMediaTitle()
+}
+
+fun MediaMetadata._subtitle(): String {
+    return this.getString(METADATA_KEY_DISPLAY_SUBTITLE) ?: ""
+}
+
+fun MediaMetadata._artistName(): String {
+    return this.getString(METADATA_KEY_ARTIST) ?: ""
+}
+
+fun MediaMetadata._albumName(): String {
+    return this.getString(METADATA_KEY_ALBUM) ?: ""
+}
+
+fun MediaMetadata._albumArtistName(): String {
+    return this.getString(METADATA_KEY_ALBUM_ARTIST) ?: ""
+}
+
+fun MediaMetadata._iconUri(): Uri? {
+    var uri: String? = this.getString(METADATA_KEY_DISPLAY_ICON_URI)
+    if (uri == null) {
+        uri = this.getString(METADATA_KEY_ART_URI)
+    }
+    if (uri == null) {
+        uri = this.getString(METADATA_KEY_ALBUM_ART_URI)
+    }
+    return if (uri != null) Uri.parse(uri) else null
+}
+
+fun MediaMetadata._icon(): Bitmap? {
+    var bitmap: Bitmap? = this.getBitmap(METADATA_KEY_DISPLAY_ICON)
+    if (bitmap == null) {
+        bitmap = this.getBitmap(METADATA_KEY_ART)
+    }
+    if (bitmap == null) {
+        bitmap = this.getBitmap(METADATA_KEY_ALBUM_ART)
+    }
+    return bitmap
 }
