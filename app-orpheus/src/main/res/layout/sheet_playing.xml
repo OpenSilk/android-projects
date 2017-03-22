@@ -64,7 +64,7 @@
                 android:layout_marginRight="6dp"
                 android:clickable="true"
                 android:src="@drawable/ic_play_black_48dp"
-                style="?footerPlayStyle"
+                style="?borderlessButtonStyle"
                 tools:tint="@color/black"
                 />
 

@@ -193,7 +193,7 @@ class HomeSlidingActivity : BaseSlidingActivity(), ItemClickSupport.OnItemClickL
                             contentResolver.takePersistableUriPermission(it, flags)
                             mLoader.dataService.insertRoot(it).subscribe { added ->
                                 if (!added) {
-                                    Snackbar.make(mPresenter.binding.coordinator, "Failed to add root", Snackbar.LENGTH_LONG)
+                                    Snackbar.make(mBinding.coordinator, "Failed to add root", Snackbar.LENGTH_LONG)
                                 }
                             }
                         } ?: Timber.e("The returned data was null")

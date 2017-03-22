@@ -77,6 +77,10 @@ class PlaybackMediaButtonReceiver: WakefulBroadcastReceiver() {
     }
 }
 
+object PlaybackActions {
+    const val TOGGLE = "toggle"
+}
+
 /**
  * Created by drew on 3/12/17.
  */
@@ -187,6 +191,22 @@ constructor(
     /*
      * Start Callback methods
      */
+
+    override fun onCustomAction(action: String?, extras: Bundle?) {
+        if (action == null) return
+        when (action) {
+            PlaybackActions.TOGGLE -> {
+                when (mRenderer.state) {
+                    STATE_BUFFERING, STATE_PLAYING -> {
+                        mRenderer.pause()
+                    }
+                    else -> {
+                        mRenderer.play()
+                    }
+                }
+            }
+        }
+    }
 
     override fun onSeekTo(pos: Long) {
         mRenderer.seekTo(pos.toInt())

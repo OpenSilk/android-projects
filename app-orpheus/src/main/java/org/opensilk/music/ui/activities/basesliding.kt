@@ -4,8 +4,11 @@ import android.app.TaskStackBuilder
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.media.MediaMetadata
 import android.media.browse.MediaBrowser
 import android.media.session.MediaController
+import android.media.session.MediaSession
+import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.NavigationView
@@ -14,15 +17,25 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.widget.LinearLayoutManager
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestOptions
 import dagger.Module
 import mortar.ViewPresenter
 import org.opensilk.common.bindLayout
 import org.opensilk.common.dagger.ActivityScope
+import org.opensilk.common.glide.PalettizedBitmapDrawable
 import org.opensilk.common.support.app.ScopedAppCompatActivity
+import org.opensilk.media.MediaBrowserCallback
+import org.opensilk.media._icon
+import org.opensilk.media._iconUri
+import org.opensilk.media._title
 import org.opensilk.music.R
 import org.opensilk.music.data.MusicAuthorityModule
 import org.opensilk.music.databinding.ActivityDrawerBinding
+import org.opensilk.music.playback.PlaybackActions
 import org.opensilk.music.playback.PlaybackService
 import org.opensilk.music.ui.presenters.BindingPresenter
 import org.opensilk.music.ui.presenters.createBinding
@@ -50,31 +63,8 @@ class BaseModule
  */
 open class BasePresenter: BindingPresenter() {
 
-    open fun onResume() {
-
-    }
-
-    open fun onPause() {
-
-    }
-
-    //takeView must have been called, null check omitted for convenience
-    val binding: ActivityDrawerBinding
-        get() = view!! as ActivityDrawerBinding
-
-    open fun startLoadingItems() {
-        setRecyclerLoading()
-    }
-
-    open fun setRecyclerLoading() {
-//        binding.recycler.layoutManager = LinearLayoutManager(context)
-//        binding.recycler.setAdapter(MediaLoadingAdapter())
-    }
-
-    open fun setRecyclerError(msg: String) {
-        binding.recycler.layoutManager = LinearLayoutManager(context)
-        binding.recycler.adapter = MediaErrorAdapter(msg)
-    }
+    val binding: ActivityDrawerBinding?
+        get() = view as? ActivityDrawerBinding
 
 }
 
@@ -86,7 +76,9 @@ const private val NAVDRAWER_LAUNCH_DELAY: Long = 250L
 /**
  * Created by drew on 6/28/16.
  */
-abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
+        NavigationView.OnNavigationItemSelectedListener,
+        View.OnClickListener, MediaBrowserCallback.Listener {
 
     protected abstract val selfNavActionId: Int
     protected abstract val mPresenter: BasePresenter
@@ -124,6 +116,8 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.On
 
         mBinding.recycler.setHasFixedSize(true)
 
+        mBinding.playingSheet.peekPlaypause.setOnClickListener(this)
+
         mPresenter.takeView(mBinding)
     }
 
@@ -136,12 +130,16 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.On
 
     override fun onResume() {
         super.onResume()
-        mPresenter.onResume()
+        if (mBrowser.isConnected) {
+            mediaController.registerCallback(mPlayingSheetCallback)
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        mPresenter.onPause()
+        if (mBrowser.isConnected) {
+            mediaController.unregisterCallback(mPlayingSheetCallback)
+        }
     }
 
     override fun onBackPressed() {
@@ -180,14 +178,74 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(), NavigationView.On
         return true
     }
 
+    override fun onClick(v: View?) {
+        if (v == mBinding.playingSheet.peekPlaypause) {
+            if (!mBrowser.isConnected) return
+            mediaController.transportControls.sendCustomAction(PlaybackActions.TOGGLE, Bundle())
+        }
+    }
+
     protected fun createBackStack(intent: Intent) {
         val bob = TaskStackBuilder.create(this)
         bob.addNextIntentWithParentStack(intent)
         bob.startActivities()
     }
 
-    fun onBrowserConnected() {
+    override fun onBrowserConnected() {
         mediaController = MediaController(this, mBrowser.sessionToken)
+        //we get this callback after onResume
+        mediaController.registerCallback(mPlayingSheetCallback)
+    }
+
+    override fun onBrowserDisconnected() {
+        mediaController.unregisterCallback(mPlayingSheetCallback)
+        mediaController = null
+    }
+
+    private val mPlayingSheetCallback = object: MediaController.Callback() {
+        override fun onQueueChanged(queue: MutableList<MediaSession.QueueItem>?) {
+
+        }
+
+        override fun onQueueTitleChanged(title: CharSequence?) {
+        }
+
+        override fun onPlaybackStateChanged(state: PlaybackState?) {
+            if (state == null) return
+            when (state.state) {
+                PlaybackState.STATE_PLAYING, PlaybackState.STATE_BUFFERING -> {
+                    mBinding.playingSheet.peekPlaypause
+                            .setImageResource(R.drawable.ic_pause_black_48dp)
+                }
+                else -> {
+                    mBinding.playingSheet.peekPlaypause
+                            .setImageResource(R.drawable.ic_play_black_48dp)
+                }
+            }
+        }
+
+        override fun onMetadataChanged(metadata: MediaMetadata?) {
+            if (metadata == null) return
+            //set title
+            mBinding.playingSheet.peekTitle.text = metadata._title()
+            // set icon
+            val icon = metadata._iconUri()
+            val bitmap = metadata._icon()
+            val thumbnail = mBinding.playingSheet.peekThumbnail
+            if (icon != null) {
+                val opts = RequestOptions().centerCrop(this@BaseSlidingActivity)
+                Glide.with(this@BaseSlidingActivity)
+                        .`as`(PalettizedBitmapDrawable::class.java)
+                        .apply(opts)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .load(icon)
+                        .into(thumbnail)
+            } else if (bitmap != null) {
+                thumbnail.setImageBitmap(bitmap)
+            } else {
+                thumbnail.setImageResource(R.drawable.ic_music_note_circle_black_48dp)
+            }
+        }
     }
 
 }

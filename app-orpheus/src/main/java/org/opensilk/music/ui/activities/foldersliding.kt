@@ -171,7 +171,7 @@ class FolderSlidingActivity: BaseSlidingActivity(), ItemClickSupport.OnItemClick
         if (meta.isDirectory) {
             startActivity(Intent(this, FolderSlidingActivity::class.java).putExtra(EXTRA_MEDIA_ITEM, tile.item))
         } else if (meta.isAudio) {
-            mMediaController.transportControls.playFromMediaId(mMediaItem.mediaId,
+            mediaController.transportControls.playFromMediaId(mMediaItem.mediaId,
                     bundle("startWithId", tile.item.mediaId))
         } else {
             TODO()
