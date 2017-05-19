@@ -14,6 +14,8 @@
       <module fileurl="file://$PROJECT_DIR$/libtvdb/libtvdb.iml" filepath="$PROJECT_DIR$/libtvdb/libtvdb.iml" />
       <module fileurl="file://$PROJECT_DIR$/media/media.iml" filepath="$PROJECT_DIR$/media/media.iml" />
       <module fileurl="file://$PROJECT_DIR$/media-playback/media-playback.iml" filepath="$PROJECT_DIR$/media-playback/media-playback.iml" />
+      <module fileurl="file://$PROJECT_DIR$/upnp-cds-browser/upnp-cds-browser.iml" filepath="$PROJECT_DIR$/upnp-cds-browser/upnp-cds-browser.iml" />
+      <module fileurl="file://$PROJECT_DIR$/upnp-cds-featurelist/upnp-cds-featurelist.iml" filepath="$PROJECT_DIR$/upnp-cds-featurelist/upnp-cds-featurelist.iml" />
     </modules>
   </component>
 </project>

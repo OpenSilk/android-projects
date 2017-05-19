@@ -1,0 +1,62 @@
+/*
+ * Copyright (c) 2016 OpenSilk Productions LLC.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+}
+
+dependencies {
+    compile "org.fourthline.cling:cling-core:$clingVersion"
+    compile "org.fourthline.cling:cling-support:$clingVersion"
+
+    compile "org.eclipse.jetty:jetty-server:8.1.18.v20150929"
+    compile "org.eclipse.jetty:jetty-servlet:8.1.18.v20150929"
+    compile "org.eclipse.jetty:jetty-client:8.1.18.v20150929"
+
+    compile "javax.servlet:javax.servlet-api:3.1.0"
+
+//    compile 'org.seamless:seamless-xml:1.0-alpha3'
+
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
+    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testCompile "commons-io:commons-io:$commonsIOVersion"
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+}

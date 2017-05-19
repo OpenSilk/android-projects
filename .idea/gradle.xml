@@ -19,6 +19,8 @@
             <option value="$PROJECT_DIR$/libtvdb" />
             <option value="$PROJECT_DIR$/media" />
             <option value="$PROJECT_DIR$/media-playback" />
+            <option value="$PROJECT_DIR$/upnp-cds-browser" />
+            <option value="$PROJECT_DIR$/upnp-cds-featurelist" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
