@@ -94,11 +94,8 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
         injectSelf()
 
         mMainWorker = AndroidSchedulers.mainThread().createWorker()
-        mBrowser = MediaBrowser(this, ComponentName(this, PlaybackService::class.java), object : MediaBrowser.ConnectionCallback() {
-            override fun onConnected() {
-                onBrowserConnected()
-            }
-        }, null)
+        mBrowser = MediaBrowser(this, ComponentName(this, PlaybackService::class.java),
+                MediaBrowserCallback(this), null)
         mBrowser.connect()
 
         setSupportActionBar(mBinding.toolbar)
