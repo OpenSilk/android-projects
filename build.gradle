@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.1.1'
+    ext.kotlin_version = '1.1.2-3'
     ext {
         compileSdkVersion = 25
         targetSdkVersion = 23
@@ -21,9 +21,11 @@ buildscript {
         commonsIOVersion = "2.5"
         rxKotlinVersion = '0.60.0'
         ankoVersion = '0.9'
+        clingVersion = "2.1.1"
 
         test_robolectricVersion = "3.1"
         test_assertJVersion = "1.7.1"
+        test_mockwebserverVersion = "3.2.0"
     }
     repositories {
         jcenter()
@@ -42,6 +44,7 @@ allprojects {
         jcenter()
         mavenCentral()
         maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
+        maven { url 'http://4thline.org/m2' }
     }
 }
 
