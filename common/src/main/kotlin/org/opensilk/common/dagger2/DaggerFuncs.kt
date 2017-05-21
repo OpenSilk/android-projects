@@ -17,34 +17,15 @@
 
 package org.opensilk.common.dagger2
 
-import android.annotation.SuppressLint
-import android.content.Context
-
-import java.lang.reflect.Method
-
 import mortar.MortarScope
-
-import java.lang.String.format
-
-const val DAGGER_SERVICE: String = "OPENSILK_DAGGER_SERVICE"
+import org.opensilk.common.dagger.DAGGER_SERVICE
+import org.opensilk.common.dagger.NoDaggerComponentException
 
 /**
  * Extension fun to add dagger component to the scope
  */
 fun MortarScope.Builder.withDaggerComponent(component: Any): MortarScope.Builder {
     return this.withService(DAGGER_SERVICE, component)
-}
-
-/**
- * Caller is required to know the type of the component for this context.
- *
- * @throws NoDaggerComponentException if there is no DaggerService attached to this context
- *
- * @return The Component associated with this context
- */
-@Suppress("UNCHECKED_CAST")
-fun <T> getDaggerComponent(context: Context): T {
-    return context.getSystemService(DAGGER_SERVICE) as? T ?: throw NoDaggerComponentException()
 }
 
 /**
@@ -59,14 +40,6 @@ fun <T> getDaggerComponent(scope: MortarScope): T {
     return if (scope.hasService(DAGGER_SERVICE)) {
         scope.getService<Any>(DAGGER_SERVICE) as T
     } else {
-        throw NoDaggerComponentException(scope)
-    }
-}
-
-class NoDaggerComponentException : IllegalArgumentException {
-    internal constructor() : super("No dagger component in given context")
-    internal constructor(scope: MortarScope) : super("No dagger component found in scope ${scope.name}")
-    companion object {
-        private val serialVersionUID = -3789316706938152733L
+        throw NoDaggerComponentException("No dagger component found in scope ${scope.name}")
     }
 }
