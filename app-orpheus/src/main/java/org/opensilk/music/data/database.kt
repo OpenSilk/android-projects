@@ -15,7 +15,7 @@ import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
-import org.opensilk.common.dagger2.NoDaggerComponentException
+import org.opensilk.common.dagger.NoDaggerComponentException
 import org.opensilk.media.*
 import org.opensilk.music.data.ref.DocumentRef
 import org.opensilk.music.data.ref.MediaRef
@@ -576,7 +576,7 @@ class MusicProvider : ContentProvider() {
     override fun onCreate(): Boolean {
         var rootCmp: AppContextComponent
         try {
-            rootCmp = getDaggerComponent(context!!.applicationContext)
+            rootCmp = context.applicationContext.getDaggerComponent()
         } catch (e: NoDaggerComponentException) {
             Timber.i("No AppContextComponent found. Making our own")
             rootCmp = DaggerAppContextComponent.builder()

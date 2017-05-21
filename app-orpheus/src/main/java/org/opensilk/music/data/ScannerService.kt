@@ -9,6 +9,7 @@ import android.os.*
 import org.opensilk.common.bundle
 import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.ServiceScope
+import org.opensilk.common.dagger.getDaggerComponent
 import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.media._getMediaMeta
 import rx.Scheduler
@@ -69,7 +70,7 @@ class ScannerService(): Service() {
     override fun onCreate() {
         Timber.d("onCreate()")
         super.onCreate()
-        val rootCmp = getDaggerComponent<AppContextComponent>(applicationContext)
+        val rootCmp = applicationContext.getDaggerComponent<AppContextComponent>()
         val cmp = DaggerScannerService_Component.builder().appContextComponent(rootCmp).build()
         cmp.inject(this)
     }

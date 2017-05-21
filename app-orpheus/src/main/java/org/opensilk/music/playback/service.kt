@@ -20,6 +20,7 @@ import dagger.Module
 import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ServiceScope
+import org.opensilk.common.dagger.getDaggerComponent
 import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.media._getMediaMeta
 import org.opensilk.media._getMediaUri
@@ -91,7 +92,7 @@ class PlaybackService: MediaBrowserService() {
     override fun onCreate() {
         super.onCreate()
          val cmp = DaggerPlaybackServiceComponent.builder()
-                .rootComponent(getDaggerComponent<RootComponent>(applicationContext))
+                .rootComponent(applicationContext.getDaggerComponent<RootComponent>())
                 .build()
         cmp.inject(this)
         sessionToken = mService.sessionToken

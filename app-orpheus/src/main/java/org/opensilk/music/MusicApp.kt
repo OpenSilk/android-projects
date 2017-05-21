@@ -9,6 +9,7 @@ import org.opensilk.common.app.BaseApp
 import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger.ForApplication
+import org.opensilk.common.dagger.getDaggerComponent
 import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.music.data.DataService
 import org.opensilk.music.data.MusicAuthorityModule
@@ -52,7 +53,7 @@ class RootModule {
  *
  */
 fun Context.getRootComponent(): RootComponent {
-    return getDaggerComponent(this.applicationContext)
+    return this.applicationContext.getDaggerComponent()
 }
 
 /**
