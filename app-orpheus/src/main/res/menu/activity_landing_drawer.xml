@@ -7,16 +7,12 @@
             android:title="Home"/>
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="Actions">
         <menu>
             <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:id="@+id/nav_add_root"
+                android:icon="@drawable/ic_folder_black_48dp"
+                android:title="@string/menu_add_root"/>
         </menu>
     </item>
 

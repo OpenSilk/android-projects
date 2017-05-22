@@ -12,6 +12,7 @@ import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.NavigationView
+import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
@@ -33,6 +34,7 @@ import org.opensilk.media._icon
 import org.opensilk.media._iconUri
 import org.opensilk.media._title
 import org.opensilk.music.R
+import org.opensilk.music.data.DataService
 import org.opensilk.music.data.MusicAuthorityModule
 import org.opensilk.music.databinding.ActivityDrawerBinding
 import org.opensilk.music.playback.PlaybackActions
@@ -43,6 +45,7 @@ import org.opensilk.music.ui.recycler.MediaErrorAdapter
 import rx.Scheduler
 import rx.android.schedulers.AndroidSchedulers
 import rx.subscriptions.CompositeSubscription
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -89,6 +92,12 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
     protected lateinit var mMainWorker: Scheduler.Worker
     protected lateinit var mBrowser: MediaBrowser
 
+    @Inject protected lateinit var mDataService: DataService
+
+    companion object {
+        internal val REQUEST_OPEN_FOLDER = 1001
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         injectSelf()
@@ -127,15 +136,17 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
-        if (mBrowser.isConnected) {
+        if (mBrowser.isConnected && !mMediaCallbackRegistered) {
             mediaController.registerCallback(mPlayingSheetCallback)
+            mMediaCallbackRegistered = true
         }
     }
 
     override fun onPause() {
         super.onPause()
-        if (mBrowser.isConnected) {
+        if (mMediaCallbackRegistered) {
             mediaController.unregisterCallback(mPlayingSheetCallback)
+            mMediaCallbackRegistered = false
         }
     }
 
@@ -156,11 +167,7 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
         when (item.itemId) {
             R.id.nav_folders_root -> {
                 mMainWorker.schedule({
-                    when (item.itemId) {
-                        R.id.nav_folders_root -> {
-                            createBackStack(Intent(this, HomeSlidingActivity::class.java))
-                        }
-                    }
+                    createBackStack(Intent(this, HomeSlidingActivity::class.java))
                     if (selfNavActionId != 0) {
                         //change selected item back to our own
                         mBinding.navView.setCheckedItem(selfNavActionId)
@@ -168,6 +175,11 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
                 }, NAVDRAWER_LAUNCH_DELAY, TimeUnit.MILLISECONDS)
                 // change the active item on the list so the user can see the item changed
                 mBinding.navView.setCheckedItem(item.itemId)
+            }
+            R.id.nav_add_root -> {
+                mMainWorker.schedule({
+                    startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_OPEN_FOLDER)
+                })
             }
         }
 
@@ -182,6 +194,30 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        Timber.d("onActivityResult: requestCode %d resultCode %d data %s", requestCode, resultCode, data)
+        when (requestCode) {
+            REQUEST_OPEN_FOLDER -> {
+                when (resultCode) {
+                    RESULT_OK -> {
+                        data?.data?.let {
+                            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            contentResolver.takePersistableUriPermission(it, flags)
+                            mDataService.insertRoot(it).subscribe { added ->
+                                if (added) {
+                                    Snackbar.make(mBinding.coordinator, "New folder added", Snackbar.LENGTH_SHORT)
+                                } else {
+                                    Snackbar.make(mBinding.coordinator, "Failed to add root", Snackbar.LENGTH_LONG)
+                                }
+                            }
+                        } ?: Timber.e("The returned data was null")
+                    }
+                }
+            }
+            else -> super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
     protected fun createBackStack(intent: Intent) {
         val bob = TaskStackBuilder.create(this)
         bob.addNextIntentWithParentStack(intent)
@@ -191,14 +227,21 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
     override fun onBrowserConnected() {
         mediaController = MediaController(this, mBrowser.sessionToken)
         //we get this callback after onResume
-        mediaController.registerCallback(mPlayingSheetCallback)
+        if (!mMediaCallbackRegistered) {
+            mediaController.registerCallback(mPlayingSheetCallback)
+            mMediaCallbackRegistered = false
+        }
     }
 
     override fun onBrowserDisconnected() {
-        mediaController.unregisterCallback(mPlayingSheetCallback)
+        if (mMediaCallbackRegistered) {
+            mediaController.unregisterCallback(mPlayingSheetCallback)
+            mMediaCallbackRegistered = false
+        }
         mediaController = null
     }
 
+    private var mMediaCallbackRegistered = false
     private val mPlayingSheetCallback = object: MediaController.Callback() {
         override fun onQueueChanged(queue: MutableList<MediaSession.QueueItem>?) {
 

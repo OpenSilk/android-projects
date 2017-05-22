@@ -111,10 +111,6 @@ constructor(
  */
 class HomeSlidingActivity : BaseSlidingActivity(), ItemClickSupport.OnItemClickListener {
 
-    companion object {
-        internal val REQUEST_OPEN_FOLDER = 1001
-    }
-
     override val selfNavActionId: Int = R.id.nav_folders_root
 
     override val activityComponent: HomeComponent by buildComponent()
@@ -164,10 +160,6 @@ class HomeSlidingActivity : BaseSlidingActivity(), ItemClickSupport.OnItemClickL
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         return when (item!!.itemId) {
-            R.id.menu_add_root -> {
-                startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_OPEN_FOLDER)
-                true //ret
-            }
             else -> super.onOptionsItemSelected(item) //ret
         }
     }
@@ -179,28 +171,6 @@ class HomeSlidingActivity : BaseSlidingActivity(), ItemClickSupport.OnItemClickL
             startActivity(Intent(this, FolderSlidingActivity::class.java).putExtra(EXTRA_MEDIA_ITEM, tile.item))
         } else {
             TODO()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Timber.d("onActivityResult: requestCode %d resultCode %d data %s", requestCode, resultCode, data)
-        when (requestCode) {
-            REQUEST_OPEN_FOLDER -> {
-                when (resultCode) {
-                    RESULT_OK -> {
-                        data?.data?.let {
-                            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            contentResolver.takePersistableUriPermission(it, flags)
-                            mLoader.dataService.insertRoot(it).subscribe { added ->
-                                if (!added) {
-                                    Snackbar.make(mBinding.coordinator, "Failed to add root", Snackbar.LENGTH_LONG)
-                                }
-                            }
-                        } ?: Timber.e("The returned data was null")
-                    }
-                }
-            }
-            else -> super.onActivityResult(requestCode, resultCode, data)
         }
     }
 

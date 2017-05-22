@@ -43,6 +43,7 @@
     <string name="menu_detailed">Detailed</string>
     <string name="menu_grid">Grid</string>
     <string name="menu_view_as">View as</string>
+    <string name="menu_add_root">Add root folder</string>
 
     <!-- Sort orders -->
     <string name="sort_order_entry_az">A-Z</string>

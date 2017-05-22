@@ -3,7 +3,7 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/menu_add_root"
-        android:title="@string/menu_play_next"
+        android:title="@string/menu_add_root"
         android:orderInCategory="1"
         app:showAsAction="always"/>
 </menu>
