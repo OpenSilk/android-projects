@@ -17,17 +17,32 @@
 
 package org.opensilk.upnp.cds.browser
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.database.Cursor
 import android.os.CancellationSignal
+import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsProvider
+import org.opensilk.common.dagger.AppContextComponent
+import org.opensilk.common.dagger.getDaggerComponent
+import javax.inject.Inject
 
 /**
  * Created by drew on 12/21/16.
  */
-class CDSDocProvider() : DocumentsProvider() {
+class CDSDocProvider() : DocumentsProvider(), ServiceConnection {
+
+    @Inject lateinit var mUpnpService: CDSUpnpService
+    @Inject lateinit var mDBClient: CDSDatabaseClient
+
+    var mHolderService : CDSHolderService.Holder? = null
 
     override fun onCreate(): Boolean {
+        val appComponent: AppContextComponent = context.getDaggerComponent()
+        context.bindService(Intent(context, CDSHolderService::class.java), this, Context.BIND_AUTO_CREATE)
         return true
     }
 
@@ -48,6 +63,15 @@ class CDSDocProvider() : DocumentsProvider() {
     }
 
     override fun queryRoots(projection: Array<out String>?): Cursor {
-        throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return mDBClient.queryRemoteDevices(projection)
+    }
+
+    override fun onServiceDisconnected(name: ComponentName?) {
+        mHolderService = null
+    }
+
+    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+        mHolderService = service as? CDSHolderService.Holder
+        mHolderService?.setCDSUpnpService(mUpnpService)
     }
 }

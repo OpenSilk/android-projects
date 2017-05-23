@@ -19,6 +19,7 @@ package org.opensilk.upnp.cds.browser
 
 import android.content.ContentResolver
 import android.content.Context
+import android.provider.DocumentsContract
 import org.apache.commons.lang3.StringUtils
 import org.fourthline.cling.UpnpService
 import org.fourthline.cling.UpnpServiceConfiguration
@@ -29,8 +30,11 @@ import org.fourthline.cling.controlpoint.ControlPoint
 import org.fourthline.cling.model.UnsupportedDataException
 import org.fourthline.cling.model.action.ActionInvocation
 import org.fourthline.cling.model.message.control.ActionResponseMessage
+import org.fourthline.cling.model.message.header.UpnpHeader
+import org.fourthline.cling.model.meta.DeviceIdentity
 import org.fourthline.cling.model.meta.RemoteDevice
 import org.fourthline.cling.model.types.ServiceType
+import org.fourthline.cling.model.types.UDADeviceType
 import org.fourthline.cling.model.types.UDAServiceType
 import org.fourthline.cling.protocol.ProtocolFactory
 import org.fourthline.cling.registry.DefaultRegistryListener
@@ -40,6 +44,8 @@ import org.fourthline.cling.transport.Router
 import org.fourthline.cling.transport.impl.RecoveringSOAPActionProcessorImpl
 import org.fourthline.cling.transport.spi.SOAPActionProcessor
 import org.opensilk.common.dagger.ForApplication
+import org.opensilk.upnp.cds.featurelist.Features
+import org.opensilk.upnp.cds.featurelist.XGetFeatureListCallback
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.inject.Inject
@@ -86,7 +92,6 @@ class CDSUpnpService @Inject constructor(
     }
 
     override fun getRegistry(): Registry {
-        ensureService()
         return ensureService().registry
     }
 
