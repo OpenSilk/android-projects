@@ -1,32 +1,16 @@
 package org.opensilk.music.ui.activities
 
-import android.app.TaskStackBuilder
 import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
 import android.media.MediaMetadata
 import android.media.browse.MediaBrowser
 import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Bundle
-import android.os.Handler
-import android.support.design.widget.NavigationView
-import android.support.design.widget.Snackbar
-import android.support.v4.view.GravityCompat
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.widget.LinearLayoutManager
-import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
-import dagger.Module
-import mortar.ViewPresenter
-import org.opensilk.common.bindLayout
-import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.glide.PalettizedBitmapDrawable
 import org.opensilk.common.support.app.ScopedAppCompatActivity
 import org.opensilk.media.MediaBrowserCallback
@@ -35,20 +19,12 @@ import org.opensilk.media._iconUri
 import org.opensilk.media._title
 import org.opensilk.music.R
 import org.opensilk.music.data.DataService
-import org.opensilk.music.data.MusicAuthorityModule
-import org.opensilk.music.databinding.ActivityDrawerBinding
+import org.opensilk.music.databinding.SheetPlayingBinding
 import org.opensilk.music.playback.PlaybackActions
 import org.opensilk.music.playback.PlaybackService
-import org.opensilk.music.ui.presenters.BindingPresenter
-import org.opensilk.music.ui.presenters.createBinding
-import org.opensilk.music.ui.recycler.MediaErrorAdapter
 import rx.Scheduler
 import rx.android.schedulers.AndroidSchedulers
-import rx.subscriptions.CompositeSubscription
-import timber.log.Timber
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 /**
  *
@@ -62,41 +38,18 @@ interface BaseComponent
 class BaseModule
 
 /**
- *
- */
-open class BasePresenter: BindingPresenter() {
-
-    val binding: ActivityDrawerBinding?
-        get() = view as? ActivityDrawerBinding
-
-}
-
-/**
- * delay to launch nav drawer item, to allow close animation to play
- */
-const private val NAVDRAWER_LAUNCH_DELAY: Long = 250L
-
-/**
  * Created by drew on 6/28/16.
  */
 abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
-        NavigationView.OnNavigationItemSelectedListener,
         View.OnClickListener, MediaBrowserCallback.Listener {
 
-    protected abstract val selfNavActionId: Int
-    protected abstract val mPresenter: BasePresenter
     protected abstract fun injectSelf()
-
-    protected val mBinding: ActivityDrawerBinding by createBinding(R.layout.activity_drawer)
+    protected abstract val mSheetBinding: SheetPlayingBinding
 
     protected lateinit var mMainWorker: Scheduler.Worker
     protected lateinit var mBrowser: MediaBrowser
 
     @Inject protected lateinit var mDataService: DataService
-
-    companion object {
-        internal val REQUEST_OPEN_FOLDER = 1001
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,31 +60,12 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
                 MediaBrowserCallback(this), null)
         mBrowser.connect()
 
-        setSupportActionBar(mBinding.toolbar)
-
-        val toggle = ActionBarDrawerToggle(this,
-                mBinding.drawerLayout, mBinding.toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        mBinding.drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        mBinding.navView.setNavigationItemSelectedListener(this)
-        if (selfNavActionId != 0) {
-            mBinding.navView.setCheckedItem(selfNavActionId)
-        }
-
-        mBinding.recycler.setHasFixedSize(true)
-
-        mBinding.playingSheet.peekPlaypause.setOnClickListener(this)
-
-        mPresenter.takeView(mBinding)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         mMainWorker.unsubscribe()
         mBrowser.disconnect()
-        mPresenter.dropView(mBinding)
     }
 
     override fun onResume() {
@@ -150,78 +84,10 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
         }
     }
 
-    override fun onBackPressed() {
-        if (mBinding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            mBinding.drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
-    }
-
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == selfNavActionId) {
-            mBinding.drawerLayout.closeDrawer(GravityCompat.START)
-            return true
-        }
-
-        when (item.itemId) {
-            R.id.nav_folders_root -> {
-                mMainWorker.schedule({
-                    createBackStack(Intent(this, HomeSlidingActivity::class.java))
-                    if (selfNavActionId != 0) {
-                        //change selected item back to our own
-                        mBinding.navView.setCheckedItem(selfNavActionId)
-                    }
-                }, NAVDRAWER_LAUNCH_DELAY, TimeUnit.MILLISECONDS)
-                // change the active item on the list so the user can see the item changed
-                mBinding.navView.setCheckedItem(item.itemId)
-            }
-            R.id.nav_add_root -> {
-                mMainWorker.schedule({
-                    startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_OPEN_FOLDER)
-                })
-            }
-        }
-
-        mBinding.drawerLayout.closeDrawer(GravityCompat.START)
-        return true
-    }
-
     override fun onClick(v: View?) {
-        if (v == mBinding.playingSheet.peekPlaypause) {
-            if (!mBrowser.isConnected) return
+        if (v == mSheetBinding.peekPlaypause && mBrowser.isConnected) {
             mediaController.transportControls.sendCustomAction(PlaybackActions.TOGGLE, Bundle())
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Timber.d("onActivityResult: requestCode %d resultCode %d data %s", requestCode, resultCode, data)
-        when (requestCode) {
-            REQUEST_OPEN_FOLDER -> {
-                when (resultCode) {
-                    RESULT_OK -> {
-                        data?.data?.let {
-                            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            contentResolver.takePersistableUriPermission(it, flags)
-                            mDataService.insertRoot(it).subscribe { added ->
-                                if (added) {
-                                    Snackbar.make(mBinding.coordinator, "New folder added", Snackbar.LENGTH_SHORT)
-                                } else {
-                                    Snackbar.make(mBinding.coordinator, "Failed to add root", Snackbar.LENGTH_LONG)
-                                }
-                            }
-                        } ?: Timber.e("The returned data was null")
-                    }
-                }
-            }
-            else -> super.onActivityResult(requestCode, resultCode, data)
-        }
-    }
-
-    protected fun createBackStack(intent: Intent) {
-        val bob = TaskStackBuilder.create(this)
-        bob.addNextIntentWithParentStack(intent)
-        bob.startActivities()
     }
 
     override fun onBrowserConnected() {
@@ -254,11 +120,11 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
             if (state == null) return
             when (state.state) {
                 PlaybackState.STATE_PLAYING, PlaybackState.STATE_BUFFERING -> {
-                    mBinding.playingSheet.peekPlaypause
+                    mSheetBinding.peekPlaypause
                             .setImageResource(R.drawable.ic_pause_black_48dp)
                 }
                 else -> {
-                    mBinding.playingSheet.peekPlaypause
+                    mSheetBinding.peekPlaypause
                             .setImageResource(R.drawable.ic_play_black_48dp)
                 }
             }
@@ -267,11 +133,11 @@ abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
         override fun onMetadataChanged(metadata: MediaMetadata?) {
             if (metadata == null) return
             //set title
-            mBinding.playingSheet.peekTitle.text = metadata._title()
+            mSheetBinding.peekTitle.text = metadata._title()
             // set icon
             val icon = metadata._iconUri()
             val bitmap = metadata._icon()
-            val thumbnail = mBinding.playingSheet.peekThumbnail
+            val thumbnail = mSheetBinding.peekThumbnail
             if (icon != null) {
                 val opts = RequestOptions().centerCrop(this@BaseSlidingActivity)
                 Glide.with(this@BaseSlidingActivity)

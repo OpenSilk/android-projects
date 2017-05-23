@@ -1,3 +1,4 @@
+
 package org.opensilk.common
 
 import android.app.Activity
@@ -11,4 +12,10 @@ import android.support.annotation.LayoutRes
 
 fun <T: ViewDataBinding> Activity.bindLayout(@LayoutRes layout: Int): T {
     return DataBindingUtil.setContentView(this, layout)
+}
+
+fun <T : ViewDataBinding> Activity.lazyBindLayout(@LayoutRes layout: Int): Lazy<T> {
+    return lazy {
+        DataBindingUtil.setContentView<T>(this, layout)
+    }
 }

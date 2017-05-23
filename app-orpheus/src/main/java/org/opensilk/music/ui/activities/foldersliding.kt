@@ -78,14 +78,6 @@ fun FolderSlidingActivity.buildComponent(): Lazy<FolderComponent> {
  *
  */
 @ActivityScope
-class FolderPresenter
-@Inject
-constructor(): BasePresenter()
-
-/**
- *
- */
-@ActivityScope
 class FolderLoader
 @Inject
 constructor(
@@ -128,7 +120,7 @@ const val EXTRA_MEDIA_ITEM = "media_item"
 /**
  *
  */
-class FolderSlidingActivity: BaseSlidingActivity(), ItemClickSupport.OnItemClickListener {
+class FolderSlidingActivity: DrawerSlidingActivity() {
 
     override val selfNavActionId: Int = 0
 
@@ -139,7 +131,6 @@ class FolderSlidingActivity: BaseSlidingActivity(), ItemClickSupport.OnItemClick
     }
 
     @Inject internal lateinit var mMediaItem: MediaBrowser.MediaItem
-    @Inject override lateinit var mPresenter: FolderPresenter
     @Inject internal lateinit var mLoader: FolderLoader
     @Inject internal lateinit var mAdapter: MediaItemAdapter
 
@@ -160,9 +151,6 @@ class FolderSlidingActivity: BaseSlidingActivity(), ItemClickSupport.OnItemClick
                 }
         //TODO onError
         )
-        //init click listeners
-        ItemClickSupport.addTo(mBinding.recycler)
-                .setOnItemClickListener(this)
     }
 
     override fun onItemClicked(recyclerView: RecyclerView?, position: Int, v: View?) {

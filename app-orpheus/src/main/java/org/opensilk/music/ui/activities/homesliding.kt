@@ -74,14 +74,6 @@ fun HomeSlidingActivity.buildComponent(): Lazy<HomeComponent> {
  *
  */
 @ActivityScope
-class HomePresenter
-@Inject
-constructor(): BasePresenter()
-
-/**
- *
- */
-@ActivityScope
 class HomeLoader
 @Inject
 constructor(
@@ -109,7 +101,7 @@ constructor(
 /**
  *
  */
-class HomeSlidingActivity : BaseSlidingActivity(), ItemClickSupport.OnItemClickListener {
+class HomeSlidingActivity : DrawerSlidingActivity() {
 
     override val selfNavActionId: Int = R.id.nav_folders_root
 
@@ -119,7 +111,6 @@ class HomeSlidingActivity : BaseSlidingActivity(), ItemClickSupport.OnItemClickL
         activityComponent.inject(this)
     }
 
-    @Inject override lateinit var mPresenter: HomePresenter
     @Inject internal lateinit var mLoader: HomeLoader
     @Inject internal lateinit var mAdapter: MediaItemAdapter
 
@@ -147,9 +138,6 @@ class HomeSlidingActivity : BaseSlidingActivity(), ItemClickSupport.OnItemClickL
                     Timber.d("onComplete()")
                 }
         )
-        //init click listeners
-        ItemClickSupport.addTo(mBinding.recycler)
-                .setOnItemClickListener(this)
 
     }
 

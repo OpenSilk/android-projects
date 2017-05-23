@@ -10,7 +10,6 @@ import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.getDaggerComponent
-import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.music.data.DataService
 import org.opensilk.music.data.MusicAuthorityModule
 import rx.Scheduler
