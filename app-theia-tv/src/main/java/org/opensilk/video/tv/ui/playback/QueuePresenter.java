@@ -60,7 +60,7 @@ public class QueuePresenter extends Presenter {
 
         if (description.getIconUri() != null) {
             RequestOptions options = new RequestOptions()
-                    .fitCenter(cardView.getContext())
+                    .fitCenter()
                     .fallback(R.drawable.movie_48dp);
             Glide.with(cardView.getContext())
                     .asDrawable()

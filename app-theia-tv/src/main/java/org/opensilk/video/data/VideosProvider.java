@@ -27,7 +27,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 
-import org.opensilk.common.dagger2.DaggerFuncsKt;
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.video.VideoAppComponent;
 
 import javax.inject.Inject;
@@ -48,7 +48,7 @@ public class VideosProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        VideoAppComponent appComponent = DaggerFuncsKt.getDaggerComponent(getContext());
+        VideoAppComponent appComponent = FuncsKt.getDaggerComponent(getContext());
         VideosProviderModule module = new VideosProviderModule();
         appComponent.newVideosProviderComponent(module).inject(this);
         return true;

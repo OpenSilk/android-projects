@@ -30,6 +30,7 @@ import android.view.ViewGroup;
 
 import org.apache.commons.lang3.StringUtils;
 import org.opensilk.common.app.ScopedActivity;
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoAppComponent;
@@ -80,7 +81,7 @@ public class PlaybackActivity extends ScopedActivity implements IVLCVout.Callbac
 
     @Override
     protected void onCreateScope(MortarScope.Builder builder) {
-        VideoAppComponent appComponent = DaggerFuncsKt.getDaggerComponent(getApplicationContext());
+        VideoAppComponent appComponent = FuncsKt.getDaggerComponent(getApplicationContext());
         PlaybackActivityModule activityModule = new PlaybackActivityModule(getMediaItem());
         PlaybackActivityComponent activityComponent = PlaybackActivityComponent.FACTORY.call(appComponent, activityModule);
         DaggerFuncsKt.withDaggerComponent(builder, activityComponent);

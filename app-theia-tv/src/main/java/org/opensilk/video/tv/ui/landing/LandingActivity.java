@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import org.opensilk.common.app.ScopedActivity;
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoApp;
@@ -36,7 +37,7 @@ public class LandingActivity extends ScopedActivity {
 
     @Override
     protected void onCreateScope(MortarScope.Builder builder) {
-        VideoAppComponent parentComponent = DaggerFuncsKt.getDaggerComponent(getApplicationContext());
+        VideoAppComponent parentComponent = FuncsKt.getDaggerComponent(getApplicationContext());
         LandingActivityModule module = new LandingActivityModule();
         LandingActivityComponent component = LandingActivityComponent.FACTORY.call(parentComponent, module);
         DaggerFuncsKt.withDaggerComponent(builder, component);

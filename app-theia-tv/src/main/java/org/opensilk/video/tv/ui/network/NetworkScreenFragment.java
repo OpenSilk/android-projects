@@ -25,6 +25,7 @@ import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.data.IndexedFoldersLoader;
 import org.opensilk.video.data.UpnpDevicesLoader;
@@ -54,7 +55,7 @@ public class NetworkScreenFragment extends BrowseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        NetworkActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
+        NetworkActivityComponent activityComponent = FuncsKt.getDaggerComponent(getActivity());
         NetworkScreenModule module = new NetworkScreenModule();
         mComponent = activityComponent.newNetworkScreenComponent(module);
         mSubscriptions = new CompositeSubscription();

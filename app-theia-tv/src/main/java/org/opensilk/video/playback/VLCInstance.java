@@ -23,7 +23,7 @@ package org.opensilk.video.playback;
 import android.content.Context;
 import android.widget.Toast;
 
-import org.opensilk.common.dagger2.DaggerFuncsKt;
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger.ForApplication;
 import org.opensilk.video.VideoAppComponent;
 import org.videolan.libvlc.LibVLC;
@@ -64,7 +64,7 @@ public class VLCInstance {
     /** A set of utility functions for the VLC application */
     @Deprecated
     public synchronized static LibVLC get(final Context context) throws IllegalStateException {
-        VideoAppComponent appComponent = DaggerFuncsKt.getDaggerComponent(context);
+        VideoAppComponent appComponent = FuncsKt.getDaggerComponent(context);
         return appComponent.vlcInstance().get();
     }
 

@@ -42,9 +42,9 @@ import java.util.concurrent.LinkedBlockingQueue
 import javax.inject.Inject
 
 import mortar.MortarScope
-import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.common.dagger2.withDaggerComponent
 import org.opensilk.common.dagger.AppContextComponent
+import org.opensilk.common.dagger.getDaggerComponent
 import rx.Observable
 import rx.Scheduler
 import rx.Subscription
@@ -74,7 +74,7 @@ class ScannerService : ScopedService() {
     private var mHasNotifiedStart: Boolean = false
 
     override fun onBuildScope(builder: MortarScope.Builder) {
-        val appComponent = getDaggerComponent<VideoAppComponent>(this)
+        val appComponent: VideoAppComponent = getDaggerComponent()
         builder.withDaggerComponent(appComponent.newScannerServiceComponent())
     }
 
@@ -85,7 +85,7 @@ class ScannerService : ScopedService() {
     override fun onCreate() {
         super.onCreate()
         Timber.d("onCreate()")
-        mComponent = getDaggerComponent(this)
+        mComponent = getDaggerComponent()
         mComponent.inject(this)
         mHandlerThread = HandlerThread("MetadataService", Process.THREAD_PRIORITY_LESS_FAVORABLE)
         mHandlerThread.start()

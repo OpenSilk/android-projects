@@ -48,6 +48,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.apache.commons.lang3.StringUtils;
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.common.util.BundleHelper;
 import org.opensilk.video.data.VideoDescInfo;
@@ -112,7 +113,7 @@ public class PlaybackControlsFragment extends PlaybackOverlayFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        PlaybackActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
+        PlaybackActivityComponent activityComponent = FuncsKt.getDaggerComponent(getActivity());
         mComponent = activityComponent.newPlaybackControlsComponent(new PlaybackControlsModule(getActivity(), this));
         mComponent.inject(this);
 

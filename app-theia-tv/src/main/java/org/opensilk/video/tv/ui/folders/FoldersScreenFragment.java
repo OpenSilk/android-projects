@@ -25,6 +25,7 @@ import android.support.v17.leanback.widget.VerticalGridPresenter;
 import android.view.View;
 import android.widget.Toast;
 
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.data.ChildrenLoader;
@@ -65,7 +66,7 @@ public class FoldersScreenFragment extends VerticalGridFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FoldersActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
+        FoldersActivityComponent activityComponent = FuncsKt.getDaggerComponent(getActivity());
         mComponent = activityComponent.newScreenComponent();
         mSubscriptions = new CompositeSubscription();
         mComponent.inject(this);

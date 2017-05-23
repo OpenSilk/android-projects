@@ -46,6 +46,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
+import org.opensilk.common.dagger.getDaggerComponent
 import org.opensilk.common.dagger2.getDaggerComponent
 import timber.log.Timber
 
@@ -61,7 +62,7 @@ class GlideConfig : GlideModule {
 
     override fun registerComponents(context: Context, registry: Registry) {
         Timber.d("registerComponents()")
-        val appComponent = getDaggerComponent<VideoAppComponent>(context)
+        val appComponent: VideoAppComponent = context.getDaggerComponent()
         val okClient = appComponent.okClient().newBuilder()
                 .addNetworkInterceptor({ chain ->
                     //let glide store responses

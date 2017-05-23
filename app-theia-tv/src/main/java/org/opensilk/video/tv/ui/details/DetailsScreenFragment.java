@@ -32,6 +32,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.data.MediaMetaExtras;
@@ -60,7 +61,7 @@ public class DetailsScreenFragment extends android.support.v17.leanback.app.Deta
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final DetailsActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getContext());
+        final DetailsActivityComponent activityComponent = FuncsKt.getDaggerComponent(getContext());
         final MediaMetaExtras extras = MediaMetaExtras.from(
                 activityComponent.mediaItem().getDescription());
         final DetailsScreenModule screenModule = new DetailsScreenModule(getContext());
@@ -108,7 +109,7 @@ public class DetailsScreenFragment extends android.support.v17.leanback.app.Deta
                         final DisplayMetrics metrics = new DisplayMetrics();
                         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
                         final RequestOptions options = new RequestOptions()
-                                .fitCenter(getContext())
+                                .fitCenter()
                                 .placeholder(defaultBackground);
                         final Target<Drawable> target = new SimpleTarget<Drawable>(metrics.widthPixels, metrics.heightPixels) {
                             @Override
@@ -151,7 +152,7 @@ public class DetailsScreenFragment extends android.support.v17.leanback.app.Deta
                         final int width = getResources().getDimensionPixelSize(R.dimen.detail_thumb_width);
                         final int height = getResources().getDimensionPixelSize(R.dimen.detail_thumb_height);
                         final RequestOptions options = new RequestOptions()
-                                .centerInside(getContext())
+                                .centerInside()
                                 .fallback(defaultIcon);
                         final Target<Drawable> target = new SimpleTarget<Drawable>(width, height) {
                             @Override

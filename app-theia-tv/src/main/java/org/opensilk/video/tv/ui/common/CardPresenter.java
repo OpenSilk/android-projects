@@ -110,7 +110,7 @@ public class CardPresenter extends Presenter {
 
         if (description.getIconUri() != null) {
             RequestOptions options = new RequestOptions()
-                    .fitCenter(cardView.getContext())
+                    .fitCenter()
                     .fallback(iconResource);
             Glide.with(cardView.getContext())
                     .asDrawable()

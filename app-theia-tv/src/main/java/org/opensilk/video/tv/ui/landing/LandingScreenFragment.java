@@ -26,6 +26,7 @@ import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.view.View;
 
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.data.FoldersLoader;
@@ -65,7 +66,7 @@ public class LandingScreenFragment extends BrowseFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LandingActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
+        LandingActivityComponent activityComponent = FuncsKt.getDaggerComponent(getActivity());
         LandingScreenModule screenModule = new LandingScreenModule();
         mComponent = activityComponent.newLandingScreenComponent(screenModule);
         mSubscriptions = new CompositeSubscription();

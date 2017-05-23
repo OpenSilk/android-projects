@@ -33,6 +33,7 @@ import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.ObjectAdapter;
 import android.support.v17.leanback.widget.SpeechRecognitionCallback;
 
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.data.MovieSearchLoader;
 import org.opensilk.video.data.TvSeriesSearchLoader;
@@ -70,7 +71,7 @@ public class SearchScreenFragment extends SearchFragment implements SearchFragme
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        SearchActivityComponent activityComponent = DaggerFuncsKt.getDaggerComponent(getActivity());
+        SearchActivityComponent activityComponent = FuncsKt.getDaggerComponent(getActivity());
         SearchScreenModule module = new SearchScreenModule();
         mComponent = activityComponent.newSearchScreenComponent(module);
         mComponent.inject(this);

@@ -21,6 +21,7 @@ import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 
 import org.opensilk.common.app.ScopedActivity;
+import org.opensilk.common.dagger.FuncsKt;
 import org.opensilk.common.dagger2.DaggerFuncsKt;
 import org.opensilk.video.R;
 import org.opensilk.video.VideoAppComponent;
@@ -35,7 +36,7 @@ public class FoldersActivity extends ScopedActivity {
 
     @Override
     protected void onCreateScope(MortarScope.Builder builder) {
-        VideoAppComponent appComponent = DaggerFuncsKt.getDaggerComponent(getApplicationContext());
+        VideoAppComponent appComponent = FuncsKt.getDaggerComponent(getApplicationContext());
         FoldersActivityModule activityModule = new FoldersActivityModule(getMediaItem());
         FoldersActivityComponent activityComponent = FoldersActivityComponent.FACTORY.call(appComponent, activityModule);
         DaggerFuncsKt.withDaggerComponent(builder, activityComponent);

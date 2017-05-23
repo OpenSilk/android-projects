@@ -298,7 +298,7 @@ public class PlaybackService {
         b.putLong(MediaMetadata.METADATA_KEY_DURATION, duration);
         if (artworkUri != null) {
             RequestOptions options = new RequestOptions()
-                    .fitCenter(mContext);
+                    .fitCenter();
             FutureTarget<Bitmap> futureTarget = Glide.with(mContext)
                     .asBitmap()
                     .apply(options)
