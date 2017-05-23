@@ -39,6 +39,6 @@ android {
 }
 
 dependencies {
-    compile (group: 'com.github.bumptech.glide', name:'glide', version: rootProject.ext.glideVersion)
+    compile "com.github.bumptech.glide:glide:$glideVersion"
     compile (group: 'com.android.support', name: 'palette-v7', version: rootProject.ext.supportLibVersion)
 }

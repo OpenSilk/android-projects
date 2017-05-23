@@ -33,9 +33,7 @@ dependencies {
     compile project(':common-dagger')
     compile project(':media')
 
-    androidTestCompile 'com.android.support.test:runner:0.5'
-    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
+    androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
     androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"
-
-    testCompile 'junit:junit:4.12'
 }
