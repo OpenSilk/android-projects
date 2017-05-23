@@ -45,11 +45,7 @@ dependencies {
     kapt 'com.google.guava:guava:19.0'
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
-    compile "com.google.dagger:dagger:$dagger2Version"
-    compile "javax.annotation:javax.annotation-api:1.2"
-
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     compile "io.reactivex:rxjava:$rxJavaVersion"
     compile "io.reactivex:rxkotlin:$rxKotlinVersion"
