@@ -44,11 +44,11 @@ dependencies {
     compile "org.fourthline.cling:cling-core:$clingVersion"
     compile "org.fourthline.cling:cling-support:$clingVersion"
 
-    compile "org.eclipse.jetty:jetty-server:8.1.18.v20150929"
-    compile "org.eclipse.jetty:jetty-servlet:8.1.18.v20150929"
-    compile "org.eclipse.jetty:jetty-client:8.1.18.v20150929"
+    compile "org.eclipse.jetty:jetty-server:8.1.22.v20160922"
+    compile "org.eclipse.jetty:jetty-servlet:8.1.22.v20160922"
+    compile "org.eclipse.jetty:jetty-client:8.1.22.v20160922"
 
-    compile "javax.servlet:javax.servlet-api:3.1.0"
+    //compile "javax.servlet:javax.servlet-api:3.1.0"
 
 //    compile 'org.seamless:seamless-xml:1.0-alpha3'
 
