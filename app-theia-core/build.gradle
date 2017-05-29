@@ -1,0 +1,63 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    dataBinding {
+        enabled = true
+    }
+}
+
+dependencies {
+    kapt 'com.google.guava:guava:19.0'
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.android.databinding:compiler:$gradleToolsVersion"
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    compile 'org.videolan.libvlc:libvlc-x86:3.0.0-SNAPSHOT@aar'
+
+    compile project(':common-app')
+    compile project(':common-glide')
+    compile project(':media')
+    compile project(':libtvdb')
+    compile project(':libtmdb')
+    compile project(':upnp-cds-browser')
+
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
+    testCompile 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
+    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+
+}
+
+repositories {
+    maven { url "file:///Users/drew/workspace/Opensilk/m2/repository" }
+}
+
+configurations.all {
+    // check for updates every build (to avoid this use offline mode)
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}

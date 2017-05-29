@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2016 OpenSilk Productions LLC.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <import type="android.view.View"/>
+        <variable
+            name="progressInfo"
+            type="org.opensilk.video.VideoProgressInfo"/>
+        <variable
+            name="desc"
+            type="org.opensilk.video.VideoDescInfo"/>
+    </data>
+    <android.support.v17.leanback.widget.BaseCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        >
+
+        <LinearLayout
+            android:layout_width="500dp"
+            android:layout_height="88dp"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            >
+
+            <FrameLayout
+                android:layout_width="56dp"
+                android:layout_height="56dp">
+
+                <ImageView
+                    android:id="@+id/icon"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    tools:src="@drawable/folder_48dp"/>
+
+                <ProgressBar
+                    android:id="@+id/progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:maxHeight="2dp"
+                    android:minHeight="2dp"
+                    android:layoutDirection="ltr"
+                    android:visibility="@{(progressInfo.progress == 0) ? View.GONE : View.VISIBLE}"
+                    android:max="100"
+                    android:progress="@{progressInfo.progress}"
+                    android:progressDrawable="@drawable/lb_playback_progress_bar"
+                    android:layout_gravity="bottom"/>
+
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:textAppearanceLarge"
+                    android:lines="1"
+                    android:ellipsize="middle"
+                    android:text="@{desc.title}"
+                    tools:text="Something"/>
+
+                <TextView
+                    android:id="@+id/subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:textAppearanceMedium"
+                    android:lines="1"
+                    android:ellipsize="middle"
+                    android:text="@{desc.subtitle}"
+                    android:visibility='@{desc.subtitle != "" ? View.VISIBLE : View.GONE}'
+                    tools:text="subtitle"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </android.support.v17.leanback.widget.BaseCardView>
+</layout>

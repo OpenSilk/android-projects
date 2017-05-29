@@ -1,5 +1,5 @@
 include ':common', ':media', ':common-app', ':common-dagger', ':common-glide', ':media-playback'
-include ':upnp-cds-featurelist', ':upnp-cds-browser'
+include ':upnp-cds-featurelist', ':upnp-cds-browser', ':upnp-cds-docprovider'
 include ':libtmdb', ':libtvdb'
 include ':leanback'
-include ':app-theia-tv', ':app-orpheus'
+include ':app-theia-tv', ':app-orpheus', ':app-theia-telly', ':app-theia-core'

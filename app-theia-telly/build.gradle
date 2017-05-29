@@ -1,0 +1,59 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "org.opensilk.video.telly"
+        minSdkVersion 23
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    dexOptions {
+        javaMaxHeapSize "2g"
+    }
+
+    dataBinding {
+        enabled = true
+    }
+}
+
+dependencies {
+    kapt 'com.google.guava:guava:19.0'
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.android.databinding:compiler:$gradleToolsVersion"
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    compile "com.android.support:leanback-v17:$supportLibVersion"
+
+    compile project(':app-theia-core')
+
+    androidTestCompile "com.android.support:support-annotations:$supportLibVersion"
+    androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
+    androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
+    androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"
+
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
+    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+}
+
+repositories {
+    maven { url "file:///Users/drew/workspace/Opensilk/m2/repository" }
+}
