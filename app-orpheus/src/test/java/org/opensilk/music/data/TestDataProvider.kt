@@ -14,6 +14,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers
 import org.opensilk.media.MediaMeta
+import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.shadows.ShadowContentResolver
 
@@ -164,7 +165,6 @@ class TestDataProvider : DocumentsProvider() {
 
         @Throws(Exception::class)
         fun setup(): TestDataProvider {
-            val provider = TestDataProvider()
 
             val pi = ProviderInfo()
             pi.authority = AUTHORITY
@@ -173,15 +173,13 @@ class TestDataProvider : DocumentsProvider() {
             pi.writePermission = android.Manifest.permission.MANAGE_DOCUMENTS
             pi.readPermission = android.Manifest.permission.MANAGE_DOCUMENTS
 
-            //setups the provider
-            provider.attachInfo(RuntimeEnvironment.application, pi)
+            val provider = Robolectric.buildContentProvider(TestDataProvider::class.java).create(pi).get()
             //run again to disable permissions
-            val attachInfo = ContentProvider::class.java.getDeclaredMethod("attachInfo",
-                    Context::class.java, ProviderInfo::class.java, Boolean::class.java)
-            attachInfo.isAccessible = true
-            attachInfo.invoke(provider, RuntimeEnvironment.application, pi, true)
+//            val attachInfo = ContentProvider::class.java.getDeclaredMethod("attachInfo",
+//                    Context::class.java, ProviderInfo::class.java, Boolean::class.java)
+//            attachInfo.isAccessible = true
+//            attachInfo.invoke(provider, RuntimeEnvironment.application, pi, true)
 
-            ShadowContentResolver.registerProvider(AUTHORITY, provider)
             return provider
         }
     }

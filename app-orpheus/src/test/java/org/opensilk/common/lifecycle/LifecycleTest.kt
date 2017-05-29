@@ -4,18 +4,18 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opensilk.music.BuildConfig
-import org.robolectric.RobolectricGradleTestRunner
 import org.robolectric.annotation.Config
 import rx.Subscriber
 import rx.lang.kotlin.observable
 import java.util.*
 import org.assertj.core.api.Assertions.*
+import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by drew on 8/4/16.
  */
-@RunWith(RobolectricGradleTestRunner::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class, sdk = intArrayOf(21))
 class LifecycleTest {
 

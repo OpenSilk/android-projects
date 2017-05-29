@@ -11,7 +11,6 @@ import android.provider.DocumentsProvider
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricGradleTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowContentResolver
@@ -24,13 +23,16 @@ import org.opensilk.media.MediaMeta
 import org.opensilk.music.BuildConfig
 import org.opensilk.music.data.ref.DocumentRef
 import org.opensilk.music.data.ref.MediaRef
+import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 
 
 /**
  * To work on unit tests, switch the Test Artifact in the Build Variants view.
  */
-@RunWith(RobolectricGradleTestRunner::class)
-@Config(constants = BuildConfig::class, sdk = intArrayOf(21))
+@RunWith(RobolectricTestRunner::class)
+@Config(constants = BuildConfig::class,
+        sdk = intArrayOf(21))
 class MusicProviderTest {
     internal lateinit var mMusicProvider: MusicProvider
     internal lateinit var mClient: MusicProviderClient
@@ -41,16 +43,15 @@ class MusicProviderTest {
         Timber.uprootAll()
         Timber.plant(Timber.DebugTree())
         ShadowLog.stream = System.err
-        mMusicProvider = MusicProvider()
-        mMusicProvider.attachInfo(RuntimeEnvironment.application, null)
-        val attachInfo = ContentProvider::class.java.getDeclaredMethod("attachInfo",
-                Context::class.java, ProviderInfo::class.java, Boolean::class.java)
-        attachInfo.isAccessible = true
-        attachInfo.invoke(mMusicProvider, RuntimeEnvironment.application, null, true)
+        mMusicProvider = Robolectric.buildContentProvider(MusicProvider::class.java).create().get()
+
+//        val attachInfo = ContentProvider::class.java.getDeclaredMethod("attachInfo",
+//                Context::class.java, ProviderInfo::class.java, Boolean::class.java)
+//        attachInfo.isAccessible = true
+//        attachInfo.invoke(mMusicProvider, RuntimeEnvironment.application, null, true)
 
         val authority = MusicAuthorityModule().provideMusicAuthority(RuntimeEnvironment.application)
         mClient = MusicProviderClient(RuntimeEnvironment.application, MusicProviderUris(authority))
-        ShadowContentResolver.registerProvider(authority, mMusicProvider)
 
         TestDataProvider.setup()
     }
