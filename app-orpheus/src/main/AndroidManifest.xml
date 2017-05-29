@@ -25,6 +25,8 @@
             android:name=".ui.activities.FolderSlidingActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:parentActivityName=".ui.activities.HomeSlidingActivity"/>
+        <activity android:name=".ui.activities.DetailSlidingActivity"
+                  android:theme="@style/AppTheme.NoActionBar"/>
 
         <provider
             android:authorities="${applicationId}.provider.index"

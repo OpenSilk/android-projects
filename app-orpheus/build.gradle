@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         minSdkVersion 23
-        targetSdkVersion rootProject.ext.compileSdkVersion
+        targetSdkVersion 23
         applicationId "org.opensilk.music"
         versionCode 1
         versionName "1.0"
