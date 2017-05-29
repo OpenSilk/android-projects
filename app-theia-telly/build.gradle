@@ -12,6 +12,8 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+
+        multiDexEnabled = true
     }
     buildTypes {
         release {
@@ -31,6 +33,12 @@ android {
     dataBinding {
         enabled = true
     }
+
+    packagingOptions {
+        exclude 'META-INF/beans.xml'
+        exclude 'META-INF/LICENSE.txt'
+    }
+
 }
 
 dependencies {
