@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
@@ -182,6 +183,18 @@ class MediaItemClickListener : OnItemViewClickedListener {
 
     override fun onItemClicked(itemViewHolder: Presenter.ViewHolder, item: Any,
                                rowViewHolder: RowPresenter.ViewHolder, row: Row) {
-        TODO()
+        val context = itemViewHolder.view.context
+        val mediaItem = item as MediaBrowser.MediaItem
+        val mediaId = newMediaRef(mediaItem.mediaId)
+        when (mediaId.kind) {
+            UPNP_DEVICE -> {
+                val intent = Intent(context, FolderActivity::class.java)
+                intent.putExtra(EXTRA_MEDIAITEM, mediaItem)
+                context.startActivity(intent)
+            }
+            else -> {
+                Toast.makeText(context, "Unhandled ItemClick", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }

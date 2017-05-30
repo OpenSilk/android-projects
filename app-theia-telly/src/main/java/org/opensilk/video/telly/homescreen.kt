@@ -1,5 +1,6 @@
 package org.opensilk.video.telly
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
@@ -60,6 +61,12 @@ class HomeActivity : ScopedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+        startService(Intent(this, UpnpHolderService::class.java))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(Intent(this, UpnpHolderService::class.java))
     }
 
 }

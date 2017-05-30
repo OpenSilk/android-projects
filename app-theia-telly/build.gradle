@@ -16,9 +16,18 @@ android {
         multiDexEnabled = true
     }
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix rootProject.getDebugVersionSuffix()
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        mock {
+            initWith debug
+            applicationIdSuffix ".mock"
+            versionNameSuffix "-mock-" + rootProject.gitSha()
         }
     }
 

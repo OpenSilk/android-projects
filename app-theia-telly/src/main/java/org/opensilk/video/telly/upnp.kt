@@ -1,16 +1,17 @@
 package org.opensilk.video.telly
 
-import android.graphics.Bitmap
+import android.content.Intent
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
+import android.os.IBinder
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
-import org.fourthline.cling.model.meta.*
-import org.fourthline.cling.model.types.ServiceType
+import org.fourthline.cling.model.meta.Device
+import org.fourthline.cling.model.meta.RemoteDeviceIdentity
+import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.model.types.UDAServiceType
 import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
-import org.fourthline.cling.registry.RegistryListener
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.loader.RxListLoader
 import org.opensilk.common.loader.RxLoader
@@ -18,10 +19,7 @@ import org.opensilk.media.MediaMeta
 import org.opensilk.media._setMediaMeta
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import rx.Observable
-import rx.lang.kotlin.BehaviorSubject
 import rx.subscriptions.Subscriptions
-import timber.log.Timber
-import java.net.URI
 import javax.inject.Inject
 
 /**
@@ -57,6 +55,7 @@ class CDSDevicesLoader
                             }
                         }
                         var uri = largest.uri.toString()
+                        //TODO fragile... only tested on MiniDLNA
                         if (uri.startsWith("/")) {
                             val ident = device.identity
                             if (ident is RemoteDeviceIdentity) {
@@ -66,9 +65,6 @@ class CDSDevicesLoader
                         }
                         builder.setIconUri(Uri.parse(uri))
                     }
-                    Timber.d(device.displayString)
-                    Timber.d(device.toString())
-                    Timber.d(device.details.toString())
                     s.onNext(MediaBrowser.MediaItem(builder.build(), MediaBrowser.MediaItem.FLAG_BROWSABLE))
                 }
 
@@ -97,3 +93,29 @@ class CDSDevicesLoader
  * they will need to clear their cache and resubscribe
  */
 class DeviceRemovedException : Exception()
+
+/**
+ * Service that holds a reference to the upnpservice so it can be shutdown
+ */
+class UpnpHolderService: android.app.Service() {
+    lateinit var mUpnpService: CDSUpnpService
+
+    override fun onCreate() {
+        super.onCreate()
+        mUpnpService = rootComponent().upnpService()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mUpnpService.shutdown()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+}
+
+class CDSBrowseLoader : RxListLoader<MediaBrowser.MediaItem> {
+    override val listObservable: Observable<List<MediaBrowser.MediaItem>>
+        get() = TODO("not implemented")
+}

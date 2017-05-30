@@ -36,7 +36,7 @@ fun Context.rootComponent(): RootComponent {
 }
 
 /**
- *
+ * This class is overridden in the mock build variant, changes here will not be seen by espresso tests!
  */
 class VideoApp: BaseApp() {
     override val rootComponent: RootComponent by lazy {

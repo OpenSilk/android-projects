@@ -25,7 +25,7 @@ data class MediaRef(val kind: String, val id: String) {
     }
 }
 
-fun newMediaId(json: String): MediaRef {
+fun newMediaRef(json: String): MediaRef {
     val jr = JsonReader(StringReader(json))
     jr.beginObject()
     val ver = jr.nextInt()
