@@ -14,6 +14,13 @@ import org.opensilk.common.app.ScopedActivity
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.getDaggerComponent
 import org.opensilk.common.dagger2.withDaggerComponent
+import org.opensilk.common.lifecycle.getLifecycleService
+import org.opensilk.common.lifecycle.lifecycleService
+import org.opensilk.common.lifecycle.terminateOnDestroy
+import org.opensilk.common.rx.observeOnMainThread
+import rx.android.schedulers.AndroidSchedulers
+import rx.exceptions.Exceptions
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -44,10 +51,10 @@ class HomeActivityModule
  */
 class HomeActivity : ScopedActivity() {
 
-    override fun onCreateScope(builder: MortarScope.Builder) {
-        builder.withDaggerComponent(DaggerHomeActivityComponent.builder()
+    override val activityComponent: HomeActivityComponent by lazy {
+        DaggerHomeActivityComponent.builder()
                 .rootComponent(rootComponent())
-                .build())
+                .build()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,6 +70,7 @@ class HomeActivity : ScopedActivity() {
 class HomeFragment : BrowseFragment() {
 
     @Inject lateinit var mServersAdapter: ServersAdapter
+    @Inject lateinit var mServersLoader: CDSDevicesLoader
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +81,7 @@ class HomeFragment : BrowseFragment() {
 
         val foldersHeader = HeaderItem("Media Servers")
         rowsAdapter.add(ListRow(foldersHeader, mServersAdapter))
-        //TODO load
+        subscribeServers()
 
         adapter = rowsAdapter
         //onItemViewClickedListener = MediaItemClickListener()
@@ -83,7 +91,7 @@ class HomeFragment : BrowseFragment() {
         super.onViewCreated(view, savedInstanceState)
         // Badge, when set, takes precedent over title
         title = getString(R.string.landing_title)
-        headersState = BrowseFragment.HEADERS_ENABLED
+        headersState = BrowseFragment.HEADERS_DISABLED
         isHeadersTransitionOnBackEnabled = true
         // set fastLane (or headers) background color
         brandColor = context.getColor(R.color.fastlane_background)
@@ -93,6 +101,25 @@ class HomeFragment : BrowseFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+    }
+
+    private fun subscribeServers() {
+        mServersLoader.observable
+                .observeOnMainThread()
+                .terminateOnDestroy(context)
+                .subscribe({
+                    Timber.d("Found Server")
+                    mServersAdapter.add(it)
+                },
+                {
+                    if (it is DeviceRemovedException) {
+                        mServersAdapter.clear()
+                        subscribeServers() //recursive
+                    } else {
+                        Exceptions.propagate(it)
+                    }
+                }
+        )
     }
 }
 

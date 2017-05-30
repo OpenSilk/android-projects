@@ -8,6 +8,7 @@ import org.opensilk.common.app.BaseApp
 import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger.getDaggerComponent
+import org.opensilk.upnp.cds.browser.CDSUpnpService
 import javax.inject.Singleton
 
 /**
@@ -17,7 +18,9 @@ import javax.inject.Singleton
 @Component(
         modules = arrayOf(RootModule::class, AppContextModule::class)
 )
-interface RootComponent: AppContextComponent
+interface RootComponent: AppContextComponent {
+    fun upnpService(): CDSUpnpService
+}
 
 /**
  *
@@ -38,5 +41,10 @@ fun Context.rootComponent(): RootComponent {
 class VideoApp: BaseApp() {
     override val rootComponent: RootComponent by lazy {
         DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        setupTimber(true, {})
     }
 }

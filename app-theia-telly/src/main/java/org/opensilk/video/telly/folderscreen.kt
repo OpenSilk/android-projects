@@ -47,12 +47,12 @@ class FolderActivityModule(val mMediaItem: MediaBrowser.MediaItem) {
  */
 class FolderActivity: ScopedActivity() {
 
-    override fun onCreateScope(builder: MortarScope.Builder) {
+    override val activityComponent: Any by lazy {
         val mediaItem: MediaBrowser.MediaItem = intent.getParcelableExtra(EXTRA_MEDIAITEM)
-        builder.withDaggerComponent(DaggerFolderActivityComponent.builder()
+        DaggerFolderActivityComponent.builder()
                 .rootComponent(rootComponent())
                 .folderActivityModule(FolderActivityModule(mediaItem))
-                .build())
+                .build()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
