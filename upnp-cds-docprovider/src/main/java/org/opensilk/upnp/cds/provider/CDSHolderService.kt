@@ -4,27 +4,23 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import javax.inject.Inject
 
 /**
  * Created by drew on 5/19/17.
  */
 class CDSHolderService : Service() {
 
-    val mHolder: Holder = Holder()
-    var mUpnpService: CDSUpnpService? = null
+    @Inject lateinit var mUpnpService: CDSUpnpService
 
-    override fun onBind(intent: Intent?): IBinder {
-        return mHolder
+    override fun onCreate() {
+        super.onCreate()
+
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        mUpnpService = null
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
     }
 
-    inner class Holder: Binder() {
-        fun setCDSUpnpService(service: CDSUpnpService?) {
-            mUpnpService = service
-        }
-    }
+
 }

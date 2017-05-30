@@ -38,8 +38,6 @@ class CDSDocProvider() : DocumentsProvider(), ServiceConnection {
     @Inject lateinit var mUpnpService: CDSUpnpService
     @Inject lateinit var mDBClient: CDSDatabaseClient
 
-    var mHolderService : CDSHolderService.Holder? = null
-
     override fun onCreate(): Boolean {
         val appComponent: AppContextComponent = context.getDaggerComponent()
         context.bindService(Intent(context, CDSHolderService::class.java), this, Context.BIND_AUTO_CREATE)

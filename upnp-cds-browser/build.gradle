@@ -55,7 +55,13 @@ dependencies {
 
     compile "org.apache.commons:commons-lang3:$commonsLangVersion"
 
+    compile "org.fourthline.cling:cling-core:$clingVersion"
+    compile "org.fourthline.cling:cling-support:$clingVersion"
+
+    compile "org.eclipse.jetty:jetty-server:8.1.22.v20160922"
+    compile "org.eclipse.jetty:jetty-servlet:8.1.22.v20160922"
+    compile "org.eclipse.jetty:jetty-client:8.1.22.v20160922"
+
     compile project(':common-dagger')
-    compile project(':upnp-cds-featurelist')
 
 }
