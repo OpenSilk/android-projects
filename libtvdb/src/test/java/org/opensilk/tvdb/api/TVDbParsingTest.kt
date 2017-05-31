@@ -22,7 +22,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opensilk.tvdb.BuildConfig
-import org.robolectric.RobolectricGradleTestRunner
 import org.robolectric.annotation.Config
 import org.simpleframework.xml.core.Persister
 

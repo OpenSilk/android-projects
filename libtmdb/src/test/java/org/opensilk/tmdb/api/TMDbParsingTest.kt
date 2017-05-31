@@ -29,7 +29,6 @@ import org.opensilk.tmdb.api.model.TvEpisode
 import org.opensilk.tmdb.api.model.TvSeason
 import org.opensilk.tmdb.api.model.TvSeries
 import org.opensilk.tmdb.api.model.TvSeriesList
-import org.robolectric.RobolectricGradleTestRunner
 import org.robolectric.annotation.Config
 
 import java.io.InputStream
