@@ -47,6 +47,8 @@ class FolderActivityModule(val mMediaItem: MediaBrowser.MediaItem) {
  */
 class FolderActivity: ScopedActivity() {
 
+
+
     override val activityComponent: Any by lazy {
         val mediaItem: MediaBrowser.MediaItem = intent.getParcelableExtra(EXTRA_MEDIAITEM)
         DaggerFolderActivityComponent.builder()

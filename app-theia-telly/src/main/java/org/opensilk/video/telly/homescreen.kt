@@ -1,5 +1,6 @@
 package org.opensilk.video.telly
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
@@ -8,18 +9,15 @@ import android.support.v17.leanback.widget.HeaderItem
 import android.support.v17.leanback.widget.ListRow
 import android.support.v17.leanback.widget.ListRowPresenter
 import android.view.View
-import dagger.Component
+import dagger.Binds
 import dagger.Module
-import mortar.MortarScope
+import dagger.Subcomponent
+import dagger.multibindings.ClassKey
+import dagger.multibindings.IntoMap
 import org.opensilk.common.app.ScopedActivity
-import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.dagger.getDaggerComponent
-import org.opensilk.common.dagger2.withDaggerComponent
-import org.opensilk.common.lifecycle.getLifecycleService
-import org.opensilk.common.lifecycle.lifecycleService
+import org.opensilk.common.dagger.*
 import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.rx.observeOnMainThread
-import rx.android.schedulers.AndroidSchedulers
 import rx.exceptions.Exceptions
 import timber.log.Timber
 import javax.inject.Inject
@@ -33,30 +31,27 @@ const val EXTRA_MEDIAITEM = "org.opensilk.extra.mediaitem"
  *
  */
 @ActivityScope
-@Component(
-        dependencies = arrayOf(RootComponent::class),
-        modules = arrayOf(HomeActivityModule::class)
-)
-interface HomeActivityComponent {
-    fun inject(fragment: HomeFragment)
+@Subcomponent(modules = arrayOf(UpnpLoadersModule::class))
+interface HomeComponent: Injector<HomeFragment>{
+    @Subcomponent.Builder
+    abstract class Builder: Injector.Builder<HomeFragment>()
 }
 
 /**
  *
  */
-@Module
-class HomeActivityModule
+@Module(subcomponents = arrayOf(HomeComponent::class))
+abstract class HomeModule {
+    @Binds @IntoMap @ClassKey(HomeActivity::class)
+    abstract fun provideBuilderFactory(b: HomeComponent.Builder): Injector.Factory<*>
+}
 
 /**
  *
  */
 class HomeActivity : ScopedActivity() {
 
-    override val activityComponent: HomeActivityComponent by lazy {
-        DaggerHomeActivityComponent.builder()
-                .rootComponent(rootComponent())
-                .build()
-    }
+    override val activityComponent: Any = DaggerServiceReference()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,10 +74,13 @@ class HomeFragment : BrowseFragment() {
     @Inject lateinit var mServersAdapter: ServersAdapter
     @Inject lateinit var mServersLoader: CDSDevicesLoader
 
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        injectMe()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val activityComponent: HomeActivityComponent = context.getDaggerComponent()
-        activityComponent.inject(this)
 
         val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
 

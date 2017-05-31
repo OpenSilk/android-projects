@@ -12,8 +12,8 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
-
         multiDexEnabled = true
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         debug {
@@ -48,12 +48,17 @@ android {
         exclude 'META-INF/LICENSE.txt'
     }
 
+    testBuildType "mock"
+
 }
 
 dependencies {
-    kapt 'com.google.guava:guava:19.0'
+    kapt 'com.google.guava:guava:20.0'
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    //annotationProcessor "com.google.dagger:dagger-android-processor:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
+
+    //compile "com.google.dagger:dagger-android:$dagger2Version"
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
@@ -61,6 +66,8 @@ dependencies {
 
     compile project(':app-theia-core')
 
+    androidTestCompile "com.android.support.test.espresso:espresso-core:$test_espressoVersion"
+    androidTestCompile "com.android.support.test.espresso:espresso-intents:$test_espressoVersion"
     androidTestCompile "com.android.support:support-annotations:$supportLibVersion"
     androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
     androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"

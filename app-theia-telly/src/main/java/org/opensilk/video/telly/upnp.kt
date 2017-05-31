@@ -5,6 +5,9 @@ import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.IBinder
+import dagger.Binds
+import dagger.Module
+import dagger.Subcomponent
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
 import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.RemoteDeviceIdentity
@@ -13,6 +16,9 @@ import org.fourthline.cling.model.types.UDAServiceType
 import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
 import org.opensilk.common.dagger.ActivityScope
+import org.opensilk.common.dagger.Injector
+import org.opensilk.common.dagger.ServiceScope
+import org.opensilk.common.dagger.injectMe
 import org.opensilk.common.loader.RxListLoader
 import org.opensilk.common.loader.RxLoader
 import org.opensilk.media.MediaMeta
@@ -23,13 +29,27 @@ import rx.subscriptions.Subscriptions
 import javax.inject.Inject
 
 /**
+ * This module is superseded in mock for espresso tests
+ */
+@Module
+abstract class UpnpLoadersModule {
+    @Binds
+    abstract fun provideCDSDevicesLoader(impl: CDSDevicesLoaderImpl): CDSDevicesLoader
+}
+
+/**
+ * The Loader for the Media Servers row in the Home Activity
+ */
+interface CDSDevicesLoader: RxLoader<MediaBrowser.MediaItem>
+
+/**
  * Created by drew on 5/29/17.
  */
 @ActivityScope
-class CDSDevicesLoader
+class CDSDevicesLoaderImpl
 @Inject constructor(
         private val mUpnpService: CDSUpnpService
-): RxLoader<MediaBrowser.MediaItem> {
+): CDSDevicesLoader {
     override val observable: Observable<MediaBrowser.MediaItem> by lazy {
         Observable.create<MediaBrowser.MediaItem> { s ->
             val listener = object : DefaultRegistryListener() {
@@ -95,14 +115,30 @@ class CDSDevicesLoader
 class DeviceRemovedException : Exception()
 
 /**
+ *
+ */
+@ServiceScope
+@Subcomponent
+interface UpnpHolderServiceComponent: Injector<UpnpHolderService> {
+    @Subcomponent.Builder
+    abstract class Builder : Injector.Builder<UpnpHolderService>()
+}
+
+/**
+ *
+ */
+@Module(subcomponents = arrayOf(UpnpHolderServiceComponent::class))
+class UpnpHolderServiceModule
+
+/**
  * Service that holds a reference to the upnpservice so it can be shutdown
  */
 class UpnpHolderService: android.app.Service() {
-    lateinit var mUpnpService: CDSUpnpService
+    @Inject lateinit var mUpnpService: CDSUpnpService
 
     override fun onCreate() {
         super.onCreate()
-        mUpnpService = rootComponent().upnpService()
+        injectMe()
     }
 
     override fun onDestroy() {

@@ -9,7 +9,7 @@ buildscript {
         gradleToolsVersion = "2.3.2"
 
         supportLibVersion = "25.3.1"
-        dagger2Version = "2.4"
+        dagger2Version = "2.11"
         rxJavaVersion = "1.1.1"
         rxAndroidVersion = "1.1.0"
         timberVersion = "4.1.0"
@@ -27,6 +27,7 @@ buildscript {
         test_assertJVersion = "1.7.1"
         test_mockwebserverVersion = "3.2.0"
         test_supportTestVersion = "0.5" //test runner and rules
+        test_espressoVersion = "2.2.2"
     }
     repositories {
         jcenter()
@@ -48,4 +49,12 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+def gitSha() {
+    return 'git rev-parse --short HEAD'.execute().text.trim()
+}
+
+def getDebugVersionSuffix() {
+    return "${gitSha()}".isEmpty() ? "-SNAPSHOT" : "-SNAPSHOT-${gitSha()}"
 }
