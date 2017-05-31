@@ -89,7 +89,7 @@ class HomeFragment : BrowseFragment() {
         subscribeServers()
 
         adapter = rowsAdapter
-        //onItemViewClickedListener = MediaItemClickListener()
+        onItemViewClickedListener = MediaItemClickListener()
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {

@@ -26,13 +26,21 @@ data class MediaRef(val kind: String, val id: String) {
 }
 
 fun newMediaRef(json: String): MediaRef {
-    val jr = JsonReader(StringReader(json))
-    jr.beginObject()
-    val ver = jr.nextInt()
-    val kind = jr.nextString()
-    val id = jr.nextString()
-    jr.close()
-    return MediaRef(kind, id)
+    return JsonReader(StringReader(json)).use { jr ->
+        var kind: String = ""
+        var id : String = ""
+        jr.beginObject()
+        while (jr.hasNext()) {
+            when (jr.nextName()) {
+                "var" -> jr.skipValue()
+                "kind" -> kind = jr.nextString()
+                "id" -> id = jr.nextString()
+                else -> jr.skipValue()
+            }
+        }
+        jr.endObject()
+        return@use MediaRef(kind, id)
+    }
 }
 
 fun MediaDescription.Builder._mediaRef(mediaRef: MediaRef) : MediaDescription.Builder {
