@@ -6,15 +6,10 @@ import android.support.v17.leanback.app.VerticalGridFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.TitleView
 import android.support.v17.leanback.widget.VerticalGridPresenter
-import dagger.Component
-import dagger.Module
-import dagger.Provides
-import dagger.Subcomponent
+import dagger.*
 import mortar.MortarScope
 import org.opensilk.common.app.ScopedActivity
-import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.dagger.ScreenScope
-import org.opensilk.common.dagger.getDaggerComponent
+import org.opensilk.common.dagger.*
 import org.opensilk.common.dagger2.withDaggerComponent
 import org.opensilk.media._getMediaTitle
 import javax.inject.Inject
@@ -23,39 +18,26 @@ import javax.inject.Inject
  * Created by drew on 5/28/17.
  */
 @ActivityScope
-@Component(
-        dependencies = arrayOf(RootComponent::class),
-        modules = arrayOf(FolderActivityModule::class)
-)
-interface FolderActivityComponent {
-    fun inject(fragment: FolderFragment)
+@Subcomponent(modules = arrayOf(UpnpLoadersModule::class))
+interface FolderComponent: Injector<FolderFragment> {
+    @Subcomponent.Builder
+    abstract class Builder: Injector.Builder<FolderFragment>() {
+        @BindsInstance abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
+    }
 }
 
 /**
  *
  */
-@Module
-class FolderActivityModule(val mMediaItem: MediaBrowser.MediaItem) {
-    @Provides
-    fun provideMediaItem() : MediaBrowser.MediaItem {
-        return mMediaItem
-    }
-}
+@Module(subcomponents = arrayOf(FolderComponent::class))
+class FolderModule
 
 /**
  *
  */
 class FolderActivity: ScopedActivity() {
 
-
-
-    override val activityComponent: Any by lazy {
-        val mediaItem: MediaBrowser.MediaItem = intent.getParcelableExtra(EXTRA_MEDIAITEM)
-        DaggerFolderActivityComponent.builder()
-                .rootComponent(rootComponent())
-                .folderActivityModule(FolderActivityModule(mediaItem))
-                .build()
-    }
+    override val activityComponent: Any = DaggerServiceReference()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,8 +56,7 @@ class FolderFragment: VerticalGridFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val activityComponent: FolderActivityComponent = context.getDaggerComponent()
-        activityComponent.inject(this)
+        injectMe()
 
         title = mMediaItem._getMediaTitle()
         gridPresenter = VerticalGridPresenter()

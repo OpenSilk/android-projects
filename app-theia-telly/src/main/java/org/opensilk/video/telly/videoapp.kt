@@ -82,6 +82,8 @@ open class VideoApp: BaseApp(), InjectionManager {
     override fun injectFoo(foo: Any) {
         if (foo is HomeFragment) {
             (foo.activity as HomeActivity).daggerService<HomeComponent>(mHomeBuilder).inject(foo)
+        } else if (foo is FolderFragment) {
+            (foo.activity as FolderActivity).daggerService<FolderComponent>(mHomeBuilder).inject(foo)
         } else if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.build().inject(foo)
         } else {
