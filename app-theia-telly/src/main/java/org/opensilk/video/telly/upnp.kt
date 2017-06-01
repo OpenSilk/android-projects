@@ -4,6 +4,7 @@ import android.content.Intent
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
+import android.os.Binder
 import android.os.IBinder
 import dagger.Binds
 import dagger.Module
@@ -134,6 +135,7 @@ class UpnpHolderServiceModule
  * Service that holds a reference to the upnpservice so it can be shutdown
  */
 class UpnpHolderService: android.app.Service() {
+    private val mBinder = HolderBinder()
     @Inject lateinit var mUpnpService: CDSUpnpService
 
     override fun onCreate() {
@@ -147,10 +149,15 @@ class UpnpHolderService: android.app.Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        return null
+        return mBinder
     }
+
+    class HolderBinder: Binder()
 }
 
+/**
+ * 
+ */
 class CDSBrowseLoader : RxListLoader<MediaBrowser.MediaItem> {
     override val listObservable: Observable<List<MediaBrowser.MediaItem>>
         get() = TODO("not implemented")

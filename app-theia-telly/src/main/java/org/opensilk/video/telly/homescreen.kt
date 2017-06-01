@@ -49,20 +49,11 @@ abstract class HomeModule {
 /**
  *
  */
-class HomeActivity : ScopedActivity() {
-
-    override val activityComponent: Any = DaggerServiceReference()
+class HomeActivity : BaseVideoActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
-
-        startService(Intent(this, UpnpHolderService::class.java))
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        stopService(Intent(this, UpnpHolderService::class.java))
     }
 
 }
@@ -72,6 +63,7 @@ class HomeActivity : ScopedActivity() {
  */
 class HomeFragment : BrowseFragment() {
 
+    @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
     @Inject lateinit var mServersLoader: CDSDevicesLoader
 
@@ -83,13 +75,11 @@ class HomeFragment : BrowseFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
-
         val foldersHeader = HeaderItem("Media Servers")
-        rowsAdapter.add(ListRow(foldersHeader, mServersAdapter))
+        mHomeAdapter.add(ListRow(foldersHeader, mServersAdapter))
         subscribeServers()
 
-        adapter = rowsAdapter
+        adapter = mHomeAdapter
         onItemViewClickedListener = MediaItemClickListener()
     }
 
@@ -132,6 +122,11 @@ class HomeFragment : BrowseFragment() {
 /**
  *
  */
-@ActivityScope
+//@ActivityScope TODO will this leak? it may hold onto the view via the listener
+class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())
+
+/**
+ *
+ */
 class ServersAdapter @Inject constructor(presenter: MediaItemPresenter) : ArrayObjectAdapter(presenter)
 

@@ -75,7 +75,7 @@ open class VideoApp: BaseApp(), InjectionManager {
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
 
     /**
-     * Anything that is injectable needs to be injected here
+     * Anything that is injectable needs to be injected here.
      * They should not inject themselves, that's not how dependency injection
      * is supposed to work.
      */

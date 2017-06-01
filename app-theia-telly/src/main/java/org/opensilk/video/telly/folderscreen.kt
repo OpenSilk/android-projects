@@ -1,5 +1,6 @@
 package org.opensilk.video.telly
 
+import android.content.Context
 import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.app.VerticalGridFragment
@@ -35,9 +36,7 @@ class FolderModule
 /**
  *
  */
-class FolderActivity: ScopedActivity() {
-
-    override val activityComponent: Any = DaggerServiceReference()
+class FolderActivity: BaseVideoActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,19 +51,28 @@ class FolderActivity: ScopedActivity() {
 class FolderFragment: VerticalGridFragment() {
 
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
-    @Inject lateinit var mPresenter: MediaItemListPresenter
+    @Inject lateinit var mFoldersAdapter: FoldersAdapter
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        injectMe()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        injectMe()
 
         title = mMediaItem._getMediaTitle()
         gridPresenter = VerticalGridPresenter()
         gridPresenter.numberOfColumns = 1
 
-        adapter = ArrayObjectAdapter(mPresenter)
+        adapter = mFoldersAdapter
         onItemViewClickedListener = MediaItemClickListener()
 
     }
 
 }
+
+/**
+ *
+ */
+class FoldersAdapter @Inject constructor(presenter: MediaItemListPresenter) : ArrayObjectAdapter(presenter)
