@@ -31,7 +31,8 @@ import javax.inject.Singleton
         modules = arrayOf(RootModule::class,
                 AppContextModule::class,
                 UpnpHolderServiceModule::class,
-                HomeModule::class
+                HomeModule::class,
+                FolderModule::class
         )
 )
 interface RootComponent: AppContextComponent, Injector<VideoApp>

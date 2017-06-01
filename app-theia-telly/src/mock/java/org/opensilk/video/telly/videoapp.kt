@@ -22,7 +22,9 @@ import javax.inject.Singleton
                 AppContextModule::class,
                 UpnpHolderServiceModule::class,
                 HomeModule::class,
-                MockHomeModule::class
+                MockHomeModule::class,
+                FolderModule::class,
+                MockFolderModule::class
                 )
 )
 interface MockRootComponent: RootComponent {
@@ -49,10 +51,26 @@ class MockVideoApp: VideoApp() {
     }
 
     @Inject lateinit var mMockHomeBuilder: MockHomeComponent.Builder
+    @Inject lateinit var mMockFolderBuilder: MockFolderComponent.Builder
 
     override fun injectFoo(foo: Any) {
         if (foo is HomeFragment) {
-            (foo.activity as HomeActivity).daggerService<MockHomeComponent>(mMockHomeBuilder).inject(foo)
+            val act = foo.activity as HomeActivity
+            val comp: Injector<HomeFragment> = if (act.hasDaggerComponent()) {
+                act.daggerComponent()
+            } else {
+                act.setDaggerComponent(mMockHomeBuilder.build())
+            }
+            comp.inject(foo)
+        } else if (foo is FolderFragment) {
+            val act = foo.activity as FolderActivity
+            val comp: Injector<FolderFragment> = if (act.hasDaggerComponent()) {
+                act.daggerComponent()
+            } else {
+                val mediaItem: MediaBrowser.MediaItem = act.intent.getParcelableExtra(EXTRA_MEDIAITEM)
+                act.setDaggerComponent(mMockFolderBuilder.mediaItem(mediaItem).build())
+            }
+            comp.inject(foo)
         } else {
             super.injectFoo(foo)
         }
