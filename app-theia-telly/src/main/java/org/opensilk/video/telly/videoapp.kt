@@ -72,6 +72,7 @@ open class VideoApp: BaseApp(), InjectionManager {
     //enable @IntoMap method that is supposed to provide an Injector.Factory but doesn't
     //@Inject lateinit var mInjectors: Map<Class<*>, Injector.Factory<*>>
     @Inject lateinit var mHomeBuilder: HomeComponent.Builder
+    @Inject lateinit var mFolderBuilder: FolderComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
 
     /**
@@ -81,9 +82,22 @@ open class VideoApp: BaseApp(), InjectionManager {
      */
     override fun injectFoo(foo: Any) {
         if (foo is HomeFragment) {
-            (foo.activity as HomeActivity).daggerService<HomeComponent>(mHomeBuilder).inject(foo)
+            val act = foo.activity as HomeActivity
+            val comp: Injector<HomeFragment> = if (act.hasDaggerComponent()) {
+                act.daggerComponent()
+            } else {
+                act.setDaggerComponent(mHomeBuilder.build())
+            }
+            comp.inject(foo)
         } else if (foo is FolderFragment) {
-            (foo.activity as FolderActivity).daggerService<FolderComponent>(mHomeBuilder).inject(foo)
+            val act = foo.activity as FolderActivity
+            val comp: Injector<FolderFragment> = if (act.hasDaggerComponent()) {
+                act.daggerComponent()
+            } else {
+                val mediaItem: MediaBrowser.MediaItem = act.intent.getParcelableExtra(EXTRA_MEDIAITEM)
+                act.setDaggerComponent(mFolderBuilder.mediaItem(mediaItem).build())
+            }
+            comp.inject(foo)
         } else if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.build().inject(foo)
         } else {
@@ -93,24 +107,20 @@ open class VideoApp: BaseApp(), InjectionManager {
 
 }
 
-/**
- * utility patch to retain the component in mortar but still keep activities
- * from creating the component themselves
- *
- * since scopes can be reused on configuration changes we use a reference class
- * to hold the component and only make one instance
- */
+fun BaseVideoActivity.hasDaggerComponent(): Boolean {
+    val ref = scope.getService<DaggerServiceReference>(DAGGER_SERVICE)
+    return ref.cmp != null
+}
+
+fun <T> BaseVideoActivity.setDaggerComponent(bob: Injector<T>): Injector<T> {
+    val ref = scope.getService<DaggerServiceReference>(DAGGER_SERVICE)
+    ref.cmp = bob
+    return bob
+}
+
 @Suppress("UNCHECKED_CAST")
-fun <T> HasScope.daggerService(bob: Injector.Builder<*>): T {
-    if (scope.hasService(DAGGER_SERVICE)) {
-        val ref = scope.getService<DaggerServiceReference>(DAGGER_SERVICE)
-        if (ref.cmp == null) {
-            ref.cmp = bob.build()
-        }
-        return ref.cmp as T
-    } else {
-        TODO("No dagger service in scope")
-    }
+fun <T> BaseVideoActivity.daggerComponent(): Injector<T> {
+    return scope.getService<DaggerServiceReference>(DAGGER_SERVICE).cmp as Injector<T>
 }
 
 /**
@@ -118,5 +128,5 @@ fun <T> HasScope.daggerService(bob: Injector.Builder<*>): T {
  * set the activityComponent to this in all activities
  */
 class DaggerServiceReference {
-    var cmp: Any? = null
+    var cmp: Injector<*>? = null
 }
