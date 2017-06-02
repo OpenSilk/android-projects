@@ -28,6 +28,8 @@ buildscript {
         test_mockwebserverVersion = "3.2.0"
         test_supportTestVersion = "0.5" //test runner and rules
         test_espressoVersion = "2.2.2"
+
+        kapt_guavaVersion = "20.0"
     }
     repositories {
         jcenter()

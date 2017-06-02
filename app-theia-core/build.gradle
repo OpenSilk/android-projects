@@ -31,7 +31,7 @@ android {
 }
 
 dependencies {
-    kapt 'com.google.guava:guava:19.0'
+    kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
 
@@ -45,9 +45,10 @@ dependencies {
     compile project(':libtvdb')
     compile project(':libtmdb')
     compile project(':upnp-cds-browser')
+    compile project(':upnp-cds-featurelist')
 
     testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    testCompile 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
+    //testCompile 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
     testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
     testCompile "org.assertj:assertj-core:$test_assertJVersion"
 

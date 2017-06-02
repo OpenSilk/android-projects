@@ -42,7 +42,7 @@ android {
 }
 
 dependencies {
-    kapt 'com.google.guava:guava:19.0'
+    kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt (group: 'com.google.dagger', name:'dagger-compiler', version: rootProject.ext.dagger2Version)
 
     compile (group: 'com.google.dagger', name:'dagger', version: rootProject.ext.dagger2Version)
