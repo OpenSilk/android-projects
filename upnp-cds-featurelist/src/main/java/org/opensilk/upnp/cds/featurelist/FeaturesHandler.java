@@ -29,8 +29,8 @@ import org.xml.sax.SAXException;
  */
 class FeaturesHandler extends SAXParser.Handler<Features> {
 
-    FeaturesHandler(Features instance) {
-        super(instance);
+    FeaturesHandler(Features instance, SAXParser parser) {
+        super(instance, parser);
     }
 
     @Override

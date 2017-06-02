@@ -46,7 +46,7 @@ public class FeaturesParser extends SAXParser {
 
     public FeaturesParser() {
         this.features = new Features();
-        setContentHandler(new FeaturesHandler(features));
+        setContentHandler(new FeaturesHandler(features, this));
     }
 
     public Features parse(String xml) throws ParserException {

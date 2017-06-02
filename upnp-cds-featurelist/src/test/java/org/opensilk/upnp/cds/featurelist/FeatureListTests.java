@@ -31,12 +31,15 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 /**
  * Created by drew on 12/20/16.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, manifest = Config.NONE, sdk = 21)
+@Config(constants = BuildConfig.class)
 public class FeatureListTests {
 
     @Test
@@ -44,22 +47,31 @@ public class FeatureListTests {
         ActionInvocation ai = makeActionInvocation();
         //pull the features
         Features features = new FeaturesParser().parse(ai.getOutput("FeatureList").toString());
-        Assertions.assertThat(features.getFeatures().size()).isEqualTo(1);
+        assertThat(features.getFeatures().size()).isEqualTo(1);
+        Feature feature = features.getFeatures().get(0);
+        assertThat(feature).isInstanceOf(BasicView.class);
+        assertThat(feature.getName()).isEqualTo(BasicView.NAME);
+        assertThat(feature.getVersion()).isEqualTo(1);
+        BasicView basicView = (BasicView) feature;
+        assertThat(basicView.getAudioItemId()).isEqualTo("1");
+        assertThat(basicView.getVideoItemId()).isEqualTo("2");
     }
 
     @Test
     public void test_callback() throws Exception {
         ActionInvocation ai = makeActionInvocation();
+        final AtomicBoolean called = new AtomicBoolean(false);
         XGetFeatureListCallback fc = new XGetFeatureListCallback(null) {
             @Override
             public void received(ActionInvocation actionInvocation, Features features) {
-                Assertions.assertThat(features.getFeatures().size()).isEqualTo(1);
+                called.set(true);
+                assertThat(features.getFeatures().size()).isEqualTo(1);
                 Feature f = features.getFeatures().get(0);
-                Assertions.assertThat(f).isOfAnyClassIn(BasicView.class);
+                assertThat(f).isOfAnyClassIn(BasicView.class);
                 BasicView b = (BasicView) f;
-                Assertions.assertThat(b.getContainers().size()).isEqualTo(3);
-                Assertions.assertThat(b.getAudioItemId()).isEqualTo("1");
-                Assertions.assertThat(b.getVideoItemId()).isEqualTo("2");
+                assertThat(b.getContainers().size()).isEqualTo(3);
+                assertThat(b.getAudioItemId()).isEqualTo("1");
+                assertThat(b.getVideoItemId()).isEqualTo("2");
             }
 
             @Override
@@ -68,15 +80,16 @@ public class FeatureListTests {
             }
         };
         fc.success(ai);
+        assertThat(called.get()).isEqualTo(true);
     }
 
 
     ActionInvocation makeActionInvocation() throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("getfeaturelistresponse.xml");
-        Assertions.assertThat(is).isNotNull();
+        assertThat(is).isNotNull();
         String xml = IOUtils.toString(is, "UTF-8");
         is.close();
-        Assertions.assertThat(xml).isNotEmpty();
+        assertThat(xml).isNotEmpty();
         //Minimal stuffs needed to convert the xml into an action invocation output
         StreamResponseMessage srm = new StreamResponseMessage(xml);
         IncomingActionResponseMessage iarm = new IncomingActionResponseMessage(srm);
