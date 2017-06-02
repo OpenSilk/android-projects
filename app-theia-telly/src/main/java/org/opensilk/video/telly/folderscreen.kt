@@ -52,6 +52,7 @@ class FolderFragment: VerticalGridFragment() {
 
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     @Inject lateinit var mFoldersAdapter: FoldersAdapter
+    @Inject lateinit var mItemClickListener: MediaItemClickListener
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -66,7 +67,7 @@ class FolderFragment: VerticalGridFragment() {
         gridPresenter.numberOfColumns = 1
 
         adapter = mFoldersAdapter
-        onItemViewClickedListener = MediaItemClickListener()
+        onItemViewClickedListener = mItemClickListener
 
     }
 

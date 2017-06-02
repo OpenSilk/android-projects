@@ -15,6 +15,7 @@ import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
+import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.rx.RxUtils
 import org.opensilk.media._getMediaMeta
 import org.opensilk.media._getMediaTitle
@@ -47,6 +48,7 @@ class MediaItemImageCardView(context: Context): ImageCardView(context) {
 /**
  * Supposed to be stoteless so dont need @ActivityScope
  */
+@ActivityScope
 class MediaItemPresenter
 @Inject constructor() : Presenter() {
 
@@ -112,8 +114,9 @@ class MediaItemPresenter
 }
 
 /**
- * supposed to be stateless so dont need @ActivityScope
+ *
  */
+@ActivityScope
 class MediaItemListPresenter
 @Inject constructor() : Presenter() {
 
@@ -179,7 +182,9 @@ class MediaItemListPresenter
 /**
  *
  */
-class MediaItemClickListener : OnItemViewClickedListener {
+@ActivityScope
+class MediaItemClickListener
+@Inject constructor(): OnItemViewClickedListener {
 
     override fun onItemClicked(itemViewHolder: Presenter.ViewHolder, item: Any,
                                rowViewHolder: RowPresenter.ViewHolder, row: Row) {

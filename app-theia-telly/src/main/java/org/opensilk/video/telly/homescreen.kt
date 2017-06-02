@@ -65,7 +65,10 @@ class HomeFragment : BrowseFragment() {
 
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
+
     @Inject lateinit var mServersLoader: CDSDevicesLoader
+
+    @Inject lateinit var mItemClickListener: MediaItemClickListener
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -80,7 +83,7 @@ class HomeFragment : BrowseFragment() {
         subscribeServers()
 
         adapter = mHomeAdapter
-        onItemViewClickedListener = MediaItemClickListener()
+        onItemViewClickedListener = mItemClickListener
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -93,10 +96,6 @@ class HomeFragment : BrowseFragment() {
         brandColor = context.getColor(R.color.fastlane_background)
         // set search icon color
         searchAffordanceColor = context.getColor(R.color.search_opaque)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
     }
 
     private fun subscribeServers() {
@@ -122,7 +121,6 @@ class HomeFragment : BrowseFragment() {
 /**
  *
  */
-//@ActivityScope TODO will this leak? it may hold onto the view via the listener
 class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())
 
 /**
