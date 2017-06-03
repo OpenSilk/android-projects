@@ -9,6 +9,7 @@ import java.io.StringWriter
 
 const val UPNP_DEVICE = "upnp_device"
 const val UPNP_FOLDER = "upnp_folder"
+const val UPNP_VIDEO = "upnp_video"
 
 /**
  * Created by drew on 5/29/17.
@@ -46,6 +47,36 @@ fun newFolderId(json: String) : FolderId {
         }
         jr.endObject()
         return@use FolderId(dev, fol)
+    }
+}
+
+data class UpnpItemId(val deviceId: String, val itemId: String): MediaId {
+    override val id: String by lazy {
+        val sr = StringWriter()
+        return@lazy JsonWriter(sr).use { jr ->
+            jr.beginObject()
+            jr.name("dev").value(deviceId)
+            jr.name("itm").value(itemId)
+            jr.endObject()
+            return@use sr.toString()
+        }
+    }
+}
+
+fun newUpnpItemId(json: String) : UpnpItemId {
+    var dev = ""
+    var itm = ""
+    return JsonReader(StringReader(json)).use { jr ->
+        jr.beginObject()
+        while (jr.hasNext()) {
+            when (jr.nextName()) {
+                "dev" -> dev = jr.nextString()
+                "itm" -> itm = jr.nextString()
+                else -> jr.skipValue()
+            }
+        }
+        jr.endObject()
+        return@use UpnpItemId(dev, itm)
     }
 }
 

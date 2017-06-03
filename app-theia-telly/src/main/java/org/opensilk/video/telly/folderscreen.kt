@@ -16,6 +16,7 @@ import org.opensilk.common.dagger2.withDaggerComponent
 import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.rx.observeOnMainThread
 import org.opensilk.media._getMediaTitle
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -78,6 +79,7 @@ class FolderFragment: VerticalGridFragment() {
 
     fun subscribeBrowseItems() {
         mBrowseLoader.observable
+                .onBackpressureBuffer()
                 .observeOnMainThread()
                 .terminateOnDestroy(activity)
                 .subscribe({
@@ -86,7 +88,8 @@ class FolderFragment: VerticalGridFragment() {
                     if (it is NoBrowseResultsException) {
                         Toast.makeText(context, "This folder is empty", Toast.LENGTH_LONG).show()
                     } else {
-                        Toast.makeText(context, "An error occurred. ${it.message}", Toast.LENGTH_LONG).show()
+                        Timber.e(it, "Loader error msg=${it.message}.")
+                        Toast.makeText(context, "An error occurred. msg=${it.message}", Toast.LENGTH_LONG).show()
                     }
                 })
     }

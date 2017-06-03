@@ -25,6 +25,8 @@ import org.fourthline.cling.registry.Registry
 import org.fourthline.cling.support.contentdirectory.callback.Browse
 import org.fourthline.cling.support.model.BrowseFlag
 import org.fourthline.cling.support.model.DIDLContent
+import org.fourthline.cling.support.model.DIDLObject
+import org.fourthline.cling.support.model.Protocol
 import org.fourthline.cling.support.model.container.MusicAlbum
 import org.fourthline.cling.support.model.container.MusicArtist
 import org.fourthline.cling.support.model.container.StorageFolder
@@ -43,6 +45,7 @@ import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.featurelist.BasicView
 import org.opensilk.upnp.cds.featurelist.Features
 import org.opensilk.upnp.cds.featurelist.XGetFeatureListCallback
+import org.opensilk.video.parseUpnpDuration
 import rx.Observable
 import rx.Subscriber
 import rx.subscriptions.Subscriptions
@@ -65,6 +68,8 @@ abstract class UpnpLoadersModule {
     abstract fun provideCDSBrowseLoader(impl: CDSBrowseLoaderImpl): CDSBrowseLoader
 }
 
+private val CDSserviceType = UDAServiceType("ContentDirectory", 1)
+
 /**
  * The Loader for the Media Servers row in the Home Activity
  */
@@ -82,19 +87,15 @@ class CDSDevicesLoaderImpl
         Observable.create<MediaBrowser.MediaItem> { s ->
             val listener = object : DefaultRegistryListener() {
                 override fun deviceAdded(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
-                    if (device.findService(UDAServiceType("ContentDirectory", 1)) == null) {
+                    if (device.findService(CDSserviceType) == null) {
                         //unsupported device
                         return
                     }
-                    val id = device.identity.udn.identifierString
-                    val label = device.details.friendlyName ?: device.displayString
-                    val subtitle = if (device.displayString == label) "" else device.displayString
-                    val mediaExtras = MediaMeta()
-                    val builder = MediaDescription.Builder()
-                            .setTitle(label)
-                            .setSubtitle(subtitle)
-                            ._mediaRef(MediaRef(UPNP_DEVICE, id))
-                            ._setMediaMeta(mediaExtras)
+                    val meta = MediaMeta()
+                    meta.mediaId = MediaRef(UPNP_DEVICE, device.identity.udn.identifierString).toJson()
+                    meta.mimeType = UPNP_DEVICE
+                    meta.title = device.details.friendlyName ?: device.displayString
+                    meta.subtitle = if (device.displayString === meta.title) "" else device.displayString
                     if (device.hasIcons()) {
                         var largest = device.icons[0]
                         for (ic in device.icons) {
@@ -111,13 +112,13 @@ class CDSDevicesLoaderImpl
                                 uri = "http://" + ru.host + ":" + ru.port + uri
                             }
                         }
-                        builder.setIconUri(Uri.parse(uri))
+                        meta.artworkUri = Uri.parse(uri)
                     }
-                    s.onNext(MediaBrowser.MediaItem(builder.build(), MediaBrowser.MediaItem.FLAG_BROWSABLE))
+                    s.onNext(meta.toMediaItem())
                 }
 
                 override fun deviceRemoved(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
-                    if (device.findService(UDAServiceType("ContentDirectory", 1)) == null) {
+                    if (device.findService(CDSserviceType) == null) {
                         //dont care
                         return
                     }
@@ -131,7 +132,7 @@ class CDSDevicesLoaderImpl
                 listener.deviceAdded(mUpnpService.registry, device)
             }
             //find new devices
-            mUpnpService.controlPoint.search(UDAServiceTypeHeader(UDAServiceType("ContentDirectory", 1)))
+            mUpnpService.controlPoint.search(UDAServiceTypeHeader(CDSserviceType))
         }
     }
 }
@@ -199,7 +200,6 @@ class CDSBrowseLoaderImpl
     }
 }
 
-private val CDSserviceType = UDAServiceType("ContentDirectory", 1)
 
 /**
  * Fetches the content directory service from the server
@@ -248,7 +248,6 @@ constructor(
         subscriber.add(Subscriptions.create { mUpnpService.registry.removeListener(listener) })
         //register listener
         mUpnpService.registry.addListener(listener)
-        Timber.d("Sending a new search for %s", udn)
         //upnpService.getControlPoint().search(new UDNHeader(udn));//doesnt work
         mUpnpService.controlPoint.search(UDAServiceTypeHeader(CDSserviceType))
     }
@@ -269,54 +268,75 @@ class BrowseOnSubscribe(
     override fun call(subscriber: Subscriber<in MediaBrowser.MediaItem>) {
         val browse = object : Browse(mCDSService, mFolderId.folderId, mBrowseFlag) {
             override fun received(actionInvocation: ActionInvocation<*>, didl: DIDLContent) {
+                Timber.d("BrowseOnSubscribe.received(${actionInvocation.action}, count=${didl.count}")
                 if (subscriber.isUnsubscribed) {
                     return
                 }
 
-                val deviceId = mCDSService.device.identity.udn.identifierString
-
                 for (c in didl.containers) {
-                    val meta = MediaMeta()
+                    if (StorageFolder.CLASS.equals(c)) {
+                        val meta = MediaMeta()
 
-                    meta.mediaId = MediaRef(UPNP_FOLDER, FolderId(deviceId, c.id)).toJson()
-                    meta.mimeType = DocumentsContract.Document.MIME_TYPE_DIR
+                        meta.mediaId = MediaRef(UPNP_FOLDER, FolderId(mFolderId.deviceId, c.id)).toJson()
+                        meta.mimeType = DocumentsContract.Document.MIME_TYPE_DIR
 
-                    meta.title = c.title
-                    c.childCount?.let {
-                        meta.subtitle = "$it Children"
+                        meta.title = c.title
+                        c.childCount?.let {
+                            meta.subtitle = "$it Children"
+                        }
+
+                        subscriber.onNext(meta.toMediaItem())
+                    } else {
+                        Timber.w("Skipping unsupported container ${c.title} type ${c.clazz.value}")
                     }
 
-                    Timber.w("Item ${c.title} is of type ${c.clazz.friendlyName}")
-
-                    subscriber.onNext(meta.toMediaItem())
                 }
 
                 for (item in didl.items) {
                     if (VideoItem.CLASS.equals(item)) {
                         val meta = MediaMeta()
+                        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpItemId(mFolderId.deviceId, item.id)).toJson()
+                        meta.parentMediaId = MediaRef(UPNP_FOLDER, FolderId(mFolderId.deviceId, item.parentID)).toJson()
+                        val res = item.firstResource ?: continue
+                        if (res.protocolInfo.protocol != Protocol.HTTP_GET) {
+                            //we can only support http-get
+                            continue
+                        }
+                        meta.mediaUri = Uri.parse(res.value)
+                        meta.mimeType = res.protocolInfo.contentFormat
+                        meta.duration = parseUpnpDuration(res.duration)
+                        meta.bitrate = res.bitrate ?: -1L
+                        meta.size = res.size ?: -1L
 
+                        meta.title = item.title
+                        meta.subtitle = item.creator ?: ""
+
+                        subscriber.onNext(meta.toMediaItem())
                     } else {
-                        Timber.i("Skipping not video item ${item.title}")
+                        Timber.w("Skipping unsupported item ${item.title}, type=${item.clazz.value}")
                     }
                 }
 
                 //TODO handle pagination
                 val numRet = actionInvocation.getOutput("NumberReturned").value as UnsignedIntegerFourBytes
                 val total = actionInvocation.getOutput("TotalMatches").value as UnsignedIntegerFourBytes
-                if (numRet.value != 0L && total.value != 0L && numRet.value < total.value) {
-                    Timber.e("TODO handle pagination")
-                }
-                // server was unable to compute total matches
-                else if (numRet.value != 0L && total.value == 0L) {
-                    //have to assume they sent us everything
+                if (numRet.value == total.value) {
+                    //they sent everything
                     subscriber.onCompleted()
                 }
                 // no results, total should return an error
                 else if (numRet.value == 0L && total.value == 720L) {
                     //notify subscriber of no results
                     subscriber.onError(NoBrowseResultsException())
-                } else {
-                    subscriber.onError(Exception("Unhandled condition numRet = $numRet total = $total"))
+                }
+                // server was unable to compute total matches
+                else if (numRet.value != 0L && total.value != 0L && numRet.value < total.value) {
+                    Timber.e("TODO handle pagination")
+                }
+                else {
+                    //server reported something weird, just ignore them
+                    Timber.w("Server sent strange response numRet=$numRet, total=$total")
+                    subscriber.onCompleted()
                 }
             }
 
@@ -326,7 +346,7 @@ class BrowseOnSubscribe(
 
             override fun failure(invocation: ActionInvocation<*>, operation: UpnpResponse, defaultMsg: String) {
                 if (!subscriber.isUnsubscribed) {
-                    subscriber.onError(IOException(defaultMsg))
+                    subscriber.onError(invocation.failure)
                 }
             }
         }
