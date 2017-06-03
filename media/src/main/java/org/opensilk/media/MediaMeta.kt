@@ -15,6 +15,11 @@ import java.util.HashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
+const val MIME_TYPE_DIR = DocumentsContract.Document.MIME_TYPE_DIR
+const val MIME_TYPE_CONTENT_DIRECTORY = "vnd.opensilk.org/ContentDirectory"
+const val MIME_TYPE_MOVIE = "vnd.opensilk.org/movie"
+
+
 /**
  * Created by drew on 6/26/16.
  */
@@ -50,7 +55,7 @@ constructor(
      *
      */
     val isDirectory: Boolean
-        get() = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
+        get() = mimeType === DocumentsContract.Document.MIME_TYPE_DIR
     /**
      *
      */
@@ -60,42 +65,47 @@ constructor(
      *
      */
     val isAlbum: Boolean
-        get() = mimeType == MediaStore.Audio.Albums.ENTRY_CONTENT_TYPE
+        get() = mimeType === MediaStore.Audio.Albums.ENTRY_CONTENT_TYPE
     /**
      *
      */
     val isArtist: Boolean
-        get() = mimeType == MediaStore.Audio.Artists.ENTRY_CONTENT_TYPE
+        get() = mimeType === MediaStore.Audio.Artists.ENTRY_CONTENT_TYPE
     /**
      *
      */
     val isGenre: Boolean
-        get() = mimeType == MediaStore.Audio.Genres.ENTRY_CONTENT_TYPE
+        get() = mimeType === MediaStore.Audio.Genres.ENTRY_CONTENT_TYPE
     /**
      *
      */
     val isPlaylist: Boolean
-        get() = mimeType == MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE
+        get() = mimeType === MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE
     /**
      *
      */
     val isTvSeries: Boolean
-        get() = mimeType == TvContract.Programs.CONTENT_TYPE
+        get() = mimeType === TvContract.Programs.CONTENT_TYPE
     /**
      *
      */
     val isTvEpisode: Boolean
-        get() = mimeType == TvContract.Programs.CONTENT_ITEM_TYPE
+        get() = mimeType === TvContract.Programs.CONTENT_ITEM_TYPE
     /**
      *
      */
     val isMovie: Boolean
-        get() = mimeType == "vnd.org.opensilk/movie"
+        get() = mimeType === MIME_TYPE_MOVIE
     /**
      *
      */
     val isVideo: Boolean
         get() = mimeType.startsWith("video")
+    /**
+     *
+     */
+    val isContentDiretory: Boolean
+        get() = mimeType === MIME_TYPE_CONTENT_DIRECTORY
     /**
      *
      */
@@ -111,6 +121,12 @@ constructor(
             MediaStore.Audio.Genres.ENTRY_CONTENT_TYPE,
             MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE -> {
                 MediaBrowser.MediaItem.FLAG_BROWSABLE or MediaBrowser.MediaItem.FLAG_PLAYABLE
+            }
+            MIME_TYPE_CONTENT_DIRECTORY -> {
+                MediaBrowser.MediaItem.FLAG_BROWSABLE
+            }
+            MIME_TYPE_MOVIE -> {
+                MediaBrowser.MediaItem.FLAG_PLAYABLE
             }
             else -> if (isAudio || isVideo) MediaBrowser.MediaItem.FLAG_PLAYABLE else 0
         }
@@ -135,6 +151,10 @@ constructor(
      *
      */
     var title: String by StringVal
+    /**
+     *
+     */
+    var subtitle: String by StringVal
     /**
      *
      */
@@ -199,6 +219,10 @@ constructor(
      * Uri: (any scheme) where jpg/png/etc can be fetched containing image of artist or group or whatever
      */
     var backdropUri: Uri by UriVal
+    /**
+     *
+     */
+    var mediaId: String by StringVal
     /**
      * Uri: media uri
      */
@@ -269,6 +293,28 @@ constructor(
      */
     var __internal4: String by StringVal
 
+}
+
+fun String.elseIfBlank(alternate: String): String {
+    return if (isNullOrBlank()) {
+        alternate
+    } else {
+        this
+    }
+}
+
+fun MediaMeta.toMediaItem(): MediaBrowser.MediaItem {
+    val bob = MediaDescription.Builder()
+    if (mediaId.isEmpty() || (title.isEmpty() && displayName.isEmpty())) {
+        throw IllegalArgumentException("Must set mediaId and title or displayName")
+    }
+    bob.setMediaId(mediaId)
+            .setTitle(title.elseIfBlank(displayName))
+            .setSubtitle(subtitle)
+            .setIconUri(artworkUri)
+            ._setMediaMeta(this)
+            ._setMediaUri(this, mediaUri)
+    return MediaBrowser.MediaItem(bob.build(), mediaItemFlags)
 }
 
 @Deprecated("Temp until usages in MediaMetaExtras are fixed")
