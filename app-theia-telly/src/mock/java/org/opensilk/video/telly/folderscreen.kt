@@ -11,7 +11,7 @@ import org.opensilk.common.dagger.Injector
  * Created by drew on 6/1/17.
  */
 @ActivityScope
-@Subcomponent(modules = arrayOf(UpnpLoadersModule::class))
+@Subcomponent(modules = arrayOf(MockUpnpLoadersModule::class))
 interface MockFolderComponent: Injector<FolderFragment> {
     @Subcomponent.Builder
     abstract class Builder: Injector.Builder<FolderFragment>() {

@@ -7,11 +7,14 @@ import android.support.v17.leanback.app.VerticalGridFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.TitleView
 import android.support.v17.leanback.widget.VerticalGridPresenter
+import android.widget.Toast
 import dagger.*
 import mortar.MortarScope
 import org.opensilk.common.app.ScopedActivity
 import org.opensilk.common.dagger.*
 import org.opensilk.common.dagger2.withDaggerComponent
+import org.opensilk.common.lifecycle.terminateOnDestroy
+import org.opensilk.common.rx.observeOnMainThread
 import org.opensilk.media._getMediaTitle
 import javax.inject.Inject
 
@@ -52,6 +55,7 @@ class FolderFragment: VerticalGridFragment() {
 
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     @Inject lateinit var mFoldersAdapter: FoldersAdapter
+    @Inject lateinit var mBrowseLoader: CDSBrowseLoader
     @Inject lateinit var mItemClickListener: MediaItemClickListener
 
     override fun onAttach(context: Context?) {
@@ -69,6 +73,22 @@ class FolderFragment: VerticalGridFragment() {
         adapter = mFoldersAdapter
         onItemViewClickedListener = mItemClickListener
 
+        subscribeBrowseItems()
+    }
+
+    fun subscribeBrowseItems() {
+        mBrowseLoader.observable
+                .observeOnMainThread()
+                .terminateOnDestroy(activity)
+                .subscribe({
+                    mFoldersAdapter.add(it)
+                }, {
+                    if (it is NoBrowseResultsException) {
+                        Toast.makeText(context, "This folder is empty", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(context, "An error occurred. ${it.message}", Toast.LENGTH_LONG).show()
+                    }
+                })
     }
 
 }

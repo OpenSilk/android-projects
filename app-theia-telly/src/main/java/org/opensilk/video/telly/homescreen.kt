@@ -103,7 +103,6 @@ class HomeFragment : BrowseFragment() {
                 .observeOnMainThread()
                 .terminateOnDestroy(context)
                 .subscribe({
-                    Timber.d("Found Server")
                     mServersAdapter.add(it)
                 },
                 {

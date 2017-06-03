@@ -1,45 +1,31 @@
 package org.opensilk.video.telly
 
-import android.util.JsonReader
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.io.StringReader
 
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class)
 class MediaRefTest {
 
     @Test
-    fun testToJson() {
+    fun testMediaRefJsonSerialization() {
         val ref = MediaRef(UPNP_DEVICE, "this is an id")
-        val str = ref.toJson()
-        JsonReader(StringReader(str)).use { jr ->
-            var skipped = 0
-            jr.beginObject()
-            while (jr.hasNext()) {
-                when (jr.nextName()) {
-                    "kind" -> Assertions.assertThat(jr.nextString()).isEqualTo(UPNP_DEVICE)
-                    "id" -> Assertions.assertThat(jr.nextString()).isEqualTo("this is an id")
-                    else -> {
-                        jr.skipValue()
-                        skipped++
-                    }
-                }
-            }
-            jr.endObject()
-            Assertions.assertThat(skipped).isEqualTo(1) //only version
-        }
+        val json = ref.toJson()
+        val newRef = newMediaRef(json)
+        Assertions.assertThat(newRef.kind).isEqualTo(UPNP_DEVICE)
+        Assertions.assertThat(newRef.mediaId).isEqualTo(StringId("this is an id"))
     }
 
     @Test
-    fun testJsonSerialization() {
-        val ref = MediaRef(UPNP_DEVICE, "this is an id")
-        val json = ref.toJson()
-        val refRR = newMediaRef(json)
-        Assertions.assertThat(refRR).isEqualTo(ref)
+    fun testFolderIdJsonSerialization() {
+        val ref = FolderId("foobag", "barnfoo")
+        val json = ref.id
+        val newRef = newFolderId(json)
+        Assertions.assertThat(newRef.deviceId).isEqualTo("foobag")
+        Assertions.assertThat(newRef.folderId).isEqualTo("barnfoo")
     }
 
 }
