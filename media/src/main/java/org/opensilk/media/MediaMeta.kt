@@ -38,10 +38,12 @@ constructor(
     /**
      * [android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID]
      */
+    @Deprecated("Use custom mediaId instead")
     var documentId: String by StringVal
     /**
      *
      */
+    @Deprecated("Use custom mediaId instead")
     var documentAuthority: String by StringVal
     /**
      * [android.provider.DocumentsContract.Document.COLUMN_DISPLAY_NAME]
@@ -307,6 +309,9 @@ fun MediaMeta.toMediaItem(): MediaBrowser.MediaItem {
     val bob = MediaDescription.Builder()
     if (mediaId.isEmpty() || (title.isEmpty() && displayName.isEmpty())) {
         throw IllegalArgumentException("Must set mediaId and title or displayName")
+    }
+    if ((isVideo || isAudio) && mediaUri == Uri.EMPTY) {
+        throw IllegalArgumentException("mediaUri must be set on playable files")
     }
     bob.setMediaId(mediaId)
             .setTitle(title.elseIfBlank(displayName))
