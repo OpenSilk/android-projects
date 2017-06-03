@@ -37,6 +37,9 @@
             android:name=".FolderActivity"
             android:parentActivityName=".HomeActivity"
             android:theme="@style/Theme.Leanback.VerticalGrid"/>
+        <activity
+            android:name=".DetailActivity"
+            android:theme="@style/Theme.Leanback.Details"/>
 
         <service android:name=".UpnpHolderService"/>
     </application>

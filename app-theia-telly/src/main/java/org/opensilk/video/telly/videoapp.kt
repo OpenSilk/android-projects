@@ -32,7 +32,8 @@ import javax.inject.Singleton
                 AppContextModule::class,
                 UpnpHolderServiceModule::class,
                 HomeModule::class,
-                FolderModule::class
+                FolderModule::class,
+                DetailModule::class
         )
 )
 interface RootComponent: AppContextComponent, Injector<VideoApp>
@@ -74,6 +75,7 @@ open class VideoApp: BaseApp(), InjectionManager {
     //@Inject lateinit var mInjectors: Map<Class<*>, Injector.Factory<*>>
     @Inject lateinit var mHomeBuilder: HomeComponent.Builder
     @Inject lateinit var mFolderBuilder: FolderComponent.Builder
+    @Inject lateinit var mDetailBuilder: DetailComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
 
     /**
@@ -97,6 +99,15 @@ open class VideoApp: BaseApp(), InjectionManager {
             } else {
                 val mediaItem: MediaBrowser.MediaItem = act.intent.getParcelableExtra(EXTRA_MEDIAITEM)
                 act.setDaggerComponent(mFolderBuilder.mediaItem(mediaItem).build())
+            }
+            comp.inject(foo)
+        } else if (foo is DetailFragment) {
+            val act = foo.activity as DetailActivity
+            val comp: Injector<DetailFragment> = if (act.hasDaggerComponent()) {
+                act.daggerComponent()
+            } else {
+                val mediaItem: MediaBrowser.MediaItem = act.intent.getParcelableExtra(EXTRA_MEDIAITEM)
+                act.setDaggerComponent(mDetailBuilder.mediaItem(mediaItem).build())
             }
             comp.inject(foo)
         } else if (foo is UpnpHolderService) {

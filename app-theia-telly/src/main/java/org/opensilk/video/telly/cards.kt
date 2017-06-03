@@ -192,7 +192,7 @@ class MediaItemClickListener
         val mediaItem = item as MediaBrowser.MediaItem
         val mediaId = newMediaRef(mediaItem.mediaId)
         when (mediaId.kind) {
-            UPNP_DEVICE -> {
+            UPNP_DEVICE, UPNP_FOLDER -> {
                 val intent = Intent(context, FolderActivity::class.java)
                 intent.putExtra(EXTRA_MEDIAITEM, mediaItem)
                 context.startActivity(intent)
