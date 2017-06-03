@@ -34,6 +34,7 @@ dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
+    kapt "com.github.bumptech.glide:compiler:$glideVersion"
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 

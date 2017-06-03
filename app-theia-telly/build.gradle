@@ -57,6 +57,7 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
     //annotationProcessor "com.google.dagger:dagger-android-processor:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
+    kapt "com.github.bumptech.glide:compiler:$glideVersion"
 
     //compile "com.google.dagger:dagger-android:$dagger2Version"
 

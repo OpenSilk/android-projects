@@ -17,7 +17,7 @@ buildscript {
         okHttpVersion = "3.0.0"
         retrofitVersion = "2.0.0"
         mortarVersion = "0.19"
-        glideVersion = '4.0.0-SNAPSHOT'
+        glideVersion = '4.0.0-RC0'
         commonsIOVersion = "2.5"
         rxKotlinVersion = '0.60.0'
         ankoVersion = '0.9'
