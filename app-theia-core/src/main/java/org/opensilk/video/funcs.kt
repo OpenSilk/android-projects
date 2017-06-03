@@ -1,9 +1,24 @@
 package org.opensilk.video
 
+import android.content.Context
+import android.media.MediaDescription
+import android.media.browse.MediaBrowser
+import android.net.Uri
+import android.text.TextUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
+import org.fourthline.cling.support.model.DIDLObject
+import org.fourthline.cling.support.model.Protocol
+import org.fourthline.cling.support.model.container.Container
+import org.fourthline.cling.support.model.container.MusicAlbum
+import org.fourthline.cling.support.model.container.MusicArtist
+import org.fourthline.cling.support.model.item.MusicTrack
+import org.opensilk.media.MediaMeta
+import java.io.File
+import java.net.URI
 import java.text.DecimalFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
 private val READABLE_DECIMAL_FORMAT = DecimalFormat("#,##0.#")
@@ -52,18 +67,16 @@ fun matchesMovie(title: CharSequence?): Boolean {
     return title != null && MOVIE_REGEX.matcher(title).matches()
 }
 
-fun extractSeriesName(title: CharSequence?): String? {
-    if (title == null) {
-        return null
-    }
+fun extractSeriesName(title: CharSequence): String {
+    if (title.isNullOrBlank()) return ""
     val m = TV_REGEX.matcher(title)
     if (m.matches()) {
         val series = m.group(1)
-        if (!StringUtils.isEmpty(series)) {
+        if (series.isNotBlank()) {
             return StringUtils.replace(series, ".", " ").trim { it <= ' ' }.toLowerCase()
         }
     }
-    return null
+    return ""
 }
 
 fun extractSeasonNumber(title: CharSequence): Int {
@@ -134,4 +147,34 @@ fun extractMovieYear(title: CharSequence?): String? {
         }
     }
     return null
+}
+
+fun parseUpnpDuration(dur: String): Long {
+    if (dur.isNullOrBlank()) {
+        return -1L
+    }
+    val strings = dur.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+    if (strings.size != 3) {
+        return -1L
+    }
+    try {
+        var sec = 0L
+        if (!strings[0].isNullOrEmpty()) {
+            sec += TimeUnit.SECONDS.convert(Integer.decode(strings[0]).toLong(), TimeUnit.HOURS).toInt()
+        }
+        sec += TimeUnit.SECONDS.convert(Integer.decode(strings[1]).toLong(), TimeUnit.MINUTES).toInt()
+        sec += TimeUnit.SECONDS.convert(Integer.decode(strings[2].substring(0, 2)).toLong(), TimeUnit.SECONDS).toInt()
+        return sec
+    } catch (e: NumberFormatException) {
+        return -1L
+    }
+
+}
+
+fun getCacheDir(context: Context, path: String): File {
+    var dir = context.externalCacheDir
+    if (dir == null || !dir.exists() || !dir.canWrite()) {
+        dir = context.cacheDir
+    }
+    return File(dir, path)
 }
