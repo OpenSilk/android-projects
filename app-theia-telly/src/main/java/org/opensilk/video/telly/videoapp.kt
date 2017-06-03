@@ -5,6 +5,10 @@ import android.app.Fragment
 import android.content.Context
 import android.media.browse.MediaBrowser
 import android.support.v4.view.ViewCompat
+import com.bumptech.glide.GlideBuilder
+import com.bumptech.glide.annotation.GlideModule
+import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
+import com.bumptech.glide.module.AppGlideModule
 import dagger.Component
 import dagger.Module
 import dagger.Provides
@@ -18,6 +22,7 @@ import org.opensilk.common.loader.RxListLoader
 import org.opensilk.common.loader.RxLoader
 import org.opensilk.common.mortar.HasScope
 import org.opensilk.upnp.cds.browser.CDSUpnpService
+import org.opensilk.video.getCacheDir
 import java.lang.ref.SoftReference
 import javax.inject.Inject
 import javax.inject.Named
@@ -141,4 +146,16 @@ fun <T> BaseVideoActivity.daggerComponent(): Injector<T> {
  */
 class DaggerServiceReference {
     var cmp: Injector<*>? = null
+}
+
+@GlideModule
+class GlideConfig: AppGlideModule() {
+    override fun applyOptions(context: Context, builder: GlideBuilder) {
+        val cacheDir = getCacheDir(context, "glide4")
+        builder.setDiskCache(DiskLruCacheFactory({ cacheDir }, 512 * 1024 * 1024))
+    }
+
+    override fun isManifestParsingEnabled(): Boolean {
+        return false
+    }
 }
