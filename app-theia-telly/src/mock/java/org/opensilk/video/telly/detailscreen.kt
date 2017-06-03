@@ -5,14 +5,16 @@ import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Subcomponent
+import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.Injector
 
 /**
  * Created by drew on 6/2/17.
  */
-@Subcomponent()
+@ActivityScope
+@Subcomponent(modules = arrayOf(DetailPresenterModule::class))
 interface MockDetailComponent: Injector<DetailFragment> {
-    @Component.Builder
+    @Subcomponent.Builder
     abstract class Builder: Injector.Builder<DetailFragment>() {
         @BindsInstance
         abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder

@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import dagger.*
+import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media._getMediaMeta
@@ -40,9 +41,10 @@ const val ACTIONID_REMOVE_DESCRIPTION = 301L
 /**
  * Created by drew on 6/2/17.
  */
+@ActivityScope
 @Subcomponent(modules = arrayOf(DetailPresenterModule::class))
 interface DetailComponent: Injector<DetailFragment> {
-    @Component.Builder
+    @Subcomponent.Builder
     abstract class Builder: Injector.Builder<DetailFragment>() {
         @BindsInstance
         abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
@@ -61,7 +63,7 @@ abstract class DetailModule
 @Module
 abstract class DetailPresenterModule {
     @Provides
-    fun provideDescriptionPresenter(descPresenter: DetailDescriptionPresenter): FullWidthDetailsOverviewRowPresenter {
+    fun provideDescriptionPresenter(descPresenter: DetailOverviewPresenter): FullWidthDetailsOverviewRowPresenter {
         return FullWidthDetailsOverviewRowPresenter(descPresenter)
     }
     @Provides
@@ -69,6 +71,13 @@ abstract class DetailPresenterModule {
         val desc = mediaItem.description
         val meta = mediaItem._getMediaMeta()
         return VideoFileInfo(meta.mediaUri, desc.title.toString(), meta.size, meta.duration)
+    }
+    @Provides
+    fun provideDetailOverviewRow(mediaItem: MediaBrowser.MediaItem): DetailsOverviewRow {
+        val desc = mediaItem.description
+        val row = DetailsOverviewRow(VideoDescInfo(desc.title.toString(),
+                desc.subtitle.toString(), desc.description?.toString() ?: ""))
+        return row
     }
 }
 
@@ -238,7 +247,7 @@ class FileInfoRowPresenter
     override fun createRowViewHolder(parent: ViewGroup): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = DataBindingUtil.inflate<DetailsFileInfoRowBinding>(inflater,
-                org.opensilk.video.R.layout.details_file_info_row, parent, false)
+                R.layout.details_file_info_row, parent, false)
         return ViewHolder(binding)
     }
 
@@ -278,7 +287,7 @@ class FileInfoRowPresenter
 /**
  *
  */
-class DetailDescriptionPresenter
+class DetailOverviewPresenter
 @Inject constructor() : AbstractDetailsDescriptionPresenter() {
 
     override fun onBindDescription(vh: AbstractDetailsDescriptionPresenter.ViewHolder, item: Any) {
@@ -287,6 +296,7 @@ class DetailDescriptionPresenter
         vh.subtitle.text =info.subtitle
         vh.body.text = info.overview
     }
+
 }
 
 /**
