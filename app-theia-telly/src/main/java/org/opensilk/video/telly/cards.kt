@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.media.browse.MediaBrowser
+import android.net.Uri
 import android.os.Bundle
 import android.support.v17.leanback.widget.*
 import android.support.v4.app.ActivityOptionsCompat
@@ -162,7 +163,7 @@ class MediaItemListPresenter
                 iconResource = R.drawable.file_48dp
             }
 
-            if (description.iconUri != null) {
+            if (description.iconUri != Uri.EMPTY) {
                 val options = RequestOptions()
                         .fitCenter()
                         .fallback(iconResource)
@@ -186,8 +187,9 @@ class MediaItemListPresenter
 class MediaItemClickListener
 @Inject constructor(): OnItemViewClickedListener {
 
+    //VerticalGridView sends null as last 2 params
     override fun onItemClicked(itemViewHolder: Presenter.ViewHolder, item: Any,
-                               rowViewHolder: RowPresenter.ViewHolder, row: Row) {
+                               rowViewHolder: RowPresenter.ViewHolder?, row: Row?) {
         val context = itemViewHolder.view.context
         val mediaItem = item as MediaBrowser.MediaItem
         val mediaId = newMediaRef(mediaItem.mediaId)
