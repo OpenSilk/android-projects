@@ -25,6 +25,11 @@ abstract class BaseVideoActivity: ScopedActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        unbindService(upnpServiceConnection)
+    }
+
     private val upnpServiceConnection = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName?) {
             upnpServiceHolder = null
