@@ -351,7 +351,7 @@ private object StringVal {
 
 private object LongVal {
     operator fun getValue(thisRef: MediaMeta, property: KProperty<*>): Long {
-        return thisRef.meta.getLong(property.name, -1);
+        return thisRef.meta.getLong(property.name, 0);
     }
 
     operator fun setValue(thisRef: MediaMeta, property: KProperty<*>, value: Long) {
@@ -361,7 +361,7 @@ private object LongVal {
 
 private object IntVal {
     operator fun getValue(thisRef: MediaMeta, property: KProperty<*>): Int {
-        return thisRef.meta.getInt(property.name, -1);
+        return thisRef.meta.getInt(property.name, 0);
     }
 
     operator fun setValue(thisRef: MediaMeta, property: KProperty<*>, value: Int) {
