@@ -5,6 +5,7 @@ import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.media.tv.TvContract
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
@@ -307,18 +308,20 @@ fun String.elseIfBlank(alternate: String): String {
 
 fun MediaMeta.toMediaItem(): MediaBrowser.MediaItem {
     val bob = MediaDescription.Builder()
-    if (mediaId.isEmpty() || (title.isEmpty() && displayName.isEmpty())) {
-        throw IllegalArgumentException("Must set mediaId and title or displayName")
+    if (mediaId.isEmpty() || title.isEmpty()) {
+        throw IllegalArgumentException("Must set mediaId and title")
     }
     if ((isVideo || isAudio) && mediaUri == Uri.EMPTY) {
         throw IllegalArgumentException("mediaUri must be set on playable files")
     }
     bob.setMediaId(mediaId)
-            .setTitle(title.elseIfBlank(displayName))
+            .setTitle(title)
             .setSubtitle(subtitle)
             .setIconUri(artworkUri)
             ._setMediaMeta(this)
-            ._setMediaUri(this, mediaUri)
+    if (Build.VERSION.SDK_INT >= 23) {
+        bob.setMediaUri(mediaUri)
+    }
     return MediaBrowser.MediaItem(bob.build(), mediaItemFlags)
 }
 
@@ -327,6 +330,7 @@ fun MediaMeta.getBundle(): Bundle {
     return meta
 }
 
+@Deprecated("Use MediaMeta.toMediaItem()")
 fun MediaDescription.Builder._setMediaMeta(mediaMeta: MediaMeta): MediaDescription.Builder {
     return this.setExtras(mediaMeta.meta)
 }

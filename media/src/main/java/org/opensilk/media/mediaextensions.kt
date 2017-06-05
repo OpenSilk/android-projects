@@ -16,6 +16,7 @@ import timber.log.Timber
  * Extensions for MediaItem and MediaDescription
  */
 
+@Deprecated("Use MediaMeta.toMediaItem()")
 fun MediaDescription.Builder._setMediaUri(metaExtras: MediaMeta, uri: Uri): MediaDescription.Builder {
     metaExtras.mediaUri = uri
     if (Build.VERSION.SDK_INT >= 23) {
@@ -43,13 +44,14 @@ fun MediaBrowser.MediaItem._getMediaTitle(): String {
 
 fun MediaDescription._getMediaTitle(): String {
     val metaExtras = MediaMeta.from(this)
-    var mediaTitle = metaExtras.displayName
-    if (mediaTitle == "") {
-        mediaTitle = title?.toString() ?: ""
+    return if (metaExtras.displayName != "") {
+        metaExtras.displayName
+    } else {
+        title.toString()
     }
-    return mediaTitle
 }
 
+@Deprecated("Use MediaMeta.toMediaItem()")
 fun MediaDescription._newBuilder(): MediaDescription.Builder {
     val bob = MediaDescription.Builder()
             .setIconUri(this.iconUri)
@@ -64,10 +66,12 @@ fun MediaDescription._newBuilder(): MediaDescription.Builder {
     return bob
 }
 
+@Deprecated("Use MediaMeta.toMediaItem()")
 fun MediaBrowser.MediaItem._copy(bob: MediaDescription.Builder, meta: MediaMeta): MediaBrowser.MediaItem {
     return MediaBrowser.MediaItem(bob._setMediaMeta(meta).build(), this.flags)
 }
 
+@Deprecated("Use MediaMeta.toMediaItem()")
 fun newMediaItem(bob: MediaDescription.Builder, meta: MediaMeta): MediaBrowser.MediaItem {
     return MediaBrowser.MediaItem(bob.setExtras(meta.meta).build(), meta.mediaItemFlags)
 }
