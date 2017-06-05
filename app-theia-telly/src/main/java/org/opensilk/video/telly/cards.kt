@@ -154,7 +154,7 @@ class MediaItemListPresenter
             binding.desc = description.videoDescInfo()
             //load icon
             val iconResource: Int
-            if (metaExtras.artworkResourceId >= 0) {
+            if (metaExtras.artworkResourceId > 0) {
                 iconResource = metaExtras.artworkResourceId
             } else if (mediaItem.isBrowsable) {
                 iconResource = R.drawable.folder_48dp
