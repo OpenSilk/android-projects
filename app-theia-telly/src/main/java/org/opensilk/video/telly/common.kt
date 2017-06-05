@@ -15,8 +15,8 @@ import timber.log.Timber
 abstract class BaseVideoActivity: ScopedActivity() {
     //temporary solution, the activity should never use this
     //Allows application to inject the component after the scope has been created
-    override val activityComponent: Any = DaggerServiceReference()
-    private var upnpServiceHolder : UpnpHolderService.HolderBinder? = null
+    final override val activityComponent: Any = DaggerServiceReference()
+    private var mUpnpServiceHolder : UpnpHolderService.HolderBinder? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,15 +28,16 @@ abstract class BaseVideoActivity: ScopedActivity() {
     override fun onDestroy() {
         super.onDestroy()
         unbindService(upnpServiceConnection)
+        mUpnpServiceHolder = null
     }
 
     private val upnpServiceConnection = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName?) {
-            upnpServiceHolder = null
+            mUpnpServiceHolder = null
         }
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            upnpServiceHolder = service as UpnpHolderService.HolderBinder
+            mUpnpServiceHolder = service as? UpnpHolderService.HolderBinder
         }
     }
 }
