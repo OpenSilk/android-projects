@@ -23,10 +23,7 @@ import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.rx.RxUtils
 import org.opensilk.media._getMediaMeta
 import org.opensilk.media._getMediaTitle
-import org.opensilk.video.DataService
-import org.opensilk.video.VideoDescInfo
-import org.opensilk.video.VideoProgressInfo
-import org.opensilk.video.findActivity
+import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
 import rx.Subscription
 import rx.functions.Action1
@@ -152,11 +149,9 @@ class MediaItemListPresenter
             val description = mediaItem.description
             val metaExtras = mediaItem._getMediaMeta()
             //set progress
-            binding.progressInfo = VideoProgressInfo(metaExtras.lastPlaybackPosition, metaExtras.duration)
+            binding.progressInfo = description.videoProgressInfo()
             //set description
-            binding.desc = VideoDescInfo(mediaItem._getMediaTitle(),
-                    description.subtitle?.toString() ?: "",
-                    description.description?.toString() ?: "")
+            binding.desc = description.videoDescInfo()
             //load icon
             val iconResource: Int
             if (metaExtras.artworkResourceId >= 0) {

@@ -58,31 +58,11 @@ class MockVideoApp: VideoApp() {
 
     override fun injectFoo(foo: Any) {
         if (foo is HomeFragment) {
-            val act = foo.activity as HomeActivity
-            val comp: Injector<HomeFragment> = if (act.hasDaggerComponent()) {
-                act.daggerComponent()
-            } else {
-                act.setDaggerComponent(mMockHomeBuilder.build())
-            }
-            comp.inject(foo)
+            (foo.activity as HomeActivity).daggerComponent(mMockHomeBuilder, foo).inject(foo)
         } else if (foo is FolderFragment) {
-            val act = foo.activity as FolderActivity
-            val comp: Injector<FolderFragment> = if (act.hasDaggerComponent()) {
-                act.daggerComponent()
-            } else {
-                val mediaItem: MediaBrowser.MediaItem = act.intent.getParcelableExtra(EXTRA_MEDIAITEM)
-                act.setDaggerComponent(mMockFolderBuilder.mediaItem(mediaItem).build())
-            }
-            comp.inject(foo)
+            (foo.activity as FolderActivity).daggerComponent(mMockFolderBuilder, foo).inject(foo)
         } else if (foo is DetailFragment) {
-            val act = foo.activity as DetailActivity
-            val comp: Injector<DetailFragment> = if (act.hasDaggerComponent()) {
-                act.daggerComponent()
-            } else {
-                val mediaItem: MediaBrowser.MediaItem = act.intent.getParcelableExtra(EXTRA_MEDIAITEM)
-                act.setDaggerComponent(mMockDetailBuilder.mediaItem(mediaItem).build())
-            }
-            comp.inject(foo)
+            (foo.activity as DetailActivity).daggerComponent(mMockDetailBuilder, foo).inject(foo)
         } else {
             super.injectFoo(foo)
         }

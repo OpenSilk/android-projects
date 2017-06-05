@@ -1,31 +1,16 @@
 package org.opensilk.video.telly
 
-import android.app.Activity
-import android.app.Fragment
 import android.content.Context
-import android.media.browse.MediaBrowser
-import android.support.v4.view.ViewCompat
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
 import com.bumptech.glide.module.AppGlideModule
 import dagger.Component
 import dagger.Module
-import dagger.Provides
-import dagger.internal.ReferenceReleasingProviderManager
-import dagger.multibindings.Multibinds
-import mortar.MortarScope
-import mortar.Scoped
 import org.opensilk.common.app.BaseApp
 import org.opensilk.common.dagger.*
-import org.opensilk.common.loader.RxListLoader
-import org.opensilk.common.loader.RxLoader
-import org.opensilk.common.mortar.HasScope
-import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.video.suitableCacheDir
-import java.lang.ref.SoftReference
 import javax.inject.Inject
-import javax.inject.Named
 import javax.inject.Singleton
 
 /**
@@ -90,31 +75,11 @@ open class VideoApp: BaseApp(), InjectionManager {
      */
     override fun injectFoo(foo: Any) {
         if (foo is HomeFragment) {
-            val act = foo.activity as HomeActivity
-            val comp: Injector<HomeFragment> = if (act.hasDaggerComponent()) {
-                act.daggerComponent()
-            } else {
-                act.setDaggerComponent(mHomeBuilder.build())
-            }
-            comp.inject(foo)
+            (foo.activity as HomeActivity).daggerComponent(mHomeBuilder, foo).inject(foo)
         } else if (foo is FolderFragment) {
-            val act = foo.activity as FolderActivity
-            val comp: Injector<FolderFragment> = if (act.hasDaggerComponent()) {
-                act.daggerComponent()
-            } else {
-                val mediaItem: MediaBrowser.MediaItem = act.intent.getParcelableExtra(EXTRA_MEDIAITEM)
-                act.setDaggerComponent(mFolderBuilder.mediaItem(mediaItem).build())
-            }
-            comp.inject(foo)
+            (foo.activity as FolderActivity).daggerComponent(mFolderBuilder, foo).inject(foo)
         } else if (foo is DetailFragment) {
-            val act = foo.activity as DetailActivity
-            val comp: Injector<DetailFragment> = if (act.hasDaggerComponent()) {
-                act.daggerComponent()
-            } else {
-                val mediaItem: MediaBrowser.MediaItem = act.intent.getParcelableExtra(EXTRA_MEDIAITEM)
-                act.setDaggerComponent(mDetailBuilder.mediaItem(mediaItem).build())
-            }
-            comp.inject(foo)
+            (foo.activity as DetailActivity).daggerComponent(mDetailBuilder, foo).inject(foo)
         } else if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.build().inject(foo)
         } else {
@@ -124,20 +89,13 @@ open class VideoApp: BaseApp(), InjectionManager {
 
 }
 
-fun BaseVideoActivity.hasDaggerComponent(): Boolean {
-    val ref = scope.getService<DaggerServiceReference>(DAGGER_SERVICE)
-    return ref.cmp != null
-}
-
-fun <T> BaseVideoActivity.setDaggerComponent(bob: Injector<T>): Injector<T> {
-    val ref = scope.getService<DaggerServiceReference>(DAGGER_SERVICE)
-    ref.cmp = bob
-    return bob
-}
-
 @Suppress("UNCHECKED_CAST")
-fun <T> BaseVideoActivity.daggerComponent(): Injector<T> {
-    return scope.getService<DaggerServiceReference>(DAGGER_SERVICE).cmp as Injector<T>
+fun <T> BaseVideoActivity.daggerComponent(bob: Injector.Factory<T>, foo: T): Injector<T> {
+    val ref = scope.getService<DaggerServiceReference>(DAGGER_SERVICE)
+    if (ref.cmp == null) {
+        ref.cmp = bob.create(foo)
+    }
+    return ref.cmp as Injector<T>
 }
 
 /**

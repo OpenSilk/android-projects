@@ -27,6 +27,10 @@ import javax.inject.Inject
 interface FolderComponent: Injector<FolderFragment> {
     @Subcomponent.Builder
     abstract class Builder: Injector.Builder<FolderFragment>() {
+        override fun create(t: FolderFragment): Injector<FolderFragment> {
+            val mediaItem: MediaBrowser.MediaItem = t.activity.intent.getParcelableExtra(EXTRA_MEDIAITEM)
+            return mediaItem(mediaItem).build()
+        }
         @BindsInstance abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
     }
 }
@@ -35,7 +39,7 @@ interface FolderComponent: Injector<FolderFragment> {
  *
  */
 @Module(subcomponents = arrayOf(FolderComponent::class))
-class FolderModule
+abstract class FolderModule
 
 /**
  *

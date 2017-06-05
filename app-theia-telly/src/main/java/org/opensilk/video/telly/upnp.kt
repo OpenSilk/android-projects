@@ -373,7 +373,7 @@ interface UpnpHolderServiceComponent: Injector<UpnpHolderService> {
  *
  */
 @Module(subcomponents = arrayOf(UpnpHolderServiceComponent::class))
-class UpnpHolderServiceModule
+abstract class UpnpHolderServiceModule
 
 /**
  * Service that holds a reference to the upnpservice so it can be shutdown
