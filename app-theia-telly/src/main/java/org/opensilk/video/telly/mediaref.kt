@@ -111,13 +111,10 @@ fun newMediaRef(json: String): MediaRef {
             }
         }
         jr.endObject()
-        when (kind) {
-            UPNP_DEVICE -> {
-                return@use MediaRef(kind, id)
-            }
-            UPNP_FOLDER -> {
-                return@use MediaRef(kind, newFolderId(id))
-            }
+        return@use when (kind) {
+            UPNP_DEVICE -> MediaRef(kind, id)
+            UPNP_FOLDER -> MediaRef(kind, newFolderId(id))
+            UPNP_VIDEO -> MediaRef(kind, newUpnpItemId(id))
             else -> {
                 TODO("Unknown mediaRef kind=$kind")
             }

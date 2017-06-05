@@ -22,7 +22,7 @@ import org.opensilk.common.loader.RxListLoader
 import org.opensilk.common.loader.RxLoader
 import org.opensilk.common.mortar.HasScope
 import org.opensilk.upnp.cds.browser.CDSUpnpService
-import org.opensilk.video.getCacheDir
+import org.opensilk.video.suitableCacheDir
 import java.lang.ref.SoftReference
 import javax.inject.Inject
 import javax.inject.Named
@@ -151,7 +151,7 @@ class DaggerServiceReference {
 @GlideModule
 class GlideConfig: AppGlideModule() {
     override fun applyOptions(context: Context, builder: GlideBuilder) {
-        val cacheDir = getCacheDir(context, "glide4")
+        val cacheDir = context.suitableCacheDir("glide4")
         builder.setDiskCache(DiskLruCacheFactory({ cacheDir }, 512 * 1024 * 1024))
     }
 

@@ -305,8 +305,8 @@ class BrowseOnSubscribe(
                         meta.mediaUri = Uri.parse(res.value)
                         meta.mimeType = res.protocolInfo.contentFormat
                         meta.duration = parseUpnpDuration(res.duration)
-                        meta.bitrate = res.bitrate ?: -1L
-                        meta.size = res.size ?: -1L
+                        meta.bitrate = res.bitrate ?: 0L
+                        meta.size = res.size ?: 0L
 
                         meta.title = item.title
                         meta.subtitle = item.creator ?: ""

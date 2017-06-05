@@ -1,13 +1,16 @@
 package org.opensilk.video.telly
 
+import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.Bundle
+import android.support.v17.leanback.transition.TransitionHelper
 import android.support.v17.leanback.widget.*
 import android.support.v4.app.ActivityOptionsCompat
+import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +26,7 @@ import org.opensilk.media._getMediaTitle
 import org.opensilk.video.DataService
 import org.opensilk.video.VideoDescInfo
 import org.opensilk.video.VideoProgressInfo
+import org.opensilk.video.findActivity
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
 import rx.Subscription
 import rx.functions.Action1
@@ -60,7 +64,7 @@ class MediaItemPresenter
         cardView.isFocusableInTouchMode = true
         cardView.updateBackgroundColor(false)
 
-        return Presenter.ViewHolder(cardView)
+        return ViewHolder(cardView)
     }
 
     override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
@@ -112,6 +116,8 @@ class MediaItemPresenter
         cardView.badgeImage = null
         cardView.mainImage = null
     }
+
+    class ViewHolder(view: MediaItemImageCardView): Presenter.ViewHolder(view)
 }
 
 /**
@@ -190,7 +196,7 @@ class MediaItemClickListener
     //VerticalGridView sends null as last 2 params
     override fun onItemClicked(itemViewHolder: Presenter.ViewHolder, item: Any,
                                rowViewHolder: RowPresenter.ViewHolder?, row: Row?) {
-        val context = itemViewHolder.view.context
+        val context = itemViewHolder.view.findActivity()
         val mediaItem = item as MediaBrowser.MediaItem
         val mediaId = newMediaRef(mediaItem.mediaId)
         when (mediaId.kind) {
@@ -198,6 +204,22 @@ class MediaItemClickListener
                 val intent = Intent(context, FolderActivity::class.java)
                 intent.putExtra(EXTRA_MEDIAITEM, mediaItem)
                 context.startActivity(intent)
+            }
+            UPNP_VIDEO -> {
+                val intent = Intent(context, DetailActivity::class.java)
+                intent.putExtra(EXTRA_MEDIAITEM, mediaItem)
+                val bundle = if (itemViewHolder is MediaItemPresenter.ViewHolder) {
+                    val view = itemViewHolder.view as MediaItemImageCardView
+                    ActivityOptions.makeSceneTransitionAnimation(context,
+                            view.mainImageView, SHARED_ELEMENT_NAME).toBundle()
+                } else if (itemViewHolder is MediaItemListPresenter.ViewHolder) {
+                    val binding = itemViewHolder.binding
+                    ActivityOptions.makeSceneTransitionAnimation(context, binding.icon,
+                            SHARED_ELEMENT_NAME).toBundle()
+                } else {
+                    Bundle.EMPTY
+                }
+                context.startActivity(intent, bundle)
             }
             else -> {
                 Toast.makeText(context, "Unhandled ItemClick", Toast.LENGTH_LONG).show()

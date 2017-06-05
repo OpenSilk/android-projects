@@ -8,15 +8,15 @@ import android.net.Uri
 data class VideoFileInfo(
         val uri: Uri,
         val title: String,
-        val sizeBytes: Long = -1,
-        val durationMilli: Long = -1,
+        val sizeBytes: Long = 0,
+        val durationMilli: Long = 0,
         val firstAudioTrack: AudioTrackInfo? = null,
         val secondAudioTrack: AudioTrackInfo? = null,
         val firstVideoTrack: VideoTrackInfo? = null
 ) {
     val sizeString: String
-        get() = org.opensilk.video.humanReadableSize(sizeBytes)
+        get() = if (sizeBytes > 0) humanReadableSize(sizeBytes) else ""
 
     val durationString: String
-        get() = org.opensilk.video.humanReadableDuration(durationMilli)
+        get() = if (durationMilli > 0) humanReadableDuration(durationMilli) else ""
 }

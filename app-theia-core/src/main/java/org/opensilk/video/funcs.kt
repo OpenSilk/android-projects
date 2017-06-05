@@ -1,10 +1,13 @@
 package org.opensilk.video
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.text.TextUtils
+import android.view.View
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import org.fourthline.cling.support.model.DIDLObject
@@ -171,10 +174,24 @@ fun parseUpnpDuration(dur: String): Long {
 
 }
 
-fun getCacheDir(context: Context, path: String): File {
-    var dir = context.externalCacheDir
+fun Context.suitableCacheDir(path: String): File {
+    var dir = externalCacheDir
     if (dir == null || !dir.exists() || !dir.canWrite()) {
-        dir = context.cacheDir
+        dir = cacheDir
     }
     return File(dir, path)
+}
+
+fun View.findActivity(): Activity {
+    return this.context.findActivity()
+}
+
+fun Context.findActivity(): Activity {
+    if (this is Activity) {
+        return this
+    } else if (this is ContextWrapper) {
+        return this.findActivity()
+    } else {
+        throw AssertionError("Unknown context type " + javaClass.name)
+    }
 }

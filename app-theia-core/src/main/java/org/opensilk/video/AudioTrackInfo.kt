@@ -22,9 +22,12 @@ data class AudioTrackInfo(
                 channels)
     }
 
-    @BindingAdapter("android:text")
-    fun bindInfoToTextView(textView: TextView, audioTrackInfo: AudioTrackInfo?) {
-        textView.visibility = if (audioTrackInfo != null) View.VISIBLE else View.INVISIBLE
-        textView.text = audioTrackInfo?.toString() ?: ""
+    companion object {
+        @BindingAdapter("android:text") @JvmStatic
+        fun bindInfoToTextView(textView: TextView, audioTrackInfo: AudioTrackInfo?) {
+            textView.visibility = if (audioTrackInfo != null) View.VISIBLE else View.INVISIBLE
+            textView.text = audioTrackInfo?.toString() ?: ""
+        }
     }
+
 }

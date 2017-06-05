@@ -10,11 +10,11 @@ import java.util.*
  */
 data class VideoTrackInfo(
         val codec: String = "",
-        val width: Int = -1,
-        val height: Int = -1,
-        val bitrate: Int = -1,
-        val frameRate: Int = -1,
-        val frameRateDen: Int = -1
+        val width: Int = 0,
+        val height: Int = 0,
+        val bitrate: Int = 0,
+        val frameRate: Int = 0,
+        val frameRateDen: Int = 0
 ) {
     override fun toString(): String {
         return String.format(Locale.US, "%s %dx%d %s %.02ffps",
@@ -25,9 +25,11 @@ data class VideoTrackInfo(
                 frameRate.toFloat() / frameRateDen)
     }
 
-    @BindingAdapter("android:text")
-    fun bindInfoToTextView(textView: TextView, videoTrackInfo: VideoTrackInfo?) {
-        textView.visibility = if (videoTrackInfo != null) View.VISIBLE else View.INVISIBLE
-        textView.text = videoTrackInfo?.toString() ?: ""
+    companion object {
+        @BindingAdapter("android:text") @JvmStatic
+        fun bindInfoToTextView(textView: TextView, videoTrackInfo: VideoTrackInfo?) {
+            textView.visibility = if (videoTrackInfo != null) View.VISIBLE else View.INVISIBLE
+            textView.text = videoTrackInfo?.toString() ?: ""
+        }
     }
 }

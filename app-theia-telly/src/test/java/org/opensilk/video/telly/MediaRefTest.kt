@@ -12,12 +12,21 @@ import org.assertj.core.api.Java6Assertions.assertThat
 class MediaRefTest {
 
     @Test
-    fun testMediaRefJsonSerialization() {
+    fun testnewMediaRefJsonSerialization() {
         val ref = MediaRef(UPNP_DEVICE, "this is an id")
         val json = ref.toJson()
         val newRef = newMediaRef(json)
         assertThat(newRef.kind).isEqualTo(UPNP_DEVICE)
-        assertThat(newRef.mediaId).isEqualTo(StringId("this is an id"))
+
+        val f_ref = MediaRef(UPNP_FOLDER, FolderId("foobag", "barnfoo"))
+        val f_json = f_ref.toJson()
+        val f_newRef = newMediaRef(f_json)
+        assertThat(f_newRef.kind).isEqualTo(UPNP_FOLDER)
+
+        val u_ref = MediaRef(UPNP_VIDEO, UpnpItemId("foobag", "barnfoo"))
+        val u_json = u_ref.toJson()
+        val u_newRef = newMediaRef(u_json)
+        assertThat(u_newRef.kind).isEqualTo(UPNP_VIDEO)
     }
 
     @Test

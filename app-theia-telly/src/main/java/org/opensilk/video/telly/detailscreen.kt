@@ -38,6 +38,9 @@ const val ACTIONID_PLAY = 200L
 const val ACTIONID_GET_DESCRIPTION = 300L
 const val ACTIONID_REMOVE_DESCRIPTION = 301L
 
+const val SHARED_ELEMENT_NAME = "hero"
+
+
 /**
  * Created by drew on 6/2/17.
  */
@@ -58,26 +61,32 @@ interface DetailComponent: Injector<DetailFragment> {
 abstract class DetailModule
 
 /**
- *
+ * this is fuckin weird but works, kotlin has no static methods so we put them
+ * in the companion object but the compiler complains if no @Module annotation on it so
+ * we add that too. this will probably break in the future, if that happens it has to be added
+ * to the builder.
  */
 @Module
 abstract class DetailPresenterModule {
-    @Provides
-    fun provideDescriptionPresenter(descPresenter: DetailOverviewPresenter): FullWidthDetailsOverviewRowPresenter {
-        return FullWidthDetailsOverviewRowPresenter(descPresenter)
-    }
-    @Provides
-    fun provideVideoFileInfo(mediaItem: MediaBrowser.MediaItem): VideoFileInfo {
-        val desc = mediaItem.description
-        val meta = mediaItem._getMediaMeta()
-        return VideoFileInfo(meta.mediaUri, desc.title.toString(), meta.size, meta.duration)
-    }
-    @Provides
-    fun provideDetailOverviewRow(mediaItem: MediaBrowser.MediaItem): DetailsOverviewRow {
-        val desc = mediaItem.description
-        val row = DetailsOverviewRow(VideoDescInfo(desc.title.toString(),
-                desc.subtitle.toString(), desc.description?.toString() ?: ""))
-        return row
+    @Module
+    companion object {
+        @Provides @JvmStatic
+        fun provideDescriptionPresenter(descPresenter: DetailOverviewPresenter): FullWidthDetailsOverviewRowPresenter {
+            return FullWidthDetailsOverviewRowPresenter(descPresenter)
+        }
+        @Provides @JvmStatic
+        fun provideVideoFileInfo(mediaItem: MediaBrowser.MediaItem): VideoFileInfo {
+            val desc = mediaItem.description
+            val meta = mediaItem._getMediaMeta()
+            return VideoFileInfo(meta.mediaUri, desc.title.toString(), meta.size, meta.duration * 1000)
+        }
+        @Provides @JvmStatic
+        fun provideDetailOverviewRow(mediaItem: MediaBrowser.MediaItem): DetailsOverviewRow {
+            val desc = mediaItem.description
+            val row = DetailsOverviewRow(VideoDescInfo(desc.title.toString(),
+                    desc.subtitle.toString(), desc.description?.toString() ?: ""))
+            return row
+        }
     }
 }
 
