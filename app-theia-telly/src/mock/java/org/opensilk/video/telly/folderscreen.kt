@@ -15,7 +15,12 @@ import org.opensilk.common.dagger.Injector
 interface MockFolderComponent: Injector<FolderFragment> {
     @Subcomponent.Builder
     abstract class Builder: Injector.Builder<FolderFragment>() {
-        @BindsInstance abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
+        override fun create(t: FolderFragment): Injector<FolderFragment> {
+            val mediaItem: MediaBrowser.MediaItem = t.activity.intent.getParcelableExtra(EXTRA_MEDIAITEM)
+            return mediaItem(mediaItem).build()
+        }
+        @BindsInstance
+        abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
     }
 }
 
@@ -23,4 +28,4 @@ interface MockFolderComponent: Injector<FolderFragment> {
  *
  */
 @Module(subcomponents = arrayOf(MockFolderComponent::class))
-class MockFolderModule
+abstract class MockFolderModule

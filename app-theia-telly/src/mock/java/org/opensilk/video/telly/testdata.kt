@@ -52,6 +52,7 @@ fun testUpnpVideoItem(): MediaBrowser.MediaItem {
     mediaExtras.subtitle = "Made by foo"
     mediaExtras.mimeType = "video/mp4"
     mediaExtras.mediaUri = Uri.parse("http://nohost/video1.mp4")
+    mediaExtras.size = 1024 * 1024 * 53
     return mediaExtras.toMediaItem()
 }
 

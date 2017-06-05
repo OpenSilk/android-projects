@@ -19,4 +19,4 @@ interface MockHomeComponent: HomeComponent {
  *
  */
 @Module(subcomponents = arrayOf(MockHomeComponent::class))
-class MockHomeModule
+abstract class MockHomeModule

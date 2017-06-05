@@ -16,6 +16,10 @@ import org.opensilk.common.dagger.Injector
 interface MockDetailComponent: Injector<DetailFragment> {
     @Subcomponent.Builder
     abstract class Builder: Injector.Builder<DetailFragment>() {
+        override fun create(t: DetailFragment): Injector<DetailFragment> {
+            val mediaItem: MediaBrowser.MediaItem = t.activity.intent.getParcelableExtra(EXTRA_MEDIAITEM)
+            return mediaItem(mediaItem).build()
+        }
         @BindsInstance
         abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
     }

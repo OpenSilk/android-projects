@@ -37,7 +37,7 @@ interface MockRootComponent: RootComponent {
  *
  */
 @Module
-class MockRootModule
+abstract class MockRootModule
 
 /**
  *
