@@ -1,10 +1,8 @@
 package org.opensilk.video.telly
 
 import android.media.browse.MediaBrowser
-import org.opensilk.media.MIME_TYPE_CONTENT_DIRECTORY
-import org.opensilk.media.MIME_TYPE_DIR
-import org.opensilk.media.MediaMeta
-import org.opensilk.media.toMediaItem
+import android.net.Uri
+import org.opensilk.media.*
 
 /**
  * a mock upnp device mediaItem
@@ -44,5 +42,16 @@ fun testUpnpFolderItemList(): List<MediaBrowser.MediaItem> {
         list.add(mediaExtras.toMediaItem())
     }
     return list
+}
+
+fun testUpnpVideoItem(): MediaBrowser.MediaItem {
+    val mediaExtras = MediaMeta()
+    mediaExtras.mediaId = MediaRef(UPNP_VIDEO, UpnpItemId("upnpcds-1", "video1")).toJson()
+    mediaExtras.parentMediaId = MediaRef(UPNP_FOLDER, FolderId("upnpcds-1", "1")).toJson()
+    mediaExtras.title = "Video 1"
+    mediaExtras.subtitle = "Made by foo"
+    mediaExtras.mimeType = "video/mp4"
+    mediaExtras.mediaUri = Uri.parse("http://nohost/video1.mp4")
+    return mediaExtras.toMediaItem()
 }
 
