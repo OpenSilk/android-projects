@@ -30,16 +30,8 @@
 
     </style>
 
-    <style name="NetworkTheme" parent="Theme.Leanback.Browse">
-
-    </style>
-
     <style name="PlaybackTheme" parent="Theme.Leanback">
         <item name="android:colorBackground">@android:color/black</item>
-    </style>
-
-    <style name="SearchTheme" parent="Theme.Leanback">
-
     </style>
 
 </resources>

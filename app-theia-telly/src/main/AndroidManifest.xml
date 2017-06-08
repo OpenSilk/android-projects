@@ -27,7 +27,7 @@
             android:label="@string/app_name"
             android:logo="@drawable/silk_video_banner"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.Leanback.Browse">
+            android:theme="@style/LandingTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
@@ -36,10 +36,17 @@
         <activity
             android:name=".FolderActivity"
             android:parentActivityName=".HomeActivity"
-            android:theme="@style/Theme.Leanback.VerticalGrid"/>
+            android:theme="@style/FoldersTheme"/>
         <activity
             android:name=".DetailActivity"
-            android:theme="@style/Theme.Leanback.Details"/>
+            android:theme="@style/DetailsTheme"/>
+        <activity
+            android:name=".PlaybackActivity"
+            android:theme="@style/PlaybackTheme"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"/>
 
         <service android:name=".UpnpHolderService"/>
     </application>

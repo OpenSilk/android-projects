@@ -23,7 +23,8 @@ import javax.inject.Singleton
                 UpnpHolderServiceModule::class,
                 HomeModule::class,
                 FolderModule::class,
-                DetailModule::class
+                DetailModule::class,
+                PlaybackModule::class
         )
 )
 interface RootComponent: AppContextComponent, Injector<VideoApp>
@@ -66,6 +67,7 @@ open class VideoApp: BaseApp(), InjectionManager {
     @Inject lateinit var mHomeBuilder: HomeComponent.Builder
     @Inject lateinit var mFolderBuilder: FolderComponent.Builder
     @Inject lateinit var mDetailBuilder: DetailComponent.Builder
+    @Inject lateinit var mPlaybackBuilder: PlaybackComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
 
     /**
@@ -80,6 +82,8 @@ open class VideoApp: BaseApp(), InjectionManager {
             (foo.activity as FolderActivity).daggerComponent(mFolderBuilder, foo).inject(foo)
         } else if (foo is DetailFragment) {
             (foo.activity as DetailActivity).daggerComponent(mDetailBuilder, foo).inject(foo)
+        } else if (foo is PlaybackActivity) {
+            foo.daggerComponent(mPlaybackBuilder, foo).inject(foo)
         } else if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.build().inject(foo)
         } else {

@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "org.opensilk.video.telly"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"

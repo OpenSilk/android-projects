@@ -26,7 +26,9 @@ import javax.inject.Singleton
                 FolderModule::class,
                 MockFolderModule::class,
                 DetailModule::class,
-                MockDetailModule::class
+                MockDetailModule::class,
+                PlaybackModule::class,
+                MockPlaybackModule::class
                 )
 )
 interface MockRootComponent: RootComponent {
@@ -55,6 +57,7 @@ class MockVideoApp: VideoApp() {
     @Inject lateinit var mMockHomeBuilder: MockHomeComponent.Builder
     @Inject lateinit var mMockFolderBuilder: MockFolderComponent.Builder
     @Inject lateinit var mMockDetailBuilder: MockDetailComponent.Builder
+    @Inject lateinit var mMockPlaybackBuilder: MockPlaybackComponent.Builder
 
     override fun injectFoo(foo: Any) {
         if (foo is HomeFragment) {
@@ -63,6 +66,8 @@ class MockVideoApp: VideoApp() {
             (foo.activity as FolderActivity).daggerComponent(mMockFolderBuilder, foo).inject(foo)
         } else if (foo is DetailFragment) {
             (foo.activity as DetailActivity).daggerComponent(mMockDetailBuilder, foo).inject(foo)
+        } else if (foo is PlaybackActivity) {
+            foo.daggerComponent(mMockPlaybackBuilder, foo).inject(foo)
         } else {
             super.injectFoo(foo)
         }
