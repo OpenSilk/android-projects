@@ -27,6 +27,9 @@
         <variable
             name="systemTimeString"
             type="String"/>
+        <variable
+            name="actionHandler"
+            type="org.opensilk.video.telly.PlaybackActionsHandler"/>
     </data>
     <FrameLayout
         android:layout_width="match_parent"
@@ -148,6 +151,7 @@
                     android:id="@+id/action_captions"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:onClick="@{() -> actionHandler.toggleCaptions()}"
                     android:src="@drawable/lb_ic_cc"
                     style="?playbackControlsButtonStyle"
                     android:background="?android:selectableItemBackgroundBorderless"/>
@@ -156,6 +160,7 @@
                     android:id="@+id/action_skip_previous"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:onClick="@{() -> actionHandler.skipPrevious()}"
                     android:src="@drawable/lb_ic_skip_previous"
                     style="?playbackControlsButtonStyle"
                     android:background="?android:selectableItemBackgroundBorderless"/>
@@ -164,6 +169,7 @@
                     android:id="@+id/action_play_pause"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:onClick="@{() -> actionHandler.togglePlayPause()}"
                     android:src="@drawable/lb_ic_play"
                     style="?playbackControlsButtonStyle"
                     android:background="?android:selectableItemBackgroundBorderless"/>
@@ -172,6 +178,7 @@
                     android:id="@+id/action_skip_next"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:onClick="@{() -> actionHandler.skipNext()}"
                     android:src="@drawable/lb_ic_skip_next"
                     style="?playbackControlsButtonStyle"
                     android:background="?android:selectableItemBackgroundBorderless"/>
@@ -180,6 +187,7 @@
                     android:id="@+id/action_pip"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:onClick="@{() -> actionHandler.enterPip()}"
                     android:src="@drawable/lb_ic_pip"
                     style="?playbackControlsButtonStyle"
                     android:background="?android:selectableItemBackgroundBorderless"/>
