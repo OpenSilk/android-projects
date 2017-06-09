@@ -110,6 +110,7 @@ class DetailActivity: BaseVideoActivity() {
  */
 class DetailFragment: DetailsFragment(), OnActionClickedListener {
 
+    @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     @Inject lateinit var mOverviewPresenter: FullWidthDetailsOverviewRowPresenter
     @Inject lateinit var mOverviewRow: DetailsOverviewRow
     @Inject lateinit var mOverviewActionsAdapter: DetailOverviewActionsAdapter
@@ -146,6 +147,8 @@ class DetailFragment: DetailsFragment(), OnActionClickedListener {
         rowsAdapter.add(mFileInfoRow)
 
         adapter = rowsAdapter
+
+        setupActions()
     }
 
     override fun onStart() {
@@ -161,10 +164,10 @@ class DetailFragment: DetailsFragment(), OnActionClickedListener {
     override fun onActionClicked(action: Action) {
         when (action.id) {
             ACTIONID_PLAY, ACTIONID_RESUME, ACTIONID_START_OVER -> {
-//            val intent = Intent(activity, PlaybackActivity::class.java)
-//            intent.setAction(PlaybackActivity.ACTION_PLAY)
-//            intent.putExtra(DetailsActivity.MEDIA_ITEM, mediaItem)
-//            activityContext.startActivity(intent)
+                val intent = Intent(activity, PlaybackActivity::class.java)
+                intent.action = ACTION_PLAY
+                intent.putExtra(EXTRA_MEDIAITEM, mMediaItem)
+                activity.startActivity(intent)
             }
             else -> {
                 Toast.makeText(activity, "UNIMPLEMENTED", Toast.LENGTH_LONG).show()
@@ -176,6 +179,10 @@ class DetailFragment: DetailsFragment(), OnActionClickedListener {
         val defaultBackground = context.getDrawable(R.drawable.default_background)
         mBackgroundManager.drawable = defaultBackground
         //TODO load image
+    }
+
+    fun setupActions() {
+        mOverviewActionsAdapter.set(ACTIONID_PLAY.toInt(), Action(ACTIONID_PLAY, "Play"))
     }
 }
 

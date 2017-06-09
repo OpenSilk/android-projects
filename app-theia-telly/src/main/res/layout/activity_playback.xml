@@ -21,7 +21,12 @@
         tools:context="org.opensilk.video.telly.PlaybackActivity"
         tools:deviceIds="tv">
     <data>
-
+        <variable
+            name="desc"
+            type="org.opensilk.video.VideoDescInfo"/>
+        <variable
+            name="systemTimeString"
+            type="String"/>
     </data>
     <FrameLayout
         android:layout_width="match_parent"
@@ -69,6 +74,7 @@
                 android:id="@+id/media_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@{desc.title}"
                 tools:text="title"
                 android:textSize="34sp"
                 style="?android:textAppearanceLarge"/>
@@ -79,6 +85,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
+                android:text="@{systemTimeString}"
                 style="?android:textAppearanceLarge"
                 tools:text="10:12"/>
 
@@ -146,10 +153,10 @@
                     android:background="?android:selectableItemBackgroundBorderless"/>
 
                 <ImageButton
-                    android:id="@+id/action_rewind"
+                    android:id="@+id/action_skip_previous"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/lb_ic_fast_rewind"
+                    android:src="@drawable/lb_ic_skip_previous"
                     style="?playbackControlsButtonStyle"
                     android:background="?android:selectableItemBackgroundBorderless"/>
 
@@ -162,10 +169,10 @@
                     android:background="?android:selectableItemBackgroundBorderless"/>
 
                 <ImageButton
-                    android:id="@+id/action_fast_forward"
+                    android:id="@+id/action_skip_next"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/lb_ic_fast_forward"
+                    android:src="@drawable/lb_ic_skip_next"
                     style="?playbackControlsButtonStyle"
                     android:background="?android:selectableItemBackgroundBorderless"/>
 

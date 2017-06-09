@@ -25,7 +25,7 @@ abstract class MockUpnpLoadersModule {
 class MockCDSDevicesLoader
 @Inject constructor(): CDSDevicesLoader {
     override val observable: Observable<MediaBrowser.MediaItem>
-        get() = Observable.just(testUpnpDeviceItem())
+        get() = Observable.from(arrayOf(testUpnpDeviceItem(), testUpnpVideoItem()))
 }
 
 /**

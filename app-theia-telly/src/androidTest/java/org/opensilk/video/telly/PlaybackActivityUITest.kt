@@ -29,4 +29,10 @@ class PlaybackActivityUITest {
         val item = mActivity.activity.intent.getParcelableExtra<MediaBrowser.MediaItem>(EXTRA_MEDIAITEM)
         assertThat(item.mediaId).isEqualTo(testUpnpVideoItem().mediaId)
     }
+
+    @Test
+    fun test_playpausebtn_isselected() {
+        assertThat(mActivity.activity.mBinding.actionPlayPause.isSelected).isEqualTo(true)
+    }
+
 }
