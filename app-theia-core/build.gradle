@@ -7,7 +7,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 22
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -43,6 +43,7 @@ dependencies {
     compile project(':common-app')
     compile project(':common-glide')
     compile project(':media')
+    compile project(':media-playback')
     compile project(':libtvdb')
     compile project(':libtmdb')
     compile project(':upnp-cds-browser')
