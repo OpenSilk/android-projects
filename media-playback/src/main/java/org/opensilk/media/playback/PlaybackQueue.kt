@@ -119,6 +119,10 @@ class PlaybackQueue {
         return success
     }
 
+    fun add(desc: MediaDescription) : Boolean {
+        return add(newItem(desc))
+    }
+
     fun remove(itemId: Long) : Boolean {
         var idx = mQueue.indexOf(mCurrent)
         val success = mQueue.removeIf { it.queueId == itemId }
