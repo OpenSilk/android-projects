@@ -1,18 +1,14 @@
 package org.opensilk.video.telly
 
 import android.content.Intent
-import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import android.provider.DocumentsContract
-import android.view.TouchDelegate
 import dagger.Binds
-import dagger.BindsInstance
 import dagger.Module
 import dagger.Subcomponent
-import org.fourthline.cling.android.AndroidUpnpService
 import org.fourthline.cling.model.action.ActionInvocation
 import org.fourthline.cling.model.message.UpnpResponse
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
@@ -25,37 +21,27 @@ import org.fourthline.cling.registry.Registry
 import org.fourthline.cling.support.contentdirectory.callback.Browse
 import org.fourthline.cling.support.model.BrowseFlag
 import org.fourthline.cling.support.model.DIDLContent
-import org.fourthline.cling.support.model.DIDLObject
 import org.fourthline.cling.support.model.Protocol
-import org.fourthline.cling.support.model.container.MusicAlbum
-import org.fourthline.cling.support.model.container.MusicArtist
 import org.fourthline.cling.support.model.container.StorageFolder
-import org.fourthline.cling.support.model.item.MusicTrack
 import org.fourthline.cling.support.model.item.VideoItem
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.ServiceScope
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.common.loader.RxListLoader
 import org.opensilk.common.loader.RxLoader
 import org.opensilk.media.MediaMeta
-import org.opensilk.media._setMediaMeta
 import org.opensilk.media.toMediaItem
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.featurelist.BasicView
 import org.opensilk.upnp.cds.featurelist.Features
 import org.opensilk.upnp.cds.featurelist.XGetFeatureListCallback
-import org.opensilk.video.parseUpnpDuration
+import org.opensilk.video.*
 import rx.Observable
 import rx.Subscriber
 import rx.subscriptions.Subscriptions
 import timber.log.Timber
-import java.io.IOException
-import java.util.ArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Provider
 
 /**
  * This module is superseded in mock for espresso tests

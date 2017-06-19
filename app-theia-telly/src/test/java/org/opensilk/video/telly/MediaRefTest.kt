@@ -6,6 +6,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 import org.assertj.core.api.Java6Assertions.assertThat
+import org.opensilk.video.*
 
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class)

@@ -3,6 +3,7 @@ package org.opensilk.video.telly
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import org.opensilk.media.*
+import org.opensilk.video.*
 
 /**
  * a mock upnp device mediaItem
