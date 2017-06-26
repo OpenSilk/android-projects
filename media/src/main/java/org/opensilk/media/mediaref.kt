@@ -1,7 +1,6 @@
-package org.opensilk.video.telly
+package org.opensilk.video
 
 import android.media.MediaDescription
-import android.provider.MediaStore
 import android.util.JsonReader
 import android.util.JsonWriter
 import java.io.StringReader
@@ -124,4 +123,8 @@ fun newMediaRef(json: String): MediaRef {
 
 fun MediaDescription.Builder._mediaRef(mediaRef: MediaRef) : MediaDescription.Builder {
     return this.setMediaId(mediaRef.toJson())
+}
+
+fun isLikelyJson(str: String): Boolean {
+    return str.first() == '{' || str.first() == '['
 }
