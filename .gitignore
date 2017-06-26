@@ -8,5 +8,7 @@
 /captures
 .externalNativeBuild
 
+#Temporary
 app-orpheus/src/androidTest/assets
 app-orpheus/src/test/resources
+media-playback/src/androidTest/assets
