@@ -1,4 +1,4 @@
-package org.opensilk.video
+package org.opensilk.media
 
 import android.media.MediaDescription
 import android.util.JsonReader
