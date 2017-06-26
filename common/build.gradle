@@ -46,9 +46,7 @@ dependencies {
     kapt (group: 'com.google.dagger', name:'dagger-compiler', version: rootProject.ext.dagger2Version)
 
     compile (group: 'com.google.dagger', name:'dagger', version: rootProject.ext.dagger2Version)
-    compile (group: 'io.reactivex', name: 'rxjava', version: rootProject.ext.rxJavaVersion)
-    compile (group: 'io.reactivex', name: 'rxkotlin', version: rootProject.ext.rxKotlinVersion)
-    compile (group: 'io.reactivex', name: 'rxandroid', version: rootProject.ext.rxAndroidVersion)
+    
     compile (group: 'com.jakewharton.timber', name:'timber', version:rootProject.ext.timberVersion)
     compile (group: 'com.squareup.mortar', name: 'mortar', version: rootProject.ext.mortarVersion)
     compile (group: 'com.android.support', name: 'support-v4', version: rootProject.ext.supportLibVersion)
@@ -60,5 +58,6 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     compile project(':common-dagger')
+    compile project(':common-rx')
 
 }
