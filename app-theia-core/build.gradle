@@ -56,10 +56,6 @@ dependencies {
 
 }
 
-repositories {
-    maven { url "file:///Users/drew/workspace/Opensilk/m2/repository" }
-}
-
 configurations.all {
     // check for updates every build (to avoid this use offline mode)
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
