@@ -29,8 +29,7 @@ import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.ServiceScope
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.common.loader.RxLoader
-import org.opensilk.media.MediaMeta
-import org.opensilk.media.toMediaItem
+import org.opensilk.media.*
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.featurelist.BasicView
 import org.opensilk.upnp.cds.featurelist.Features

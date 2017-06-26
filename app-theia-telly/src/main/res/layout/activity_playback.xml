@@ -35,33 +35,29 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:keepScreenOn="true">
-        <!--
-          the double FrameLayout is necessary here to do cropping on the bottom right
-          (which requires the surface not be centered), while keeping the result centered
-         -->
 
-        <FrameLayout
+        <com.google.android.exoplayer2.ui.AspectRatioFrameLayout
+            android:id="@+id/surface_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_gravity="center">
 
-            <FrameLayout
-                android:id="@+id/player_surface_frame"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:foregroundGravity="clip_horizontal|clip_vertical">
+            <SurfaceView
+                android:id="@+id/video_surface"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
 
-                <SurfaceView
-                    android:id="@+id/player_surface"
-                    android:layout_width="1dp"
-                    android:layout_height="1dp"/>
+            <View android:id="@+id/shutter"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:background="@android:color/black"/>
 
-                <SurfaceView
-                    android:id="@+id/subtitles_surface"
-                    android:layout_width="1dp"
-                    android:layout_height="1dp"/>
-            </FrameLayout>
-        </FrameLayout>
+            <com.google.android.exoplayer2.ui.SubtitleView
+                android:id="@+id/subtitles"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
 
         <RelativeLayout
             android:id="@+id/top_bar"

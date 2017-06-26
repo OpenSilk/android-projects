@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewPropertyAnimator
 import android.widget.ViewAnimator
+import com.google.android.exoplayer2.SimpleExoPlayer
 import dagger.BindsInstance
 import dagger.Module
 import dagger.Subcomponent
@@ -69,12 +70,10 @@ abstract class PlaybackModule
 class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
 
     lateinit var mMainWorker: Scheduler.Worker
-
     lateinit var mBinding: ActivityPlaybackBinding
-    @Inject
-    lateinit var mMediaItem: MediaBrowser.MediaItem
-
+    @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     lateinit var mBrowser: MediaBrowser
+    lateinit var mExoPlayer: SimpleExoPlayer
 
     override fun onScopeCreated(scope: MortarScope) {
         super.onScopeCreated(scope)
