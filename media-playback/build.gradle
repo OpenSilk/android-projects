@@ -30,6 +30,10 @@ dependencies {
     compile "io.reactivex:rxjava:$rxJavaVersion"
     compile "io.reactivex:rxandroid:$rxAndroidVersion"
 
+    compile "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
+    compile "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
+    compile "com.google.android.exoplayer:extension-ffmpeg-x86:r2.4.2-SNAPSHOT"
+
     compile project(':common-dagger')
     compile project(':media')
 
