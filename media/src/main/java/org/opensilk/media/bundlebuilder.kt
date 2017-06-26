@@ -1,6 +1,7 @@
 package org.opensilk.media
 
 import android.os.Bundle
+import android.os.IBinder
 import android.os.Parcelable
 
 /**
@@ -33,5 +34,10 @@ fun <T: Parcelable> bundle(key: String, data: T): Bundle {
 
 fun <T: Parcelable> Bundle._putParcelable(key: String, data: T): Bundle {
     this.putParcelable(key, data)
+    return this
+}
+
+fun <T: IBinder> Bundle._putBinder(key: String, data: T): Bundle {
+    this.putBinder(key, data)
     return this
 }
