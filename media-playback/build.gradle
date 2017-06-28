@@ -7,7 +7,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 22
         targetSdkVersion rootProject.ext.compileSdkVersion
         versionCode 1
         versionName "1.0"
@@ -27,14 +27,12 @@ dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
-    compile "io.reactivex:rxjava:$rxJavaVersion"
-    compile "io.reactivex:rxandroid:$rxAndroidVersion"
-
     compile "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
     compile "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
     compile "com.google.android.exoplayer:extension-ffmpeg-x86:r2.4.2-SNAPSHOT"
 
     compile project(':common-dagger')
+    compile project(':common-rx')
     compile project(':media')
 
     androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"

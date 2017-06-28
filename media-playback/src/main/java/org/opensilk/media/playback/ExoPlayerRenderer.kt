@@ -130,6 +130,10 @@ constructor(
         mWakeLock.release()
     }
 
+    fun seekTo(pos: Long) {
+        mExoPlayer.seekTo(pos)
+    }
+
     fun release() {
         pause()
         mExoPlayer.stop()

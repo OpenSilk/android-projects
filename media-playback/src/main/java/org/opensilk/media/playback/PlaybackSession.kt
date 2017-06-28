@@ -1,7 +1,8 @@
-package org.opensilk.video
+package org.opensilk.media.playback
 
 import android.content.Context
 import android.content.Intent
+import android.media.MediaMetadata
 import android.media.Rating
 import android.media.browse.MediaBrowser
 import android.media.session.MediaSession
@@ -11,67 +12,31 @@ import android.net.Uri
 import android.os.*
 import android.service.media.MediaBrowserService
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
+import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
-import org.opensilk.media.playback.ExoPlayerRenderer
-import org.opensilk.media.playback.PlaybackQueue
 import timber.log.Timber
+import java.util.*
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
 /**
- * Created by drew on 6/8/17.
+ * Created by drew on 6/26/17.
  */
-
-class VideoPlaybackService: MediaBrowserService() {
-    override fun onLoadChildren(parentId: String?, result: Result<MutableList<MediaBrowser.MediaItem>>) {
-
-    }
-
-    override fun onGetRoot(clientPackageName: String?, clientUid: Int, rootHints: Bundle?): BrowserRoot {
-        return BrowserRoot("0", null)
-    }
-}
-
-class PlaybackExtras {
-    private val bundle: Bundle
-    public constructor(): this(Bundle())
-    internal constructor(bundle: Bundle) {
-        this.bundle = bundle
-    }
-
-    var resume: Boolean
-        set(value) = bundle.putBoolean("resume", value)
-        get() = bundle.getBoolean("resume", false)
-
-    fun bundle() : Bundle {
-        return Bundle(bundle)
-    }
-}
-
-fun Bundle?._playbackExtras(): PlaybackExtras {
-    return if (this != null) PlaybackExtras(this) else PlaybackExtras()
-}
-
-const val CMD_GET_EXOPLAYER = "cmd.get_exoplayer"
-const val CMD_RESULT_OK = 1
-const val CMD_RESULT_ARG1 = "arg1"
-
-const val SEEK_DELTA_DURATION = 10000
-
 class PlaybackSession
 @Inject
 constructor(
-        private val mContext: Context,
-        private val mSettings: VideoAppPreferences,
-        private val mDbClient: VideosProviderClient,
+        @ForApplication private val mContext: Context,
+        private val mDbClient: MediaProviderClient,
         private val mQueue: PlaybackQueue,
-        private val mDataService: DataService,
         private val mRenderer: ExoPlayerRenderer
-) : MediaSession.Callback(), ExoPlayer.EventListener {
+) : MediaSession.Callback() {
 
     /**
      * Allows us to pass a reference to this class through a bundle
@@ -84,24 +49,43 @@ constructor(
             get() = mRenderer.player
     }
 
-
     private val mMediaSession: MediaSession = MediaSession(mContext, BuildConfig.APPLICATION_ID)
     private var mMainHandler: Handler = Handler(Looper.getMainLooper())
     private var mBinder = SessionBinder()
 
-    var mPlaybackState: PlaybackState by Delegates.observable(PlaybackState.Builder().build(), { _,_,nv ->
+    private val mDataSourceFactory = DefaultDataSourceFactory(mContext,
+            mContext.packageName + "/" + BuildConfig.VERSION_NAME)
+    private val mExtractorFactory = DefaultExtractorsFactory()
+
+    var mPlaybackState: PlaybackState by Delegates.observable(PlaybackState.Builder().build(), { _, _, nv ->
         mMediaSession.setPlaybackState(nv)
     })
 
     init {
-
         mMediaSession.setCallback(this, mMainHandler)
         mMediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS)
         //TODO mediaButtons
         //TODO activity
         mMediaSession.isActive = true
 
+        //subscribe to renderer changes
+        mRenderer.stateChanges.subscribe {
+            updateState(it)
+        }
 
+    }
+
+    fun release() {
+        mMediaSession.isActive = false
+        mMediaSession.release()
+
+        mRenderer.release()
+
+
+    }
+
+    private fun newMediaSource(uri: Uri): MediaSource {
+        return ExtractorMediaSource(uri, mDataSourceFactory, mExtractorFactory, null, null)
     }
 
     /*
@@ -124,7 +108,7 @@ constructor(
 
     override fun onPlay() {
         Timber.d("onPlay()")
-        mMediaSession.isActive = true
+        mRenderer.play()
     }
 
     override fun onPlayFromMediaId(mediaId: String, extras: Bundle?) {
@@ -141,19 +125,12 @@ constructor(
         val playbackExtras = extras._playbackExtras()
         when (mediaRef.kind) {
             UPNP_VIDEO -> {
-                mDataService.getMediaItem(mediaRef).subscribe({ item ->
+                mDbClient.getMediaItem(mediaRef).subscribe({ item ->
                     val meta = item._getMediaMeta()
-                    changeState(STATE_BUFFERING)
-
-                    mExoPlayer.prepare()
-                    if (playbackExtras.resume) {
-                        if (meta.lastPlaybackPosition > 0) {
-                            mExoPlayer.see
-                            mForceSeekDuringLoad = true
-                            mSeekOnMedia = meta.lastPlaybackPosition
-                        }
+                    mRenderer.prepare(newMediaSource(meta.mediaUri))
+                    if (playbackExtras.resume && meta.lastPlaybackPosition > 0) {
+                        mRenderer.seekTo(meta.lastPlaybackPosition)
                     }
-                    loadMediaItem(item)
                     onPlay()
                 }, { t ->
                     onStop()
@@ -232,47 +209,43 @@ constructor(
      * End mediasession callback methods
      */
 
-
-    /*
-     * Start Exoplayer callbacks
-     */
-    override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
-        TODO("not implemented")
-    }
-
-    override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
-        TODO("not implemented")
-    }
-
-    override fun onPlayerError(error: ExoPlaybackException?) {
-        TODO("not implemented")
-    }
-
-    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-        TODO("not implemented")
-    }
-
-    override fun onLoadingChanged(isLoading: Boolean) {
-        TODO("not implemented")
-    }
-
-    override fun onPositionDiscontinuity() {
-        TODO("not implemented")
-    }
-
-    override fun onTimelineChanged(timeline: Timeline?, manifest: Any?) {
-        TODO("not implemented")
-    }
-
-    /*
-     * End Exoplayer callbacks
-     */
-
-    fun changeState(state: Int) {
-        changeState(state, {})
+    fun updateMetadata(media: MediaBrowser.MediaItem) {
+        val meta = media._getMediaMeta()
+        val bob = MediaMetadata.Builder()
+                .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, meta.mediaId)
+                .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, meta.title)
+                .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, meta.subtitle)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, meta.duration)
+        if (meta.artworkUri != Uri.EMPTY) {
+            bob.putString(MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI, meta.artworkUri.toString())
+        }
+        val desc = media.description
+        if (desc.iconBitmap != null) {
+            bob.putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, desc.iconBitmap)
+        }
+        mMediaSession.setMetadata(bob.build())
     }
 
     fun changeState(state: Int, opts: (PlaybackState.Builder) -> Unit) {
+        val builder = PlaybackState.Builder()
+        builder.setActions(generateActions(state))
+        applyCommonState(builder)
+        opts(builder)
+        mPlaybackState = builder.build()
+    }
+
+    fun updateState(current: PlaybackState) {
+        val builder = current._newBuilder()
+        builder.setActions(generateActions(current.state))
+        applyCommonState(builder)
+        mPlaybackState = builder.build()
+    }
+
+    fun applyCommonState(builder: PlaybackState.Builder) {
+        mQueue.getCurrent().subscribeIgnoreError({ builder.setActiveQueueItemId(it.queueId) })
+    }
+
+    fun generateActions(state: Int): Long {
         var actions = ACTION_PLAY_FROM_MEDIA_ID or when (state) {
 
             STATE_PLAYING -> ACTION_PAUSE or ACTION_SEEK_TO
@@ -293,20 +266,8 @@ constructor(
             STATE_NONE -> 0
             else -> 0
         }
-        if ((actions and ACTION_PAUSE) == ACTION_PAUSE) {
-            if (mExoPlayer.isCurrentWindowSeekable) {
-                actions = actions or ACTION_SEEK_TO
-            }
-        }
-        val builder = PlaybackState.Builder()
-                .setActions(actions)
-                .setState(state, mExoPlayer.currentPosition, mExoPlayer.playbackParameters.speed)
-                .setBufferedPosition(mExoPlayer.bufferedPosition)
-        mQueue.getCurrent().subscribeIgnoreError({ builder.setActiveQueueItemId(it.queueId) })
-        opts(builder)
-        mPlaybackState = builder.build()
+        return actions
     }
-
 }
 
 fun PlaybackState._newBuilder(): PlaybackState.Builder {
@@ -322,4 +283,3 @@ fun PlaybackState._newBuilder(): PlaybackState.Builder {
     }
     return bob
 }
-

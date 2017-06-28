@@ -1,7 +1,6 @@
 package org.opensilk.video.telly
 
 import android.animation.Animator
-import android.animation.AnimatorSet
 import android.content.*
 import android.databinding.DataBindingUtil
 import android.media.browse.MediaBrowser
@@ -9,9 +8,6 @@ import android.media.session.MediaController
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.View
-import android.view.ViewAnimationUtils
-import android.view.ViewPropertyAnimator
-import android.widget.ViewAnimator
 import com.google.android.exoplayer2.SimpleExoPlayer
 import dagger.BindsInstance
 import dagger.Module
@@ -22,10 +18,7 @@ import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.common.lifecycle.bindToLifeCycle
-import org.opensilk.common.lifecycle.lifecycleService
-import org.opensilk.common.lifecycle.terminateOnDestroy
-import org.opensilk.media.MediaBrowserCallback
-import org.opensilk.video.VideoPlaybackService
+import org.opensilk.media.playback.VideoPlaybackService
 import org.opensilk.video.telly.databinding.ActivityPlaybackBinding
 import org.opensilk.video.videoDescInfo
 import rx.Observable
@@ -33,7 +26,6 @@ import rx.Scheduler
 import rx.android.schedulers.AndroidSchedulers
 import rx.subscriptions.Subscriptions
 import java.util.*
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 const val ACTION_PLAY = "org.opensilk.action.PLAY"
