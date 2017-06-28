@@ -18,7 +18,8 @@ import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.common.lifecycle.bindToLifeCycle
-import org.opensilk.media.playback.VideoPlaybackService
+import org.opensilk.media.MediaBrowserCallback
+import org.opensilk.video.PlaybackService
 import org.opensilk.video.telly.databinding.ActivityPlaybackBinding
 import org.opensilk.video.videoDescInfo
 import rx.Observable
@@ -59,7 +60,7 @@ abstract class PlaybackModule
 /**
  *
  */
-class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
+class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler, MediaBrowserCallback.Listener {
 
     lateinit var mMainWorker: Scheduler.Worker
     lateinit var mBinding: ActivityPlaybackBinding
@@ -79,11 +80,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         mBinding.desc = mMediaItem.description.videoDescInfo()
         mBinding.actionHandler = this
 
-        mBrowser = MediaBrowser(this, ComponentName(this, VideoPlaybackService::class.java), object: MediaBrowser.ConnectionCallback() {
-            override fun onConnected() {
-                mediaController = MediaController(this@PlaybackActivity, mBrowser.sessionToken)
-            }
-        }, null)
+        mBrowser = MediaBrowser(this, ComponentName(this, PlaybackService::class.java),
+                MediaBrowserCallback(this), null)
         mBrowser.connect()
     }
 
@@ -109,6 +107,14 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         mBinding.topBar.visibility = View.INVISIBLE
         mBinding.bottomBar.visibility = View.INVISIBLE
         animateOverlayIn()
+    }
+
+    override fun onBrowserConnected() {
+        mediaController = MediaController(this, mBrowser.sessionToken)
+    }
+
+    override fun onBrowserDisconnected() {
+        mediaController = null
     }
 
     override fun toggleCaptions() {

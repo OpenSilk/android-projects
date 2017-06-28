@@ -58,7 +58,7 @@ constructor(
             }
         }
     }
-    private var mCurrentPlayerState: Int by Delegates.observable(STATE_NONE) { p, old, new ->
+    private var mCurrentPlayerState: Int by Delegates.observable(STATE_NONE) { _, _, new ->
         mCurrentPlayerStateChanges.onNext(new)
     }
     private var mNextPlayerState: Int = STATE_NONE

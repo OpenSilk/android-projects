@@ -57,9 +57,12 @@ constructor(
             mContext.packageName + "/" + BuildConfig.VERSION_NAME)
     private val mExtractorFactory = DefaultExtractorsFactory()
 
-    var mPlaybackState: PlaybackState by Delegates.observable(PlaybackState.Builder().build(), { _, _, nv ->
+    private var mPlaybackState: PlaybackState by Delegates.observable(PlaybackState.Builder().build(), { _, _, nv ->
         mMediaSession.setPlaybackState(nv)
     })
+
+    val token: MediaSession.Token
+        get() = mMediaSession.sessionToken
 
     init {
         mMediaSession.setCallback(this, mMainHandler)

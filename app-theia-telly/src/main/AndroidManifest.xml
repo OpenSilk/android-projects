@@ -49,6 +49,7 @@
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"/>
 
         <service android:name=".UpnpHolderService"/>
+        <service android:name="org.opensilk.video.PlaybackService"/>
     </application>
 
 </manifest>

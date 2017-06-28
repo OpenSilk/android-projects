@@ -9,7 +9,7 @@ import dagger.Component
 import dagger.Module
 import org.opensilk.common.app.BaseApp
 import org.opensilk.common.dagger.*
-import org.opensilk.video.suitableCacheDir
+import org.opensilk.video.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,7 +24,9 @@ import javax.inject.Singleton
                 HomeModule::class,
                 FolderModule::class,
                 DetailModule::class,
-                PlaybackModule::class
+                PlaybackModule::class,
+                PlaybackServiceModule::class,
+                ProviderModule::class
         )
 )
 interface RootComponent: AppContextComponent, Injector<VideoApp>
@@ -69,6 +71,7 @@ open class VideoApp: BaseApp(), InjectionManager {
     @Inject lateinit var mDetailBuilder: DetailComponent.Builder
     @Inject lateinit var mPlaybackBuilder: PlaybackComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
+    @Inject lateinit var mPlaybackServiceBuilder: PlaybackServiceComponent.Builder
 
     /**
      * Anything that is injectable needs to be injected here.
@@ -86,6 +89,8 @@ open class VideoApp: BaseApp(), InjectionManager {
             foo.daggerComponent(mPlaybackBuilder, foo).inject(foo)
         } else if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.build().inject(foo)
+        } else if (foo is PlaybackService) {
+            mPlaybackServiceBuilder.build().inject(foo)
         } else {
             TODO("Don't have an injector for ${foo.javaClass}")
         }

@@ -6,13 +6,16 @@ import android.media.session.MediaSession.*
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import javax.inject.Inject
 import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
 
 /**
  * Created by drew on 2/24/17.
  */
-class PlaybackQueue {
+class PlaybackQueue
+@Inject
+constructor() {
 
     private val mIdGen = AtomicLong(1)
     private val mQueue = LinkedList<QueueItem>()

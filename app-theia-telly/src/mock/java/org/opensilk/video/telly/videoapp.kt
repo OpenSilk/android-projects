@@ -11,6 +11,8 @@ import org.opensilk.common.dagger.InjectionManager
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.loader.RxLoader
 import org.opensilk.upnp.cds.browser.CDSUpnpService
+import org.opensilk.video.PlaybackServiceModule
+import org.opensilk.video.ProviderModule
 import rx.Observable
 import javax.inject.Inject
 import javax.inject.Named
@@ -28,7 +30,9 @@ import javax.inject.Singleton
                 DetailModule::class,
                 MockDetailModule::class,
                 PlaybackModule::class,
-                MockPlaybackModule::class
+                MockPlaybackModule::class,
+                PlaybackServiceModule::class,
+                ProviderModule::class
                 )
 )
 interface MockRootComponent: RootComponent {
