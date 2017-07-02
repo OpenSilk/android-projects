@@ -32,7 +32,7 @@ import javax.inject.Singleton
                 PlaybackModule::class,
                 MockPlaybackModule::class,
                 PlaybackServiceModule::class,
-                ProviderModule::class
+                MockMediaProviderClientModule::class
                 )
 )
 interface MockRootComponent: RootComponent {
