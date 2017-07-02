@@ -165,7 +165,7 @@ constructor(
 
     override fun onPause() {
         Timber.d("onPause()")
-        TODO()
+        mRenderer.pause()
     }
 
     override fun onSkipToNext() {
