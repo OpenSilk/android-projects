@@ -5,6 +5,7 @@ import android.media.MediaDescription
 import android.media.MediaMetadata
 import android.media.MediaMetadata.*
 import android.media.browse.MediaBrowser
+import android.media.session.MediaSession
 import android.net.Uri
 import android.os.Build
 import timber.log.Timber
@@ -122,4 +123,9 @@ fun MediaMetadata._icon(): Bitmap? {
         bitmap = this.getBitmap(METADATA_KEY_ALBUM_ART)
     }
     return bitmap
+}
+
+
+fun MediaBrowser.notConnected(): Boolean {
+    return !isConnected
 }
