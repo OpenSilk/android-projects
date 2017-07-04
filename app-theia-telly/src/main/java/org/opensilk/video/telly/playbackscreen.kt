@@ -50,6 +50,8 @@ import javax.inject.Inject
 const val ACTION_PLAY = "org.opensilk.action.PLAY"
 const val ACTION_RESUME = "org.opensilk.action.RESUME"
 
+const val EXTRA_PLAY_WHEN_READY = "org.opensilk.extra.PLAY_WHEN_READY"
+
 const val OVERLAY_ANIM_DURATION = 300L
 
 /**
@@ -161,7 +163,14 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                         val binder = resultData!!.getBinder(CMD_RESULT_ARG1) as PlaybackSession.SessionBinder
                         mExoPlayer = binder.player
                         attachExoPlayer()
-                        mediaController.transportControls.playFromMediaId(mMediaItem.mediaId, bundle())
+                        val extras = PlaybackExtras()
+                        if (intent.hasExtra(EXTRA_PLAY_WHEN_READY)) {
+                            extras.playWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
+                        }
+                        if (intent.action == ACTION_RESUME) {
+                            extras.resume = true
+                        }
+                        mediaController.transportControls.playFromMediaId(mMediaItem.mediaId, extras.bundle())
                     }
                     else -> {
                         throw RuntimeException("Invalid return value on CMD_GET_EXOPLAYER val=$resultCode")
