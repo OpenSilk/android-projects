@@ -1,6 +1,7 @@
 package org.opensilk.video.telly
 
 import android.content.Intent
+import android.media.MediaMetadata
 import android.media.browse.MediaBrowser
 import android.media.session.MediaController
 import android.media.session.PlaybackState
@@ -19,8 +20,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.assertj.core.api.Java6Assertions.assertThat
+import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
+import org.opensilk.media.MediaMeta
 
 /**
  * Created by drew on 6/7/17.
@@ -41,6 +44,21 @@ class PlaybackActivityUITest {
     fun test_activityStarts() {
         val item = mActivity.activity.intent.getParcelableExtra<MediaBrowser.MediaItem>(EXTRA_MEDIAITEM)
         assertThat(item.mediaId).isEqualTo(testUpnpVideoItem().mediaId)
+    }
+
+    @Test
+    fun test_media_title_is_displayed_and_updated() {
+        Espresso.onView(ViewMatchers.withId(R.id.media_title)).check(ViewAssertions.matches(
+                ViewMatchers.withText("Video 1")
+        ))
+        mActivity.activity.runOnUiThread {
+            mActivity.activity.onMetadataChanged(MediaMetadata.Builder()
+                .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, "Video 2").build())
+            mActivity.activity.mBinding.executePendingBindings()
+        }
+        Espresso.onView(ViewMatchers.withId(R.id.media_title)).check(ViewAssertions.matches(
+                ViewMatchers.withText("Video 2")
+        ))
     }
 
     @Test
