@@ -134,7 +134,9 @@ constructor(
                     if (playbackExtras.resume && meta.lastPlaybackPosition > 0) {
                         mRenderer.seekTo(meta.lastPlaybackPosition)
                     }
-                    onPlay()
+                    if (playbackExtras.playWhenReady) {
+                        onPlay()
+                    }
                 }, { t ->
                     onStop()
                     changeState(STATE_ERROR) {
