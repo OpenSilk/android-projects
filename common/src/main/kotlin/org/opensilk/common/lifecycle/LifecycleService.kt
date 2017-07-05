@@ -22,6 +22,7 @@ import android.content.Context
 import mortar.MortarScope
 import org.opensilk.common.mortar.HasScope
 import rx.Observable
+import rx.Single
 import rx.exceptions.Exceptions
 import rx.functions.Func1
 import rx.subjects.BehaviorSubject
@@ -39,8 +40,8 @@ fun MortarScope.Builder.withLifeCycleService(): MortarScope.Builder {
  * @return The Lifecycle associated with this context
  */
 @Throws(NoLifecycleServiceException::class)
-fun getLifecycleService(context: Context): LifecycleService {
-    val lifecycleService = context.getSystemService(LIFECYCLE_SERVICE) as? LifecycleService
+fun Context.lifecycleService(): LifecycleService {
+    val lifecycleService = this.getSystemService(LIFECYCLE_SERVICE) as? LifecycleService
     if (lifecycleService != null) {
         return lifecycleService
     }
@@ -89,24 +90,43 @@ class NoLifecycleServiceException : IllegalArgumentException {
 }
 
 fun <T> Observable<T>.bindToLifeCycle(context: Context): Observable<T> {
-    return this.compose<T>(LifecycleService.bindLifecycle(context))
+    return this.compose<T>(context.lifecycleService().bind())
 }
 
 fun <T> Observable<T>.terminateOnDestroy(context: Context): Observable<T> {
-    return this.compose<T>(LifecycleService.bindUntilLifecycleEvent(context, Lifecycle.DESTROY))
+    return this.compose<T>(context.lifecycleService().bindUntilEvent(Lifecycle.DESTROY))
 }
 
 fun <T> Observable<T>.terminateOnDestroy(lifecycleService: LifecycleService): Observable<T> {
     return this.compose<T>(lifecycleService.bindUntilEvent(Lifecycle.DESTROY))
 }
 
-fun <T> Observable<T>.connectedToPauseResume(lifecycleService: LifecycleService): Observable<T> {
-    return lifecycleService.lifeCycle
+fun <T> Observable<T>.connectedToPauseResume(context: Context): Observable<T> {
+    return connectToEvents(Lifecycle.RESUME, Lifecycle.PAUSE, context)
+}
+
+fun <T> Observable<T>.connectToStartStop(context: Context): Observable<T> {
+    return connectToEvents(Lifecycle.START, Lifecycle.STOP, context)
+}
+
+fun <T> Observable<T>.connectToEvents(start: Lifecycle, end: Lifecycle, context: Context): Observable<T> {
+    return context.lifecycleService().lifeCycle
             //terminate on destroy
             .takeUntil { it === Lifecycle.DESTROY }
             //only let resume through
-            .filter { it === Lifecycle.RESUME }
-            .flatMap { this.compose<T>(lifecycleService.bindUntilEvent(Lifecycle.PAUSE)) }
+            .filter { it === start }
+            .flatMap { this.compose<T>(context.lifecycleService().bindUntilEvent(end)) }
+}
+
+/**
+ * Will send CancelationException when destroy called
+ */
+fun <T> Single<T>.cancelOnDestroy(context: Context): Single<T> {
+    return this.compose { source ->
+        source.takeUntil(context.lifecycleService().lifeCycle.takeFirst {
+            it === Lifecycle.DESTROY
+        }.toCompletable())
+    }
 }
 
 /**
@@ -146,7 +166,9 @@ class LifecycleService {
 
     fun <T> bindUntilEvent(event: Lifecycle): Observable.Transformer<in T, out T> {
         return Observable.Transformer<T, T> { source ->
-            source.takeUntil(lifeCycle.takeFirst { lifecycleEvent -> lifecycleEvent === event })
+            source.takeUntil(lifeCycle.takeFirst {
+                lifecycleEvent -> lifecycleEvent === event
+            })
         }
     }
 
@@ -164,64 +186,6 @@ class LifecycleService {
     }
 
     companion object {
-
-        /**
-         * Binds the given source to a Lifecycle.
-         *
-         *
-         * When the lifecycle event occurs, the source will cease to emit any notifications.
-         *
-         *
-         * Use with [Observable.compose]:
-         * `source.compose(RxLifecycle.bindUntilEvent(lifecycle, FragmentEvent.STOP)).subscribe()`
-
-         * @param context the context
-         * *
-         * @param event the event which should conclude notifications from the source
-         * *
-         * @return a reusable [Observable.Transformer] that unsubscribes the source at the specified event
-         */
-        fun <T> bindUntilLifecycleEvent(
-                context: Context, event: Lifecycle): Observable.Transformer<in T, out T> {
-            return getLifecycleService(context).bindUntilEvent<T>(event)
-        }
-
-        /**
-         * @see {@link .bindLifecycle
-         */
-        fun <T> bindUntilLifecycleEvent(
-                scope: MortarScope, event: Lifecycle): Observable.Transformer<in T, out T> {
-            return getLifecycleService(scope).bindUntilEvent<T>(event)
-        }
-
-        /**
-         * Binds the given source to a Lifecycle.
-         *
-         *
-         * Use with [Observable.compose]:
-         * `source.compose(RxLifecycle.bindActivity(lifecycle)).subscribe()`
-         *
-         *
-         * This helper automatically determines (based on the lifecycle sequence itself) when the source
-         * should stop emitting items. In the case that the lifecycle sequence is in the
-         * creation phase (START, RESUME) it will choose the equivalent destructive phase (PAUSE,
-         * STOP). If used in the destructive phase, the notifications will cease at the next event;
-         * for example, if used in PAUSE, it will unsubscribe in STOP.
-
-         * @param context the lifecycle sequence of an Activity
-         * * * @return a reusable [Observable.Transformer] that unsubscribes the source during the Activity lifecycle
-         */
-        fun <T> bindLifecycle(context: Context): Observable.Transformer<in T, out T> {
-            return getLifecycleService(context).bind<T>()
-        }
-
-        /**
-         * @see {@link .bindLifecycle
-         */
-        fun <T> bindLifecycle(scope: MortarScope): Observable.Transformer<in T, out T> {
-            return getLifecycleService(scope).bind<T>()
-        }
-
         // Figures out which corresponding next lifecycle event in which to unsubscribe
         private val CORRESPONDING_EVENTS = Func1<Lifecycle, Lifecycle> { lastEvent ->
             when (lastEvent) {
