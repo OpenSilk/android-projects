@@ -48,6 +48,10 @@ fun <T> Single<T>.subscribeIgnoreError(action: (T) -> Unit): Subscription {
     })
 }
 
+fun <T> Single<T>.observeOnMainThread(): Single<T> {
+    return this.observeOn(AndroidSchedulers.mainThread())
+}
+
 open class SimpleSubscriber<T>: Subscriber<T>() {
     override fun onError(e: Throwable?) {
     }
