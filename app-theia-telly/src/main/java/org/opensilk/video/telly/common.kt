@@ -6,9 +6,8 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import mortar.MortarScope
 import org.opensilk.common.app.ScopedActivity
-import org.opensilk.common.dagger.injectMe
+import org.opensilk.video.UpnpHolderService
 import timber.log.Timber
 
 /**

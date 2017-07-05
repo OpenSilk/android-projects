@@ -6,6 +6,8 @@ import dagger.Module
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.media.MediaRef
 import org.opensilk.media.playback.MediaProviderClient
+import org.opensilk.video.CDSBrowseLoader
+import org.opensilk.video.CDSDevicesLoader
 import rx.Observable
 import rx.Single
 import javax.inject.Inject

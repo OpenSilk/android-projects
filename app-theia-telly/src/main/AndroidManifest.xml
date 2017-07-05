@@ -48,7 +48,7 @@
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"/>
 
-        <service android:name=".UpnpHolderService"/>
+        <service android:name="org.opensilk.video.UpnpHolderService"/>
         <service android:name="org.opensilk.video.PlaybackService"/>
     </application>
 

@@ -1,21 +1,11 @@
 package org.opensilk.video.telly
 
-import android.media.browse.MediaBrowser
 import dagger.Component
 import dagger.Module
-import dagger.Provides
-import org.opensilk.common.app.BaseApp
-import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.AppContextModule
-import org.opensilk.common.dagger.InjectionManager
-import org.opensilk.common.dagger.Injector
-import org.opensilk.common.loader.RxLoader
-import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.video.PlaybackServiceModule
-import org.opensilk.video.ProviderModule
-import rx.Observable
+import org.opensilk.video.UpnpHolderServiceModule
 import javax.inject.Inject
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton

@@ -1,4 +1,4 @@
-package org.opensilk.video.telly
+package org.opensilk.video
 
 import android.content.Intent
 import android.media.browse.MediaBrowser
@@ -34,7 +34,6 @@ import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.featurelist.BasicView
 import org.opensilk.upnp.cds.featurelist.Features
 import org.opensilk.upnp.cds.featurelist.XGetFeatureListCallback
-import org.opensilk.video.*
 import rx.Observable
 import rx.Subscriber
 import rx.subscriptions.Subscriptions
@@ -151,7 +150,7 @@ class CDSBrowseLoaderImpl
         }
         return@lazy Observable.create(CDSOnSubscribe(mUpnpService, folderId))
                 .flatMap { cdsservice -> Observable.create(BrowseOnSubscribe(mUpnpService, cdsservice,
-                            folderId, BrowseFlag.DIRECT_CHILDREN)) }
+                        folderId, BrowseFlag.DIRECT_CHILDREN)) }
     }
 
     fun createFeatureList(cdservice: RemoteService): Observable.OnSubscribe<String> {

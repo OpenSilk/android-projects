@@ -1,7 +1,6 @@
 package org.opensilk.video.telly
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
@@ -14,12 +13,13 @@ import dagger.Module
 import dagger.Subcomponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
-import org.opensilk.common.app.ScopedActivity
 import org.opensilk.common.dagger.*
 import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.rx.observeOnMainThread
+import org.opensilk.video.CDSDevicesLoader
+import org.opensilk.video.DeviceRemovedException
+import org.opensilk.video.UpnpLoadersModule
 import rx.exceptions.Exceptions
-import timber.log.Timber
 import javax.inject.Inject
 
 /**

@@ -5,17 +5,16 @@ import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.app.VerticalGridFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
-import android.support.v17.leanback.widget.TitleView
 import android.support.v17.leanback.widget.VerticalGridPresenter
 import android.widget.Toast
 import dagger.*
-import mortar.MortarScope
-import org.opensilk.common.app.ScopedActivity
 import org.opensilk.common.dagger.*
-import org.opensilk.common.dagger2.withDaggerComponent
 import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.rx.observeOnMainThread
 import org.opensilk.media._getMediaTitle
+import org.opensilk.video.CDSBrowseLoader
+import org.opensilk.video.NoBrowseResultsException
+import org.opensilk.video.UpnpLoadersModule
 import timber.log.Timber
 import javax.inject.Inject
 
