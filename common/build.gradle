@@ -43,10 +43,9 @@ android {
 
 dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
-    kapt (group: 'com.google.dagger', name:'dagger-compiler', version: rootProject.ext.dagger2Version)
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
-    compile (group: 'com.google.dagger', name:'dagger', version: rootProject.ext.dagger2Version)
-    
+
     compile (group: 'com.jakewharton.timber', name:'timber', version:rootProject.ext.timberVersion)
     compile (group: 'com.squareup.mortar', name: 'mortar', version: rootProject.ext.mortarVersion)
     compile (group: 'com.android.support', name: 'support-v4', version: rootProject.ext.supportLibVersion)
@@ -60,4 +59,8 @@ dependencies {
     compile project(':common-dagger')
     compile project(':common-rx')
 
+    testCompile "junit:junit:$test_junitVersion"
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
+    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
 }

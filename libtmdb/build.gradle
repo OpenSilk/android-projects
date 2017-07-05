@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    testCompile "junit:junit:$test_junitVersion"
     testCompile "org.robolectric:robolectric:$test_robolectricVersion"
     testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
     testCompile "org.assertj:assertj-core:$test_assertJVersion"

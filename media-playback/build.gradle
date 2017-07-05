@@ -35,6 +35,8 @@ dependencies {
     compile project(':common-rx')
     compile project(':media')
 
+    testCompile "junit:junit:$test_junitVersion"
+
     androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
     androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
     androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"

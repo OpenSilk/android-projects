@@ -27,4 +27,5 @@ android {
 
 dependencies {
     compile project(':upnp-cds-browser')
+    testCompile "junit:junit:$test_junitVersion"
 }

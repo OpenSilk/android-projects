@@ -29,4 +29,5 @@ dependencies {
     compile (group: 'io.reactivex', name: 'rxjava', version: rootProject.ext.rxJavaVersion)
     compile (group: 'io.reactivex', name: 'rxkotlin', version: rootProject.ext.rxKotlinVersion)
     compile (group: 'io.reactivex', name: 'rxandroid', version: rootProject.ext.rxAndroidVersion)
+    testCompile "junit:junit:$test_junitVersion"
 }
