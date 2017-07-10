@@ -40,12 +40,13 @@ class LifecycleTest {
     @Test
     fun test_single_terminate_on_destroy() {
         mLifecycle.onCreate()
-        val s = single<Int> { }.terminateOnDestroy(mContext).subscribe(mSub)
+        val s = single<Int> { }.cancelOnDestroy(mContext).subscribe(mSub)
         mLifecycle.onDestroy()
         assertThat(s.isUnsubscribed).isTrue()
         verify(mSub, never()).onNext(0)
         //cancel triggers exception
         verify(mSub).onError(Mockito.any(CancellationException::class.java))
+        assertThat(s.isUnsubscribed).isTrue()
     }
 
     @Test
@@ -61,6 +62,7 @@ class LifecycleTest {
         mLifecycle.onPause()
         mLifecycle.onDestroy()
         verify(mSub).onCompleted()
+        assertThat(s.isUnsubscribed).isTrue()
     }
 
     @Test
@@ -76,6 +78,7 @@ class LifecycleTest {
         mLifecycle.onDestroy()
         //destroy should trigger completed
         verify(mSub).onCompleted()
+        assertThat(s.isUnsubscribed).isTrue()
     }
 
 }
