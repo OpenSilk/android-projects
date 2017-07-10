@@ -25,6 +25,7 @@ buildscript {
         exoPlayerVersion = "r2.4.2"
         mapdbVersion = "3.0.5"
         guavaVersion = "20.0"
+        androidarchVersion = "1.0.0-alpha3"
 
         test_junitVersion = "4.12"
         test_robolectricVersion = "3.3.2"
@@ -51,6 +52,7 @@ allprojects {
         mavenCentral()
         maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
         maven { url 'http://4thline.org/m2' }
+        maven { url "https://maven.google.com/" }
         maven { url "file:///Users/drew/workspace/Opensilk/m2/repository" }
         //maven { url "https://opensilk.org/opensilk/m2/raw/master/repository" }
     }

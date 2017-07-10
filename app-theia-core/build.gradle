@@ -35,16 +35,22 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
+    kapt "android.arch.lifecycle:compiler:$androidarchVersion"
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     //compile 'org.videolan.libvlc:libvlc-x86:3.0.0-SNAPSHOT@aar'
 
     compile "org.mapdb:mapdb:$mapdbVersion"
     compile "com.google.guava:guava:$guavaVersion"
 
-    compile project(':common-app')
+    compile "android.arch.lifecycle:runtime:$androidarchVersion"
+    compile "android.arch.lifecycle:extensions:$androidarchVersion"
+
     compile project(':common-glide')
+    compile project(':common-dagger')
+    compile project(':common-rx')
     compile project(':media')
     compile project(':media-playback')
     compile project(':libtvdb')
