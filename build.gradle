@@ -23,6 +23,8 @@ buildscript {
         ankoVersion = '0.9'
         clingVersion = "2.1.1"
         exoPlayerVersion = "r2.4.2"
+        mapdbVersion = "3.0.5"
+        guavaVersion = "20.0"
 
         test_junitVersion = "4.12"
         test_robolectricVersion = "3.3.2"
