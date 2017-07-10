@@ -38,24 +38,17 @@ interface RootComponent: AppContextComponent, Injector<VideoApp>
 abstract class RootModule
 
 /**
- *
- */
-fun Context.rootComponent(): RootComponent {
-    return applicationContext.getDaggerComponent<RootComponent>()
-}
-
-/**
  * This class is overridden in the mock build variant, changes here will not be seen by espresso tests!
  */
 open class VideoApp: BaseApp(), InjectionManager {
 
-    override val rootComponent: Any by lazy {
+    override val rootComponent: RootComponent by lazy {
         DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
     }
 
     override fun onCreate() {
         super.onCreate()
-        rootComponent().inject(this)
+        rootComponent.inject(this)
         setupTimber(true, {})
     }
 
