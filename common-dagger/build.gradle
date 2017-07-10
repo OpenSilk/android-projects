@@ -46,6 +46,7 @@ dependencies {
 
     compile "com.google.dagger:dagger:$dagger2Version"
     compile "javax.annotation:javax.annotation-api:1.2"
+    compile "com.android.support:support-v4:$supportLibVersion"
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testCompile "junit:junit:$test_junitVersion"
