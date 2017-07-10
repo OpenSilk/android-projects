@@ -1,6 +1,5 @@
 package org.opensilk.media
 
-import android.media.MediaDescription
 import android.util.JsonReader
 import android.util.JsonWriter
 import java.io.StringReader
@@ -17,8 +16,14 @@ interface MediaId {
     val id: String
 }
 
+/**
+ *
+ */
 data class StringId(override val id: String): MediaId
 
+/**
+ *
+ */
 data class FolderId(val deviceId: String, val folderId: String): MediaId {
     override val id: String by lazy {
         val sr = StringWriter()
@@ -32,7 +37,10 @@ data class FolderId(val deviceId: String, val folderId: String): MediaId {
     }
 }
 
-fun newFolderId(json: String) : FolderId {
+/**
+ *
+ */
+private fun newFolderId(json: String) : FolderId {
     var dev = ""
     var fol = ""
     return JsonReader(StringReader(json)).use { jr ->
@@ -49,6 +57,9 @@ fun newFolderId(json: String) : FolderId {
     }
 }
 
+/**
+ *
+ */
 data class UpnpItemId(val deviceId: String, val itemId: String): MediaId {
     override val id: String by lazy {
         val sr = StringWriter()
@@ -62,7 +73,10 @@ data class UpnpItemId(val deviceId: String, val itemId: String): MediaId {
     }
 }
 
-fun newUpnpItemId(json: String) : UpnpItemId {
+/**
+ *
+ */
+private fun newUpnpItemId(json: String) : UpnpItemId {
     var dev = ""
     var itm = ""
     return JsonReader(StringReader(json)).use { jr ->
@@ -79,6 +93,9 @@ fun newUpnpItemId(json: String) : UpnpItemId {
     }
 }
 
+/**
+ *
+ */
 data class MediaRef(val kind: String, val mediaId: MediaId) {
 
     constructor(kind: String, id: String) : this(kind, StringId(id))
@@ -96,6 +113,9 @@ data class MediaRef(val kind: String, val mediaId: MediaId) {
     }
 }
 
+/**
+ *
+ */
 fun newMediaRef(json: String): MediaRef {
     var kind = ""
     var id = ""
@@ -121,10 +141,9 @@ fun newMediaRef(json: String): MediaRef {
     }
 }
 
-fun MediaDescription.Builder._mediaRef(mediaRef: MediaRef) : MediaDescription.Builder {
-    return this.setMediaId(mediaRef.toJson())
-}
-
+/**
+ *
+ */
 fun isLikelyJson(str: String): Boolean {
     return str.first() == '{' || str.first() == '['
 }

@@ -296,6 +296,12 @@ constructor(
      */
     var __internal4: String by StringVal
 
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other !is MediaMeta) return false
+        return other.mediaId == mediaId
+    }
 }
 
 fun String.elseIfBlank(alternate: String): String {
