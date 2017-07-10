@@ -101,6 +101,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     var mMediaControllerCallbackRegistered = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        injectMe()
         super.onCreate(savedInstanceState)
         mMainWorker = AndroidSchedulers.mainThread().createWorker()
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_playback)

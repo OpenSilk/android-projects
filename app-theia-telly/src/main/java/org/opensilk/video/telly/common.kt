@@ -50,7 +50,6 @@ abstract class BaseVideoActivity: FragmentActivity(), LifecycleRegistryOwner {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        injectMe()
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(upnpServiceHolder)
     }
