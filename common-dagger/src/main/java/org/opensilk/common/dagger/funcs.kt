@@ -16,6 +16,7 @@ const val DAGGER_SERVICE: String = "OPENSILK_DAGGER_SERVICE"
  */
 
 @Suppress("UNCHECKED_CAST")
+@Deprecated("Use Application to inject stuff")
 fun <T> Context.getDaggerComponent() : T {
     return getSystemService(DAGGER_SERVICE) as? T ?:
             throw NoDaggerComponentException("No dagger component in given context")

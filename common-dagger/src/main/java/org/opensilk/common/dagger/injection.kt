@@ -3,6 +3,7 @@ package org.opensilk.common.dagger
 import android.app.Activity
 import android.app.Fragment
 import android.app.Service
+import android.content.ContentProvider
 
 /**
  * Created by drew on 5/30/17.
@@ -36,6 +37,15 @@ fun Fragment.injectMe() {
 
 fun Service.injectMe() {
     val app = application
+    if (app is InjectionManager) {
+        app.injectFoo(this)
+    } else {
+        TODO("App needs to be an InjectionManager")
+    }
+}
+
+fun ContentProvider.injectMe() {
+    val app = context!!.applicationContext
     if (app is InjectionManager) {
         app.injectFoo(this)
     } else {
