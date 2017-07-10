@@ -1,17 +1,21 @@
 package org.opensilk.video.telly
 
+import android.app.Application
+import android.arch.lifecycle.ViewModel
 import android.content.Context
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
 import com.bumptech.glide.module.AppGlideModule
 import dagger.Component
+import dagger.MapKey
 import dagger.Module
-import org.opensilk.common.app.BaseApp
 import org.opensilk.common.dagger.*
 import org.opensilk.video.*
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.reflect.KClass
 
 /**
  * Created by drew on 5/28/17.
@@ -40,16 +44,16 @@ abstract class RootModule
 /**
  * This class is overridden in the mock build variant, changes here will not be seen by espresso tests!
  */
-open class VideoApp: BaseApp(), InjectionManager {
+open class VideoApp: Application(), InjectionManager {
 
-    override val rootComponent: RootComponent by lazy {
+    open val rootComponent: RootComponent by lazy {
         DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
     }
 
     override fun onCreate() {
         super.onCreate()
         rootComponent.inject(this)
-        setupTimber(true, {})
+        Timber.plant(DebugTreeWithThreadName())
     }
 
     //For now we hold references to all our injectors here
@@ -91,23 +95,17 @@ open class VideoApp: BaseApp(), InjectionManager {
 
 }
 
-@Suppress("UNCHECKED_CAST")
-fun <T> BaseVideoActivity.daggerComponent(bob: Injector.Factory<T>, foo: T): Injector<T> {
-    val ref = scope.getService<DaggerServiceReference>(DAGGER_SERVICE)
-    if (ref.cmp == null) {
-        ref.cmp = bob.create(foo)
-    }
-    return ref.cmp as Injector<T>
-}
+/**
+ *
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@MapKey
+annotation class ViewModelKey(val value: KClass<out ViewModel>)
 
 /**
- * holds the component in activies dagger service
- * set the activityComponent to this in all activities
+ *
  */
-class DaggerServiceReference {
-    var cmp: Injector<*>? = null
-}
-
 @GlideModule
 class GlideConfig: AppGlideModule() {
     override fun applyOptions(context: Context, builder: GlideBuilder) {
@@ -117,5 +115,23 @@ class GlideConfig: AppGlideModule() {
 
     override fun isManifestParsingEnabled(): Boolean {
         return false
+    }
+}
+
+/**
+ *
+ */
+open class DebugTreeWithThreadName : Timber.DebugTree() {
+
+    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+        super.log(priority, tag, appendThreadName(message), t)
+    }
+
+    internal fun appendThreadName(msg: String): String {
+        val threadName = Thread.currentThread().name
+        if ("main" == threadName) {
+            return msg
+        }
+        return "$msg [$threadName]"
     }
 }

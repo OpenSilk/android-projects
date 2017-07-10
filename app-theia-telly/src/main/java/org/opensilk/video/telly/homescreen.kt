@@ -14,7 +14,6 @@ import dagger.Subcomponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.*
-import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.rx.observeOnMainThread
 import org.opensilk.video.CDSDevicesLoader
 import org.opensilk.video.DeviceRemovedException
@@ -42,8 +41,8 @@ interface HomeComponent: Injector<HomeFragment>{
  */
 @Module(subcomponents = arrayOf(HomeComponent::class))
 abstract class HomeModule {
-    @Binds @IntoMap @ClassKey(HomeActivity::class)
-    abstract fun provideBuilderFactory(b: HomeComponent.Builder): Injector.Factory<*>
+    //@Binds @IntoMap @ClassKey(HomeActivity::class)
+    //abstract fun provideBuilderFactory(b: HomeComponent.Builder): Injector.Factory<*>
 }
 
 /**
@@ -101,7 +100,6 @@ class HomeFragment : BrowseFragment() {
     private fun subscribeServers() {
         mServersLoader.observable
                 .observeOnMainThread()
-                .terminateOnDestroy(context)
                 .subscribe({
                     mServersAdapter.add(it)
                 },

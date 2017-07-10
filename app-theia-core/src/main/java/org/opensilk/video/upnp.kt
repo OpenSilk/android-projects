@@ -1,6 +1,13 @@
 package org.opensilk.video
 
+import android.app.Activity
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
+import android.arch.lifecycle.OnLifecycleEvent
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.Binder
@@ -28,7 +35,6 @@ import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.ServiceScope
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.common.loader.RxLoader
 import org.opensilk.media.*
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.featurelist.BasicView
@@ -57,7 +63,9 @@ private val CDSserviceType = UDAServiceType("ContentDirectory", 1)
 /**
  * The Loader for the Media Servers row in the Home Activity
  */
-interface CDSDevicesLoader: RxLoader<MediaBrowser.MediaItem>
+interface CDSDevicesLoader {
+    val observable: Observable<MediaBrowser.MediaItem>
+}
 
 /**
  * Created by drew on 5/29/17.
@@ -130,7 +138,9 @@ class DeviceRemovedException : Exception()
 /**
  * The loader for the folder activity
  */
-interface CDSBrowseLoader: RxLoader<MediaBrowser.MediaItem>
+interface CDSBrowseLoader {
+    val observable: Observable<MediaBrowser.MediaItem>
+}
 
 /**
  *
@@ -358,6 +368,37 @@ interface UpnpHolderServiceComponent: Injector<UpnpHolderService> {
  */
 @Module(subcomponents = arrayOf(UpnpHolderServiceComponent::class))
 abstract class UpnpHolderServiceModule
+
+/**
+ *
+ */
+class UpnpServiceConnectionManager
+constructor(
+        val activity: Activity
+): ServiceConnection, LifecycleObserver {
+    private var mUpnpServiceHolder : UpnpHolderService.HolderBinder? = null
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    fun onCreate() {
+        if (!activity.bindService(Intent(activity, UpnpHolderService::class.java), this, Context.BIND_AUTO_CREATE)) {
+            Timber.e("Failed to bind to the UpnpHolderService")
+        }
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    fun onDestroy() {
+        activity.unbindService(this)
+        mUpnpServiceHolder = null
+    }
+
+    override fun onServiceDisconnected(name: ComponentName?) {
+        mUpnpServiceHolder = null
+    }
+
+    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+        mUpnpServiceHolder = service as? UpnpHolderService.HolderBinder
+    }
+}
 
 /**
  * Service that holds a reference to the upnpservice so it can be shutdown

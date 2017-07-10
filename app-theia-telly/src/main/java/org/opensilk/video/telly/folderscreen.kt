@@ -1,5 +1,7 @@
 package org.opensilk.video.telly
 
+import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelStores
 import android.content.Context
 import android.media.browse.MediaBrowser
 import android.os.Bundle
@@ -9,7 +11,6 @@ import android.support.v17.leanback.widget.VerticalGridPresenter
 import android.widget.Toast
 import dagger.*
 import org.opensilk.common.dagger.*
-import org.opensilk.common.lifecycle.terminateOnDestroy
 import org.opensilk.common.rx.observeOnMainThread
 import org.opensilk.media._getMediaTitle
 import org.opensilk.video.CDSBrowseLoader
@@ -52,6 +53,10 @@ class FolderActivity: BaseVideoActivity() {
 
 }
 
+class FolderViewModel: ViewModel() {
+
+}
+
 /**
  *
  */
@@ -84,7 +89,6 @@ class FolderFragment: VerticalGridFragment() {
         mBrowseLoader.observable
                 .onBackpressureBuffer()
                 .observeOnMainThread()
-                .terminateOnDestroy(activity)
                 .subscribe({
                     mFoldersAdapter.add(it)
                 }, {

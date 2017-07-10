@@ -23,13 +23,9 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import dagger.BindsInstance
 import dagger.Module
 import dagger.Subcomponent
-import mortar.MortarScope
-import org.opensilk.common.animation.DefaultAnimatorListener
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.common.lifecycle.bindToLifeCycle
-import org.opensilk.common.lifecycle.lifecycleService
 import org.opensilk.media.MediaBrowserCallback
 import org.opensilk.media.MediaControllerCallback
 import org.opensilk.media.bundle
@@ -103,11 +99,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     val mMainHandler = Handler(Looper.getMainLooper())
     val mMediaControllerCallback = MediaControllerCallback(this)
     var mMediaControllerCallbackRegistered = false
-
-    override fun onScopeCreated(scope: MortarScope) {
-        super.onScopeCreated(scope)
-        injectMe()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -354,7 +345,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
             s.add(Subscriptions.create { unregisterReceiver(timetick) })
             //seed initial value
             timetick.onReceive(this, null)
-        }.bindToLifeCycle(this).subscribe { time ->
+        }.subscribe { time ->
             mBinding.systemTimeString = time
         }
     }
@@ -421,3 +412,16 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
 
 }
 
+open class DefaultAnimatorListener: Animator.AnimatorListener {
+    override fun onAnimationRepeat(animation: Animator?) {
+    }
+
+    override fun onAnimationEnd(animation: Animator?) {
+    }
+
+    override fun onAnimationCancel(animation: Animator?) {
+    }
+
+    override fun onAnimationStart(animation: Animator?) {
+    }
+}

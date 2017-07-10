@@ -39,13 +39,13 @@ abstract class MockRootModule
  *
  */
 class MockVideoApp: VideoApp() {
-    override val rootComponent: Any by lazy {
+    override val rootComponent: MockRootComponent by lazy {
         DaggerMockRootComponent.builder().appContextModule(AppContextModule(this)).build()
     }
 
     override fun onCreate() {
         super.onCreate()
-        (rootComponent as MockRootComponent).injectMockApp(this)
+        rootComponent.injectMockApp(this)
     }
 
     @Inject lateinit var mMockHomeBuilder: MockHomeComponent.Builder
