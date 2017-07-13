@@ -1,8 +1,10 @@
 package org.opensilk.video.telly
 
+import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
+import android.support.v17.leanback.app.BrowseSupportFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.HeaderItem
 import android.support.v17.leanback.widget.ListRow
@@ -53,6 +55,11 @@ class HomeActivity : BaseVideoActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                    .replace(R.id.home_browse_fragment, HomeFragment(), "home_frag")
+                    .commit()
+        }
     }
 
 }
@@ -60,7 +67,7 @@ class HomeActivity : BaseVideoActivity() {
 /**
  *
  */
-class HomeFragment : BrowseFragment() {
+class HomeFragment : BrowseSupportFragment() {
 
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
@@ -113,6 +120,13 @@ class HomeFragment : BrowseFragment() {
                 }
         )
     }
+}
+
+/**
+ *
+ */
+class HomeViewModel: ViewModel() {
+    
 }
 
 /**

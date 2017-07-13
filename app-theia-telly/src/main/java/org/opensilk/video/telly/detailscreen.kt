@@ -8,6 +8,7 @@ import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.app.BackgroundManager
 import android.support.v17.leanback.app.DetailsFragment
+import android.support.v17.leanback.app.DetailsSupportFragment
 import android.support.v17.leanback.widget.*
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -101,6 +102,11 @@ class DetailActivity: BaseVideoActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                    .replace(R.id.detail_fragment, DetailFragment(), "detail_frag")
+                    .commit()
+        }
         BackgroundManager.getInstance(this).attach(window)
     }
 }
@@ -108,7 +114,7 @@ class DetailActivity: BaseVideoActivity() {
 /**
  *
  */
-class DetailFragment: DetailsFragment(), OnActionClickedListener {
+class DetailFragment: DetailsSupportFragment(), OnActionClickedListener {
 
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     @Inject lateinit var mOverviewPresenter: FullWidthDetailsOverviewRowPresenter

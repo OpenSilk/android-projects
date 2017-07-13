@@ -6,6 +6,7 @@ import android.content.Context
 import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.app.VerticalGridFragment
+import android.support.v17.leanback.app.VerticalGridSupportFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.VerticalGridPresenter
 import android.widget.Toast
@@ -49,6 +50,11 @@ class FolderActivity: BaseVideoActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_folder)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                    .replace(R.id.folder_browse_fragment, FolderFragment(), "folder_frag")
+                    .commit()
+        }
     }
 
 }
@@ -60,7 +66,7 @@ class FolderViewModel: ViewModel() {
 /**
  *
  */
-class FolderFragment: VerticalGridFragment() {
+class FolderFragment: VerticalGridSupportFragment() {
 
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     @Inject lateinit var mFoldersAdapter: FoldersAdapter

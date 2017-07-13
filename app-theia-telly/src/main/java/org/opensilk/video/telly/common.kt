@@ -10,6 +10,8 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.ContactsContract
+import android.support.annotation.IdRes
+import android.support.annotation.LayoutRes
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import dagger.Module
@@ -66,4 +68,10 @@ abstract class BaseVideoActivity: FragmentActivity(), LifecycleRegistryOwner {
         return componentReference.get()
     }
 
+}
+
+fun FragmentActivity.insertFragment(@LayoutRes id: Int, fragment: Fragment, tag: String) {
+    supportFragmentManager.beginTransaction()
+            .replace(id, fragment, tag)
+            .commit()
 }
