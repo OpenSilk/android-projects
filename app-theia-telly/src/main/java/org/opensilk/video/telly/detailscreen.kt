@@ -1,6 +1,8 @@
 package org.opensilk.video.telly
 
 import android.app.Activity
+import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProvider
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
@@ -14,12 +16,14 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import dagger.*
+import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media._getMediaMeta
 import org.opensilk.video.VideoDescInfo
 import org.opensilk.video.VideoFileInfo
+import org.opensilk.video.ViewModelKey
 import org.opensilk.video.telly.databinding.DetailsFileInfoRowBinding
 import java.lang.ref.WeakReference
 import java.util.ArrayList
@@ -63,7 +67,10 @@ interface DetailComponent: Injector<DetailFragment> {
  *
  */
 @Module(subcomponents = arrayOf(DetailComponent::class))
-abstract class DetailModule
+abstract class DetailModule {
+    @Binds @IntoMap @ViewModelKey(DetailViewModel::class)
+    abstract fun detailViewModel(vm: DetailViewModel): ViewModel
+}
 
 /**
  * this is fuckin weird but works, kotlin has no static methods so we put them
@@ -116,6 +123,7 @@ class DetailActivity: BaseVideoActivity() {
  */
 class DetailFragment: DetailsSupportFragment(), OnActionClickedListener {
 
+    @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     @Inject lateinit var mOverviewPresenter: FullWidthDetailsOverviewRowPresenter
     @Inject lateinit var mOverviewRow: DetailsOverviewRow
@@ -190,6 +198,11 @@ class DetailFragment: DetailsSupportFragment(), OnActionClickedListener {
     fun setupActions() {
         mOverviewActionsAdapter.set(ACTIONID_PLAY.toInt(), Action(ACTIONID_PLAY, "Play"))
     }
+}
+
+class DetailViewModel
+@Inject constructor(): ViewModel() {
+
 }
 
 /**

@@ -24,6 +24,9 @@ import org.opensilk.video.UpnpServiceConnectionManager
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
+import javax.inject.Provider
+import javax.inject.Singleton
+import kotlin.reflect.KClass
 
 /**
  *
@@ -70,8 +73,4 @@ abstract class BaseVideoActivity: FragmentActivity(), LifecycleRegistryOwner {
 
 }
 
-fun FragmentActivity.insertFragment(@LayoutRes id: Int, fragment: Fragment, tag: String) {
-    supportFragmentManager.beginTransaction()
-            .replace(id, fragment, tag)
-            .commit()
-}
+

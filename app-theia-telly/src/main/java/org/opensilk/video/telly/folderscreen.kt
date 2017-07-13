@@ -1,6 +1,7 @@
 package org.opensilk.video.telly
 
 import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelStores
 import android.content.Context
 import android.media.browse.MediaBrowser
@@ -11,12 +12,14 @@ import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.VerticalGridPresenter
 import android.widget.Toast
 import dagger.*
+import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.*
 import org.opensilk.common.rx.observeOnMainThread
 import org.opensilk.media._getMediaTitle
 import org.opensilk.video.CDSBrowseLoader
 import org.opensilk.video.NoBrowseResultsException
 import org.opensilk.video.UpnpLoadersModule
+import org.opensilk.video.ViewModelKey
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -40,7 +43,10 @@ interface FolderComponent: Injector<FolderFragment> {
  *
  */
 @Module(subcomponents = arrayOf(FolderComponent::class))
-abstract class FolderModule
+abstract class FolderModule {
+    @Binds @IntoMap @ViewModelKey(FolderViewModel::class)
+    abstract fun folderViewModel(vm: FolderViewModel): ViewModel
+}
 
 /**
  *
@@ -59,7 +65,8 @@ class FolderActivity: BaseVideoActivity() {
 
 }
 
-class FolderViewModel: ViewModel() {
+class FolderViewModel
+@Inject constructor() : ViewModel() {
 
 }
 
@@ -68,6 +75,7 @@ class FolderViewModel: ViewModel() {
  */
 class FolderFragment: VerticalGridSupportFragment() {
 
+    @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     @Inject lateinit var mFoldersAdapter: FoldersAdapter
     @Inject lateinit var mBrowseLoader: CDSBrowseLoader

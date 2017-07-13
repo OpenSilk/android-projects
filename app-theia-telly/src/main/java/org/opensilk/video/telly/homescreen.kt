@@ -1,6 +1,7 @@
 package org.opensilk.video.telly
 
 import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProvider
 import android.content.Context
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
@@ -13,13 +14,13 @@ import android.view.View
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
-import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.*
 import org.opensilk.common.rx.observeOnMainThread
 import org.opensilk.video.CDSDevicesLoader
 import org.opensilk.video.DeviceRemovedException
 import org.opensilk.video.UpnpLoadersModule
+import org.opensilk.video.ViewModelKey
 import rx.exceptions.Exceptions
 import javax.inject.Inject
 
@@ -45,6 +46,8 @@ interface HomeComponent: Injector<HomeFragment>{
 abstract class HomeModule {
     //@Binds @IntoMap @ClassKey(HomeActivity::class)
     //abstract fun provideBuilderFactory(b: HomeComponent.Builder): Injector.Factory<*>
+    @Binds @IntoMap @ViewModelKey(HomeViewModel::class)
+    abstract fun homeViewModel(vm: HomeViewModel): ViewModel
 }
 
 /**
@@ -68,6 +71,8 @@ class HomeActivity : BaseVideoActivity() {
  *
  */
 class HomeFragment : BrowseSupportFragment() {
+
+    @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
 
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
@@ -125,8 +130,9 @@ class HomeFragment : BrowseSupportFragment() {
 /**
  *
  */
-class HomeViewModel: ViewModel() {
-    
+class HomeViewModel
+@Inject constructor(): ViewModel() {
+
 }
 
 /**

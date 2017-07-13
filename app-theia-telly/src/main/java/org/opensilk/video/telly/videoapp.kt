@@ -2,18 +2,22 @@ package org.opensilk.video.telly
 
 import android.app.Application
 import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProvider
 import android.content.Context
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
 import com.bumptech.glide.module.AppGlideModule
+import dagger.Binds
 import dagger.Component
 import dagger.MapKey
 import dagger.Module
+import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.*
 import org.opensilk.video.*
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.reflect.KClass
 
@@ -39,7 +43,10 @@ interface RootComponent: AppContextComponent, Injector<VideoApp>
  *
  */
 @Module
-abstract class RootModule
+abstract class RootModule {
+    @Binds
+    abstract fun viewModelFactory(appViewModelFactory: AppViewModelFactory): ViewModelProvider.Factory
+}
 
 /**
  * This class is overridden in the mock build variant, changes here will not be seen by espresso tests!
@@ -98,14 +105,6 @@ open class VideoApp: Application(), InjectionManager {
 /**
  *
  */
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-@MapKey
-annotation class ViewModelKey(val value: KClass<out ViewModel>)
-
-/**
- *
- */
 @GlideModule
 class GlideConfig: AppGlideModule() {
     override fun applyOptions(context: Context, builder: GlideBuilder) {
@@ -133,5 +132,21 @@ open class DebugTreeWithThreadName : Timber.DebugTree() {
             return msg
         }
         return "$msg [$threadName]"
+    }
+}
+
+@Singleton
+class AppViewModelFactory
+@Inject
+constructor(
+        val providersMap: Map<Class<out ViewModel>, @JvmSuppressWildcards Provider<ViewModel>>
+): ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (providersMap.containsKey(modelClass)) {
+            return providersMap[modelClass]!!.get() as T
+        }
+        throw IllegalArgumentException("No factory for $modelClass")
     }
 }

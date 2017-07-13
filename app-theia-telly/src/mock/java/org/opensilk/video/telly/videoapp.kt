@@ -1,5 +1,7 @@
 package org.opensilk.video.telly
 
+import android.arch.lifecycle.ViewModelProvider
+import dagger.Binds
 import dagger.Component
 import dagger.Module
 import org.opensilk.common.dagger.AppContextModule
@@ -10,7 +12,8 @@ import javax.inject.Singleton
 
 @Singleton
 @Component(
-        modules = arrayOf(MockRootModule::class,
+        modules = arrayOf(
+                MockRootModule::class,
                 AppContextModule::class,
                 UpnpHolderServiceModule::class,
                 HomeModule::class,
@@ -33,7 +36,10 @@ interface MockRootComponent: RootComponent {
  *
  */
 @Module
-abstract class MockRootModule
+abstract class MockRootModule {
+    @Binds
+    abstract fun viewModelFactory(appViewModelFactory: AppViewModelFactory): ViewModelProvider.Factory
+}
 
 /**
  *
