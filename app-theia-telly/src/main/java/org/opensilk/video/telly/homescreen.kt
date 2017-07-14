@@ -1,8 +1,8 @@
 package org.opensilk.video.telly
 
-import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.*
 import android.content.Context
+import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
 import android.support.v17.leanback.app.BrowseSupportFragment
@@ -17,6 +17,7 @@ import dagger.Subcomponent
 import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.*
 import org.opensilk.common.rx.observeOnMainThread
+import org.opensilk.media.MediaMeta
 import org.opensilk.video.CDSDevicesLoader
 import org.opensilk.video.DeviceRemovedException
 import org.opensilk.video.UpnpLoadersModule
@@ -70,14 +71,14 @@ class HomeActivity : BaseVideoActivity() {
 /**
  *
  */
-class HomeFragment : BrowseSupportFragment() {
+class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
+    lateinit var mViewModel: HomeViewModel
 
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
 
-    @Inject lateinit var mServersLoader: CDSDevicesLoader
 
     @Inject lateinit var mItemClickListener: MediaItemClickListener
 
@@ -88,10 +89,10 @@ class HomeFragment : BrowseSupportFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(HomeViewModel::class.java)
 
         val foldersHeader = HeaderItem("Media Servers")
         mHomeAdapter.add(ListRow(foldersHeader, mServersAdapter))
-        subscribeServers()
 
         adapter = mHomeAdapter
         onItemViewClickedListener = mItemClickListener
@@ -109,7 +110,24 @@ class HomeFragment : BrowseSupportFragment() {
         searchAffordanceColor = context.getColor(R.color.search_opaque)
     }
 
-    private fun subscribeServers() {
+    private val lifecycleRegistry: LifecycleRegistry by lazy {
+        LifecycleRegistry(this)
+    }
+
+    override fun getLifecycle(): LifecycleRegistry {
+        return lifecycleRegistry
+    }
+}
+
+/**
+ *
+ */
+class HomeViewModel
+@Inject constructor(
+        private val mServersLoader: CDSDevicesLoader
+): ViewModel() {
+    val servers: LiveData<List<MediaBrowser.MediaItem>> = MutableLiveData<List<MediaBrowser.MediaItem>>()
+  private fun subscribeServers() {
         mServersLoader.observable
                 .observeOnMainThread()
                 .subscribe({
@@ -125,14 +143,6 @@ class HomeFragment : BrowseSupportFragment() {
                 }
         )
     }
-}
-
-/**
- *
- */
-class HomeViewModel
-@Inject constructor(): ViewModel() {
-
 }
 
 /**

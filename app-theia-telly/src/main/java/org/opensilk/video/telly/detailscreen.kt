@@ -1,6 +1,8 @@
 package org.opensilk.video.telly
 
 import android.app.Activity
+import android.arch.lifecycle.LifecycleRegistry
+import android.arch.lifecycle.LifecycleRegistryOwner
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.content.Context
@@ -121,7 +123,7 @@ class DetailActivity: BaseVideoActivity() {
 /**
  *
  */
-class DetailFragment: DetailsSupportFragment(), OnActionClickedListener {
+class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnActionClickedListener {
 
     @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
@@ -197,6 +199,14 @@ class DetailFragment: DetailsSupportFragment(), OnActionClickedListener {
 
     fun setupActions() {
         mOverviewActionsAdapter.set(ACTIONID_PLAY.toInt(), Action(ACTIONID_PLAY, "Play"))
+    }
+
+    private val lifecycleRegistry: LifecycleRegistry by lazy {
+        LifecycleRegistry(this)
+    }
+
+    override fun getLifecycle(): LifecycleRegistry {
+        return lifecycleRegistry
     }
 }
 

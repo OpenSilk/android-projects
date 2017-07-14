@@ -1,8 +1,6 @@
 package org.opensilk.video.telly
 
-import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProvider
-import android.arch.lifecycle.ViewModelStores
+import android.arch.lifecycle.*
 import android.content.Context
 import android.media.browse.MediaBrowser
 import android.os.Bundle
@@ -73,7 +71,7 @@ class FolderViewModel
 /**
  *
  */
-class FolderFragment: VerticalGridSupportFragment() {
+class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
@@ -113,6 +111,14 @@ class FolderFragment: VerticalGridSupportFragment() {
                         Toast.makeText(context, "An error occurred. msg=${it.message}", Toast.LENGTH_LONG).show()
                     }
                 })
+    }
+
+    private val lifecycleRegistry: LifecycleRegistry by lazy {
+        LifecycleRegistry(this)
+    }
+
+    override fun getLifecycle(): LifecycleRegistry {
+        return lifecycleRegistry
     }
 
 }
