@@ -4,21 +4,20 @@ import android.arch.lifecycle.*
 import android.content.Context
 import android.media.browse.MediaBrowser
 import android.os.Bundle
-import android.support.v17.leanback.app.VerticalGridFragment
 import android.support.v17.leanback.app.VerticalGridSupportFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.VerticalGridPresenter
 import android.widget.Toast
-import dagger.*
+import dagger.Binds
+import dagger.Module
+import dagger.Subcomponent
 import dagger.multibindings.IntoMap
-import org.opensilk.common.dagger.*
-import org.opensilk.common.rx.observeOnMainThread
-import org.opensilk.media._getMediaMeta
-import org.opensilk.media._getMediaTitle
+import org.opensilk.common.dagger.FragmentScope
+import org.opensilk.common.dagger.Injector
+import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.elseIfBlank
 import org.opensilk.video.CDSBrowseLoader
 import org.opensilk.video.NoBrowseResultsException
-import org.opensilk.video.UpnpLoadersModule
 import org.opensilk.video.ViewModelKey
 import rx.subscriptions.CompositeSubscription
 import timber.log.Timber
@@ -68,7 +67,6 @@ class FolderActivity: BaseVideoActivity() {
  */
 class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 
-    @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var mFolderAdapter: FolderAdapter
     @Inject lateinit var mFolderPresenter: FolderPresenter
     @Inject lateinit var mItemClickListener: MediaItemClickListener
@@ -82,7 +80,8 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(FolderViewModel::class.java)
+        mViewModel = fetchViewModel(FolderViewModel::class)
+
         mViewModel.mediaTitle.observe(this, Observer { title = it })
         mViewModel.noBrowseResults.observe(this, Observer {
             Toast.makeText(context, "This folder is empty", Toast.LENGTH_LONG).show()

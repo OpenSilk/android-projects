@@ -1,12 +1,13 @@
 package org.opensilk.video.telly
 
-import android.arch.lifecycle.LifecycleRegistry
-import android.arch.lifecycle.LifecycleRegistryOwner
+import android.arch.lifecycle.*
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import org.opensilk.common.dagger.Injector
 import org.opensilk.video.UpnpServiceConnectionManager
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.reflect.KClass
 
 /**
  * extra name
@@ -27,6 +28,13 @@ fun <T> BaseVideoActivity.daggerComponent(bob: Injector.Factory<T>, foo: T): Inj
      */
     //Don't keep around for now
     return bob.create(foo)
+}
+
+/**
+ *
+ */
+fun <T: ViewModel> Fragment.fetchViewModel(clazz: KClass<T>): T {
+    return ViewModelProviders.of(this, (activity.application as ViewModelProvider.Factory)).get(clazz.java)
 }
 
 /**

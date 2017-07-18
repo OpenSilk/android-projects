@@ -1,26 +1,24 @@
 package org.opensilk.video.telly
 
-import android.app.Activity
 import android.arch.lifecycle.*
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
-import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.app.BackgroundManager
-import android.support.v17.leanback.app.DetailsFragment
 import android.support.v17.leanback.app.DetailsSupportFragment
 import android.support.v17.leanback.widget.*
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
-import dagger.*
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
+import dagger.Subcomponent
 import dagger.multibindings.IntoMap
-import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.media._getMediaMeta
 import org.opensilk.media.bundle
 import org.opensilk.video.VideoDescInfo
 import org.opensilk.video.VideoFileInfo
@@ -115,7 +113,6 @@ fun newDetailFragment(mediaId: String): DetailFragment {
  */
 class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnActionClickedListener {
 
-    @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var mOverviewPresenter: FullWidthDetailsOverviewRowPresenter
     @Inject lateinit var mOverviewRow: DetailsOverviewRow
     @Inject lateinit var mOverviewActionsAdapter: DetailOverviewActionsAdapter
@@ -133,7 +130,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(DetailViewModel::class.java)
+        mViewModel = fetchViewModel(DetailViewModel::class)
         mViewModel.mediaId = arguments.getString(EXTRA_MEDIAID)
 
         mViewModel.videoDescription.observe(this, Observer {

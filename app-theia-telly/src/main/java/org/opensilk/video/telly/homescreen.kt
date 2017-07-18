@@ -10,23 +10,23 @@ import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.HeaderItem
 import android.support.v17.leanback.widget.ListRow
 import android.support.v17.leanback.widget.ListRowPresenter
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
 import android.view.View
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
-import org.opensilk.common.dagger.*
-import org.opensilk.common.rx.observeOnMainThread
-import org.opensilk.media.MediaMeta
+import org.opensilk.common.dagger.FragmentScope
+import org.opensilk.common.dagger.Injector
+import org.opensilk.common.dagger.injectMe
 import org.opensilk.video.CDSDevicesLoader
 import org.opensilk.video.DeviceRemovedException
-import org.opensilk.video.UpnpLoadersModule
 import org.opensilk.video.ViewModelKey
 import rx.exceptions.Exceptions
 import rx.subscriptions.CompositeSubscription
-import rx.subscriptions.Subscriptions
+import timber.log.Timber
 import javax.inject.Inject
-
 
 
 /**
@@ -72,7 +72,6 @@ class HomeActivity : BaseVideoActivity() {
  */
 class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
-    @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
     @Inject lateinit var mItemClickListener: MediaItemClickListener
@@ -86,17 +85,11 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(HomeViewModel::class.java)
+        mViewModel = fetchViewModel(HomeViewModel::class)
 
         //watch for mediaitems
         mViewModel.servers.observe(this, Observer {
-            mHomeAdapter.add(it)
-        })
-        //watch for loader errors
-        mViewModel.adapterReset.observe(this, Observer {
-            mHomeAdapter.clear()
-            mViewModel.subscribeServers()
+            mServersAdapter.add(it)
         })
 
         val foldersHeader = HeaderItem("Media Servers")
@@ -104,6 +97,9 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
         adapter = mHomeAdapter
         onItemViewClickedListener = mItemClickListener
+
+        //mViewModel.subscribeServers()
+
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -134,23 +130,16 @@ class HomeViewModel
 @Inject constructor(
         private val mServersLoader: CDSDevicesLoader
 ): ViewModel() {
-    val servers = MutableLiveData<MediaBrowser.MediaItem>()
+    val servers = MutableLiveData<List<MediaBrowser.MediaItem>>()
     val subscriptions = CompositeSubscription()
-    val adapterReset = MutableLiveData<Boolean>()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun subscribeServers() {
         val s = mServersLoader.observable
-                .observeOnMainThread()
                 .subscribe({
                     servers.postValue(it)
-                },
-                {
-                    if (it is DeviceRemovedException) {
-                        adapterReset.postValue(true)
-                    } else {
-                        Exceptions.propagate(it)
-                    }
+                }, {
+                    Exceptions.propagate(it) //TODO handle errors
                 }
         )
         subscriptions.add(s)

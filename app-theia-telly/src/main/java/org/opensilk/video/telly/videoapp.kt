@@ -44,15 +44,12 @@ interface RootComponent: AppContextComponent, Injector<VideoApp>
  *
  */
 @Module
-abstract class RootModule {
-    @Binds
-    abstract fun viewModelFactory(appViewModelFactory: AppViewModelFactory): ViewModelProvider.Factory
-}
+abstract class RootModule
 
 /**
  * This class is overridden in the mock build variant, changes here will not be seen by espresso tests!
  */
-open class VideoApp: Application(), InjectionManager {
+open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory {
 
     open val rootComponent: RootComponent by lazy {
         DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
@@ -101,6 +98,11 @@ open class VideoApp: Application(), InjectionManager {
         }
     }
 
+    @Inject lateinit var mViewModelFactory: AppViewModelFactory
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return mViewModelFactory.create(modelClass)
+    }
 }
 
 /**
