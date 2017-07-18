@@ -304,11 +304,11 @@ constructor(
     }
 }
 
-fun String.elseIfBlank(alternate: String): String {
+fun String?.elseIfBlank(alternate: String): String {
     return if (isNullOrBlank()) {
         alternate
     } else {
-        this
+        this ?: alternate
     }
 }
 
