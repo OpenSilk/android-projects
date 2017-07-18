@@ -70,7 +70,6 @@ interface CDSDevicesLoader {
 /**
  * Created by drew on 5/29/17.
  */
-@ActivityScope
 class CDSDevicesLoaderImpl
 @Inject constructor(
         private val mUpnpService: CDSUpnpService
@@ -139,26 +138,24 @@ class DeviceRemovedException : Exception()
  * The loader for the folder activity
  */
 interface CDSBrowseLoader {
-    val observable: Observable<MediaBrowser.MediaItem>
+    fun observable(mediaId: String): Observable<MediaBrowser.MediaItem>
 }
 
 /**
  *
  */
-@ActivityScope
 class CDSBrowseLoaderImpl
 @Inject constructor(
-        private val mUpnpService: CDSUpnpService,
-        private val mMediaItem: MediaBrowser.MediaItem
+        private val mUpnpService: CDSUpnpService
 ) : CDSBrowseLoader {
-    override val observable: Observable<MediaBrowser.MediaItem> by lazy {
-        val mediaRef = newMediaRef(mMediaItem.mediaId)
+    override fun observable(mediaId: String): Observable<MediaBrowser.MediaItem> {
+        val mediaRef = newMediaRef(mediaId)
         val folderId = when (mediaRef.kind) {
             UPNP_FOLDER -> mediaRef.mediaId as FolderId
             UPNP_DEVICE -> FolderId(mediaRef.mediaId.id, "0")
             else -> TODO("Unsupported mediaid")
         }
-        return@lazy Observable.create(CDSOnSubscribe(mUpnpService, folderId))
+        return Observable.create(CDSOnSubscribe(mUpnpService, folderId))
                 .flatMap { cdsservice -> Observable.create(BrowseOnSubscribe(mUpnpService, cdsservice,
                         folderId, BrowseFlag.DIRECT_CHILDREN)) }
     }
