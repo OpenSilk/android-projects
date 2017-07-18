@@ -13,28 +13,26 @@ import dagger.*
 import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.*
 import org.opensilk.common.rx.observeOnMainThread
+import org.opensilk.media._getMediaMeta
 import org.opensilk.media._getMediaTitle
+import org.opensilk.media.elseIfBlank
 import org.opensilk.video.CDSBrowseLoader
 import org.opensilk.video.NoBrowseResultsException
 import org.opensilk.video.UpnpLoadersModule
 import org.opensilk.video.ViewModelKey
+import rx.subscriptions.CompositeSubscription
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.properties.Delegates
 
 /**
  * Created by drew on 5/28/17.
  */
-@ActivityScope
-@Subcomponent(modules = arrayOf(UpnpLoadersModule::class))
+@FragmentScope
+@Subcomponent
 interface FolderComponent: Injector<FolderFragment> {
     @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<FolderFragment>() {
-        override fun create(t: FolderFragment): Injector<FolderFragment> {
-            val mediaItem: MediaBrowser.MediaItem = t.activity.intent.getParcelableExtra(EXTRA_MEDIAITEM)
-            return mediaItem(mediaItem).build()
-        }
-        @BindsInstance abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
-    }
+    abstract class Builder: Injector.Builder<FolderFragment>()
 }
 
 /**
@@ -63,10 +61,7 @@ class FolderActivity: BaseVideoActivity() {
 
 }
 
-class FolderViewModel
-@Inject constructor() : ViewModel() {
 
-}
 
 /**
  *
@@ -74,10 +69,11 @@ class FolderViewModel
 class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
-    @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
-    @Inject lateinit var mFoldersAdapter: FoldersAdapter
-    @Inject lateinit var mBrowseLoader: CDSBrowseLoader
+    @Inject lateinit var mFolderAdapter: FolderAdapter
+    @Inject lateinit var mFolderPresenter: FolderPresenter
     @Inject lateinit var mItemClickListener: MediaItemClickListener
+
+    lateinit var mViewModel: FolderViewModel
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -86,31 +82,21 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(FolderViewModel::class.java)
+        mViewModel.mediaTitle.observe(this, Observer { title = it })
+        mViewModel.noBrowseResults.observe(this, Observer {
+            Toast.makeText(context, "This folder is empty", Toast.LENGTH_LONG).show()
+        })
+        mViewModel.loadError.observe(this, Observer {
+            Toast.makeText(context, "An error occurred. msg=$it", Toast.LENGTH_LONG).show()
+        })
 
-        title = mMediaItem._getMediaTitle()
-        gridPresenter = VerticalGridPresenter()
+        gridPresenter = mFolderPresenter
         gridPresenter.numberOfColumns = 1
 
-        adapter = mFoldersAdapter
+        adapter = mFolderAdapter
         onItemViewClickedListener = mItemClickListener
 
-        subscribeBrowseItems()
-    }
-
-    fun subscribeBrowseItems() {
-        mBrowseLoader.observable
-                .onBackpressureBuffer()
-                .observeOnMainThread()
-                .subscribe({
-                    mFoldersAdapter.add(it)
-                }, {
-                    if (it is NoBrowseResultsException) {
-                        Toast.makeText(context, "This folder is empty", Toast.LENGTH_LONG).show()
-                    } else {
-                        Timber.e(it, "Loader error msg=${it.message}.")
-                        Toast.makeText(context, "An error occurred. msg=${it.message}", Toast.LENGTH_LONG).show()
-                    }
-                })
     }
 
     private val lifecycleRegistry: LifecycleRegistry by lazy {
@@ -126,4 +112,49 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 /**
  *
  */
-class FoldersAdapter @Inject constructor(presenter: MediaItemListPresenter) : ArrayObjectAdapter(presenter)
+class FolderViewModel
+@Inject constructor(
+        private val mBrowseLoader: CDSBrowseLoader
+) : ViewModel() {
+    val mediaTitle = MutableLiveData<String>()
+    val folderItems = MutableLiveData<List<MediaBrowser.MediaItem>>()
+    val noBrowseResults = MutableLiveData<String>()
+    val loadError = MutableLiveData<String>()
+    val subscriptions = CompositeSubscription()
+    var mediaId: String by Delegates.observable("", { _, oldValue, newValue ->
+        if (newValue != "" && oldValue != newValue) {
+            subscribeBrowseItems()
+        }
+    })
+
+    fun subscribeBrowseItems() {
+        val s = mBrowseLoader.observable(mediaId)
+                .toList()
+                .subscribe({
+                    folderItems.postValue(it)
+                }, {
+                    if (it is NoBrowseResultsException) {
+                        noBrowseResults.postValue("This folder is empty")
+                    } else {
+                        Timber.e(it, "Loader error msg=${it.message}.")
+                        loadError.postValue(it.message.elseIfBlank("null"))
+                    }
+                })
+        subscriptions.add(s)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        subscriptions.clear()
+    }
+}
+
+/**
+ *
+ */
+class FolderAdapter @Inject constructor(presenter: MediaItemListPresenter) : ArrayObjectAdapter(presenter)
+
+/**
+ *
+ */
+class FolderPresenter @Inject constructor(): VerticalGridPresenter()

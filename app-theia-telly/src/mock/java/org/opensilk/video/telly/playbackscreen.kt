@@ -14,13 +14,7 @@ import org.opensilk.common.dagger.Injector
 @Subcomponent
 interface MockPlaybackComponent: Injector<PlaybackActivity> {
     @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<PlaybackActivity>() {
-        override fun create(t: PlaybackActivity): Injector<PlaybackActivity> {
-            return mediaItem(testUpnpVideoItem()).build()
-        }
-        @BindsInstance
-        abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
-    }
+    abstract class Builder: Injector.Builder<PlaybackActivity>()
 }
 
 /**

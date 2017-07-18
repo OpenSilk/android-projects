@@ -27,7 +27,6 @@ abstract class MockUpnpLoadersModule {
 /**
  *
  */
-@ActivityScope
 class MockCDSDevicesLoader
 @Inject constructor(): CDSDevicesLoader {
     override val observable: Observable<MediaBrowser.MediaItem>
@@ -37,11 +36,10 @@ class MockCDSDevicesLoader
 /**
  *
  */
-@ActivityScope
 class MockCDSBrowseLoader
 @Inject constructor(): CDSBrowseLoader {
-    override val observable: Observable<MediaBrowser.MediaItem>
-        get() = Observable.from(testUpnpFolderItemList())
+    override fun observable(mediaId: String): Observable<MediaBrowser.MediaItem>
+            = Observable.from(testUpnpFolderItemList())
 }
 
 

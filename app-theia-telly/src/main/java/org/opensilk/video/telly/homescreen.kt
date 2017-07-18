@@ -23,18 +23,17 @@ import org.opensilk.video.DeviceRemovedException
 import org.opensilk.video.UpnpLoadersModule
 import org.opensilk.video.ViewModelKey
 import rx.exceptions.Exceptions
+import rx.subscriptions.CompositeSubscription
+import rx.subscriptions.Subscriptions
 import javax.inject.Inject
 
-/**
- * extra name
- */
-const val EXTRA_MEDIAITEM = "org.opensilk.extra.mediaitem"
+
 
 /**
  *
  */
-@ActivityScope
-@Subcomponent(modules = arrayOf(UpnpLoadersModule::class))
+@FragmentScope
+@Subcomponent
 interface HomeComponent: Injector<HomeFragment>{
     @Subcomponent.Builder
     abstract class Builder: Injector.Builder<HomeFragment>()
@@ -74,13 +73,11 @@ class HomeActivity : BaseVideoActivity() {
 class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
-    lateinit var mViewModel: HomeViewModel
-
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
-
-
     @Inject lateinit var mItemClickListener: MediaItemClickListener
+
+    lateinit var mViewModel: HomeViewModel
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -89,7 +86,18 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(HomeViewModel::class.java)
+
+        //watch for mediaitems
+        mViewModel.servers.observe(this, Observer {
+            mHomeAdapter.add(it)
+        })
+        //watch for loader errors
+        mViewModel.adapterReset.observe(this, Observer {
+            mHomeAdapter.clear()
+            mViewModel.subscribeServers()
+        })
 
         val foldersHeader = HeaderItem("Media Servers")
         mHomeAdapter.add(ListRow(foldersHeader, mServersAdapter))
@@ -126,23 +134,33 @@ class HomeViewModel
 @Inject constructor(
         private val mServersLoader: CDSDevicesLoader
 ): ViewModel() {
-    val servers: LiveData<List<MediaBrowser.MediaItem>> = MutableLiveData<List<MediaBrowser.MediaItem>>()
-  private fun subscribeServers() {
-        mServersLoader.observable
+    val servers = MutableLiveData<MediaBrowser.MediaItem>()
+    val subscriptions = CompositeSubscription()
+    val adapterReset = MutableLiveData<Boolean>()
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    fun subscribeServers() {
+        val s = mServersLoader.observable
                 .observeOnMainThread()
                 .subscribe({
-                    mServersAdapter.add(it)
+                    servers.postValue(it)
                 },
                 {
                     if (it is DeviceRemovedException) {
-                        mServersAdapter.clear()
-                        subscribeServers() //recursive
+                        adapterReset.postValue(true)
                     } else {
                         Exceptions.propagate(it)
                     }
                 }
         )
+        subscriptions.add(s)
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        subscriptions.clear()
+    }
+
 }
 
 /**

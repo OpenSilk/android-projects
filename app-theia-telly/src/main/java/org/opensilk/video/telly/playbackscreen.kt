@@ -57,14 +57,7 @@ const val OVERLAY_ANIM_DURATION = 300L
 @Subcomponent
 interface PlaybackComponent: Injector<PlaybackActivity> {
     @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<PlaybackActivity>() {
-        override fun create(t: PlaybackActivity): Injector<PlaybackActivity> {
-            val mediaItem: MediaBrowser.MediaItem = t.intent.getParcelableExtra(EXTRA_MEDIAITEM)
-            return mediaItem(mediaItem).build()
-        }
-        @BindsInstance
-        abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
-    }
+    abstract class Builder: Injector.Builder<PlaybackActivity>()
 }
 
 /**
@@ -93,7 +86,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
 
     lateinit var mMainWorker: Scheduler.Worker
     lateinit var mBinding: ActivityPlaybackBinding
-    @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     lateinit var mBrowser: MediaBrowser
     lateinit var mExoPlayer: SimpleExoPlayer
     val mMainHandler = Handler(Looper.getMainLooper())
@@ -105,7 +97,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         super.onCreate(savedInstanceState)
         mMainWorker = AndroidSchedulers.mainThread().createWorker()
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_playback)
-        mBinding.desc = mMediaItem.description.videoDescInfo()
+        //mBinding.desc = mMediaItem.description.videoDescInfo()
         mBinding.actionHandler = this
 
         mBrowser = MediaBrowser(this, ComponentName(this, PlaybackService::class.java),
@@ -162,7 +154,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                         if (intent.action == ACTION_RESUME) {
                             extras.resume = true
                         }
-                        mediaController.transportControls.playFromMediaId(mMediaItem.mediaId, extras.bundle())
+                        mediaController.transportControls.playFromMediaId(
+                                intent.getStringExtra(EXTRA_MEDIAID), extras.bundle())
                     }
                     else -> {
                         throw RuntimeException("Invalid return value on CMD_GET_EXOPLAYER val=$resultCode")

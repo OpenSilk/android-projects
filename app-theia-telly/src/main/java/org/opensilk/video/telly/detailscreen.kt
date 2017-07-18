@@ -1,10 +1,7 @@
 package org.opensilk.video.telly
 
 import android.app.Activity
-import android.arch.lifecycle.LifecycleRegistry
-import android.arch.lifecycle.LifecycleRegistryOwner
-import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.*
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
@@ -20,9 +17,11 @@ import android.widget.Toast
 import dagger.*
 import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.ActivityScope
+import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media._getMediaMeta
+import org.opensilk.media.bundle
 import org.opensilk.video.VideoDescInfo
 import org.opensilk.video.VideoFileInfo
 import org.opensilk.video.ViewModelKey
@@ -51,18 +50,11 @@ const val SHARED_ELEMENT_NAME = "hero"
 /**
  * Created by drew on 6/2/17.
  */
-@ActivityScope
+@FragmentScope
 @Subcomponent(modules = arrayOf(DetailPresenterModule::class))
 interface DetailComponent: Injector<DetailFragment> {
     @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<DetailFragment>() {
-        override fun create(t: DetailFragment): Injector<DetailFragment> {
-            val mediaItem: MediaBrowser.MediaItem = t.activity.intent.getParcelableExtra(EXTRA_MEDIAITEM)
-            return mediaItem(mediaItem).build()
-        }
-        @BindsInstance
-        abstract fun mediaItem(mediaItem: MediaBrowser.MediaItem): Builder
-    }
+    abstract class Builder: Injector.Builder<DetailFragment>()
 }
 
 /**
@@ -89,17 +81,8 @@ abstract class DetailPresenterModule {
             return FullWidthDetailsOverviewRowPresenter(descPresenter)
         }
         @Provides @JvmStatic
-        fun provideVideoFileInfo(mediaItem: MediaBrowser.MediaItem): VideoFileInfo {
-            val desc = mediaItem.description
-            val meta = mediaItem._getMediaMeta()
-            return VideoFileInfo(meta.mediaUri, desc.title.toString(), meta.size, meta.duration * 1000)
-        }
-        @Provides @JvmStatic
-        fun provideDetailOverviewRow(mediaItem: MediaBrowser.MediaItem): DetailsOverviewRow {
-            val desc = mediaItem.description
-            val row = DetailsOverviewRow(VideoDescInfo(desc.title.toString(),
-                    desc.subtitle.toString(), desc.description?.toString() ?: ""))
-            return row
+        fun provideDetailsRow(): DetailsOverviewRow {
+            return DetailsOverviewRow(VideoDescInfo())
         }
     }
 }
@@ -113,11 +96,18 @@ class DetailActivity: BaseVideoActivity() {
         setContentView(R.layout.activity_detail)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.detail_fragment, DetailFragment(), "detail_frag")
+                    .replace(R.id.detail_fragment,
+                            newDetailFragment(intent.getStringExtra(EXTRA_MEDIAID)), "detail_frag")
                     .commit()
         }
         BackgroundManager.getInstance(this).attach(window)
     }
+}
+
+fun newDetailFragment(mediaId: String): DetailFragment {
+    val f = DetailFragment()
+    f.arguments = bundle(EXTRA_MEDIAID, mediaId)
+    return f
 }
 
 /**
@@ -126,7 +116,6 @@ class DetailActivity: BaseVideoActivity() {
 class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnActionClickedListener {
 
     @Inject lateinit var mViewModelFactory: ViewModelProvider.Factory
-    @Inject lateinit var mMediaItem: MediaBrowser.MediaItem
     @Inject lateinit var mOverviewPresenter: FullWidthDetailsOverviewRowPresenter
     @Inject lateinit var mOverviewRow: DetailsOverviewRow
     @Inject lateinit var mOverviewActionsAdapter: DetailOverviewActionsAdapter
@@ -134,6 +123,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
     @Inject lateinit var mFileInfoRow: FileInfoRow
 
     lateinit var mBackgroundManager: BackgroundManager
+    lateinit var mViewModel: DetailViewModel
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -141,12 +131,17 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         mBackgroundManager = BackgroundManager.getInstance(activity)
     }
 
-    override fun onDetach() {
-        super.onDetach()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(DetailViewModel::class.java)
+        mViewModel.mediaId = arguments.getString(EXTRA_MEDIAID)
+
+        mViewModel.videoDescription.observe(this, Observer {
+            mOverviewRow.item = it
+        })
+        mViewModel.fileInfo.observe(this, Observer {
+            mFileInfoRow.fileInfo = it!!
+        })
 
         mBackgroundManager = BackgroundManager.getInstance(activity)
 
@@ -182,7 +177,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
             ACTIONID_PLAY, ACTIONID_RESUME, ACTIONID_START_OVER -> {
                 val intent = Intent(activity, PlaybackActivity::class.java)
                 intent.action = ACTION_PLAY
-                intent.putExtra(EXTRA_MEDIAITEM, mMediaItem)
+                intent.putExtra(EXTRA_MEDIAID, mViewModel.mediaId)
                 activity.startActivity(intent)
             }
             else -> {
@@ -210,25 +205,29 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
     }
 }
 
+/**
+ *
+ */
 class DetailViewModel
-@Inject constructor(): ViewModel() {
-
+@Inject constructor(
+): ViewModel() {
+    var mediaId: String = ""
+    val videoDescription = MutableLiveData<VideoDescInfo>()
+    val fileInfo = MutableLiveData<VideoFileInfo>()
 }
 
 /**
  *
  */
 class FileInfoRow
-@Inject constructor(
-        initialFileInfo: VideoFileInfo
-): Row(HeaderItem("File Info")) { //TODO use string resource
+@Inject constructor(): Row(HeaderItem("File Info")) { //TODO use string resource
 
     interface Listener {
         fun onItemChanged(fileInfoRow: FileInfoRow)
     }
 
     private val mListeners: ArrayList<WeakReference<Listener>> = ArrayList()
-    var fileInfo: VideoFileInfo by Delegates.observable(initialFileInfo, { _, _, _ ->
+    var fileInfo: VideoFileInfo by Delegates.observable(VideoFileInfo(), { _, _, _ ->
         notifyItemChanged()
     })
 

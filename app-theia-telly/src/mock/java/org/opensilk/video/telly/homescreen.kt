@@ -9,7 +9,7 @@ import org.opensilk.common.dagger.Injector
  *
  */
 @ActivityScope
-@Subcomponent(modules = arrayOf(MockUpnpLoadersModule::class))
+@Subcomponent
 interface MockHomeComponent: HomeComponent {
     @Subcomponent.Builder
     abstract class Builder: Injector.Builder<HomeFragment>()

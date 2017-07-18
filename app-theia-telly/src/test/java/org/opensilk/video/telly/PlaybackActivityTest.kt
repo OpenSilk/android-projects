@@ -20,7 +20,7 @@ class PlaybackActivityTest {
     @Test
     fun test_timeTickReceiverIsUnregisteredInOnStop() {
         val controller = Robolectric.buildActivity(PlaybackActivity::class.java,
-                Intent(ACTION_PLAY).putExtra(EXTRA_MEDIAITEM, testUpnpVideoItem()))
+                Intent(ACTION_PLAY).putExtra(EXTRA_MEDIAID, testUpnpVideoItem().mediaId))
         controller.create().postCreate(null).start().resume().visible()
         assertThat(Shadows.shadowOf(RuntimeEnvironment.application)
                 .getReceiversForIntent(Intent(Intent.ACTION_TIME_TICK)).size).isEqualTo(1)

@@ -32,7 +32,7 @@ class HomeActivityIntentsTest {
         serveritem.perform(ViewActions.click())
         Intents.intended(Matchers.allOf(
                 IntentMatchers.hasComponent(ComponentName(mActivityRule.activity, FolderActivity::class.java)),
-                IntentMatchers.hasExtraWithKey(EXTRA_MEDIAITEM) //TODO verify mediaitem
+                IntentMatchers.hasExtraWithKey(EXTRA_MEDIAID) //TODO verify mediaitem
         ))
     }
 

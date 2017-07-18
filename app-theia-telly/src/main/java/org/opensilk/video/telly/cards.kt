@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import org.opensilk.common.dagger.ActivityScope
+import org.opensilk.common.dagger.ScreenScope
 import org.opensilk.media.*
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
@@ -39,9 +40,8 @@ class MediaItemImageCardView(context: Context): ImageCardView(context) {
 }
 
 /**
- * Supposed to be stoteless so dont need @ActivityScope
+ *
  */
-@ActivityScope
 class MediaItemPresenter
 @Inject constructor() : Presenter() {
 
@@ -111,7 +111,6 @@ class MediaItemPresenter
 /**
  *
  */
-@ActivityScope
 class MediaItemListPresenter
 @Inject constructor() : Presenter() {
 
@@ -175,7 +174,6 @@ class MediaItemListPresenter
 /**
  *
  */
-@ActivityScope
 class MediaItemClickListener
 @Inject constructor(): OnItemViewClickedListener {
 
@@ -188,12 +186,12 @@ class MediaItemClickListener
         when (mediaId.kind) {
             UPNP_DEVICE, UPNP_FOLDER -> {
                 val intent = Intent(context, FolderActivity::class.java)
-                intent.putExtra(EXTRA_MEDIAITEM, mediaItem)
+                intent.putExtra(EXTRA_MEDIAID, mediaItem.mediaId)
                 context.startActivity(intent)
             }
             UPNP_VIDEO -> {
                 val intent = Intent(context, DetailActivity::class.java)
-                intent.putExtra(EXTRA_MEDIAITEM, mediaItem)
+                intent.putExtra(EXTRA_MEDIAID, mediaItem.mediaId)
                 val bundle = if (itemViewHolder is MediaItemPresenter.ViewHolder) {
                     val view = itemViewHolder.view as MediaItemImageCardView
                     ActivityOptions.makeSceneTransitionAnimation(context,

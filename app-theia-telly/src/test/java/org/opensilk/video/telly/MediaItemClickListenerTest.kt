@@ -38,8 +38,7 @@ class MediaItemClickListenerTest {
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
-        assertThat(intent.getParcelableExtra<MediaBrowser.MediaItem>(EXTRA_MEDIAITEM))
-                .isEqualTo(item)
+        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.mediaId)
     }
 
     @Test
@@ -48,8 +47,7 @@ class MediaItemClickListenerTest {
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
-        assertThat(intent.getParcelableExtra<MediaBrowser.MediaItem>(EXTRA_MEDIAITEM))
-                .isEqualTo(item)
+        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.mediaId)
     }
 
     @Test
@@ -58,8 +56,7 @@ class MediaItemClickListenerTest {
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, DetailActivity::class.java))
-        assertThat(intent.getParcelableExtra<MediaBrowser.MediaItem>(EXTRA_MEDIAITEM))
-                .isEqualTo(item)
+        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.mediaId)
     }
 
 }

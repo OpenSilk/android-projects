@@ -16,6 +16,7 @@ import javax.inject.Singleton
                 MockRootModule::class,
                 AppContextModule::class,
                 UpnpHolderServiceModule::class,
+                MockUpnpLoadersModule::class,
                 HomeModule::class,
                 MockHomeModule::class,
                 FolderModule::class,

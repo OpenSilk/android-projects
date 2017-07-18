@@ -29,6 +29,7 @@ import kotlin.reflect.KClass
         modules = arrayOf(RootModule::class,
                 AppContextModule::class,
                 UpnpHolderServiceModule::class,
+                UpnpLoadersModule::class,
                 HomeModule::class,
                 FolderModule::class,
                 DetailModule::class,

@@ -29,7 +29,7 @@ class DetailActivityUITest {
     @Rule @JvmField
     val mActivityRule = object : ActivityTestRule<DetailActivity>(DetailActivity::class.java) {
         override fun getActivityIntent(): Intent {
-            return super.getActivityIntent().putExtra(EXTRA_MEDIAITEM, mItem)
+            return super.getActivityIntent().putExtra(EXTRA_MEDIAID, mItem.mediaId)
         }
     }
 

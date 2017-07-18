@@ -35,15 +35,15 @@ class PlaybackActivityUITest {
     @Rule @JvmField
     val mActivity = object: ActivityTestRule<PlaybackActivity>(PlaybackActivity::class.java) {
         override fun getActivityIntent(): Intent {
-            return super.getActivityIntent().putExtra(EXTRA_MEDIAITEM, testUpnpVideoItem())
+            return super.getActivityIntent().putExtra(EXTRA_MEDIAID, testUpnpVideoItem().mediaId)
                     .putExtra(EXTRA_PLAY_WHEN_READY, false)
         }
     }
 
     @Test
     fun test_activityStarts() {
-        val item = mActivity.activity.intent.getParcelableExtra<MediaBrowser.MediaItem>(EXTRA_MEDIAITEM)
-        assertThat(item.mediaId).isEqualTo(testUpnpVideoItem().mediaId)
+        val mediaId = mActivity.activity.intent.getStringExtra(EXTRA_MEDIAID)
+        assertThat(mediaId).isEqualTo(testUpnpVideoItem().mediaId)
     }
 
     @Test
