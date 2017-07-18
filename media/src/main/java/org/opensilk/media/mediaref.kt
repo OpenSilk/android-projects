@@ -40,7 +40,7 @@ data class FolderId(val deviceId: String, val folderId: String): MediaId {
 /**
  *
  */
-private fun newFolderId(json: String) : FolderId {
+internal fun newFolderId(json: String) : FolderId {
     var dev = ""
     var fol = ""
     return JsonReader(StringReader(json)).use { jr ->
@@ -76,7 +76,7 @@ data class UpnpItemId(val deviceId: String, val itemId: String): MediaId {
 /**
  *
  */
-private fun newUpnpItemId(json: String) : UpnpItemId {
+internal fun newUpnpItemId(json: String) : UpnpItemId {
     var dev = ""
     var itm = ""
     return JsonReader(StringReader(json)).use { jr ->
