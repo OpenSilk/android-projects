@@ -62,14 +62,6 @@ fun getLifecycleService(scope: MortarScope): LifecycleService {
     throw NoLifecycleServiceException(scope)
 }
 
-fun HasScope.lifecycleService(): LifecycleService {
-    return if (this.scope.hasService(LIFECYCLE_SERVICE)) {
-        scope.getService(LIFECYCLE_SERVICE)
-    } else {
-        throw NoLifecycleServiceException(this.scope);
-    }
-}
-
 class OutsideLifecycleException internal constructor(detailMessage: String) : IllegalStateException(detailMessage) {
     companion object {
         private val serialVersionUID = -3644015688130759619L
