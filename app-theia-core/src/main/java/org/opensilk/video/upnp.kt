@@ -64,7 +64,7 @@ private val CDSserviceType = UDAServiceType("ContentDirectory", 1)
  * The Loader for the Media Servers row in the Home Activity
  */
 interface CDSDevicesLoader {
-    val observable: Observable<MediaBrowser.MediaItem>
+    val observable: Observable<List<MediaBrowser.MediaItem>>
 }
 
 /**
@@ -74,38 +74,16 @@ class CDSDevicesLoaderImpl
 @Inject constructor(
         private val mUpnpService: CDSUpnpService
 ): CDSDevicesLoader {
-    override val observable: Observable<MediaBrowser.MediaItem> by lazy {
-        Observable.create<MediaBrowser.MediaItem> { s ->
+
+    override val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
+          Observable.create<Boolean> { s ->
             val listener = object : DefaultRegistryListener() {
                 override fun deviceAdded(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
                     if (device.findService(CDSserviceType) == null) {
                         //unsupported device
                         return
                     }
-                    val meta = MediaMeta()
-                    meta.mediaId = MediaRef(UPNP_DEVICE, device.identity.udn.identifierString).toJson()
-                    meta.mimeType = UPNP_DEVICE
-                    meta.title = device.details.friendlyName ?: device.displayString
-                    meta.subtitle = if (device.displayString === meta.title) "" else device.displayString
-                    if (device.hasIcons()) {
-                        var largest = device.icons[0]
-                        for (ic in device.icons) {
-                            if (largest.height < ic.height) {
-                                largest = ic
-                            }
-                        }
-                        var uri = largest.uri.toString()
-                        //TODO fragile... only tested on MiniDLNA
-                        if (uri.startsWith("/")) {
-                            val ident = device.identity
-                            if (ident is RemoteDeviceIdentity) {
-                                val ru = ident.descriptorURL
-                                uri = "http://" + ru.host + ":" + ru.port + uri
-                            }
-                        }
-                        meta.artworkUri = Uri.parse(uri)
-                    }
-                    s.onNext(meta.toMediaItem())
+                    s.onNext(true)
                 }
 
                 override fun deviceRemoved(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
@@ -113,18 +91,51 @@ class CDSDevicesLoaderImpl
                         //dont care
                         return
                     }
-                    s.onError(DeviceRemovedException())
+                    s.onNext(false)
                 }
             }
+            //dont leak the listener
             s.add(Subscriptions.create { mUpnpService.registry.removeListener(listener) })
             mUpnpService.registry.addListener(listener)
-            for (device in mUpnpService.registry.devices) {
-                //pass through all the already found ones
-                listener.deviceAdded(mUpnpService.registry, device)
-            }
-            //find new devices
+            //listen for changes
             mUpnpService.controlPoint.search(UDAServiceTypeHeader(CDSserviceType))
-        }
+        }.startWith(true).concatMap { registryObservable }
+    }
+
+    private val registryObservable: Observable<List<MediaBrowser.MediaItem>> by lazy {
+        Observable.create<MediaBrowser.MediaItem> { s ->
+            //pass through all the already found ones
+            for (device in mUpnpService.registry.devices) {
+                if (device.findService(CDSserviceType) == null) {
+                    continue //unsupported device
+                }
+                val meta = MediaMeta()
+                meta.mediaId = MediaRef(UPNP_DEVICE, device.identity.udn.identifierString).toJson()
+                meta.mimeType = UPNP_DEVICE
+                meta.title = device.details.friendlyName ?: device.displayString
+                meta.subtitle = if (device.displayString === meta.title) "" else device.displayString
+                if (device.hasIcons()) {
+                    var largest = device.icons[0]
+                    for (ic in device.icons) {
+                        if (largest.height < ic.height) {
+                            largest = ic
+                        }
+                    }
+                    var uri = largest.uri.toString()
+                    //TODO fragile... only tested on MiniDLNA
+                    if (uri.startsWith("/")) {
+                        val ident = device.identity
+                        if (ident is RemoteDeviceIdentity) {
+                            val ru = ident.descriptorURL
+                            uri = "http://" + ru.host + ":" + ru.port + uri
+                        }
+                    }
+                    meta.artworkUri = Uri.parse(uri)
+                }
+                s.onNext(meta.toMediaItem())
+            }
+            s.onCompleted()
+        }.toList()
     }
 }
 
