@@ -34,7 +34,11 @@ fun <T> BaseVideoActivity.daggerComponent(bob: Injector.Factory<T>, foo: T): Inj
  *
  */
 fun <T: ViewModel> Fragment.fetchViewModel(clazz: KClass<T>): T {
-    return ViewModelProviders.of(this, (activity.application as ViewModelProvider.Factory)).get(clazz.java)
+    val vm = ViewModelProviders.of(this, (activity.application as ViewModelProvider.Factory)).get(clazz.java)
+    if (this is LifecycleRegistryOwner && vm is LifecycleObserver) {
+        this.lifecycle.addObserver(vm)
+    }
+    return vm
 }
 
 /**

@@ -10,8 +10,6 @@ import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.HeaderItem
 import android.support.v17.leanback.widget.ListRow
 import android.support.v17.leanback.widget.ListRowPresenter
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
 import android.view.View
 import dagger.Binds
 import dagger.Module
@@ -21,7 +19,6 @@ import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.video.CDSDevicesLoader
-import org.opensilk.video.DeviceRemovedException
 import org.opensilk.video.ViewModelKey
 import rx.exceptions.Exceptions
 import rx.subscriptions.CompositeSubscription
@@ -86,10 +83,10 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(HomeViewModel::class)
-
-        //watch for mediaitems
+        mViewModel.subscribeServers()
         mViewModel.servers.observe(this, Observer {
-            mServersAdapter.add(it)
+            mServersAdapter.clear()
+            mServersAdapter.addAll(0, it)
         })
 
         val foldersHeader = HeaderItem("Media Servers")
@@ -97,8 +94,6 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
         adapter = mHomeAdapter
         onItemViewClickedListener = mItemClickListener
-
-        //mViewModel.subscribeServers()
 
     }
 
@@ -131,10 +126,10 @@ class HomeViewModel
         private val mServersLoader: CDSDevicesLoader
 ): ViewModel() {
     val servers = MutableLiveData<List<MediaBrowser.MediaItem>>()
-    val subscriptions = CompositeSubscription()
+    private val subscriptions = CompositeSubscription()
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun subscribeServers() {
+        Timber.e("Subscribe Servers")
         val s = mServersLoader.observable
                 .subscribe({
                     servers.postValue(it)

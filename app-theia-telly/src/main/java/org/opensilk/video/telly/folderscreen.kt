@@ -15,6 +15,7 @@ import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
+import org.opensilk.media.bundle
 import org.opensilk.media.elseIfBlank
 import org.opensilk.video.CDSBrowseLoader
 import org.opensilk.video.NoBrowseResultsException
@@ -53,14 +54,19 @@ class FolderActivity: BaseVideoActivity() {
         setContentView(R.layout.activity_folder)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.folder_browse_fragment, FolderFragment(), "folder_frag")
+                    .replace(R.id.folder_browse_fragment,
+                            newFolderFragment(intent.getStringExtra(EXTRA_MEDIAID)), "folder_frag")
                     .commit()
         }
     }
 
 }
 
-
+fun newFolderFragment(mediaId: String): FolderFragment {
+    val f = FolderFragment()
+    f.arguments = bundle(EXTRA_MEDIAID, mediaId)
+    return f
+}
 
 /**
  *
@@ -81,8 +87,14 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(FolderViewModel::class)
-
-        mViewModel.mediaTitle.observe(this, Observer { title = it })
+        mViewModel.mediaId = arguments.getString(EXTRA_MEDIAID)
+        mViewModel.mediaTitle.observe(this, Observer {
+            title = it
+        })
+        mViewModel.folderItems.observe(this, Observer {
+            mFolderAdapter.clear()
+            mFolderAdapter.addAll(0, it)
+        })
         mViewModel.noBrowseResults.observe(this, Observer {
             Toast.makeText(context, "This folder is empty", Toast.LENGTH_LONG).show()
         })
@@ -119,14 +131,15 @@ class FolderViewModel
     val folderItems = MutableLiveData<List<MediaBrowser.MediaItem>>()
     val noBrowseResults = MutableLiveData<String>()
     val loadError = MutableLiveData<String>()
-    val subscriptions = CompositeSubscription()
-    var mediaId: String by Delegates.observable("", { _, oldValue, newValue ->
-        if (newValue != "" && oldValue != newValue) {
-            subscribeBrowseItems()
+    private val subscriptions = CompositeSubscription()
+    var mediaId: String by Delegates.observable("", { _, o, n ->
+        if ("" != n && o != n) {
+            subscribeBrowseItems(n)
+            //TODO fetch title
         }
     })
 
-    fun subscribeBrowseItems() {
+    fun subscribeBrowseItems(mediaId: String) {
         val s = mBrowseLoader.observable(mediaId)
                 .toList()
                 .subscribe({

@@ -132,9 +132,8 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(DetailViewModel::class)
         mViewModel.mediaId = arguments.getString(EXTRA_MEDIAID)
-
         mViewModel.videoDescription.observe(this, Observer {
-            mOverviewRow.item = it
+            mOverviewRow.item = it!!
         })
         mViewModel.fileInfo.observe(this, Observer {
             mFileInfoRow.fileInfo = it!!
