@@ -42,9 +42,6 @@ dependencies {
 
     //compile 'org.videolan.libvlc:libvlc-x86:3.0.0-SNAPSHOT@aar'
 
-    compile "org.mapdb:mapdb:$mapdbVersion"
-    compile "com.google.guava:guava:$guavaVersion"
-
     compile "android.arch.lifecycle:runtime:$androidarchVersion"
     compile "android.arch.lifecycle:extensions:$androidarchVersion"
 
