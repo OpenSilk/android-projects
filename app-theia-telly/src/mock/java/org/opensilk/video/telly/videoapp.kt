@@ -1,13 +1,19 @@
 package org.opensilk.video.telly
 
 import android.arch.lifecycle.ViewModelProvider
+import android.content.Context
+import android.net.Uri
 import dagger.Binds
 import dagger.Component
 import dagger.Module
+import dagger.Provides
 import org.opensilk.common.dagger.AppContextModule
+import org.opensilk.common.dagger.ForApplication
+import org.opensilk.video.DatabaseProviderModule
 import org.opensilk.video.PlaybackServiceModule
 import org.opensilk.video.UpnpHolderServiceModule
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
@@ -26,7 +32,8 @@ import javax.inject.Singleton
                 PlaybackModule::class,
                 MockPlaybackModule::class,
                 PlaybackServiceModule::class,
-                MockMediaProviderClientModule::class
+                MockMediaProviderClientModule::class,
+                DatabaseProviderModule::class
                 )
 )
 interface MockRootComponent: RootComponent {
@@ -37,9 +44,11 @@ interface MockRootComponent: RootComponent {
  *
  */
 @Module
-abstract class MockRootModule {
-    @Binds
-    abstract fun viewModelFactory(appViewModelFactory: AppViewModelFactory): ViewModelProvider.Factory
+object MockRootModule {
+    @Provides @JvmStatic @Named("TVDBRoot")
+    fun tvdbRoot() = Uri.parse("https://thetvdb.com/")
+    @Provides @Named("DatabaseAuthority") @JvmStatic
+    fun databaseAuthority(@ForApplication context: Context) = context.getString(R.string.videos_authority)
 }
 
 /**
