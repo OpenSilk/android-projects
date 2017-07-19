@@ -51,6 +51,7 @@ class Database
                     "overview TEXT, " +
                     "episode_number INTEGER NOT NULL, " +
                     "season_number INTEGER NOT NULL, " +
+                    "season_id INTEGER, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP VIEW IF EXISTS tv_episode_series_map")
@@ -139,28 +140,23 @@ class Database
             db.execSQL("DROP TABLE IF EXISTS media;")
             db.execSQL("CREATE TABLE media (" +
                     "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "media_uri TEXT NOT NULL UNIQUE, " +
+                    "media_type TEXT NOT NULL, " +
+                    "media_id TEXT NOT NULL, " +
+                    "parent_media_type TEXT NOT NULL, " +
+                    "parent_media_id TEXT NOT NULL, " +
                     "_display_name TEXT NOT NULL, " +
                     "_title TEXT, " +
                     "_subtitle TEXT, " +
-                    "parent_media_uri TEXT NOT NULL, " +
-                    "server_id TEXT, " +
                     "artwork_uri TEXT, " +
                     "custom_artwork_uri INTEGER DEFAULT 0, " +
                     "backdrop_uri TEXT, " +
                     "custom_backdrop_uri INTEGER DEFAULT 0, " +
-                    "media_category INTEGER DEFAULT 0, " + //type from mediametaextras
 
                     "series_id INTEGER, " +
                     "episode_id INTEGER, " +
                     "movie_id INTEGER, " +
-                    "is_indexed INTEGER DEFAULT 0, " +
+
                     "date_added INTEGER NOT NULL, " + //milli
-
-                    "last_played INTEGER, " + //milli
-
-                    "last_position INTEGER DEFAULT -1, " + //milli
-
                     "duration INTEGER, " + //milli
 
                     "file_size INTEGER DEFAULT -1, " +
@@ -168,7 +164,14 @@ class Database
                     "audio_delay INTEGER DEFAULT 0, " +
                     "spu_track INTEGER DEFAULT -1, " +
                     "spu_delay INTEGER DEFAULT -1," +
-                    "spu_path TEXT " +
+                    "spu_path TEXT, " +
+                    "UNIQUE(media_type,media_id) " +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS media_position")
+            db.execSQL("CREATE TABLE media_position (" +
+                    "_display_name TEXT NOT NULL PRIMARY KEY, " +
+                    "last_played INTEGER, " + //milli
+                    "last_position INTEGER DEFAULT -1 " +
                     ");")
             db.execSQL("DROP VIEW IF EXISTS media_episode_series_map")
             db.execSQL("DROP VIEW IF EXISTS media_description")

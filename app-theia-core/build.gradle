@@ -60,6 +60,7 @@ dependencies {
     //testCompile 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
     testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
     testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testCompile "org.apache.commons:commons-lang3:$commonsLangVersion"
 
 }
 
