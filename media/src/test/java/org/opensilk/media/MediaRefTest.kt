@@ -1,51 +1,39 @@
 package org.opensilk.media
 
+import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-
-import org.assertj.core.api.Java6Assertions.assertThat
-import org.opensilk.media.*
 
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class)
 class MediaRefTest {
 
     @Test
-    fun testnewMediaRefJsonSerialization() {
-        val ref = MediaRef(UPNP_DEVICE, "this is an id")
-        val json = ref.toJson()
-        val newRef = newMediaRef(json)
+    fun testUpnpDeviceSerialization() {
+        val ref = MediaRef(UPNP_DEVICE, UpnpDeviceId("this is an id"))
+        val newRef = newMediaRef(ref.toJson())
         assertThat(newRef.kind).isEqualTo(UPNP_DEVICE)
-
-        val f_ref = MediaRef(UPNP_FOLDER, FolderId("foobag", "barnfoo"))
-        val f_json = f_ref.toJson()
-        val f_newRef = newMediaRef(f_json)
-        assertThat(f_newRef.kind).isEqualTo(UPNP_FOLDER)
-
-        val u_ref = MediaRef(UPNP_VIDEO, UpnpItemId("foobag", "barnfoo"))
-        val u_json = u_ref.toJson()
-        val u_newRef = newMediaRef(u_json)
-        assertThat(u_newRef.kind).isEqualTo(UPNP_VIDEO)
+        assertThat((newRef.mediaId as UpnpDeviceId).deviceId).isEqualTo("this is an id")
     }
 
     @Test
     fun testFolderIdJsonSerialization() {
-        val ref = FolderId("foobag", "barnfoo")
-        val json = ref.id
-        val newRef = newFolderId(json)
-        assertThat(newRef.deviceId).isEqualTo("foobag")
-        assertThat(newRef.folderId).isEqualTo("barnfoo")
+        val ref = MediaRef(UPNP_FOLDER, UpnpFolderId("foobag", "barnfoo"))
+        val newRef = newMediaRef(ref.toJson())
+        assertThat(newRef.kind).isEqualTo(UPNP_FOLDER)
+        assertThat((newRef.mediaId as UpnpFolderId).deviceId).isEqualTo("foobag")
+        assertThat((newRef.mediaId as UpnpFolderId).folderId).isEqualTo("barnfoo")
     }
 
     @Test
     fun testUpnpItemIdJsonSerialization() {
-        val ref = UpnpItemId("foobag", "barnfoo")
-        val json = ref.id
-        val newRef = newUpnpItemId(json)
-        assertThat(newRef.deviceId).isEqualTo("foobag")
-        assertThat(newRef.itemId).isEqualTo("barnfoo")
+        val ref = MediaRef(UPNP_VIDEO, UpnpVideoId("foobag", "barnfoo"))
+        val newRef = newMediaRef(ref.toJson())
+        assertThat(newRef.kind).isEqualTo(UPNP_VIDEO)
+        assertThat((newRef.mediaId as UpnpVideoId).deviceId).isEqualTo("foobag")
+        assertThat((newRef.mediaId as UpnpVideoId).itemId).isEqualTo("barnfoo")
     }
 
 }

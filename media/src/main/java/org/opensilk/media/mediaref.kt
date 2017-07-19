@@ -13,92 +13,67 @@ const val UPNP_VIDEO = "upnp_video"
  * Created by drew on 5/29/17.
  */
 interface MediaId {
-    val id: String
+    fun write(jw: JsonWriter)
 }
 
-/**
- *
- */
-data class StringId(override val id: String): MediaId
-
-/**
- *
- */
-data class FolderId(val deviceId: String, val folderId: String): MediaId {
-    override val id: String by lazy {
-        val sr = StringWriter()
-        return@lazy JsonWriter(sr).use { jr ->
-            jr.beginObject()
-            jr.name("dev").value(deviceId)
-            jr.name("fol").value(folderId)
-            jr.endObject()
-            return@use sr.toString()
-        }
+data class UpnpDeviceId(val deviceId: String): MediaId {
+    override fun write(jw: JsonWriter) {
+        jw.name("dev").value(deviceId)
     }
 }
 
-/**
- *
- */
-internal fun newFolderId(json: String) : FolderId {
+internal fun newUpnpDeviceId(jr: JsonReader): UpnpDeviceId {
+    var id = ""
+    while (jr.hasNext()) {
+        when (jr.nextName()) {
+            "dev" -> id = jr.nextString()
+            else -> jr.skipValue()
+        }
+    }
+    return UpnpDeviceId(id)
+}
+
+data class UpnpFolderId(val deviceId: String, val folderId: String): MediaId {
+    override fun write(jw: JsonWriter) {
+        jw.name("dev").value(deviceId)
+        jw.name("fol").value(folderId)
+    }
+}
+
+internal fun newUpnpFolderId(jr: JsonReader) : UpnpFolderId {
     var dev = ""
     var fol = ""
-    return JsonReader(StringReader(json)).use { jr ->
-        jr.beginObject()
-        while (jr.hasNext()) {
-            when (jr.nextName()) {
-                "dev" -> dev = jr.nextString()
-                "fol" -> fol = jr.nextString()
-                else -> jr.skipValue()
-            }
+    while (jr.hasNext()) {
+        when (jr.nextName()) {
+            "dev" -> dev = jr.nextString()
+            "fol" -> fol = jr.nextString()
+            else -> jr.skipValue()
         }
-        jr.endObject()
-        return@use FolderId(dev, fol)
+    }
+    return UpnpFolderId(dev, fol)
+}
+
+data class UpnpVideoId(val deviceId: String, val itemId: String): MediaId {
+    override fun write(jw: JsonWriter) {
+        jw.name("dev").value(deviceId)
+        jw.name("itm").value(itemId)
     }
 }
 
-/**
- *
- */
-data class UpnpItemId(val deviceId: String, val itemId: String): MediaId {
-    override val id: String by lazy {
-        val sr = StringWriter()
-        return@lazy JsonWriter(sr).use { jr ->
-            jr.beginObject()
-            jr.name("dev").value(deviceId)
-            jr.name("itm").value(itemId)
-            jr.endObject()
-            return@use sr.toString()
-        }
-    }
-}
-
-/**
- *
- */
-internal fun newUpnpItemId(json: String) : UpnpItemId {
+internal fun newUpnpVideoId(jr: JsonReader) : UpnpVideoId {
     var dev = ""
     var itm = ""
-    return JsonReader(StringReader(json)).use { jr ->
-        jr.beginObject()
-        while (jr.hasNext()) {
-            when (jr.nextName()) {
-                "dev" -> dev = jr.nextString()
-                "itm" -> itm = jr.nextString()
-                else -> jr.skipValue()
-            }
+    while (jr.hasNext()) {
+        when (jr.nextName()) {
+            "dev" -> dev = jr.nextString()
+            "itm" -> itm = jr.nextString()
+            else -> jr.skipValue()
         }
-        jr.endObject()
-        return@use UpnpItemId(dev, itm)
     }
+    return UpnpVideoId(dev, itm)
 }
 
-/**
- *
- */
 data class MediaRef(val kind: String, val mediaId: MediaId) {
-
-    constructor(kind: String, id: String) : this(kind, StringId(id))
 
     fun toJson(): String {
         return StringWriter().use {
@@ -106,38 +81,40 @@ data class MediaRef(val kind: String, val mediaId: MediaId) {
             jw.beginObject()
             jw.name("ver").value(1)
             jw.name("kind").value(kind)
-            jw.name("id").value(mediaId.id)
+            jw.name("id")
+            jw.beginObject()
+            mediaId.write(jw)
+            jw.endObject()
             jw.endObject()
             return@use it.toString()
         }
     }
 }
 
-/**
- *
- */
 fun newMediaRef(json: String): MediaRef {
-    var kind = ""
-    var id = ""
     return JsonReader(StringReader(json)).use { jr ->
+        var kind = ""
+        var mediaId: MediaId? = null
         jr.beginObject()
         while (jr.hasNext()) {
             when (jr.nextName()) {
                 "ver" -> jr.skipValue()
                 "kind" -> kind = jr.nextString()
-                "id" -> id = jr.nextString()
+                "id" -> {
+                    jr.beginObject()
+                    when (kind) {
+                        UPNP_DEVICE -> mediaId = newUpnpDeviceId(jr)
+                        UPNP_FOLDER -> mediaId = newUpnpFolderId(jr)
+                        UPNP_VIDEO -> mediaId = newUpnpVideoId(jr)
+                        else -> TODO("unknown kind: $kind")
+                    }
+                    jr.endObject()
+                }
                 else -> jr.skipValue()
             }
         }
         jr.endObject()
-        return@use when (kind) {
-            UPNP_DEVICE -> MediaRef(kind, id)
-            UPNP_FOLDER -> MediaRef(kind, newFolderId(id))
-            UPNP_VIDEO -> MediaRef(kind, newUpnpItemId(id))
-            else -> {
-                TODO("Unknown mediaRef kind=$kind")
-            }
-        }
+        return@use MediaRef(kind, mediaId!!)
     }
 }
 
