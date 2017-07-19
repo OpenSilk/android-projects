@@ -110,7 +110,7 @@ class CDSDevicesLoaderImpl
                     continue //unsupported device
                 }
                 val meta = MediaMeta()
-                meta.mediaId = MediaRef(UPNP_DEVICE, device.identity.udn.identifierString).toJson()
+                meta.mediaId = MediaRef(UPNP_DEVICE, UpnpDeviceId(device.identity.udn.identifierString)).toJson()
                 meta.mimeType = UPNP_DEVICE
                 meta.title = device.details.friendlyName ?: device.displayString
                 meta.subtitle = if (device.displayString === meta.title) "" else device.displayString
@@ -162,8 +162,8 @@ class CDSBrowseLoaderImpl
     override fun observable(mediaId: String): Observable<MediaBrowser.MediaItem> {
         val mediaRef = newMediaRef(mediaId)
         val folderId = when (mediaRef.kind) {
-            UPNP_FOLDER -> mediaRef.mediaId as FolderId
-            UPNP_DEVICE -> FolderId(mediaRef.mediaId.id, "0")
+            UPNP_FOLDER -> mediaRef.mediaId as UpnpFolderId
+            UPNP_DEVICE -> UpnpFolderId((mediaRef.mediaId as UpnpDeviceId).deviceId, "0")
             else -> TODO("Unsupported mediaid")
         }
         return Observable.create(CDSOnSubscribe(mUpnpService, folderId))
@@ -209,7 +209,7 @@ class CDSBrowseLoaderImpl
 class CDSOnSubscribe
 constructor(
         private val mUpnpService: CDSUpnpService,
-        private val mFolderId: FolderId
+        private val mFolderId: UpnpFolderId
 ) : Observable.OnSubscribe<RemoteService> {
 
     override fun call(subscriber: Subscriber<in RemoteService>) {
@@ -263,7 +263,7 @@ class NoContentDirectoryFoundException: Exception()
 class BrowseOnSubscribe(
         private val mUpnpService: CDSUpnpService,
         private val mCDSService: RemoteService,
-        private val mFolderId: FolderId,
+        private val mFolderId: UpnpFolderId,
         private val mBrowseFlag: BrowseFlag
 ) : Observable.OnSubscribe<MediaBrowser.MediaItem> {
 
@@ -279,7 +279,7 @@ class BrowseOnSubscribe(
                     if (StorageFolder.CLASS.equals(c)) {
                         val meta = MediaMeta()
 
-                        meta.mediaId = MediaRef(UPNP_FOLDER, FolderId(mFolderId.deviceId, c.id)).toJson()
+                        meta.mediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(mFolderId.deviceId, c.id)).toJson()
                         meta.mimeType = DocumentsContract.Document.MIME_TYPE_DIR
 
                         meta.title = c.title
@@ -297,8 +297,8 @@ class BrowseOnSubscribe(
                 for (item in didl.items) {
                     if (VideoItem.CLASS.equals(item)) {
                         val meta = MediaMeta()
-                        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpItemId(mFolderId.deviceId, item.id)).toJson()
-                        meta.parentMediaId = MediaRef(UPNP_FOLDER, FolderId(mFolderId.deviceId, item.parentID)).toJson()
+                        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId(mFolderId.deviceId, item.id)).toJson()
+                        meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(mFolderId.deviceId, item.parentID)).toJson()
                         val res = item.firstResource ?: continue
                         if (res.protocolInfo.protocol != Protocol.HTTP_GET) {
                             //we can only support http-get
