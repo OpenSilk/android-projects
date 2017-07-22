@@ -37,6 +37,11 @@ constructor(
     }
 
     /**
+     * Database rowid of this item, table should be inferred from other information
+     */
+    var rowId: Long by LongVal
+
+    /**
      * [android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID]
      */
     @Deprecated("Use custom mediaId instead")
