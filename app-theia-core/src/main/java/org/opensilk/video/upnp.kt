@@ -1,21 +1,13 @@
 package org.opensilk.video
 
-import android.app.Activity
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.database.ContentObserver
 import android.media.browse.MediaBrowser
 import android.net.Uri
-import android.os.Binder
-import android.os.IBinder
+import android.os.Handler
 import android.provider.DocumentsContract
 import dagger.Binds
 import dagger.Module
-import dagger.Subcomponent
 import org.fourthline.cling.model.action.ActionInvocation
 import org.fourthline.cling.model.message.UpnpResponse
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
@@ -31,17 +23,17 @@ import org.fourthline.cling.support.model.DIDLContent
 import org.fourthline.cling.support.model.Protocol
 import org.fourthline.cling.support.model.container.StorageFolder
 import org.fourthline.cling.support.model.item.VideoItem
-import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.dagger.Injector
-import org.opensilk.common.dagger.ServiceScope
-import org.opensilk.common.dagger.injectMe
+import org.opensilk.common.dagger.ForApplication
 import org.opensilk.media.*
 import org.opensilk.upnp.cds.browser.CDSUpnpService
+import org.opensilk.upnp.cds.browser.CDSserviceType
 import org.opensilk.upnp.cds.featurelist.BasicView
 import org.opensilk.upnp.cds.featurelist.Features
 import org.opensilk.upnp.cds.featurelist.XGetFeatureListCallback
 import rx.Observable
 import rx.Subscriber
+import rx.android.schedulers.AndroidSchedulers
+import rx.android.schedulers.HandlerScheduler
 import rx.subscriptions.Subscriptions
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
@@ -58,8 +50,6 @@ abstract class UpnpLoadersModule {
     abstract fun provideCDSBrowseLoader(impl: CDSBrowseLoaderImpl): CDSBrowseLoader
 }
 
-private val CDSserviceType = UDAServiceType("ContentDirectory", 1)
-
 /**
  * The Loader for the Media Servers row in the Home Activity
  */
@@ -72,78 +62,24 @@ interface CDSDevicesLoader {
  */
 class CDSDevicesLoaderImpl
 @Inject constructor(
-        private val mUpnpService: CDSUpnpService
+        @ForApplication private val mContext: Context,
+        private val mDatabaseClient: DatabaseClient
 ): CDSDevicesLoader {
 
     override val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
-          Observable.create<Boolean> { s ->
-            val listener = object : DefaultRegistryListener() {
-                override fun deviceAdded(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
-                    if (device.findService(CDSserviceType) == null) {
-                        //unsupported device
-                        return
-                    }
-                    s.onNext(true)
-                }
-
-                override fun deviceRemoved(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
-                    if (device.findService(CDSserviceType) == null) {
-                        //dont care
-                        return
-                    }
-                    s.onNext(false)
+        Observable.create<Boolean> { s ->
+            val co = object: ContentObserver(null) {
+                override fun onChange(selfChange: Boolean, uri: Uri?) {
+                    s.onNext(!selfChange)
                 }
             }
-            //dont leak the listener
-            s.add(Subscriptions.create { mUpnpService.registry.removeListener(listener) })
-            mUpnpService.registry.addListener(listener)
-            //listen for changes
-            mUpnpService.controlPoint.search(UDAServiceTypeHeader(CDSserviceType))
-        }.startWith(true).concatMap { registryObservable }
-    }
-
-    private val registryObservable: Observable<List<MediaBrowser.MediaItem>> by lazy {
-        Observable.create<MediaBrowser.MediaItem> { s ->
-            //pass through all the already found ones
-            for (device in mUpnpService.registry.devices) {
-                if (device.findService(CDSserviceType) == null) {
-                    continue //unsupported device
-                }
-                val meta = MediaMeta()
-                meta.mediaId = MediaRef(UPNP_DEVICE, UpnpDeviceId(device.identity.udn.identifierString)).toJson()
-                meta.mimeType = UPNP_DEVICE
-                meta.title = device.details.friendlyName ?: device.displayString
-                meta.subtitle = if (device.displayString === meta.title) "" else device.displayString
-                if (device.hasIcons()) {
-                    var largest = device.icons[0]
-                    for (ic in device.icons) {
-                        if (largest.height < ic.height) {
-                            largest = ic
-                        }
-                    }
-                    var uri = largest.uri.toString()
-                    //TODO fragile... only tested on MiniDLNA
-                    if (uri.startsWith("/")) {
-                        val ident = device.identity
-                        if (ident is RemoteDeviceIdentity) {
-                            val ru = ident.descriptorURL
-                            uri = "http://" + ru.host + ":" + ru.port + uri
-                        }
-                    }
-                    meta.artworkUri = Uri.parse(uri)
-                }
-                s.onNext(meta.toMediaItem())
-            }
-            s.onCompleted()
-        }.toList()
+            mContext.contentResolver.registerContentObserver(mDatabaseClient.uris.upnpDevices(), true, co)
+            s.add(Subscriptions.create { mContext.contentResolver.unregisterContentObserver(co) })
+        }.startWith(true).flatMap {
+            mDatabaseClient.getUpnpDevices().map { it.toMediaItem() }.toList().subscribeOn(AppSchedulers.diskIo)
+        }
     }
 }
-
-/**
- * Exception used to notify subscribers a device was removed
- * they will need to clear their cache and resubscribe
- */
-class DeviceRemovedException : Exception()
 
 /**
  * The loader for the folder activity
@@ -360,74 +296,3 @@ class BrowseOnSubscribe(
  *
  */
 class NoBrowseResultsException: Exception()
-
-/**
- *
- */
-@ServiceScope
-@Subcomponent
-interface UpnpHolderServiceComponent: Injector<UpnpHolderService> {
-    @Subcomponent.Builder
-    abstract class Builder : Injector.Builder<UpnpHolderService>()
-}
-
-/**
- *
- */
-@Module(subcomponents = arrayOf(UpnpHolderServiceComponent::class))
-abstract class UpnpHolderServiceModule
-
-/**
- *
- */
-class UpnpServiceConnectionManager
-constructor(
-        val activity: Activity
-): ServiceConnection, LifecycleObserver {
-    private var mUpnpServiceHolder : UpnpHolderService.HolderBinder? = null
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreate() {
-        if (!activity.bindService(Intent(activity, UpnpHolderService::class.java), this, Context.BIND_AUTO_CREATE)) {
-            Timber.e("Failed to bind to the UpnpHolderService")
-        }
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy() {
-        activity.unbindService(this)
-        mUpnpServiceHolder = null
-    }
-
-    override fun onServiceDisconnected(name: ComponentName?) {
-        mUpnpServiceHolder = null
-    }
-
-    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-        mUpnpServiceHolder = service as? UpnpHolderService.HolderBinder
-    }
-}
-
-/**
- * Service that holds a reference to the upnpservice so it can be shutdown
- */
-class UpnpHolderService: android.app.Service() {
-    private val mBinder = HolderBinder()
-    @Inject lateinit var mUpnpService: CDSUpnpService
-
-    override fun onCreate() {
-        super.onCreate()
-        injectMe()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mUpnpService.shutdown()
-    }
-
-    override fun onBind(intent: Intent?): IBinder? {
-        return mBinder
-    }
-
-    class HolderBinder: Binder()
-}
