@@ -32,9 +32,7 @@ class UpnpDevicesObserver
                 .subscribe { list ->
                     val devices = LinkedList(list)
                     val external = mUpnpService.registry.devices
-                            .filter {
-                                it.findService(CDSserviceType) != null
-                            }.map { toMeta(it) }
+                            .filter { it.findService(CDSserviceType) != null }.map { it.toMediaMeta() }
                     for (ext in external) {
                         val dev = devices.find { it.mediaId == ext.mediaId }
                         if (dev != null) {
@@ -57,37 +55,12 @@ class UpnpDevicesObserver
         mUpnpService.registry.removeListener(mListener)
     }
 
-    private fun toMeta(device: Device<*, *, *>): MediaMeta {
-        val meta = MediaMeta()
-        meta.mediaId = MediaRef(UPNP_DEVICE, UpnpDeviceId(device.identity.udn.identifierString)).toJson()
-        meta.mimeType = MIME_TYPE_CONTENT_DIRECTORY
-        meta.title = device.details.friendlyName ?: device.displayString
-        meta.subtitle = if (device.displayString == meta.title) "" else device.displayString
-        if (device.hasIcons()) {
-            var largest = device.icons[0]
-            for (ic in device.icons) {
-                if (largest.height < ic.height) {
-                    largest = ic
-                }
-            }
-            var uri = largest.uri.toString()
-            //TODO fragile... only tested on MiniDLNA
-            if (uri.startsWith("/")) {
-                val ident = device.identity
-                if (ident is RemoteDeviceIdentity) {
-                    val ru = ident.descriptorURL
-                    uri = "http://" + ru.host + ":" + ru.port + uri
-                }
-            }
-            meta.artworkUri = Uri.parse(uri)
-        }
-        return meta
-    }
+
 
     private val mListener = object : DefaultRegistryListener() {
         override fun deviceAdded(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
             if (device.findService(CDSserviceType) != null) {
-                mDatabaseClient.addUpnpDevice(toMeta(device))
+                mDatabaseClient.addUpnpDevice(device.toMediaMeta())
             }
         }
 
