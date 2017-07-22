@@ -3,6 +3,7 @@ package org.opensilk.video
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
+import android.database.ContentObserver
 import android.database.Cursor
 import android.database.sqlite.SQLiteException
 import android.media.browse.MediaBrowser
@@ -10,8 +11,10 @@ import android.net.Uri
 import android.os.CancellationSignal
 import dagger.Binds
 import dagger.Module
+import org.fourthline.cling.model.meta.Device
+import org.fourthline.cling.model.meta.RemoteDeviceIdentity
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.media.MediaRef
+import org.opensilk.media.*
 import org.opensilk.media.playback.MediaProviderClient
 import org.opensilk.tmdb.api.model.Image
 import org.opensilk.tmdb.api.model.ImageList
@@ -55,6 +58,7 @@ internal interface ContentResolverGlue {
               selectionArgs: Array<String>?, sortOrder: String?,
               cancellationSignal: CancellationSignal?): Cursor?
     fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int
+    fun notifyChange(uri: Uri, co: ContentObserver?)
 }
 
 /**
@@ -84,6 +88,10 @@ private class DefaultContentResolverGlue(private val mResolver: ContentResolver)
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
         return mResolver.delete(uri, selection, selectionArgs)
     }
+
+    override fun notifyChange(uri: Uri, co: ContentObserver?) {
+        mResolver.notifyChange(uri, co)
+    }
 }
 
 fun <T> Subscriber<T>.cancellationSignal(): CancellationSignal {
@@ -91,6 +99,8 @@ fun <T> Subscriber<T>.cancellationSignal(): CancellationSignal {
     this.add(Subscriptions.create { cancelation.cancel() })
     return cancelation
 }
+
+class VideoDatabaseMalfuction: Exception()
 
 /**
  * Created by drew on 7/18/17.
@@ -106,6 +116,11 @@ class DatabaseClient
     internal var mResolver: ContentResolverGlue = DefaultContentResolverGlue(context.contentResolver)
     val tvdb = TVDbClient(tvdbRootUri)
     val tmdb = MovieDbClient()
+    val uris = mUris
+
+    fun notifyChange(uri: Uri) {
+        mResolver.notifyChange(uri, null)
+    }
 
     override fun getMediaItem(mediaRef: MediaRef): Single<MediaBrowser.MediaItem> {
         TODO("not implemented")
@@ -114,6 +129,55 @@ class DatabaseClient
     fun getVideoDescription(mediaRef: MediaRef): Single<VideoDescInfo> {
         return Single.create { s ->
             s.onError(NoSuchItemException())
+        }
+    }
+
+    /**
+     * Add a meta item describing a upnp device with a content directory service to the database
+     */
+    fun addUpnpDevice(meta: MediaMeta): Uri {
+        val id = newMediaRef(meta.mediaId)
+        if (id.kind != UPNP_DEVICE) throw IllegalArgumentException("media.kind not UPNP_DEVICE")
+        val cv = ContentValues()
+        cv.put("device_id", (id.mediaId as UpnpDeviceId).deviceId)
+        cv.put("mime_type", meta.mimeType)
+        cv.put("title", meta.title)
+        cv.put("subtitle", meta.subtitle)
+        if (meta.artworkUri != Uri.EMPTY) {
+            cv.put("artwork_uri", meta.artworkUri.toString())
+        }
+        cv.put("available", 1)
+        return mResolver.insert(mUris.upnpDevices(), cv) ?: Uri.EMPTY
+    }
+
+    /**
+     * marks the upnp device with giving identity as unavailable
+     */
+    fun hideUpnpDevice(identity: String): Boolean {
+        val cv = ContentValues()
+        cv.put("available", 0)
+        return mResolver.update(mUris.upnpDevices(), cv, "device_id=?", arrayOf(identity)) != 0
+    }
+
+    /**
+     * retrieves all the upnp devices marked as available
+     */
+    fun getUpnpDevices(): Observable<MediaMeta> {
+        return Observable.create { s ->
+            mResolver.query(mUris.upnpDevices(), arrayOf("_id", "device_id", "mime_type", "title",
+                    "subtitle", "artwork_uri"), "available=1", null, "title", s.cancellationSignal())?.use { c ->
+                while (c.moveToNext()) {
+                    val meta = MediaMeta()
+                    meta.rowId = c.getLong(0)
+                    meta.mediaId = MediaRef(UPNP_DEVICE, UpnpDeviceId(c.getString(1))).toJson()
+                    meta.mimeType = c.getString(2)
+                    meta.title = c.getString(3) ?: ""
+                    meta.subtitle = c.getString(4) ?: ""
+                    if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
+                    s.onNext(meta)
+                }
+                s.onCompleted()
+            } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
@@ -356,14 +420,7 @@ class DatabaseClient
             }
         }
 
-        fun setMovieAssociation(q: String, id: Long) {
-            val contentValues = ContentValues(2)
-            contentValues.put("q", q)
-            contentValues.put("movie_id", id)
-            mResolver.insert(mUris.movieLookups(), contentValues)
-        }
-
-        fun insertMovie(movie: Movie, config: TMDbConfig): Uri {
+        fun insertMovie(movie: Movie, imageBaseUrl: String): Uri {
             val values = ContentValues(10)
             values.put("_id", movie.id)
             values.put("_display_name", movie.title)
@@ -371,11 +428,11 @@ class DatabaseClient
             values.put("release_date", movie.releaseDate)
             values.put("poster_path", movie.posterPath)
             values.put("backdrop_path", movie.backdropPath)
-            values.put("image_base_url", config.images.secureBaseUrl)
+            values.put("image_base_url", imageBaseUrl)
             return mResolver.insert(mUris.movies(), values) ?: Uri.EMPTY
         }
 
-        fun insertImages(imageList: ImageList, config: TMDbConfig) {
+        fun insertImages(imageList: ImageList, imageBaseUrl: String) {
             val numPosters = if (imageList.posters != null) imageList.posters.size else 0
             val numBackdrops = if (imageList.posters != null) imageList.backdrops.size else 0
             val contentValues = arrayOfNulls<ContentValues>(numPosters + numBackdrops)
@@ -384,7 +441,7 @@ class DatabaseClient
                 for (image in imageList.posters) {
                     val values = makeImageValues(image)
                     values.put("movie_id", imageList.id)
-                    values.put("image_base_url", config.images.secureBaseUrl)
+                    values.put("image_base_url", imageBaseUrl)
                     values.put("image_type", "poster")
                     contentValues[idx++] = values
                 }
@@ -393,7 +450,7 @@ class DatabaseClient
                 for (image in imageList.backdrops) {
                     val values = makeImageValues(image)
                     values.put("movie_id", imageList.id)
-                    values.put("image_base_url", config.images.secureBaseUrl)
+                    values.put("image_base_url", imageBaseUrl)
                     values.put("image_type", "backdrop")
                     contentValues[idx++] = values
                 }

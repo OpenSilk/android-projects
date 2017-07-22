@@ -24,6 +24,13 @@ class Database
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < VERSION) {
+            db.execSQL("DROP VIEW IF EXISTS tv_episode_banner_map;")
+            db.execSQL("DROP VIEW IF EXISTS media_episode_series_map")
+            db.execSQL("DROP VIEW IF EXISTS media_description")
+            db.execSQL("DROP VIEW IF EXISTS media_episode_map")
+            db.execSQL("DROP VIEW IF EXISTS media_movie_map")
+            db.execSQL("DROP TABLE IF EXISTS media;")
+
             db.execSQL("DROP TABLE IF EXISTS tv_series;")
             db.execSQL("CREATE TABLE tv_series (" +
                     "_id INTEGER PRIMARY KEY , " +
@@ -54,25 +61,6 @@ class Database
                     "season_id INTEGER, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
-            db.execSQL("DROP VIEW IF EXISTS tv_episode_series_map")
-            db.execSQL("CREATE VIEW tv_episode_series_map AS " +
-                    "SELECT " +
-                    "e._id, " +
-                    "e._display_name as episode_name, " +
-                    "e.first_aired, " +
-                    "e.overview, " +
-                    "e.episode_number, " +
-                    "e.season_number, " +
-                    "e.series_id, " +
-                    "s._display_name as series_name, " +
-                    "s.first_aired as series_first_aired, " +
-                    "s.poster_path, " +
-                    "s.backdrop_path " +
-                    "FROM tv_episodes e " +
-                    "JOIN tv_series s ON e.series_id = s._id " +
-                    "GROUP BY e._id " +
-                    ";")
-            db.execSQL("DROP VIEW IF EXISTS tv_episode_banner_map;")
             db.execSQL("DROP TABLE IF EXISTS tv_banners;")
             db.execSQL("CREATE TABLE tv_banners (" +
                     "_id INTEGER PRIMARY KEY, " +
@@ -137,50 +125,86 @@ class Database
                     "q TEXT PRIMARY KEY, " +
                     "movie_id INTEGER NOT NULL " +
                     ");")
-            db.execSQL("DROP TABLE IF EXISTS media;")
-            db.execSQL("CREATE TABLE media (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "media_type TEXT NOT NULL, " +
-                    "media_id TEXT NOT NULL, " +
-                    "parent_media_type TEXT NOT NULL, " +
-                    "parent_media_id TEXT NOT NULL, " +
-                    "_display_name TEXT NOT NULL, " +
-                    "_title TEXT, " +
-                    "_subtitle TEXT, " +
-                    "artwork_uri TEXT, " +
-                    "custom_artwork_uri INTEGER DEFAULT 0, " +
-                    "backdrop_uri TEXT, " +
-                    "custom_backdrop_uri INTEGER DEFAULT 0, " +
-
-                    "series_id INTEGER, " +
-                    "episode_id INTEGER, " +
-                    "movie_id INTEGER, " +
-
-                    "date_added INTEGER NOT NULL, " + //milli
-                    "duration INTEGER, " + //milli
-
-                    "file_size INTEGER DEFAULT -1, " +
-                    "audio_track INTEGER DEFAULT -1, " +
-                    "audio_delay INTEGER DEFAULT 0, " +
-                    "spu_track INTEGER DEFAULT -1, " +
-                    "spu_delay INTEGER DEFAULT -1," +
-                    "spu_path TEXT, " +
-                    "UNIQUE(media_type,media_id) " +
-                    ");")
             db.execSQL("DROP TABLE IF EXISTS media_position")
             db.execSQL("CREATE TABLE media_position (" +
                     "_display_name TEXT NOT NULL PRIMARY KEY, " +
                     "last_played INTEGER, " + //milli
                     "last_position INTEGER DEFAULT -1 " +
                     ");")
-            db.execSQL("DROP VIEW IF EXISTS media_episode_series_map")
-            db.execSQL("DROP VIEW IF EXISTS media_description")
-            db.execSQL("DROP VIEW IF EXISTS media_episode_map")
-            db.execSQL("DROP VIEW IF EXISTS media_movie_map")
-            db.execSQL("DROP TRIGGER IF EXISTS tv_series_cleanup;")
-            db.execSQL("CREATE TRIGGER tv_series_cleanup AFTER DELETE ON media " +
+            db.execSQL("DROP TABLE IF EXISTS upnp_device")
+            db.execSQL("CREATE TABLE upnp_device (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "device_id TEXT NOT NULL UNIQUE, " +
+                    "mime_type TEXT NOT NULL, " +
+                    "title TEXT NOT NULL, " +
+                    "subtitle TEXT, " +
+                    "artwork_uri TEXT, " +
+                    "available INTEGER DEFAULT 0 " +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS upnp_folder")
+            db.execSQL("CREATE TABLE upnp_folder (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "device_id TEXT NOT NULL, " +
+                    "folder_id TEXT NOT NULL, " +
+                    "parent_id TEXT NOT NULL, " +
+                    "_display_name TEXT NOT NULL, " +
+                    "artwork_uri TEXT, " +
+                    "mime_type TEXT NOT NULL, " +
+
+                    "date_added INTEGER NOT NULL," +
+                    "UNIQUE(device_id,folder_id) " + //milli
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS upnp_video")
+            db.execSQL("CREATE TABLE upnp_video (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "device_id TEXT NOT NULL, " +
+                    "item_id TEXT NOT NULL, " +
+                    "parent_id TEXT NOT NULL, " +
+                    "_display_name TEXT NOT NULL, " +
+                    "artwork_uri TEXT, " +
+                    "custom_artwork_uri TEXT, " +
+                    "backdrop_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+                    "mime_type TEXT NOT NULL, " +
+                    "media_uri TEXT NOT NULL, " +
+                    "duration INTEGER DEFAULT -1, " + //milli
+                    "bitrate INTEGER DEFAULT -1, " +
+                    "file_size INTEGER DEFAULT -1, " +
+                    "creator TEXT, " +
+
+                    "series_id INTEGER, " +
+                    "episode_id INTEGER, " +
+                    "movie_id INTEGER, " +
+
+                    "date_added INTEGER NOT NULL, " + //milli
+
+                    "audio_track INTEGER DEFAULT -1, " +
+                    "audio_delay INTEGER DEFAULT 0, " +
+                    "spu_track INTEGER DEFAULT -1, " +
+                    "spu_delay INTEGER DEFAULT -1," +
+                    "spu_path TEXT, " +
+                    "UNIQUE(device_id,item_id,parent_id) " +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS upnp_video_search")
+            db.execSQL("CREATE VIRTUAL TABLE upnp_video_search USING fts3 (" +
+                    "title" +
+                    ");")
+            db.execSQL("DROP TRIGGER IF EXISTS upnp_video_search_maint;")
+            db.execSQL("CREATE TRIGGER upnp_video_search_maint AFTER INSERT ON upnp_video " +
                     "FOR EACH ROW " +
-                    "WHEN (SELECT COUNT(_id) FROM media WHERE series_id=OLD.series_id) = 0 " +
+                    "BEGIN " +
+                    "INSERT INTO upnp_video_search (rowid,title) VALUES (NEW._id, NEW._display_name); " +
+                    "END")
+            db.execSQL("DROP TRIGGER IF EXISTS upnp_video_search_cleanup")
+            db.execSQL("CREATE TRIGGER upnp_video_search_cleanup AFTER DELETE ON upnp_video " +
+                    "FOR EACH ROW " +
+                    "BEGIN " +
+                    "DELETE FROM upnp_video_search WHERE rowid=OLD._id; " +
+                    "END")
+            db.execSQL("DROP TRIGGER IF EXISTS tv_series_cleanup;")
+            db.execSQL("CREATE TRIGGER tv_series_cleanup AFTER DELETE ON upnp_video " +
+                    "FOR EACH ROW " +
+                    "WHEN (SELECT COUNT(_id) FROM upnp_video WHERE series_id=OLD.series_id) = 0 " +
                     "BEGIN " +
                     "DELETE FROM tv_series WHERE _id=OLD.series_id; " +
                     "DELETE FROM tv_episodes WHERE series_id=OLD.series_id; " +
@@ -190,9 +214,9 @@ class Database
                     "DELETE FROM tv_series_search WHERE rowid=OLD.series_id; " +
                     "END")
             db.execSQL("DROP TRIGGER IF EXISTS movies_cleanup;")
-            db.execSQL("CREATE TRIGGER movies_cleanup AFTER DELETE ON media " +
+            db.execSQL("CREATE TRIGGER movies_cleanup AFTER DELETE ON upnp_video " +
                     "FOR EACH ROW " +
-                    "WHEN (SELECT COUNT(_id) FROM media WHERE movie_id=OLD.movie_id) = 0 " +
+                    "WHEN (SELECT COUNT(_id) FROM upnp_video WHERE movie_id=OLD.movie_id) = 0 " +
                     "BEGIN " +
                     "DELETE FROM movies WHERE _id=OLD.movie_id; " +
                     "DELETE FROM movie_images WHERE movie_id=OLD.movie_id; " +

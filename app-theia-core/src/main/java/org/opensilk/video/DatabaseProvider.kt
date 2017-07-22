@@ -4,6 +4,7 @@ import android.content.ContentProvider
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import android.provider.ContactsContract
 import dagger.Binds
@@ -96,6 +97,7 @@ class DatabaseProvider: ContentProvider() {
             }
             DatabaseMatches.MEDIA -> {
                 table = "media"
+                val sb = SQLiteQueryBuilder()
             }
             DatabaseMatches.MOVIES_ONE -> {
                 id = uri.lastPathSegment.toLong()
@@ -116,6 +118,9 @@ class DatabaseProvider: ContentProvider() {
             }
             DatabaseMatches.MOVIE_SEARCH -> {
                 table = "movies_search"
+            }
+            DatabaseMatches.UPNP_DEVICES -> {
+                table = "upnp_device"
             }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
@@ -172,6 +177,10 @@ class DatabaseProvider: ContentProvider() {
                 val id = db.insertWithOnConflict("movie_lookups", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.movieLookups()
             }
+            DatabaseMatches.UPNP_DEVICES -> {
+                val id = db.insertWithOnConflict("upnp_device", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                return mUris.upnpDevice(id)
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
     }
@@ -213,6 +222,9 @@ class DatabaseProvider: ContentProvider() {
             }
             DatabaseMatches.MOVIE_IMAGES -> {
                 return db.update("movie_images", values, selection, selectionArgs)
+            }
+            DatabaseMatches.UPNP_DEVICES -> {
+                return db.update("upnp_device", values, selection, selectionArgs)
             }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
