@@ -3,6 +3,7 @@ package org.opensilk.video
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.pm.ProviderInfo
+import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
 import android.os.CancellationSignal
@@ -12,6 +13,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.*
 import org.opensilk.tvdb.api.model.Actor
 import org.opensilk.tvdb.api.model.Banner
 import org.opensilk.tvdb.api.model.Episode
@@ -61,7 +63,29 @@ class DatabaseClientTest {
             override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
                 return mProvider.delete(uri, selection, selectionArgs)
             }
+
+            override fun notifyChange(uri: Uri, co: ContentObserver?) {
+                //pass
+            }
         }
+    }
+
+    @Test
+    fun testUpnpDevice_ops() {
+        val meta = MediaMeta()
+        val mId = MediaRef(UPNP_DEVICE, UpnpDeviceId("foo"))
+        meta.mediaId = mId.toJson()
+        meta.mimeType = MIME_TYPE_CONTENT_DIRECTORY
+        meta.title = "a heading"
+        meta.subtitle = "a sub heading"
+        meta.artworkUri = Uri.parse("http://foo.com")
+        mClient.addUpnpDevice(meta)
+        val list = mClient.getUpnpDevices().toList().toBlocking().first()
+        assertThat(list.size).isEqualTo(1)
+        assertThat(list[0].mediaId).isEqualTo(meta.mediaId)
+        mClient.hideUpnpDevice((mId.mediaId as UpnpDeviceId).deviceId)
+        val list2 = mClient.getUpnpDevices().toList().toBlocking().first()
+        assertThat(list2.size).isEqualTo(0)
     }
 
     @Test
