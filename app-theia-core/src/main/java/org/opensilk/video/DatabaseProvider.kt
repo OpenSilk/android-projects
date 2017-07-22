@@ -122,6 +122,10 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.UPNP_DEVICES -> {
                 table = "upnp_device"
             }
+            DatabaseMatches.UPNP_FOLDERS -> {
+                //TODO join on upnp_device and only return folders were available=1
+                table = "upnp_folder"
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
         if (id != -1L) {
@@ -181,6 +185,10 @@ class DatabaseProvider: ContentProvider() {
                 val id = db.insertWithOnConflict("upnp_device", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.upnpDevice(id)
             }
+            DatabaseMatches.UPNP_FOLDERS -> {
+                val id = db.insertWithOnConflict("upnp_folder", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                return mUris.upnpFolder(id)
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
     }
@@ -196,6 +204,9 @@ class DatabaseProvider: ContentProvider() {
                     Timber.w("Ignoring selection %s for delete of %s", selectionArgs, uri)
                 }
                 return db.delete("media", "_id=" + uri.lastPathSegment, null)
+            }
+            DatabaseMatches.UPNP_FOLDERS_ONE -> {
+                return db.delete("upnp_folder", "_id=?", arrayOf(uri.lastPathSegment))
             }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }

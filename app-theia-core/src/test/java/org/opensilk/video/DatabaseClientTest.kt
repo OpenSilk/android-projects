@@ -71,7 +71,26 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testUpnpDevice_ops() {
+    fun testUpnpFolder_add_remove_get() {
+        val meta = MediaMeta()
+        val mid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "bar"))
+        meta.mediaId = mid.toJson()
+        meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "0")).toJson()
+        meta.mimeType = MIME_TYPE_DIR
+        meta.title = "a foo title"
+        meta.artworkUri = Uri.parse("http://foo.com")
+        mClient.addUpnpFolder(meta)
+        val list = mClient.getUpnpFolders().toList().toBlocking().first()
+        assertThat(list.size).isEqualTo(1)
+        assertThat(list[0].mediaId).isEqualTo(meta.mediaId)
+        //TODO more assertions on item
+        mClient.removeUpnpFolder(list[0].rowId)
+        val list2 = mClient.getUpnpDevices().toList().toBlocking().first()
+        assertThat(list2.size).isEqualTo(0)
+    }
+
+    @Test
+    fun testUpnpDevice_add_hide_get() {
         val meta = MediaMeta()
         val mId = MediaRef(UPNP_DEVICE, UpnpDeviceId("foo"))
         meta.mediaId = mId.toJson()
@@ -83,6 +102,7 @@ class DatabaseClientTest {
         val list = mClient.getUpnpDevices().toList().toBlocking().first()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0].mediaId).isEqualTo(meta.mediaId)
+        //todo more assertions on item
         mClient.hideUpnpDevice((mId.mediaId as UpnpDeviceId).deviceId)
         val list2 = mClient.getUpnpDevices().toList().toBlocking().first()
         assertThat(list2.size).isEqualTo(0)

@@ -181,6 +181,47 @@ class DatabaseClient
         }
     }
 
+    fun addUpnpFolder(meta: MediaMeta): Uri {
+        val id = newMediaRef(meta.mediaId)
+        if (id.kind != UPNP_FOLDER) throw IllegalArgumentException("meta.kind not UPNP_FOLDER")
+        val parentId = newMediaRef(meta.parentMediaId)
+        val cv = ContentValues()
+        cv.put("device_id", (id.mediaId as UpnpFolderId).deviceId)
+        cv.put("folder_id", (id.mediaId as UpnpFolderId).folderId)
+        cv.put("parent_id", (parentId.mediaId as UpnpFolderId).folderId)
+        cv.put("_display_name", meta.title)
+        if (meta.artworkUri != Uri.EMPTY) {
+            cv.put("artwork_uri", meta.artworkUri.toString())
+        }
+        cv.put("mime_type", meta.mimeType)
+        cv.put("date_added", System.currentTimeMillis())
+        return mResolver.insert(uris.upnpFolders(), cv) ?: Uri.EMPTY
+    }
+
+    fun removeUpnpFolder(rowid: Long): Boolean {
+        return mResolver.delete(uris.upnpFolder(rowid), null, null) != 0
+    }
+
+    fun getUpnpFolders(): Observable<MediaMeta> {
+        return Observable.create { s ->
+            mResolver.query(mUris.upnpFolders(), arrayOf("_id", "device_id", "folder_id",
+                    "parent_id", "_display_name", "artwork_uri", "mime_type"), null, null,
+                    null, s.cancellationSignal())?.use { c ->
+                while (c.moveToNext()) {
+                    val meta = MediaMeta()
+                    meta.rowId = c.getLong(0)
+                    meta.mediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(2))).toJson()
+                    meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
+                    meta.title = c.getString(4)
+                    if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
+                    meta.mimeType = c.getString(6)
+                    s.onNext(meta)
+                }
+                s.onCompleted()
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
     inner class TVDbClient(private val tvdbRoot: Uri) {
 
         fun rootUri(): Uri {
