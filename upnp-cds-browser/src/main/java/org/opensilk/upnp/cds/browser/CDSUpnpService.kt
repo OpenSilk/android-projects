@@ -41,6 +41,8 @@ import java.util.logging.Logger
 import javax.inject.Inject
 import javax.inject.Singleton
 
+val CDSserviceType = UDAServiceType("ContentDirectory", 1)
+
 /**
  * Created by drew on 12/21/16.
  */
@@ -134,7 +136,7 @@ class CDSUpnpService @Inject constructor(
     private fun createConfiguration(): UpnpServiceConfiguration {
         return object : AndroidUpnpServiceConfiguration() {
             override fun getExclusiveServiceTypes(): Array<ServiceType> {
-                return arrayOf(UDAServiceType("ContentDirectory", 1))
+                return arrayOf(CDSserviceType)
             }
 
             override fun createSOAPActionProcessor(): SOAPActionProcessor {
