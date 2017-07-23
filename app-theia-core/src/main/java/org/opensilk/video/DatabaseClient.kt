@@ -134,6 +134,7 @@ class DatabaseClient
 
     /**
      * Add a meta item describing a upnp device with a content directory service to the database
+     * item should be created with Device.toMediaMeta
      */
     fun addUpnpDevice(meta: MediaMeta): Uri {
         val id = newMediaRef(meta.mediaId)
@@ -181,6 +182,9 @@ class DatabaseClient
         }
     }
 
+    /**
+     * add a upnp folder to the database, item should be created with Container.toMediaMeta
+     */
     fun addUpnpFolder(meta: MediaMeta): Uri {
         val id = newMediaRef(meta.mediaId)
         if (id.kind != UPNP_FOLDER) throw IllegalArgumentException("meta.kind not UPNP_FOLDER")
@@ -198,10 +202,16 @@ class DatabaseClient
         return mResolver.insert(uris.upnpFolders(), cv) ?: Uri.EMPTY
     }
 
+    /**
+     * removes specified folder from database
+     */
     fun removeUpnpFolder(rowid: Long): Boolean {
         return mResolver.delete(uris.upnpFolder(rowid), null, null) != 0
     }
 
+    /**
+     * retrieve direct decedents of parent folder
+     */
     fun getUpnpFolders(parentId: UpnpFolderId): Observable<MediaMeta> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpFolders(), arrayOf("_id", "device_id", "folder_id",
@@ -223,6 +233,9 @@ class DatabaseClient
         }
     }
 
+    /**
+     * Adds upnp video to database, item should be created with VideoItem.toMediaMeta
+     */
     fun addUpnpVideo(meta: MediaMeta): Uri {
         val id = newMediaRef(meta.mediaId)
         if (id.kind != UPNP_VIDEO) throw IllegalArgumentException("media.kind not UPNP_VIDEO")
@@ -242,10 +255,16 @@ class DatabaseClient
         return mResolver.insert(uris.upnpVideos(), cv) ?: Uri.EMPTY
     }
 
+    /**
+     * remove specified video from database
+     */
     fun removeUpnpVideo(id: Long): Boolean {
         return mResolver.delete(uris.upnpVideo(id), null, null) != 0
     }
 
+    /**
+     * retrieve upnp videos, direct decedents of parent
+     */
     fun getUpnpVideos(parentId: UpnpFolderId): Observable<MediaMeta> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpVideos(), upnpVideoProjection,
@@ -259,6 +278,9 @@ class DatabaseClient
         }
     }
 
+    /**
+     * retrieve specified upnp video
+     */
     fun getUpnpVideo(id: Long): Single<MediaMeta> {
         return Single.create { s ->
             mResolver.query(mUris.upnpVideo(id), upnpVideoProjection,
@@ -287,6 +309,9 @@ class DatabaseClient
             "m.poster_path as movie_poster", //19
             "m.backdrop_path as movie_backdrop", "image_base_url") //21
 
+    /**
+     * helper to convert cursor to mediameta using above projection
+     */
     fun Cursor.toUpnpVideoMediaMeta(): MediaMeta {
         val c = this
         val meta = MediaMeta()
