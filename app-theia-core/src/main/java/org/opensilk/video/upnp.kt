@@ -76,7 +76,7 @@ fun Container.toMediaMeta(deviceId: UpnpDeviceId): MediaMeta {
     meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(deviceId.deviceId, this.parentID)).toJson()
     meta.mimeType = DocumentsContract.Document.MIME_TYPE_DIR
 
-    meta.displayName = this.title
+    meta.title = this.title
     this.childCount?.let {
         meta.subtitle = "$it Children"
     }
@@ -121,23 +121,20 @@ interface CDSDevicesLoader {
  */
 class CDSDevicesLoaderImpl
 @Inject constructor(
-        @ForApplication private val mContext: Context,
         private val mDatabaseClient: DatabaseClient
 ): CDSDevicesLoader {
 
     override val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
-        Observable.create<Boolean> { s ->
-            val co = object: ContentObserver(null) {
-                override fun onChange(selfChange: Boolean, uri: Uri?) {
-                    s.onNext(!selfChange)
+        mDatabaseClient.changesObservable
+                .filter { it is UpnpDeviceChange }
+                .map { it as UpnpDeviceChange }
+                .startWith(UpnpDeviceChange())
+                .flatMap {
+                    mDatabaseClient.getUpnpDevices()
+                            .map { it.toMediaItem() }
+                            .toList().subscribeOn(AppSchedulers.diskIo)
                 }
-            }
-            mContext.contentResolver.registerContentObserver(mDatabaseClient.uris.upnpDevices(), true, co)
-            s.add(Subscriptions.create { mContext.contentResolver.unregisterContentObserver(co) })
-        }.startWith(true).flatMap {
-            mDatabaseClient.getUpnpDevices().map { it.toMediaItem() }.toList().subscribeOn(AppSchedulers.diskIo)
         }
-    }
 }
 
 /**
@@ -152,7 +149,8 @@ interface CDSBrowseLoader {
  */
 class CDSBrowseLoaderImpl
 @Inject constructor(
-        private val mUpnpService: CDSUpnpService
+        private val mDatabaseClient: DatabaseClient,
+        private val mUpnpBrowseService: UpnpBrowseService
 ) : CDSBrowseLoader {
     override fun observable(mediaId: String): Observable<MediaBrowser.MediaItem> {
         val mediaRef = newMediaRef(mediaId)
@@ -161,174 +159,19 @@ class CDSBrowseLoaderImpl
             UPNP_DEVICE -> UpnpFolderId((mediaRef.mediaId as UpnpDeviceId).deviceId, "0")
             else -> TODO("Unsupported mediaid")
         }
-        return Observable.create(CDSOnSubscribe(mUpnpService, folderId))
-                .flatMap { cdsservice -> Observable.create(BrowseOnSubscribe(mUpnpService, cdsservice,
-                        folderId, BrowseFlag.DIRECT_CHILDREN)) }
-    }
-
-    fun createFeatureList(cdservice: RemoteService): Observable.OnSubscribe<String> {
-        return Observable.OnSubscribe<String> { subscriber ->
-            val callback = object : XGetFeatureListCallback(cdservice) {
-                override fun received(actionInvocation: ActionInvocation<out Service<*, *>>?, features: Features?) {
-                    if (subscriber.isUnsubscribed) {
-                        return
-                    }
-                    features?.features?.firstOrNull { (it is BasicView && !it.videoItemId.isNullOrBlank()) }?.let {
-                        sendNext((it as BasicView).videoItemId)
-                        return
-                    }
-                    //the above failed send default root id
-                    sendNext("0")
-                }
-
-                override fun failure(invocation: ActionInvocation<out Service<*, *>>?, operation: UpnpResponse?, defaultMsg: String?) {
-                    sendNext("0")
-                }
-
-                private fun sendNext(n : String) {
-                    if (subscriber.isUnsubscribed) {
-                        return
-                    }
-                    subscriber.onNext(n)
-                    subscriber.onCompleted()
-                }
-            }
-        }
-    }
-}
-
-
-/**
- * Fetches the content directory service from the server
- */
-class CDSOnSubscribe
-constructor(
-        private val mUpnpService: CDSUpnpService,
-        private val mFolderId: UpnpFolderId
-) : Observable.OnSubscribe<RemoteService> {
-
-    override fun call(subscriber: Subscriber<in RemoteService>) {
-        val udn = UDN.valueOf(mFolderId.deviceId)
-        //check cache first
-        val rd = mUpnpService.registry.getRemoteDevice(udn, false)
-        if (rd != null) {
-            val rs = rd.findService(CDSserviceType)
-            if (rs != null) {
-                subscriber.onNext(rs)
-                subscriber.onCompleted()
-                return
-            }
-        }
-        //missed cache, we have to look it up
-        val listener = object : DefaultRegistryListener() {
-            internal var once = AtomicBoolean(true)
-            override fun remoteDeviceAdded(registry: Registry, device: RemoteDevice) {
-                if (subscriber.isUnsubscribed) {
-                    return
-                }
-                if (udn == device.identity.udn) {
-                    val rs = device.findService(CDSserviceType)
-                    if (rs != null) {
-                        if (once.compareAndSet(true, false)) {
-                            subscriber.onNext(rs)
-                            subscriber.onCompleted()
-                        } else {
-                            Timber.w("Ignoring second notify of device $udn (${device.details.friendlyName})")
-                        }
-                    } else {
-                        subscriber.onError(NoContentDirectoryFoundException())
-                    }
-                }
-            }
-        }
-        //ensure we don't leak our listener
-        subscriber.add(Subscriptions.create { mUpnpService.registry.removeListener(listener) })
-        //register listener
-        mUpnpService.registry.addListener(listener)
-        //upnpService.getControlPoint().search(new UDNHeader(udn));//doesnt work
-        mUpnpService.controlPoint.search(UDAServiceTypeHeader(CDSserviceType))
+        mUpnpBrowseService.browse(folderId)
+        return mDatabaseClient.changesObservable
+                .filter { it is UpnpFolderChange && folderId == it.folderId }
+                .flatMap<MediaMeta> {
+                    Observable.concat(
+                        mDatabaseClient.getUpnpFolders(folderId).subscribeOn(AppSchedulers.diskIo),
+                        mDatabaseClient.getUpnpVideos(folderId).subscribeOn(AppSchedulers.diskIo)
+                    )
+                }.map { it.toMediaItem() }
     }
 }
 
 class NoContentDirectoryFoundException: Exception()
-
-/**
- * performs the browse
- */
-class BrowseOnSubscribe(
-        private val mUpnpService: CDSUpnpService,
-        private val mCDSService: RemoteService,
-        private val mFolderId: UpnpFolderId,
-        private val mBrowseFlag: BrowseFlag
-) : Observable.OnSubscribe<MediaBrowser.MediaItem> {
-
-    override fun call(subscriber: Subscriber<in MediaBrowser.MediaItem>) {
-        val browse = object : Browse(mCDSService, mFolderId.folderId, mBrowseFlag) {
-            override fun received(actionInvocation: ActionInvocation<*>, didl: DIDLContent) {
-                Timber.d("BrowseOnSubscribe.received(${actionInvocation.action}, count=${didl.count}")
-                if (subscriber.isUnsubscribed) {
-                    return
-                }
-
-                val deviceId = UpnpDeviceId(mFolderId.deviceId)
-
-                for (c in didl.containers) {
-                    if (StorageFolder.CLASS.equals(c)) {
-                        subscriber.onNext(c.toMediaMeta(deviceId).toMediaItem())
-                    } else {
-                        Timber.w("Skipping unsupported container ${c.title} type ${c.clazz.value}")
-                    }
-                }
-
-                for (item in didl.items) {
-                    if (VideoItem.CLASS.equals(item)) {
-                        val res = item.firstResource ?: continue
-                        if (res.protocolInfo.protocol != Protocol.HTTP_GET) {
-                            //we can only support http-get
-                            continue
-                        }
-                        subscriber.onNext((item as VideoItem).toMediaMeta(deviceId).toMediaItem())
-                    } else {
-                        Timber.w("Skipping unsupported item ${item.title}, type=${item.clazz.value}")
-                    }
-                }
-
-                //TODO handle pagination
-                val numRet = actionInvocation.getOutput("NumberReturned").value as UnsignedIntegerFourBytes
-                val total = actionInvocation.getOutput("TotalMatches").value as UnsignedIntegerFourBytes
-                if (numRet.value == total.value) {
-                    //they sent everything
-                    subscriber.onCompleted()
-                }
-                // no results, total should return an error
-                else if (numRet.value == 0L && total.value == 720L) {
-                    //notify subscriber of no results
-                    subscriber.onError(NoBrowseResultsException())
-                }
-                // server was unable to compute total matches
-                else if (numRet.value != 0L && total.value != 0L && numRet.value < total.value) {
-                    Timber.e("TODO handle pagination")
-                }
-                else {
-                    //server reported something weird, just ignore them
-                    Timber.w("Server sent strange response numRet=$numRet, total=$total")
-                    subscriber.onCompleted()
-                }
-            }
-
-            override fun updateStatus(status: Browse.Status) {
-                //pass
-            }
-
-            override fun failure(invocation: ActionInvocation<*>, operation: UpnpResponse, defaultMsg: String) {
-                if (!subscriber.isUnsubscribed) {
-                    subscriber.onError(invocation.failure)
-                }
-            }
-        }
-        mUpnpService.controlPoint.execute(browse)
-    }
-}
 
 /**
  *
