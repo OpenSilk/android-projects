@@ -50,6 +50,11 @@
 
         <service android:name="org.opensilk.video.UpnpHolderService"/>
         <service android:name="org.opensilk.video.PlaybackService"/>
+
+        <provider
+            android:name="org.opensilk.video.DatabaseProvider"
+            android:authorities="@string/videos_authority"
+            android:exported="false"/>
     </application>
 
 </manifest>
