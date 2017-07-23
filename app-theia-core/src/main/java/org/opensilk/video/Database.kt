@@ -161,22 +161,20 @@ class Database
                     "item_id TEXT NOT NULL, " +
                     "parent_id TEXT NOT NULL, " +
                     "_display_name TEXT NOT NULL, " +
-                    "artwork_uri TEXT, " +
-                    "custom_artwork_uri TEXT, " +
-                    "backdrop_uri TEXT, " +
-                    "custom_backdrop_uri TEXT, " +
                     "mime_type TEXT NOT NULL, " +
                     "media_uri TEXT NOT NULL, " +
                     "duration INTEGER DEFAULT -1, " + //milli
                     "bitrate INTEGER DEFAULT -1, " +
                     "file_size INTEGER DEFAULT -1, " +
-                    "creator TEXT, " +
+                    "resolution TEXT, " +
+
+                    "date_added INTEGER NOT NULL, " + //milli
 
                     "series_id INTEGER, " +
                     "episode_id INTEGER, " +
                     "movie_id INTEGER, " +
-
-                    "date_added INTEGER NOT NULL, " + //milli
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
 
                     "audio_track INTEGER DEFAULT -1, " +
                     "audio_delay INTEGER DEFAULT 0, " +

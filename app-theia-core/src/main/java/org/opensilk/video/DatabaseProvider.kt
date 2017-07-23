@@ -45,6 +45,7 @@ class DatabaseProvider: ContentProvider() {
         var table: String = ""
         var id: Long = -1L
         var realSelection = selection ?: ""
+        var realSelectionArgs = selectionArgs
         when (mUris.matcher.match(uri)) {
             DatabaseMatches.TV_SERIES_ONE -> {
                 id = uri.lastPathSegment.toLong()
@@ -97,7 +98,6 @@ class DatabaseProvider: ContentProvider() {
             }
             DatabaseMatches.MEDIA -> {
                 table = "media"
-                val sb = SQLiteQueryBuilder()
             }
             DatabaseMatches.MOVIES_ONE -> {
                 id = uri.lastPathSegment.toLong()
@@ -126,23 +126,38 @@ class DatabaseProvider: ContentProvider() {
                 //TODO join on upnp_device and only return folders were available=1
                 table = "upnp_folder"
             }
+            DatabaseMatches.UPNP_VIDEOS -> {
+                table = "upnp_video v " +
+                        "LEFT JOIN tv_episodes e ON v.episode_id = e._id " +
+                        "LEFT JOIN tv_series s ON e.series_id = s._id " +
+                        "LEFT JOIN movies m ON v.movie_id = m._id "
+            }
+            DatabaseMatches.UPNP_VIDEOS_ONE -> {
+                table = "upnp_video v " +
+                        "LEFT JOIN tv_episodes e ON v.episode_id = e._id " +
+                        "LEFT JOIN tv_series s ON e.series_id = s._id " +
+                        "LEFT JOIN movies m ON v.movie_id = m._id "
+                realSelection = "v._id=${uri.lastPathSegment}"
+                realSelectionArgs = null
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
         if (id != -1L) {
-            if (realSelection.isBlank()) {
-                realSelection = "_id=" + id
-            } else {
-                realSelection += " AND _id=" + id
+            if (!realSelection.isNullOrBlank()) {
+                Timber.w("Ignoring selection on single item uri: %s", uri)
             }
+            realSelection = "_id=$id"
+            realSelectionArgs = null
         }
-        return mDatabase.readableDatabase.query(table, projection, realSelection, selectionArgs, null, null, sortOrder)
+        return mDatabase.readableDatabase.query(table, projection, realSelection,
+                realSelectionArgs, null, null, sortOrder)
     }
 
     override fun getType(uri: Uri): String? {
         return null
     }
 
-    override fun insert(uri: Uri, values: ContentValues?): Uri? {
+    override fun insert(uri: Uri, values: ContentValues): Uri? {
         val db = mDatabase.writableDatabase
         when (mUris.matcher.match(uri)) {
             DatabaseMatches.TV_SERIES -> {
@@ -189,6 +204,30 @@ class DatabaseProvider: ContentProvider() {
                 val id = db.insertWithOnConflict("upnp_folder", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.upnpFolder(id)
             }
+            DatabaseMatches.UPNP_VIDEOS -> {
+                var id = db.insert("upnp_video", null, values)
+                if (id > 0) {
+                    return mUris.upnpVideo(id)
+                }
+                //already in database, we don't want to replace so update entry
+                val device_id = values.getAsString("device_id")
+                val parent_id = values.getAsString("parent_id")
+                val item_id = values.getAsString("item_id")
+                values.remove("device_id")
+                values.remove("parent_id")
+                values.remove("item_id")
+                values.remove("date_added")
+                //fetch the id
+                id = db.query("upnp_video", arrayOf("_id"), "device_id=? AND parent_id=? AND item_id=?",
+                        arrayOf(device_id, parent_id, item_id), null, null, null)?.use {
+                    return@use if (it.moveToNext()) it.getLong(0) else -1 } ?: -1
+                //update the entry
+                if (db.update("upnp_video", values, "_id=?", arrayOf(id.toString())) != 0) {
+                    return mUris.upnpVideo(id)
+                } else {
+                    return null
+                }
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
     }
@@ -207,6 +246,9 @@ class DatabaseProvider: ContentProvider() {
             }
             DatabaseMatches.UPNP_FOLDERS_ONE -> {
                 return db.delete("upnp_folder", "_id=?", arrayOf(uri.lastPathSegment))
+            }
+            DatabaseMatches.UPNP_VIDEOS_ONE -> {
+                return db.delete("upnp_video", "_id=?", arrayOf(uri.lastPathSegment))
             }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }

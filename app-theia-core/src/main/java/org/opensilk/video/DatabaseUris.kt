@@ -39,6 +39,9 @@ object DatabaseMatches {
 
     val UPNP_FOLDERS = 51
     val UPNP_FOLDERS_ONE = 52
+
+    val UPNP_VIDEOS = 61
+    val UPNP_VIDEOS_ONE = 62
 }
 
 /**
@@ -80,6 +83,9 @@ class DatabaseUris
 
         matcher.addURI(mAuthority, "upnp/folder", DatabaseMatches.UPNP_FOLDERS)
         matcher.addURI(mAuthority, "upnp/folder/#", DatabaseMatches.UPNP_FOLDERS_ONE)
+
+        matcher.addURI(mAuthority, "upnp/video", DatabaseMatches.UPNP_VIDEOS)
+        matcher.addURI(mAuthority, "upnp/video/#", DatabaseMatches.UPNP_VIDEOS_ONE)
     }
 
     private fun base(): Uri.Builder {
@@ -184,6 +190,14 @@ class DatabaseUris
 
     fun upnpFolder(id: Long): Uri {
         return ContentUris.withAppendedId(upnpFolders(), id)
+    }
+
+    fun upnpVideos(): Uri {
+        return base().appendPath("upnp").appendPath("video").build()
+    }
+
+    fun upnpVideo(id: Long): Uri {
+        return ContentUris.withAppendedId(upnpVideos(), id)
     }
 
 }

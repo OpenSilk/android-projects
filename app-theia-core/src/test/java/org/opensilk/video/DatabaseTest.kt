@@ -36,15 +36,19 @@ class DatabaseTest {
         val bob = SQLiteQueryBuilder()
         bob.tables = "upnp_video v " +
                 "LEFT JOIN tv_episodes e ON v.episode_id = e._id " +
-                "LEFT JOIN movies m ON v.movie_id = m._id"
+                "LEFT JOIN tv_series s ON e.series_id = s._id " +
+                "LEFT JOIN movies m ON v.movie_id = m._id "
         val projMap = HashMap<String, String>()
         projMap.put("_id", "v._id")
         projMap.put("_display_name", "v._display_name")
         projMap.put("movie_title", "m._display_name")
         projMap.put("episode_title", "e._display_name")
-        //bob.setProjectionMap(projMap)
-        val c = bob.query(mDatabase, arrayOf("v._id", "v._display_name",
-                "m._display_name as movie_title", "e._display_name as episode_title"), null, null, "v._id" , null, null)
+        bob.setProjectionMap(projMap)
+        val c = bob.query(mDatabase, arrayOf("_id", "_display_name", "movie_title", "episode_title", "duration"),
+                null, null, null, null, null)
+        //val c = bob.query(mDatabase, arrayOf("v._id", "v._display_name",
+        //       "m._display_name as movies_name","e._display_name as episode_name",
+        //        "s._display_name as series_name"), null, null, "v._id" , null, null)
         System.out.println(Arrays.toString(c.columnNames))
         System.out.println("count = " + c.count)
         while (c.moveToNext()) {
@@ -53,7 +57,6 @@ class DatabaseTest {
             }
             System.out.println()
         }
-
     }
 
     fun insertTestData() {

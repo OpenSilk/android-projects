@@ -189,7 +189,7 @@ class DatabaseClient
         cv.put("device_id", (id.mediaId as UpnpFolderId).deviceId)
         cv.put("folder_id", (id.mediaId as UpnpFolderId).folderId)
         cv.put("parent_id", (parentId.mediaId as UpnpFolderId).folderId)
-        cv.put("_display_name", meta.title)
+        cv.put("_display_name", meta.displayName)
         if (meta.artworkUri != Uri.EMPTY) {
             cv.put("artwork_uri", meta.artworkUri.toString())
         }
@@ -212,7 +212,7 @@ class DatabaseClient
                     meta.rowId = c.getLong(0)
                     meta.mediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(2))).toJson()
                     meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
-                    meta.title = c.getString(4)
+                    meta.displayName = c.getString(4)
                     if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
                     meta.mimeType = c.getString(6)
                     s.onNext(meta)
@@ -220,6 +220,105 @@ class DatabaseClient
                 s.onCompleted()
             } ?: s.onError(VideoDatabaseMalfuction())
         }
+    }
+
+    fun addUpnpVideo(meta: MediaMeta): Uri {
+        val id = newMediaRef(meta.mediaId)
+        if (id.kind != UPNP_VIDEO) throw IllegalArgumentException("media.kind not UPNP_VIDEO")
+        val parentId = newMediaRef(meta.parentMediaId)
+        val cv = ContentValues()
+        cv.put("device_id", (id.mediaId as UpnpVideoId).deviceId)
+        cv.put("item_id", (id.mediaId as UpnpVideoId).itemId)
+        cv.put("parent_id", (parentId.mediaId as UpnpFolderId).folderId)
+        cv.put("_display_name", meta.displayName)
+        cv.put("mime_type", meta.mimeType)
+        cv.put("media_uri", meta.mediaUri.toString())
+        cv.put("duration", meta.duration)
+        cv.put("bitrate", meta.bitrate)
+        cv.put("file_size", meta.size)
+        cv.put("resolution", meta.resolution)
+        cv.put("date_added", System.currentTimeMillis())
+        return mResolver.insert(uris.upnpVideos(), cv) ?: Uri.EMPTY
+    }
+
+    fun removeUpnpVideo(id: Long): Boolean {
+        return mResolver.delete(uris.upnpVideo(id), null, null) != 0
+    }
+
+    fun getUpnpVideos(parentId: UpnpFolderId): Observable<MediaMeta> {
+        return Observable.create { s ->
+            mResolver.query(mUris.upnpVideos(), upnpVideoProjection,
+                    "device_id=? AND parent_id=?", arrayOf(parentId.deviceId, parentId.folderId),
+                    null, s.cancellationSignal())?.use { c ->
+                while (c.moveToNext()) {
+                    s.onNext(c.toUpnpVideoMediaMeta())
+                }
+                s.onCompleted()
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    fun getUpnpVideo(id: Long): Single<MediaMeta> {
+        return Single.create { s ->
+            mResolver.query(mUris.upnpVideo(id), upnpVideoProjection,
+                    null, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.toUpnpVideoMediaMeta())
+                } else {
+                    s.onError(NoSuchItemException())
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    val upnpVideoProjection = arrayOf(
+            //upnp_video columns
+            "v._id", "device_id", "item_id", "parent_id", //3
+            "v._display_name", "mime_type", "media_uri", "duration", "file_size", //8
+            //episode columns
+            "e._id as episode_id", "e._display_name as episode_title", //10
+            "episode_number", "season_number", //12
+            //series columns
+            "s._id as series_id", "s._display_name as series_title", //14
+            "s.poster_path as tv_poster", "s.backdrop_path as tv_backdrop", //16
+            //movie columns
+            "m._id as movie_id", "m._display_name as movie_title",  //18
+            "m.poster_path as movie_poster", //19
+            "m.backdrop_path as movie_backdrop", "image_base_url") //21
+
+    fun Cursor.toUpnpVideoMediaMeta(): MediaMeta {
+        val c = this
+        val meta = MediaMeta()
+        meta.rowId = c.getLong(0)
+        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId(c.getString(1), c.getString(2))).toJson()
+        meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
+        meta.displayName = c.getString(4)
+        meta.mimeType = c.getString(5)
+        meta.mediaUri = Uri.parse(c.getString(6))
+        meta.duration = c.getLong(7)
+        meta.size = c.getLong(8)
+        if (!c.isNull(9)) {
+            meta.extras.putLong("episode", c.getLong(9))
+            meta.extras.putLong("series", c.getLong(13))
+            meta.title = c.getString(10)
+            meta.subtitle = tvdb.makeSubtitle(c.getString(14), c.getInt(11), c.getInt(12))
+            if (!c.isNull(15)) {
+                meta.artworkUri = tvdb.makeBannerUri(c.getString(15))
+            }
+            if (!c.isNull(16)) {
+                meta.backdropUri = tvdb.makeBannerUri(c.getString(16))
+            }
+        } else if (!c.isNull(17)) {
+            meta.extras.putLong("movie", c.getLong(17))
+            meta.title = c.getString(18)
+            if (!c.isNull(19)) {
+                meta.artworkUri = tmdb.makePosterUri(c.getString(21), c.getString(19))
+            }
+            if (!c.isNull(20)) {
+                meta.backdropUri = tmdb.makeBackdropUri(c.getString(21), c.getString(20))
+            }
+        }
+        return meta
     }
 
     inner class TVDbClient(private val tvdbRoot: Uri) {
