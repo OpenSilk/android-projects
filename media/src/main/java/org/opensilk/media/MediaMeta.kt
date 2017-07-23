@@ -196,6 +196,10 @@ constructor(
      */
     var duration: Long by LongVal
     /**
+     * String: video resolution
+     */
+    var resolution: String by StringVal
+    /**
      * Int: value > 0 if part of compilation
      */
     var isCompilation: Boolean by BoolVal
@@ -270,17 +274,19 @@ constructor(
      */
     var seasonNumber: Int by IntVal
     /**
-     * Int: total number of seasons
-     */
-    var seasonCount: Int by IntVal
-    /**
      * Int: episode number
      */
     var episodeNumber: Int by IntVal
     /**
-     * Int: total number of episodes (in season)
+     *
      */
-    var episodeCount: Int by IntVal
+    val extras: Bundle by lazy {
+        if (!meta.containsKey("__extras")) {
+            meta.putBundle("__extras", Bundle())
+        }
+        return@lazy meta.getBundle("__extras")
+    }
+
     /*
      * Scratch space until better solution are found
      */
