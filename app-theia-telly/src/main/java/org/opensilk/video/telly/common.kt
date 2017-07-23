@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import org.opensilk.common.dagger.Injector
-import org.opensilk.video.UpnpServiceConnectionManager
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KClass
 
@@ -50,18 +49,6 @@ abstract class BaseVideoActivity: FragmentActivity(), LifecycleRegistryOwner {
     }
     private val lifecycleRegistry by lazy {
         LifecycleRegistry(this)
-    }
-    private val upnpServiceHolder: UpnpServiceConnectionManager by lazy {
-        UpnpServiceConnectionManager(this)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        lifecycle.addObserver(upnpServiceHolder)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     override fun getLifecycle(): LifecycleRegistry {

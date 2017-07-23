@@ -1,9 +1,7 @@
 package org.opensilk.video.telly
 
-import android.arch.lifecycle.ViewModelProvider
 import android.content.Context
 import android.net.Uri
-import dagger.Binds
 import dagger.Component
 import dagger.Module
 import dagger.Provides
