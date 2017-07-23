@@ -202,10 +202,11 @@ class DatabaseClient
         return mResolver.delete(uris.upnpFolder(rowid), null, null) != 0
     }
 
-    fun getUpnpFolders(): Observable<MediaMeta> {
+    fun getUpnpFolders(parentId: UpnpFolderId): Observable<MediaMeta> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpFolders(), arrayOf("_id", "device_id", "folder_id",
-                    "parent_id", "_display_name", "artwork_uri", "mime_type"), null, null,
+                    "parent_id", "_display_name", "artwork_uri", "mime_type"),
+                    "device_id=? AND parent_id=?", arrayOf(parentId.deviceId, parentId.folderId),
                     null, s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
                     val meta = MediaMeta()

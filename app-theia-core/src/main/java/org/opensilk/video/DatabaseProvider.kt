@@ -123,7 +123,6 @@ class DatabaseProvider: ContentProvider() {
                 table = "upnp_device"
             }
             DatabaseMatches.UPNP_FOLDERS -> {
-                //TODO join on upnp_device and only return folders were available=1
                 table = "upnp_folder"
             }
             DatabaseMatches.UPNP_VIDEOS -> {

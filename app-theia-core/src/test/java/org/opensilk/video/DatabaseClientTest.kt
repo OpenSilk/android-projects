@@ -154,13 +154,14 @@ class DatabaseClientTest {
     fun testUpnpFolder_add_remove_get() {
         val meta = MediaMeta()
         val mid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "bar"))
+        val parentmid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "0"))
         meta.mediaId = mid.toJson()
-        meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "0")).toJson()
+        meta.parentMediaId = parentmid.toJson()
         meta.mimeType = MIME_TYPE_DIR
         meta.displayName = "a foo title"
         meta.artworkUri = Uri.parse("http://foo.com")
         mClient.addUpnpFolder(meta)
-        val list = mClient.getUpnpFolders().toList().toBlocking().first()
+        val list = mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId).toList().toBlocking().first()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0].mediaId).isEqualTo(meta.mediaId)
         //TODO more assertions on item
