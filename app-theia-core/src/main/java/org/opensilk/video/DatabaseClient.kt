@@ -25,6 +25,7 @@ import rx.Single
 import rx.Observable
 import rx.Subscriber
 import rx.Subscription
+import rx.lang.kotlin.BehaviorSubject
 import rx.subscriptions.Subscriptions
 import timber.log.Timber
 import java.util.*
@@ -102,6 +103,11 @@ fun <T> Subscriber<T>.cancellationSignal(): CancellationSignal {
 
 class VideoDatabaseMalfuction: Exception()
 
+interface DatabaseChange
+class UpnpDeviceChange: DatabaseChange
+class UpnpFolderChange(val folderId: UpnpFolderId): DatabaseChange
+class UpnpVideoChange(val videoId: UpnpVideoId): DatabaseChange
+
 /**
  * Created by drew on 7/18/17.
  */
@@ -118,8 +124,13 @@ class DatabaseClient
     val tmdb = MovieDbClient()
     val uris = mUris
 
-    fun notifyChange(uri: Uri) {
-        mResolver.notifyChange(uri, null)
+    private val mChangesSubject = BehaviorSubject<DatabaseChange>()
+
+    val changesObservable: Observable<DatabaseChange>
+        get() = mChangesSubject.asObservable()
+
+    fun postChange(event: DatabaseChange) {
+        mChangesSubject.onNext(event)
     }
 
     override fun getMediaItem(mediaRef: MediaRef): Single<MediaBrowser.MediaItem> {
@@ -160,6 +171,12 @@ class DatabaseClient
         return mResolver.update(mUris.upnpDevices(), cv, "device_id=?", arrayOf(identity)) != 0
     }
 
+    fun hideAllUpnpDevices() {
+        val cv = ContentValues()
+        cv.put("available", 0)
+        mResolver.update(mUris.upnpDevices(), cv, null, null)
+    }
+
     /**
      * retrieves all the upnp devices marked as available
      */
@@ -193,7 +210,7 @@ class DatabaseClient
         cv.put("device_id", (id.mediaId as UpnpFolderId).deviceId)
         cv.put("folder_id", (id.mediaId as UpnpFolderId).folderId)
         cv.put("parent_id", (parentId.mediaId as UpnpFolderId).folderId)
-        cv.put("_display_name", meta.displayName)
+        cv.put("_display_name", meta.title)
         if (meta.artworkUri != Uri.EMPTY) {
             cv.put("artwork_uri", meta.artworkUri.toString())
         }
@@ -223,7 +240,7 @@ class DatabaseClient
                     meta.rowId = c.getLong(0)
                     meta.mediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(2))).toJson()
                     meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
-                    meta.displayName = c.getString(4)
+                    meta.title = c.getString(4)
                     if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
                     meta.mimeType = c.getString(6)
                     s.onNext(meta)
@@ -319,6 +336,7 @@ class DatabaseClient
         meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId(c.getString(1), c.getString(2))).toJson()
         meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
         meta.displayName = c.getString(4)
+        meta.title = c.getString(4)
         meta.mimeType = c.getString(5)
         meta.mediaUri = Uri.parse(c.getString(6))
         meta.duration = c.getLong(7)

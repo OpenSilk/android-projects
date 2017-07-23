@@ -158,7 +158,7 @@ class DatabaseClientTest {
         meta.mediaId = mid.toJson()
         meta.parentMediaId = parentmid.toJson()
         meta.mimeType = MIME_TYPE_DIR
-        meta.displayName = "a foo title"
+        meta.title = "a foo title"
         meta.artworkUri = Uri.parse("http://foo.com")
         mClient.addUpnpFolder(meta)
         val list = mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId).toList().toBlocking().first()
