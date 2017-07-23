@@ -18,6 +18,10 @@
 package org.opensilk.upnp.cds.browser
 
 import android.content.Context
+import android.os.AsyncTask
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import org.apache.commons.lang3.StringUtils
 import org.fourthline.cling.UpnpService
 import org.fourthline.cling.UpnpServiceConfiguration
@@ -47,17 +51,14 @@ val CDSserviceType = UDAServiceType("ContentDirectory", 1)
  * Created by drew on 12/21/16.
  */
 @Singleton
-class CDSUpnpService @Inject constructor(
-        @ForApplication context: Context) : UpnpService {
+class CDSUpnpService
+@Inject constructor(
+        @ForApplication private val mContext: Context
+) : UpnpService {
 
-    private val mContext: Context = context
-    private var mUpnpService: UpnpService
-    private var mShutdown = true
+    private val mUpnpService = Service()
 
     init {
-        mUpnpService = createUpnpService()
-        mShutdown = false
-
         // Fix the logging integration between java.util.logging and Android internal logging
         org.seamless.util.logging.LoggingUtil.resetRootHandler(
                 org.seamless.android.FixedAndroidLogHandler()
@@ -71,94 +72,101 @@ class CDSUpnpService @Inject constructor(
 //            Logger.getLogger("org.fourthline.cling.transport.spi.SOAPActionProcessor").setLevel(Level.FINER);
     }
 
-    override fun getRouter(): Router {
-        return ensureService().router
+    override fun getRouter(): AndroidRouter {
+        return mUpnpService.router
     }
 
     override fun getProtocolFactory(): ProtocolFactory {
-        return ensureService().protocolFactory
+        return mUpnpService.protocolFactory
     }
 
     override fun getConfiguration(): UpnpServiceConfiguration {
-        return ensureService().configuration
+        return mUpnpService.configuration
     }
 
     override fun getRegistry(): Registry {
-        return ensureService().registry
+        return mUpnpService.registry
     }
 
     override fun getControlPoint(): ControlPoint {
-        return ensureService().controlPoint
+        return mUpnpService.controlPoint
     }
 
+    /**
+     * Does nothing, we never shutdown, user is responsible for cleaning up themselves
+     */
     override fun shutdown() {
-        if (!mShutdown) {
-            synchronized(this) {
-                if (!mShutdown) {
-                    mUpnpService.shutdown()
-                    mShutdown = true
-                }
+        //
+    }
+
+    /**
+     * Executes the shutdown task
+     */
+    class ShutdownDelayHandler: Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            if (msg.what == 1) {
+                ShutdownTask(msg.obj as Service).execute()
             }
         }
     }
 
-    fun ensureService(): UpnpService {
-        if (mShutdown) {
-            synchronized(this) {
-                if (mShutdown) {
-                    mUpnpService = createUpnpService()
-                    mShutdown = false
-                }
+    /**
+     * Executes the shutdown on a background thread
+     */
+    class ShutdownTask(val mService: Service): AsyncTask<Void, Int, Int>() {
+        override fun onPreExecute() {
+            val router = mService.router
+            if (router is AndroidRouter) {
+                router.unregisterBroadcastReceiver()
             }
         }
-        return mUpnpService
-    }
 
-    private fun createUpnpService(): UpnpService {
-        return object : UpnpServiceImpl(createConfiguration()) {
-            override fun createRouter(protocolFactory: ProtocolFactory, registry: Registry?): Router {
-                return AndroidRouter(getConfiguration(), protocolFactory, mContext)
-            }
-
-            @Synchronized override fun shutdown() {
-                // First have to remove the receiver, so Android won't complain about it leaking
-                // when the main UI thread exits.
-                (getRouter() as AndroidRouter).unregisterBroadcastReceiver()
-
-                // Now we can concurrently run the Cling shutdown code, without occupying the
-                // Android main UI thread. This will complete probably after the main UI thread
-                // is done.
-                super.shutdown(true)
-            }
+        override fun doInBackground(vararg params: Void?): Int {
+            mService.shutdown()
+            return 0
         }
     }
 
-    private fun createConfiguration(): UpnpServiceConfiguration {
-        return object : AndroidUpnpServiceConfiguration() {
-            override fun getExclusiveServiceTypes(): Array<ServiceType> {
-                return arrayOf(CDSserviceType)
-            }
+    /**
+     * Our custom upnp service class
+     */
+    inner class Service: UpnpServiceImpl(ServiceConfiguration()) {
+        override fun createRouter(protocolFactory: ProtocolFactory, registry: Registry?): Router {
+            return AndroidRouter(getConfiguration(), protocolFactory, mContext)
+        }
 
-            override fun createSOAPActionProcessor(): SOAPActionProcessor {
-                return object : RecoveringSOAPActionProcessorImpl() {
-                    @Throws(UnsupportedDataException::class)
-                    override fun readBody(responseMsg: ActionResponseMessage, actionInvocation: ActionInvocation<*>) {
-                        try {
-                            super.readBody(responseMsg, actionInvocation)
-                        } catch (e: Exception) {
-                            //Hack for X_GetFeatureList embedding this in the body
-                            val fixedBody = StringUtils.remove(getMessageBody(responseMsg),
-                                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>")
-                            responseMsg.setBody(fixedBody)
-                            super.readBody(responseMsg, actionInvocation)
-                        }
+        override fun getRouter(): AndroidRouter {
+            return super.getRouter() as AndroidRouter
+        }
+    }
+
+    /**
+     * Our custom upnp service configuration
+     */
+    class ServiceConfiguration : AndroidUpnpServiceConfiguration() {
+        override fun getExclusiveServiceTypes(): Array<ServiceType> {
+            return arrayOf(CDSserviceType)
+        }
+
+        override fun createSOAPActionProcessor(): SOAPActionProcessor {
+            return object : RecoveringSOAPActionProcessorImpl() {
+                @Throws(UnsupportedDataException::class)
+                override fun readBody(responseMsg: ActionResponseMessage, actionInvocation: ActionInvocation<*>) {
+                    try {
+                        super.readBody(responseMsg, actionInvocation)
+                    } catch (e: Exception) {
+                        //Hack for X_GetFeatureList embedding this in the body
+                        val fixedBody = StringUtils.remove(getMessageBody(responseMsg),
+                                "<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+                        responseMsg.setBody(fixedBody)
+                        super.readBody(responseMsg, actionInvocation)
                     }
                 }
             }
+        }
 
-            override fun getRegistryMaintenanceIntervalMillis(): Int {
-                return 2500//10000;
-            }
+        override fun getRegistryMaintenanceIntervalMillis(): Int {
+            return 2500//10000;
         }
     }
 
