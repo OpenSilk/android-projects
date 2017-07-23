@@ -17,5 +17,5 @@
   -->
 
 <resources>
-    <string name="videos_authority">org.opensilk.video.provider.videos</string>
+    <string name="videos_authority">org.opensilk.video.telly.provider.videos</string>
 </resources>
