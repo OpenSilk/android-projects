@@ -91,7 +91,6 @@ class UpnpBrowseService
         return Observable.create { subscriber ->
             val browse = object : Browse(holder.service, holder.parentId.folderId, mBrowseFlag) {
                 override fun received(actionInvocation: ActionInvocation<*>, didl: DIDLContent) {
-                    Timber.d("BrowseOnSubscribe.received(${actionInvocation.action}, count=${didl.count}")
                     if (subscriber.isUnsubscribed) {
                         return
                     }

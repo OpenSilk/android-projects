@@ -141,7 +141,7 @@ class CDSDevicesLoaderImpl
  * The loader for the folder activity
  */
 interface CDSBrowseLoader {
-    fun observable(mediaId: String): Observable<MediaBrowser.MediaItem>
+    fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>>
 }
 
 /**
@@ -152,7 +152,7 @@ class CDSBrowseLoaderImpl
         private val mDatabaseClient: DatabaseClient,
         private val mUpnpBrowseService: UpnpBrowseService
 ) : CDSBrowseLoader {
-    override fun observable(mediaId: String): Observable<MediaBrowser.MediaItem> {
+    override fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>> {
         val mediaRef = newMediaRef(mediaId)
         val folderId = when (mediaRef.kind) {
             UPNP_FOLDER -> mediaRef.mediaId as UpnpFolderId
@@ -162,12 +162,12 @@ class CDSBrowseLoaderImpl
         mUpnpBrowseService.browse(folderId)
         return mDatabaseClient.changesObservable
                 .filter { it is UpnpFolderChange && folderId == it.folderId }
-                .flatMap<MediaMeta> {
+                .flatMap {
                     Observable.concat(
                         mDatabaseClient.getUpnpFolders(folderId).subscribeOn(AppSchedulers.diskIo),
                         mDatabaseClient.getUpnpVideos(folderId).subscribeOn(AppSchedulers.diskIo)
-                    )
-                }.map { it.toMediaItem() }
+                    ).map { it.toMediaItem() }.toList()
+                }
     }
 }
 
