@@ -109,10 +109,13 @@ class DatabaseClientTest {
         meta.displayName = "my display name"
         meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
         val uri = mClient.addUpnpVideo(meta)
+
         val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong()).toBlocking().value()
-        assertThat(retrieved).isNotNull()
         assertThat(retrieved.mediaId).isEqualTo(meta.mediaId)
         //todo more assertions
+
+        val retrieved2 = mClient.getUpnpVideo(mid.mediaId as UpnpVideoId).toBlocking().value()
+        assertThat(retrieved2.mediaId).isEqualTo(meta.mediaId)
     }
 
     @Test(expected = RuntimeException::class)
@@ -161,9 +164,14 @@ class DatabaseClientTest {
         meta.title = "a foo title"
         meta.artworkUri = Uri.parse("http://foo.com")
         mClient.addUpnpFolder(meta)
+
         val list = mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId).toList().toBlocking().first()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0].mediaId).isEqualTo(meta.mediaId)
+
+        val retrieved = mClient.getUpnpFolder(mid.mediaId as UpnpFolderId).toBlocking().value()
+        assertThat(retrieved.mediaId).isEqualTo(meta.mediaId)
+
         //TODO more assertions on item
         mClient.removeUpnpFolder(list[0].rowId)
         val list2 = mClient.getUpnpDevices().toList().toBlocking().first()
@@ -180,10 +188,15 @@ class DatabaseClientTest {
         meta.subtitle = "a sub heading"
         meta.artworkUri = Uri.parse("http://foo.com")
         mClient.addUpnpDevice(meta)
+
         val list = mClient.getUpnpDevices().toList().toBlocking().first()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0].mediaId).isEqualTo(meta.mediaId)
         //todo more assertions on item
+
+        val retrieved = mClient.getUpnpDevice(mId.mediaId as UpnpDeviceId).toBlocking().value()
+        assertThat(retrieved.mediaId).isEqualTo(meta.mediaId)
+
         mClient.hideUpnpDevice((mId.mediaId as UpnpDeviceId).deviceId)
         val list2 = mClient.getUpnpDevices().toList().toBlocking().first()
         assertThat(list2.size).isEqualTo(0)

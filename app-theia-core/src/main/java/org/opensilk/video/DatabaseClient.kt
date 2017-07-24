@@ -134,7 +134,12 @@ class DatabaseClient
     }
 
     override fun getMediaItem(mediaRef: MediaRef): Single<MediaBrowser.MediaItem> {
-        TODO("not implemented")
+        return when (mediaRef.kind) {
+            UPNP_FOLDER -> getUpnpFolder(mediaRef.mediaId as UpnpFolderId).map { it.toMediaItem() }
+            UPNP_VIDEO -> getUpnpVideo(mediaRef.mediaId as UpnpVideoId).map { it.toMediaItem() }
+            UPNP_DEVICE -> getUpnpDevice(mediaRef.mediaId as UpnpDeviceId).map { it.toMediaItem() }
+            else -> TODO()
+        }
     }
 
     fun getVideoDescription(mediaRef: MediaRef): Single<VideoDescInfo> {
@@ -182,21 +187,42 @@ class DatabaseClient
      */
     fun getUpnpDevices(): Observable<MediaMeta> {
         return Observable.create { s ->
-            mResolver.query(mUris.upnpDevices(), arrayOf("_id", "device_id", "mime_type", "title",
-                    "subtitle", "artwork_uri"), "available=1", null, "title", s.cancellationSignal())?.use { c ->
+            mResolver.query(mUris.upnpDevices(), upnpDeviceProjection,
+                    "available=1", null, "title", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
-                    val meta = MediaMeta()
-                    meta.rowId = c.getLong(0)
-                    meta.mediaId = MediaRef(UPNP_DEVICE, UpnpDeviceId(c.getString(1))).toJson()
-                    meta.mimeType = c.getString(2)
-                    meta.title = c.getString(3) ?: ""
-                    meta.subtitle = c.getString(4) ?: ""
-                    if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
-                    s.onNext(meta)
+                    s.onNext(c.toUpnpDeviceMediaMeta())
                 }
                 s.onCompleted()
             } ?: s.onError(VideoDatabaseMalfuction())
         }
+    }
+
+    fun getUpnpDevice(deviceId: UpnpDeviceId): Single<MediaMeta> {
+        return Single.create { s ->
+            mResolver.query(mUris.upnpDevices(), upnpDeviceProjection,
+                    "device_id=?", arrayOf(deviceId.deviceId), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.toUpnpDeviceMediaMeta())
+                } else {
+                    s.onError(NoSuchItemException())
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    val upnpDeviceProjection = arrayOf("_id", "device_id", "mime_type", "title",
+            "subtitle", "artwork_uri")
+
+    fun Cursor.toUpnpDeviceMediaMeta(): MediaMeta {
+        val c = this
+        val meta = MediaMeta()
+        meta.rowId = c.getLong(0)
+        meta.mediaId = MediaRef(UPNP_DEVICE, UpnpDeviceId(c.getString(1))).toJson()
+        meta.mimeType = c.getString(2)
+        meta.title = c.getString(3) ?: ""
+        meta.subtitle = c.getString(4) ?: ""
+        if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
+        return meta
     }
 
     /**
@@ -231,23 +257,45 @@ class DatabaseClient
      */
     fun getUpnpFolders(parentId: UpnpFolderId): Observable<MediaMeta> {
         return Observable.create { s ->
-            mResolver.query(mUris.upnpFolders(), arrayOf("_id", "device_id", "folder_id",
-                    "parent_id", "_display_name", "artwork_uri", "mime_type"),
-                    "device_id=? AND parent_id=?", arrayOf(parentId.deviceId, parentId.folderId),
-                    null, s.cancellationSignal())?.use { c ->
+            mResolver.query(mUris.upnpFolders(), upnpFolderProjection,
+                    "device_id=? AND parent_id=?",
+                    arrayOf(parentId.deviceId, parentId.folderId),
+                    "_display_name", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
-                    val meta = MediaMeta()
-                    meta.rowId = c.getLong(0)
-                    meta.mediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(2))).toJson()
-                    meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
-                    meta.title = c.getString(4)
-                    if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
-                    meta.mimeType = c.getString(6)
-                    s.onNext(meta)
+                    s.onNext(c.toUpnpFolderMediaMeta())
                 }
                 s.onCompleted()
             } ?: s.onError(VideoDatabaseMalfuction())
         }
+    }
+
+    fun getUpnpFolder(folderId: UpnpFolderId): Single<MediaMeta> {
+        return Single.create { s ->
+            mResolver.query(uris.upnpFolders(), upnpFolderProjection,
+                    "device_id=? AND folder_id=?",
+                    arrayOf(folderId.deviceId, folderId.folderId), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.toUpnpFolderMediaMeta())
+                } else {
+                    s.onError(NoSuchItemException())
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    val upnpFolderProjection = arrayOf("_id", "device_id", "folder_id",
+            "parent_id", "_display_name", "artwork_uri", "mime_type")
+
+    fun Cursor.toUpnpFolderMediaMeta(): MediaMeta {
+        val c = this
+        val meta = MediaMeta()
+        meta.rowId = c.getLong(0)
+        meta.mediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(2))).toJson()
+        meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
+        meta.title = c.getString(4)
+        if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
+        meta.mimeType = c.getString(6)
+        return meta
     }
 
     /**
@@ -286,7 +334,7 @@ class DatabaseClient
         return Observable.create { s ->
             mResolver.query(mUris.upnpVideos(), upnpVideoProjection,
                     "device_id=? AND parent_id=?", arrayOf(parentId.deviceId, parentId.folderId),
-                    null, s.cancellationSignal())?.use { c ->
+                    "v._display_name", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
                     s.onNext(c.toUpnpVideoMediaMeta())
                 }
@@ -302,6 +350,20 @@ class DatabaseClient
         return Single.create { s ->
             mResolver.query(mUris.upnpVideo(id), upnpVideoProjection,
                     null, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.toUpnpVideoMediaMeta())
+                } else {
+                    s.onError(NoSuchItemException())
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    fun getUpnpVideo(videoId: UpnpVideoId): Single<MediaMeta> {
+        return Single.create { s ->
+            mResolver.query(uris.upnpVideos(), upnpVideoProjection,
+                    "device_id=? AND item_id=?",
+                    arrayOf(videoId.deviceId, videoId.itemId), null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     s.onSuccess(c.toUpnpVideoMediaMeta())
                 } else {
