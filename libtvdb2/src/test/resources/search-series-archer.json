@@ -1,0 +1,47 @@
+{
+  "data": [
+    {
+      "aliases": [],
+      "banner": "",
+      "firstAired": "1975-01-01",
+      "id": 73065,
+      "network": "NBC",
+      "overview": "Archer was a detective drama based on the novels of Ross Macdonald.",
+      "seriesName": "Archer",
+      "status": "Ended"
+    },
+    {
+      "aliases": [
+        "Archer 2009",
+        "Archer Dreamland"
+      ],
+      "banner": "graphical/110381-g5.jpg",
+      "firstAired": "2009-09-17",
+      "id": 110381,
+      "network": "FXX",
+      "overview": "Covert black ops and espionage take a back seat to zany personalities and relationships between secret agents and drones.",
+      "seriesName": "Archer (2009)",
+      "status": "Continuing"
+    },
+    {
+      "aliases": [],
+      "banner": "",
+      "firstAired": "1954-09-01",
+      "id": 74651,
+      "network": "Syndicated",
+      "overview": null,
+      "seriesName": "Meet Corliss Archer",
+      "status": "Ended"
+    },
+    {
+      "aliases": [],
+      "banner": "",
+      "firstAired": "1940-10-01",
+      "id": 248777,
+      "network": "",
+      "overview": "The struggle over the Bellamy estate ends with Michael Bellamy accused of murder and killed on the way to prison, while his brother, Abel Bellamy, takes control of the estate for his own nefarious plans. Bellamy is using Garr Castle as a base for his jewelry-theft ring, and he kidnaps his brother's wife to keep things quiet. Insurance investigator Spike Holland enters the case, and Bellamy continually dispatches his resident gang to do away with him. Detective Thompson, representing the law, is seldom of any help. Meanwhile, the estate's fabled \"Green Archer\", a masked, leotard-clad marksman, steals silently through Garr Castle and the estate grounds, confounding the enemy forces",
+      "seriesName": "The Green Archer",
+      "status": "Ended"
+    }
+  ]
+}

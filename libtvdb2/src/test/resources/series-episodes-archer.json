@@ -1,0 +1,1710 @@
+{
+  "links": {
+    "first": 1,
+    "last": 1,
+    "next": null,
+    "prev": null
+  },
+  "data": [
+    {
+      "absoluteNumber": 2,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 1,
+      "dvdSeason": 1,
+      "episodeName": "Mole Hunt",
+      "firstAired": "2009-09-17",
+      "id": 1555111,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843259,
+      "overview": "Archer is in trouble with his Mother and the Comptroller because his expense account is way out of proportion to his actual expenses. So he creates the idea that a Mole has breached ISIS and he needs to get into the mainframe to hunt him down (so he can cover his tracks!). All this leads to a surprising ending."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 1,
+      "dvdSeason": 2,
+      "episodeName": "Swiss Miss",
+      "firstAired": "2011-01-27",
+      "id": 3226611,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1487723947,
+      "overview": "In yet another attempt to secure funding for ISIS, Malory drags her agents to the luxury winter resort town of Gstaad to protect a Swiss billionaire's daughter from a kidnapping threat. But Archer soon finds out the real threat is his protectee: an underage nymphomaniac who will stop at nothing to bed the world’s greatest spy."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archersaurus",
+      "firstAired": "",
+      "id": 3368921,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1293778214,
+      "overview": "The \"Original Unaired Archer Pilot\" Is actually the first episode \"Mole Hunt\" With a dinosaur in place of the character of Archer..for the entire episode... "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 4,
+      "dvdSeason": 3,
+      "episodeName": "The Man From Jupiter",
+      "firstAired": "2012-01-19",
+      "id": 4171788,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843583,
+      "overview": "Archer is shocked to learn that his mother is dating Archer's idol/hero/man-crush, Burt Reynolds."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Fugue and Riffs",
+      "firstAired": "2013-01-17",
+      "id": 4357938,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843682,
+      "overview": "Archer, I mean Bob, has amnesia and decides the only cure is a spa weekend."
+    },
+    {
+      "absoluteNumber": 50,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "White Elephant",
+      "firstAired": "2014-01-13",
+      "id": 4704586,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459844230,
+      "overview": "ISIS is raided and disbanded by the U.S. government when it transpires that the agency was never sanctioned by them. Its former staff discover a hidden vault containing one-ton of cocaine, and form a drug cartel to sell the drugs to fund their retirements.\r\nThen, Archer becomes Archer Vice."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Holdout",
+      "firstAired": "2015-01-08",
+      "id": 5052407,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939481,
+      "overview": "Archer must salvage a crashed plane in a jungle filled with relics from World War II."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Figgis Agency",
+      "firstAired": "2016-03-31",
+      "id": 5483426,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939933,
+      "overview": "Archer breaks into a mansion to repair a Hollywood starlet's honor."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 8,
+      "airedSeasonID": 695974,
+      "dvdEpisodeNumber": 1,
+      "dvdSeason": 8,
+      "episodeName": "Archer Dreamland: No Good Deed",
+      "firstAired": "2017-04-05",
+      "id": 5924316,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1500914732,
+      "overview": "Archer tries to find out who killed his partner, but accidentally gets in bed with Mother, a notorious L.A. crime boss."
+    },
+    {
+      "absoluteNumber": 1,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 2,
+      "dvdSeason": 1,
+      "episodeName": "Training Day",
+      "firstAired": "2010-01-14",
+      "id": 1085661,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843291,
+      "overview": "Lana's residual lust for Archer prompts Malory to promote Cyril to field agent. Archer then trains his new competition as only he can, whilst Malory frets over her own past and her son's future."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Unaired Network Promo",
+      "firstAired": "",
+      "id": 3368931,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1293567131,
+      "overview": "An unused FX Network promo"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 2,
+      "dvdSeason": 2,
+      "episodeName": "A Going Concern",
+      "firstAired": "2011-02-03",
+      "id": 3409341,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843421,
+      "overview": "After Malory is wiped out in a Ponzi scheme, she hatches a scheme of her own: selling ISIS - lock, stock and snack machines - to archrival spy agency ODIN. Archer and the rest of the ISIS employees, rightfully fearing for their jobs, must use every trick in the book (ISIS Field Manual, 3rd Edition) to try to stop the sale."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 5,
+      "dvdSeason": 3,
+      "episodeName": "El Contador",
+      "firstAired": "2012-01-26",
+      "id": 4245836,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843592,
+      "overview": "Cyril is promoted to field agent, while Malory institutes a strict drug-testing policy. Neither of which sit well with the staff of ISIS."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Wind Cries Mary",
+      "firstAired": "2013-01-24",
+      "id": 4479272,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843689,
+      "overview": "Archer and his former best friend are holed up in the Vermont wilderness, fighting hard to come out on top. "
+    },
+    {
+      "absoluteNumber": 51,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: A Kiss While Dying",
+      "firstAired": "2014-01-20",
+      "id": 4762195,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459844158,
+      "overview": "Archer, Pam and Lana travel to Miami to visit some old friends. It's a fondue party!"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Three to Tango",
+      "firstAired": "2015-01-15",
+      "id": 5066956,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939504,
+      "overview": "An agent from the past has a hand in creating tension between Archer and Lana."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Handoff",
+      "firstAired": "2016-04-07",
+      "id": 5552070,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939948,
+      "overview": "Archer and Lana make a handoff while the others listen to the best voicemail ever."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 8,
+      "airedSeasonID": 695974,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Dreamland: Berenice",
+      "firstAired": "2017-04-12",
+      "id": 6030273,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1500914741,
+      "overview": "A mysterious woman hires Archer to fake her death but Archer is unable to rise to the occasion.\r\n"
+    },
+    {
+      "absoluteNumber": 3,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 3,
+      "dvdSeason": 1,
+      "episodeName": "Diversity Hire",
+      "firstAired": "2010-01-21",
+      "id": 1555121,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843310,
+      "overview": "Owing to a rash of agent deaths (the result of Sterling's carelessness), ISIS can't meet government diversity standards. Enter the gruffly elegant Conway Stern, an \"onyx\" agent who wears a Star of David around his neck. Conway is \"a diversity double whammy,\" gushes Malory, but that and his secret-agent skills aren't the only reasons she hired him."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 3,
+      "dvdSeason": 2,
+      "episodeName": "Blood Test",
+      "firstAired": "2011-02-10",
+      "id": 3409351,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843427,
+      "overview": "When Archer's favorite call girl suddenly arrives for a visit, Archer is shocked to learn that she claims her new baby boy was fathered by him.  She obtains a court order that forces him to take a paternity test in hopes of proving her claim."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 6,
+      "dvdSeason": 3,
+      "episodeName": "The Limited",
+      "firstAired": "2012-02-02",
+      "id": 4246771,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843599,
+      "overview": "The Royal Canadian Mounted Police enlist the help of ISIS to transport a captured Canadian terrorist. On a train. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Legs",
+      "firstAired": "2013-01-31",
+      "id": 4479273,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843696,
+      "overview": "Archer's fear of cyborgs hits home when Krieger offers to make robotic legs for Gillette."
+    },
+    {
+      "absoluteNumber": 52,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: A Debt of Honor",
+      "firstAired": "2014-01-27",
+      "id": 4762196,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459844149,
+      "overview": "Pam makes a deal that puts everyone in danger. Archer dons his slightly darker black suit to save the day."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Waking Up As H. Jon Benjamin",
+      "firstAired": "",
+      "id": 4993993,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1413542619,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Archer Sanction",
+      "firstAired": "2015-01-22",
+      "id": 5066957,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939524,
+      "overview": "Archer, Lana, and Ray climb their way to the top of an assassin’s hit list. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Deadly Prep",
+      "firstAired": "2016-04-14",
+      "id": 5552071,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939964,
+      "overview": "A business opportunity arises at a prep school reunion."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 8,
+      "airedSeasonID": 695974,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Dreamland: Jane Doe",
+      "firstAired": "2017-04-19",
+      "id": 6030275,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1500914747,
+      "overview": "Archer tries to escape from jail with the help of a crazed heiress and a dysfunctional jazz quartet."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": 1,
+      "dvdSeason": 3,
+      "episodeName": "Heart of Archness: Part I",
+      "firstAired": "2011-09-15",
+      "id": 4162139,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843547,
+      "overview": "Malory hires an adventurer named Rip Riley (voice of Patrick Warburton) to find Archer, who has been missing since his fiancée was murdered on their wedding day. Rip finds him on a tropical island, but Archer has no interest in leaving."
+    },
+    {
+      "absoluteNumber": 4,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 4,
+      "dvdSeason": 1,
+      "episodeName": "Killing Utne",
+      "firstAired": "2010-01-28",
+      "id": 1555131,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843320,
+      "overview": "Malory hosts a dinner party for the UN intelligence chairman, Torvald Utne, in an effort to get a new weapons contract for ISIS. Unfortunately, a group of rival assassins have targeted Mr. Utne for elimination."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 4,
+      "dvdSeason": 2,
+      "episodeName": "Pipeline Fever",
+      "firstAired": "2011-02-17",
+      "id": 3409361,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1487723910,
+      "overview": "Archer and Lana head to Louisiana to stop an ecoterrorist from blowing up a natural-gas pipeline. (Archer’s also looking forward to a Big Easy vacation.) Back at ISIS headquarters, Mallory orders the staff to go green to get “freebie socialist tax credits.” A flashback recalls Lana’s introduction to ISIS."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 7,
+      "dvdSeason": 3,
+      "episodeName": "Drift Problem",
+      "firstAired": "2012-02-09",
+      "id": 4253725,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843606,
+      "overview": "Archer's surprise birthday present - a high-tech, souped-up spy car - leads to all sorts of other surprises. None of which are good. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Midnight Ron",
+      "firstAired": "2013-02-07",
+      "id": 4479275,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843702,
+      "overview": "The beginning of beautiful hatred between Archer and his new stepfather plays out as the two are chased by gangsters. "
+    },
+    {
+      "absoluteNumber": 53,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: House Call",
+      "firstAired": "2014-02-03",
+      "id": 4762197,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459844133,
+      "overview": "Archer has to stage an intervention for Pam that gets derailed by an unwanted guest. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Edie's Wedding",
+      "firstAired": "2015-01-29",
+      "id": 5066960,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939548,
+      "overview": "Pam takes Archer to her sister's wedding but gets side-tracked with technical difficulties. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Motherless Child",
+      "firstAired": "2016-04-21",
+      "id": 5581189,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939982,
+      "overview": "A mysterious stranger surfaces and asks Archer to help him find his birth mother."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 8,
+      "airedSeasonID": 695974,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Dreamland: Ladyfingers",
+      "firstAired": "2017-04-26",
+      "id": 6030278,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1500914753,
+      "overview": "While investigating a kidnapping, Archer reveals too much about Figgis and Krieger reveals too much about his past."
+    },
+    {
+      "absoluteNumber": 5,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 5,
+      "dvdSeason": 1,
+      "episodeName": "Honeypot",
+      "firstAired": "2010-02-04",
+      "id": 1654761,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1487723916,
+      "overview": "Malory's career is threatened when a sensitive videotape falls into the hands of a rogue (and roguish) Cuban agent, so she calls on Archer’s expertise in seduction to turn the tables on her blackmailer."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 5,
+      "dvdSeason": 2,
+      "episodeName": "The Double Deuce",
+      "firstAired": "2011-02-24",
+      "id": 3409371,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843445,
+      "overview": "When members of Woodhouse's famed WWI Royal Flying Corps squadron start dying mysteriously, Archer tries to track down the killer."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": 2,
+      "dvdSeason": 3,
+      "episodeName": "Heart of Archness: Part II",
+      "firstAired": "2011-09-22",
+      "id": 4164047,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843552,
+      "overview": "On the tropical island, Archer has emerged as Pirate King and must deal with it. Meanwhile, his ISIS colleagues keep up their attempts to rescue him. Sort of. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 8,
+      "dvdSeason": 3,
+      "episodeName": "Lo Scandalo",
+      "firstAired": "2012-02-16",
+      "id": 4246772,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843614,
+      "overview": "Malory turns to Archer and Lana for help when she finds herself in a compromising situation with the Italian prime minister. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Viscous Coupling",
+      "firstAired": "2013-02-14",
+      "id": 4491197,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843710,
+      "overview": "Archer's former fiancée calls on him to rescue her cyborg boyfriend from outer space, but he has other things on his mind."
+    },
+    {
+      "absoluteNumber": 54,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: Southbound and Down",
+      "firstAired": "2014-02-24",
+      "id": 4771189,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459844115,
+      "overview": "Malory buys a bus and takes everyone on a road trip. Put that hammer down and give it hell."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Vision Quest",
+      "firstAired": "2015-02-05",
+      "id": 5066961,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939569,
+      "overview": "The gang gets to work early so they can spend some quality time together."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Bel Panto (1)",
+      "firstAired": "2016-04-28",
+      "id": 5581190,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1464328563,
+      "overview": "A fundraiser goes awry due to party crashers.\r\n"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 8,
+      "airedSeasonID": 695974,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Dreamland: Sleepers Wake",
+      "firstAired": "2017-05-03",
+      "id": 6030279,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1493672138,
+      "overview": "Dutch becomes a new man while Archer's ransom exchange goes up in smoke.\r\n"
+    },
+    {
+      "absoluteNumber": 6,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 6,
+      "dvdSeason": 1,
+      "episodeName": "Skorpio",
+      "firstAired": "2010-02-11",
+      "id": 1699621,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843338,
+      "overview": "Archer must rescue Lana from the clutches of Skorpio, the infamous arms dealer. Meanwhile, Cyril fears not only for his girlfriend's life, but her succumbing to the seductive nature of Archer's heroics."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 6,
+      "dvdSeason": 2,
+      "episodeName": "Tragical History",
+      "firstAired": "2011-03-03",
+      "id": 3409381,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843452,
+      "overview": "Cyril agrees to help George Spelvin inject a virus into the ISIS mainframe so Cyril can defeat the virus and be seen as a hero."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": 3,
+      "dvdSeason": 3,
+      "episodeName": "Heart of Archness: Part III",
+      "firstAired": "2011-09-29",
+      "id": 4164388,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843557,
+      "overview": "Archer and his fellow prisoners attempt to escape from the Pirate Fortress. Meanwhile, Malory plays hardball in ransom negotiations. Conclusion of a three-part episode."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 9,
+      "dvdSeason": 3,
+      "episodeName": "Bloody Ferlin",
+      "firstAired": "2012-02-23",
+      "id": 4253736,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843622,
+      "overview": "Archer must help Gillette save his younger brother from a crooked sheriff in the backwoods of West Virginia. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Once Bitten",
+      "firstAired": "2013-02-21",
+      "id": 4491198,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843716,
+      "overview": "Archer is bitten by a snake in a \"special place\"."
+    },
+    {
+      "absoluteNumber": 55,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: Baby Shower",
+      "firstAired": "2014-03-03",
+      "id": 4791022,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459844101,
+      "overview": "Archer decides to give Lana the perfect baby shower gift by forcing Kenny Loggins to sing a duet with Cherlene. Something something Danja Zown!"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Sitting",
+      "firstAired": "2015-02-12",
+      "id": 5101345,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939588,
+      "overview": "Archer’s first weekend alone with baby AJ is soiled by a Pakistani intelligence officer."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Bel Panto (2)",
+      "firstAired": "2016-05-05",
+      "id": 5582036,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1464328571,
+      "overview": "Archer and Lana go missing as a hostage situation gets out of control"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 8,
+      "airedSeasonID": 695974,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Dreamland: Waxing Gibbous",
+      "firstAired": "2017-05-10",
+      "id": 6030280,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1493672146,
+      "overview": "All roads lead to Len Trexler as Archer and the gang try to avoid unfriendly ghosts.\r\n"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Nellis",
+      "firstAired": "2015-02-19",
+      "id": 5107958,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939603,
+      "overview": "A rescue mission turns into an out-of-this-world visit to Area 51."
+    },
+    {
+      "absoluteNumber": 7,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 7,
+      "dvdSeason": 1,
+      "episodeName": "Skytanic",
+      "firstAired": "2010-02-18",
+      "id": 1699631,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843351,
+      "overview": "When a bomb threat jeopardizes the maiden voyage of the luxury airship Excelsior, Archer and the ISIS crew must battle the clock (and each other) to avert disaster."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 7,
+      "dvdSeason": 2,
+      "episodeName": "Movie Star",
+      "firstAired": "2011-03-10",
+      "id": 3409391,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843458,
+      "overview": "On Malory's orders, Lana helps Hollywood star Rona Thorne (voice of Rachael Harris) research her role in a spy thriller while Malory writes a role for herself in the movie (with Cyril's reluctant assistance). Meanwhile, Pam steals Rona's diary. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 10,
+      "dvdSeason": 3,
+      "episodeName": "Crossing Over",
+      "firstAired": "2012-03-01",
+      "id": 4258939,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843629,
+      "overview": "Archer's sex life compromises his effectiveness as an agent. But more seriously than the countless other times."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Live and Let Dine",
+      "firstAired": "2013-02-28",
+      "id": 4491200,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843723,
+      "overview": "Archer, Lana, and Cyril go undercover in celebrity chef Lance Casteau's hellish kitchen."
+    },
+    {
+      "absoluteNumber": 56,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: Smugglers' Blues",
+      "firstAired": "2014-03-10",
+      "id": 4796974,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843854,
+      "overview": "Archer travels to Columbia on a secret mission that becomes not so secret after he gets drunk."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Danger Zone",
+      "firstAired": "2013-10-10",
+      "id": 4808198,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1398352527,
+      "overview": "Archer heads Into the Danger Zone."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Double Indecency",
+      "firstAired": "2016-05-12",
+      "id": 5582038,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499940054,
+      "overview": "Who's sexier, Cyril or Krieger? Pam or Cheryl? Only one way to find out: bar fight!"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 8,
+      "airedSeasonID": 695974,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Dreamland: Gramercy, Halberd!",
+      "firstAired": "2017-05-17",
+      "id": 6030281,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1495657455,
+      "overview": "Archer and Trexler try to escape a rampaging Dutch by telling the world's worst knock-knock joke."
+    },
+    {
+      "absoluteNumber": 8,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 8,
+      "dvdSeason": 1,
+      "episodeName": "The Rock",
+      "firstAired": "2010-03-04",
+      "id": 1725041,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843364,
+      "overview": "After ISIS loses yet another lucrative contract to rival agency ODIN, Malory assigns Archer and Lana to embarrass ODIN by stealing a priceless diamond from their biggest client."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 8,
+      "dvdSeason": 2,
+      "episodeName": "Stage Two",
+      "firstAired": "2011-03-17",
+      "id": 3712581,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843466,
+      "overview": "Breast cancer strikes the Archer family---Sterling has it. \"I'm trying to stay positive,\" he says. \"I can beat this.\" But before surgery, he wants to bond with young Seamus (even though he isn't actually the baby's father) and take a Las Vegas vacation. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 11,
+      "dvdSeason": 3,
+      "episodeName": "Skin Game",
+      "firstAired": "2012-03-08",
+      "id": 4277067,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843636,
+      "overview": "Archer is faced with a dilemma when his murdered fiance, Katya, miraculously reappears. In Krieger's lab. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Coyote Lovely",
+      "firstAired": "2013-03-07",
+      "id": 4491201,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843730,
+      "overview": "Archer heads to the Mexican border to capture a notorious coyote, which is Spanish for coyote."
+    },
+    {
+      "absoluteNumber": 56,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: The Rules of Extraction",
+      "firstAired": "2014-03-17",
+      "id": 4802460,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843861,
+      "overview": "Archer, Ray, and Cyril raft down a crocodile-filled river while Lana and Pam plan a spa day for Malory."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Kanes",
+      "firstAired": "2015-02-26",
+      "id": 5118520,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939623,
+      "overview": "Lana introduces Archer to her parents. Archer introduces Lana's parents to high-speed chases."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer - P.I.",
+      "firstAired": "2016-02-01",
+      "id": 5511528,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1455273790,
+      "overview": "Get your moustache on and go full magnum for the next season of Archer."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Liquid Lunch",
+      "firstAired": "2016-05-19",
+      "id": 5605521,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499940075,
+      "overview": "The on-again, off-again relationship of Archer and Slater causes a rift in the on-again, off-again relationship of Archer and Lana. "
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 8,
+      "airedSeasonID": 695974,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Dreamland: Auflösung",
+      "firstAired": "2017-05-24",
+      "id": 6030784,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1495809778,
+      "overview": "Archer visits Dreamland and receives a big break that leads him to Woodhouse's killer.\r\n"
+    },
+    {
+      "absoluteNumber": 9,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 9,
+      "dvdSeason": 1,
+      "episodeName": "Job Offer",
+      "firstAired": "2010-03-11",
+      "id": 1746101,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843376,
+      "overview": "When Archer takes a higher-paying job at rival agency ODIN, Malory will stop at nothing to get him back."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 9,
+      "dvdSeason": 2,
+      "episodeName": "Placebo Effect",
+      "firstAired": "2011-03-24",
+      "id": 3712591,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843475,
+      "overview": "When Archer discovers that the chemotherapy drugs he has been taking are phony, he goes on a rampage against the Irish gangsters behind the scheme. He also makes friends with a fellow marijuana-toking cancer patient (voice of Joan Van Ark). Meanwhile, Cyril learns why Krieger is fluent in Portuguese."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 12,
+      "dvdSeason": 3,
+      "episodeName": "Space Race (1)",
+      "firstAired": "2012-03-15",
+      "id": 4277068,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843644,
+      "overview": "Archer and his colleagues at ISIS voyage to the final frontier in an effort to prevent a catastrophe on the International Space Station."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Honeymooners",
+      "firstAired": "2013-03-14",
+      "id": 4491202,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1487723934,
+      "overview": "Archer and Lana pose as newlyweds to stop a sale of enriched uranium. "
+    },
+    {
+      "absoluteNumber": 58,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: On The Carpet",
+      "firstAired": "2014-03-24",
+      "id": 4807829,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843868,
+      "overview": "Archer avoids crash landing in a dangerous swamp only to come face-to-face with a shady arms dealer."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Pocket Listing",
+      "firstAired": "2015-03-05",
+      "id": 5118521,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939641,
+      "overview": "Slater has the gang swindle the Durhani royal family and Gillette lends a hand."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "With Conan O'Brien",
+      "firstAired": "2015-01-20",
+      "id": 5547423,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1458045609,
+      "overview": "Conan is picked up by Archer and suddenly finds himself embroiled in a high-speed pursuit while dealing with Tinder, the merits of Uber, and the tenacity of the Russian mob"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Deadly Velvet: Part I",
+      "firstAired": "2016-05-26",
+      "id": 5605522,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499940103,
+      "overview": "Archer and the gang are hired by renowned director, Ellis Crane, to investigate suspicious activity on the set of his new movie, Deadly Velvet. "
+    },
+    {
+      "absoluteNumber": 10,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 1,
+      "airedSeasonID": 119181,
+      "dvdEpisodeNumber": 10,
+      "dvdSeason": 1,
+      "episodeName": "Dial M for Mother",
+      "firstAired": "2010-03-18",
+      "id": 1834021,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843384,
+      "overview": "Questions about the identity of Archer's real father lead him into a perilous trap... and an explosive confrontation with Malory."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 10,
+      "dvdSeason": 2,
+      "episodeName": "El Secuestro",
+      "firstAired": "2011-03-31",
+      "id": 3989581,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843486,
+      "overview": "Pam is abducted by kidnappers who mistake her for Cheryl. It seems that Cheryl wasn’t completely forthcoming about her background when she applied for her job at ISIS."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 3,
+      "airedSeasonID": 465786,
+      "dvdEpisodeNumber": 13,
+      "dvdSeason": 3,
+      "episodeName": "Space Race (2)",
+      "firstAired": "2012-03-22",
+      "id": 4277069,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843653,
+      "overview": "Season finale. Archer and the rest of ISIS are held captive by mutineers on the International Space Station."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Un Chien Tangerine",
+      "firstAired": "2013-03-21",
+      "id": 4491203,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1487723928,
+      "overview": "Archer and Lana extract an agent from Morocco only to find out his bark is worse than his bite."
+    },
+    {
+      "absoluteNumber": 59,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: Palace Intrigue (1)",
+      "firstAired": "2014-03-31",
+      "id": 4815361,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459844010,
+      "overview": "Archer and the rest of the ISIS gang are the guests of Gustavo Calderon and his wife Juliana. Calderon is a big fan of Cherlene but Juliana is a bigger fan of Archer."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Reignition Sequence",
+      "firstAired": "2015-03-12",
+      "id": 5124776,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939661,
+      "overview": "An office romance is interrupted by the Russians."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 0,
+      "airedSeasonID": 109111,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer reviews every James Bond film",
+      "firstAired": "2016-03-25",
+      "id": 5602312,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1485647327,
+      "overview": "Entertainment Weekly has tasked Archer with reviewing all 24 James Bond, and he delivers."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 7,
+      "airedSeasonID": 652814,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Deadly Velvet: Part II",
+      "firstAired": "2016-06-02",
+      "id": 5605523,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499940123,
+      "overview": "Things get even deadlier on the set of Deadly Velvet when someone turns up, you guessed it, dead."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 11,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 11,
+      "dvdSeason": 2,
+      "episodeName": "Jeu Monegasque",
+      "firstAired": "2011-04-07",
+      "id": 4002861,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843496,
+      "overview": "When a mysterious stranger summons Malory and her intrepid ISIS agents to Monaco, all bets are off! Well, actually all bets are on. Because Monaco is basically one giant casino, and Archer has $4 million in untraceable bearer bonds. Also, it's Gran Prix week, so you can just forget getting a hotel room"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 11,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Papal Chase",
+      "firstAired": "2013-03-28",
+      "id": 4491204,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1487723940,
+      "overview": "Archer must rescue the Pope from an assassination plot using Woodhouse as a decoy. Operation Bad Habit is a go."
+    },
+    {
+      "absoluteNumber": 60,
+      "airedEpisodeNumber": 11,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: Palace Intrigue (2)",
+      "firstAired": "2014-04-07",
+      "id": 4822927,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459844003,
+      "overview": "Archer tries to keep his fling with the dictator's wife a secret while Krieger bonds with his clone-brothers."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 11,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Achub Y Morfilod",
+      "firstAired": "2015-03-19",
+      "id": 5134060,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939683,
+      "overview": "Archer and Lana travel to Wales for a romantic getaway of aiding separatists. Story Inspired from a Rousing Tale by Matthew Rhys"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 12,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 12,
+      "dvdSeason": 2,
+      "episodeName": "White Nights",
+      "firstAired": "2011-04-14",
+      "id": 4002891,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843505,
+      "overview": "Archer's search for his father's identity leads him into hot water.  Agent Barry Dylan is sent to rescue Archer."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 12,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Sea Tunt (1)",
+      "firstAired": "2013-04-04",
+      "id": 4502446,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1487723922,
+      "overview": "Cheryl's brother Cecil Tunt and his girlfriend Tiffy drive her crazier than usual as they travel into the Bermuda Triangle. Where mysteries abound!."
+    },
+    {
+      "absoluteNumber": 61,
+      "airedEpisodeNumber": 12,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: Filibuster",
+      "firstAired": "2014-04-14",
+      "id": 4830139,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843992,
+      "overview": "Cyril becomes the new president of San Marcos, Cherlene becomes the first lady of country music, and Archer becomes a resistance fighter."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 12,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Drastic Voyage (1)",
+      "firstAired": "2015-03-26",
+      "id": 5137446,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939718,
+      "overview": "Archer and the gang prepare for their most fantastic voyage ever."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 13,
+      "airedSeason": 2,
+      "airedSeasonID": 364791,
+      "dvdEpisodeNumber": 13,
+      "dvdSeason": 2,
+      "episodeName": "Double Trouble",
+      "firstAired": "2011-04-21",
+      "id": 4077515,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843512,
+      "overview": "Krieger works to finish a top-secret project, and Archer brings a mysterious former KGB agent named Katya Kazanova home to meet Malory."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 13,
+      "airedSeason": 4,
+      "airedSeasonID": 490075,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Sea Tunt (2)",
+      "firstAired": "2013-04-11",
+      "id": 4502447,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843764,
+      "overview": "Archer and the ISIS crew go to an underwater SEA LABoratory  to stop the deranged Captain Murphy."
+    },
+    {
+      "absoluteNumber": 62,
+      "airedEpisodeNumber": 13,
+      "airedSeason": 5,
+      "airedSeasonID": 566527,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Archer Vice: Arrivals/Departures",
+      "firstAired": "2014-04-21",
+      "id": 4830140,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1459843985,
+      "overview": "Archer helps Lana with the delivery of her baby, while Krieger tries to prevent the delivery of a deadly weapon."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 13,
+      "airedSeason": 6,
+      "airedSeasonID": 604054,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Drastic Voyage (2)",
+      "firstAired": "2015-04-02",
+      "id": 5137447,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1499939746,
+      "overview": "The fantastic voyage concludes."
+    }
+  ]
+}

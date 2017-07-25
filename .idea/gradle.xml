@@ -20,6 +20,7 @@
             <option value="$PROJECT_DIR$/leanback" />
             <option value="$PROJECT_DIR$/libtmdb" />
             <option value="$PROJECT_DIR$/libtvdb" />
+            <option value="$PROJECT_DIR$/libtvdb2" />
             <option value="$PROJECT_DIR$/media" />
             <option value="$PROJECT_DIR$/media-playback" />
             <option value="$PROJECT_DIR$/upnp-cds-browser" />

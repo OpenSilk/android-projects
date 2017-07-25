@@ -1,0 +1,29 @@
+{
+  "data": {
+    "id": 74651,
+    "seriesName": "Meet Corliss Archer",
+    "aliases": [],
+    "banner": "",
+    "seriesId": "27877",
+    "status": "Ended",
+    "firstAired": "1954-09-01",
+    "network": "Syndicated",
+    "networkId": "",
+    "runtime": "30",
+    "genre": [],
+    "overview": null,
+    "lastUpdated": 1378870183,
+    "airsDayOfWeek": "",
+    "airsTime": "",
+    "rating": "",
+    "imdbId": "",
+    "zap2itId": "",
+    "added": "",
+    "addedBy": null,
+    "siteRating": 0,
+    "siteRatingCount": 0
+  },
+  "errors": {
+    "invalidLanguage": "Incomplete or no translation for the given language"
+  }
+}

@@ -1,0 +1,673 @@
+{
+  "links": {
+    "first": 1,
+    "last": 1,
+    "next": null,
+    "prev": null
+  },
+  "data": [
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 1,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "No Clothes for the Party",
+      "firstAired": "",
+      "id": 150865,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310481744,
+      "overview": "Corliss and Dexter plan to go to a big party, but must work up the nerve to ask the Archer's for a tux and an evening wrap, both of which are in danger around Dex.\r\n"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 2,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Harry, Child Psychiatrist",
+      "firstAired": "",
+      "id": 150866,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310481731,
+      "overview": "Harry and Mr. Franklyn try to teach Corliss and Dex the value of money, and promise to match dollar for dollar everything the kids \r\ncan earn. \r\n"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 3,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "title unknown",
+      "firstAired": "",
+      "id": 150867,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 4,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Dexter, The Director",
+      "firstAired": "",
+      "id": 150868,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310481789,
+      "overview": "Dexter is directing the school parent/student play. Corliss is the lead but to get Harry he tells him Judge Peters is appearing. To get \r\nthe Judge he gives the lead to Lucy Peters and, well, you get the idea!\r\n"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 5,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Dexter's Surprise Party",
+      "firstAired": "",
+      "id": 150869,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310481811,
+      "overview": "After seeing Mr. Archer hiding a package and misunderstanding a business call, Corliss and Dexter decide he's a kleptomaniac.\r\n"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 6,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Algebra Problem",
+      "firstAired": "",
+      "id": 150870,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310481836,
+      "overview": "Corliss and Dex are struggling with a tough algebra problem. Their parents smugly think they can find the answer, and soon everyone is working on the problem with no solution in sight!\r\n"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 7,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Quarenteened",
+      "firstAired": "",
+      "id": 150871,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310481857,
+      "overview": "Corliss has the measles, which makes Mr. Archer happy, because that means a whole week without Dexter; until Dex is quarantined along with her!\r\n"
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 8,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Phone Fumble",
+      "firstAired": "",
+      "id": 150872,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310481962,
+      "overview": "Synopsis 1: \r\nHarry Archer needs to make an important phone call but is hindered by losing the phone number, not to mention the phone! Not helping at all is Corliss doing housework and Dexter's arrival with a pie and a watermelon.\r\n\r\nSynopsis 2:\r\nThere's only one phone number in the Archer household - not enough when there's a teenager in the home. The phone is constantly in use, and Mr. Archer keeps missing important business calls."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 9,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Dexter's Job",
+      "firstAired": "",
+      "id": 150873,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310481981,
+      "overview": "Dex's father makes a deal with him: get a job, keep it a week, and he will buy a new muffler for his car."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 10,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Harry's Cold",
+      "firstAired": "",
+      "id": 150874,
+      "language": {
+        "episodeName": "en",
+        "overview": "en"
+      },
+      "lastUpdated": 1310482107,
+      "overview": "Synopsis 1:\r\nHarry has a bad cold and Janet makes him stay in bed, and everyone leaves him alone except Dex.\r\n\r\nSynopsis 2:\r\nHarry has a bad cold. The well-meaning but bumbling Dexter tries to help out by going \r\nto the drug store for Harry's medicine. While there, a misunderstanding leads the \r\ndruggist and neighbors to believe that the Archer family is destitute. As a result, \r\nlots of food baskets mysteriously begin to appear at the Archer's front door."
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 11,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Dexter, The Helper",
+      "firstAired": "",
+      "id": 150875,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 12,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Best Policy",
+      "firstAired": "",
+      "id": 150876,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 13,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Harry's Diet",
+      "firstAired": "",
+      "id": 150877,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 14,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Vase That Came to Dinner",
+      "firstAired": "",
+      "id": 150878,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 15,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Corliss, The Cheerleader",
+      "firstAired": "",
+      "id": 150879,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 16,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Archers Get a Maid",
+      "firstAired": "",
+      "id": 150880,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 17,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Dexter Becomes a Man",
+      "firstAired": "",
+      "id": 150881,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 18,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Dexter's Masquerade Costume",
+      "firstAired": "",
+      "id": 150882,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 19,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "title unknown",
+      "firstAired": "",
+      "id": 150883,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 20,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Male Ego",
+      "firstAired": "",
+      "id": 150884,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 21,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Money Matters",
+      "firstAired": "",
+      "id": 150885,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 22,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "A Party for Corliss",
+      "firstAired": "",
+      "id": 150886,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 23,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The New Neighbors",
+      "firstAired": "",
+      "id": 150887,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 24,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Harry and the Soap Opera Queen",
+      "firstAired": "",
+      "id": 150888,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 25,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "A Date for Doris",
+      "firstAired": "",
+      "id": 150889,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 26,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Friends Forever?",
+      "firstAired": "",
+      "id": 150890,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 27,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Boat Builders",
+      "firstAired": "",
+      "id": 150891,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 28,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Miffy's Overnight Painting",
+      "firstAired": "",
+      "id": 150892,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 29,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Pain in the Neck",
+      "firstAired": "",
+      "id": 150893,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 30,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "President of the Garden Club",
+      "firstAired": "",
+      "id": 150894,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 31,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Fortune Teller",
+      "firstAired": "",
+      "id": 150895,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 32,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Harry, The Dictator",
+      "firstAired": "",
+      "id": 150896,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 33,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Harry Gives Advice",
+      "firstAired": "",
+      "id": 150897,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 34,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Dexter and the Car",
+      "firstAired": "",
+      "id": 150898,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 35,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Harry, The Photographer",
+      "firstAired": "",
+      "id": 150899,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 36,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Personality Test",
+      "firstAired": "",
+      "id": 150900,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 37,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Janet Goes to College",
+      "firstAired": "",
+      "id": 150901,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 38,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "Harry Tells Dex How It Is",
+      "firstAired": "",
+      "id": 150902,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    },
+    {
+      "absoluteNumber": null,
+      "airedEpisodeNumber": 39,
+      "airedSeason": 1,
+      "airedSeasonID": 7800,
+      "dvdEpisodeNumber": null,
+      "dvdSeason": null,
+      "episodeName": "The Christmas Story",
+      "firstAired": "",
+      "id": 150903,
+      "language": {
+        "episodeName": "en",
+        "overview": ""
+      },
+      "lastUpdated": 1163101692,
+      "overview": null
+    }
+  ]
+}

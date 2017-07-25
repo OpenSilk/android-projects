@@ -1,0 +1,34 @@
+{
+  "data": {
+    "id": 110381,
+    "seriesName": "Archer (2009)",
+    "aliases": [
+      "Archer 2009",
+      "Archer Dreamland"
+    ],
+    "banner": "graphical/110381-g5.jpg",
+    "seriesId": "77555",
+    "status": "Continuing",
+    "firstAired": "2009-09-17",
+    "network": "FXX",
+    "networkId": "",
+    "runtime": "25",
+    "genre": [
+      "Action",
+      "Adventure",
+      "Animation",
+      "Comedy"
+    ],
+    "overview": "Covert black ops and espionage take a back seat to zany personalities and relationships between secret agents and drones.",
+    "lastUpdated": 1500914212,
+    "airsDayOfWeek": "Wednesday",
+    "airsTime": "10:00 PM",
+    "rating": "TV-MA",
+    "imdbId": "tt1486217",
+    "zap2itId": "EP01216702",
+    "added": "2009-08-23 04:13:16",
+    "addedBy": 235,
+    "siteRating": 8.9,
+    "siteRatingCount": 304
+  }
+}
