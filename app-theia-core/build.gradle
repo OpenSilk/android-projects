@@ -28,6 +28,16 @@ android {
     dataBinding {
         enabled = true
     }
+
+    //inject api keys
+    try {
+        defaultConfig.buildConfigField("String", "TMDB_API_KEY", String.format("\"%s\"", (String) TMDB_API_KEY))
+        defaultConfig.buildConfigField("String", "TVDB_API_KEY", String.format("\"%s\"", (String) TVDB_API_KEY))
+    } catch (MissingPropertyException e) {
+        printf("Api keys not configured. Did you setup the gradle.properties file? \n%s", e)
+        defaultConfig.buildConfigField("String", "TMDB_API_KEY", "\"NOKEY\"")
+        defaultConfig.buildConfigField("String", "TVDB_API_KEY", "\"NOKEY\"")
+    }
 }
 
 dependencies {
@@ -45,12 +55,15 @@ dependencies {
     compile "android.arch.lifecycle:runtime:$androidarchVersion"
     compile "android.arch.lifecycle:extensions:$androidarchVersion"
 
+    //for tv/movie db api
+    compile "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
+
     compile project(':common-glide')
     compile project(':common-dagger')
     compile project(':common-rx')
     compile project(':media')
     compile project(':media-playback')
-    compile project(':libtvdb')
+    compile project(':libtvdb2')
     compile project(':libtmdb')
     compile project(':upnp-cds-browser')
     compile project(':upnp-cds-featurelist')
