@@ -21,7 +21,7 @@ const val MIME_TYPE_CONTENT_DIRECTORY = "vnd.opensilk.org/ContentDirectory"
 const val MIME_TYPE_MOVIE = "vnd.opensilk.org/movie"
 const val MIME_TYPE_TV_SERIES = "vnd.opensilk.org/series"
 const val MIME_TYPE_TV_EPISODE = "vnd.opensilk.org/episode"
-
+const val MIME_TYPE_JPEG = "image/jpeg"
 
 /**
  * Created by drew on 6/26/16.
@@ -95,12 +95,12 @@ constructor(
      *
      */
     val isTvSeries: Boolean
-        get() = mimeType === TvContract.Programs.CONTENT_TYPE
+        get() = mimeType === MIME_TYPE_TV_SERIES
     /**
      *
      */
     val isTvEpisode: Boolean
-        get() = mimeType === TvContract.Programs.CONTENT_ITEM_TYPE
+        get() = mimeType === MIME_TYPE_TV_EPISODE
     /**
      *
      */
