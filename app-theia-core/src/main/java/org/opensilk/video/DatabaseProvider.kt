@@ -85,6 +85,9 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.TV_LOOKUPS -> {
                 table = "tv_lookups"
             }
+            DatabaseMatches.TV_CONFIG -> {
+                table = "tv_config"
+            }
             DatabaseMatches.TV_EPISODE_DESC_ONE -> {
                 id = uri.lastPathSegment.toLong()
                 table = "tv_episode_series_map"
@@ -118,6 +121,9 @@ class DatabaseProvider: ContentProvider() {
             }
             DatabaseMatches.MOVIE_SEARCH -> {
                 table = "movies_search"
+            }
+            DatabaseMatches.MOVIE_CONFIG -> {
+                table = "movie_config"
             }
             DatabaseMatches.UPNP_DEVICES -> {
                 table = "upnp_device"
@@ -179,6 +185,10 @@ class DatabaseProvider: ContentProvider() {
                 val id = db.insertWithOnConflict("tv_lookups", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.tvLookups()
             }
+            DatabaseMatches.TV_CONFIG -> {
+                val id = db.insertWithOnConflict("tv_config", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                return mUris.tvConfig()
+            }
             DatabaseMatches.MEDIA -> {
                 val id = db.insertWithOnConflict("media", null, values, SQLiteDatabase.CONFLICT_FAIL)
                 return mUris.media(id)
@@ -194,6 +204,10 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.MOVIE_LOOKUPS -> {
                 val id = db.insertWithOnConflict("movie_lookups", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.movieLookups()
+            }
+            DatabaseMatches.MOVIE_CONFIG -> {
+                val id = db.insertWithOnConflict("movie_config", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                return mUris.movieConfig()
             }
             DatabaseMatches.UPNP_DEVICES -> {
                 val id = db.insertWithOnConflict("upnp_device", null, values, SQLiteDatabase.CONFLICT_REPLACE)

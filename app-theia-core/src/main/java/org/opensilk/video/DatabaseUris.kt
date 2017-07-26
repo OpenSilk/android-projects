@@ -18,7 +18,7 @@ object DatabaseMatches {
     val TV_ACTORS = 8
     val TV_ACTORS_ONE = 9
     val TV_LOOKUPS = 10
-    //
+    val TV_CONFIG = 11
     //
     val TV_EPISODE_DESC = 12
     val TV_EPISODE_DESC_ONE = 13
@@ -33,6 +33,7 @@ object DatabaseMatches {
     val MOVIE_IMAGES_ONE = 33
     val MOVIE_LOOKUPS = 34
     val MOVIE_SEARCH = 35
+    val MOVIE_CONFIG = 36
 
     val UPNP_DEVICES = 41
     val UPNP_DEVICES_ONE = 42
@@ -67,6 +68,7 @@ class DatabaseUris
         matcher.addURI(mAuthority, "tv/lookups", DatabaseMatches.TV_LOOKUPS)
         matcher.addURI(mAuthority, "tv/episodes/descriptions", DatabaseMatches.TV_EPISODE_DESC)
         matcher.addURI(mAuthority, "tv/episodes/descriptions/#", DatabaseMatches.TV_EPISODE_DESC_ONE)
+        matcher.addURI(mAuthority, "tv/config", DatabaseMatches.TV_CONFIG)
 
         matcher.addURI(mAuthority, "media", DatabaseMatches.MEDIA)
         matcher.addURI(mAuthority, "media/#", DatabaseMatches.MEDIA_ONE)
@@ -77,6 +79,7 @@ class DatabaseUris
         matcher.addURI(mAuthority, "movies/images/#", DatabaseMatches.MOVIE_IMAGES_ONE)
         matcher.addURI(mAuthority, "movies/lookups", DatabaseMatches.MOVIE_LOOKUPS)
         matcher.addURI(mAuthority, "movies/search", DatabaseMatches.MOVIE_SEARCH)
+        matcher.addURI(mAuthority, "movies/config", DatabaseMatches.MOVIE_CONFIG)
 
         matcher.addURI(mAuthority, "upnp/device", DatabaseMatches.UPNP_DEVICES)
         matcher.addURI(mAuthority, "upnp/device/#", DatabaseMatches.UPNP_DEVICES_ONE)
@@ -136,6 +139,10 @@ class DatabaseUris
         return base().appendPath("tv").appendPath("lookups").build()
     }
 
+    fun tvConfig(): Uri {
+        return base().appendPath("tv").appendPath("config").build()
+    }
+
     fun tvEpisodeDescriptions(): Uri {
         return base().appendPath("tv").appendPath("episodes").appendPath("descriptions").build()
     }
@@ -174,6 +181,10 @@ class DatabaseUris
 
     fun movieSearch(): Uri {
         return base().appendPath("movies").appendPath("search").build()
+    }
+
+    fun movieConfig(): Uri {
+        return base().appendPath("movies").appendPath("config").build()
     }
 
     fun upnpDevices(): Uri {

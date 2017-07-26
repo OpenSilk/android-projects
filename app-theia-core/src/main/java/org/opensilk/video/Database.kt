@@ -30,15 +30,21 @@ class Database
             db.execSQL("DROP VIEW IF EXISTS media_episode_map")
             db.execSQL("DROP VIEW IF EXISTS media_movie_map")
             db.execSQL("DROP TABLE IF EXISTS media;")
+            db.execSQL("DROP TRIGGER IF EXISTS tv_series_cleanup;")
+            db.execSQL("DROP TRIGGER IF EXISTS movies_cleanup;")
 
+            db.execSQL("DROP TABLE IF EXISTS tv_config;")
+            db.execSQL("CREATE TABLE tv_config (" +
+                    "key TEXT NOT NULL UNIQUE, " +
+                    "value TEXT " +
+                    ");")
             db.execSQL("DROP TABLE IF EXISTS tv_series;")
             db.execSQL("CREATE TABLE tv_series (" +
                     "_id INTEGER PRIMARY KEY , " +
                     "_display_name TEXT NOT NULL, " +
                     "overview TEXT," +
                     "first_aired TEXT, " +
-                    "poster_path TEXT, " +
-                    "backdrop_path TEXT " +
+                    "banner TEXT " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS tv_series_search")
             db.execSQL("CREATE VIRTUAL TABLE tv_series_search USING fts3 (" +
@@ -58,7 +64,6 @@ class Database
                     "overview TEXT, " +
                     "episode_number INTEGER NOT NULL, " +
                     "season_number INTEGER NOT NULL, " +
-                    "season_id INTEGER, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS tv_banners;")
@@ -70,7 +75,7 @@ class Database
                     "rating FLOAT, " +
                     "rating_count INTEGER, " +
                     "thumb_path TEXT, " +
-                    "season INTEGER, " +
+                    "resolution TEXT, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS tv_actors;")
@@ -87,6 +92,11 @@ class Database
                     "q TEXT PRIMARY KEY, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
+            db.execSQL("DROP TABLE IF EXISTS movie_config")
+            db.execSQL("CREATE TABLE movie_config (" +
+                    "key TEXT NOT NULL UNIQUE, " +
+                    "value TEXT " +
+                    ");")
             db.execSQL("DROP TABLE IF EXISTS movies;")
             db.execSQL("CREATE TABLE movies (" +
                     "_id INTEGER PRIMARY KEY, " +
@@ -94,8 +104,7 @@ class Database
                     "overview TEXT, " +
                     "release_date TEXT, " +
                     "poster_path TEXT, " +
-                    "backdrop_path TEXT," +
-                    "image_base_url TEXT NOT NULL " +
+                    "backdrop_path TEXT " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS movies_search")
             db.execSQL("CREATE VIRTUAL TABLE movies_search USING fts3 (" +
@@ -111,7 +120,6 @@ class Database
             db.execSQL("CREATE TABLE movie_images (" +
                     "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "movie_id INTEGER NOT NULL, " +
-                    "image_base_url TEXT NOT NULL, " +
                     "image_type TEXT NOT NULL, " + //poster|backdrop
 
                     "height INTEGER NOT NULL, " +
@@ -198,28 +206,6 @@ class Database
                     "FOR EACH ROW " +
                     "BEGIN " +
                     "DELETE FROM upnp_video_search WHERE rowid=OLD._id; " +
-                    "END")
-            db.execSQL("DROP TRIGGER IF EXISTS tv_series_cleanup;")
-            db.execSQL("CREATE TRIGGER tv_series_cleanup AFTER DELETE ON upnp_video " +
-                    "FOR EACH ROW " +
-                    "WHEN (SELECT COUNT(_id) FROM upnp_video WHERE series_id=OLD.series_id) = 0 " +
-                    "BEGIN " +
-                    "DELETE FROM tv_series WHERE _id=OLD.series_id; " +
-                    "DELETE FROM tv_episodes WHERE series_id=OLD.series_id; " +
-                    "DELETE FROM tv_banners WHERE series_id=OLD.series_id; " +
-                    "DELETE FROM tv_actors WHERE series_id=OLD.series_id; " +
-                    "DELETE FROM tv_lookups WHERE series_id=OLD.series_id; " +
-                    "DELETE FROM tv_series_search WHERE rowid=OLD.series_id; " +
-                    "END")
-            db.execSQL("DROP TRIGGER IF EXISTS movies_cleanup;")
-            db.execSQL("CREATE TRIGGER movies_cleanup AFTER DELETE ON upnp_video " +
-                    "FOR EACH ROW " +
-                    "WHEN (SELECT COUNT(_id) FROM upnp_video WHERE movie_id=OLD.movie_id) = 0 " +
-                    "BEGIN " +
-                    "DELETE FROM movies WHERE _id=OLD.movie_id; " +
-                    "DELETE FROM movie_images WHERE movie_id=OLD.movie_id; " +
-                    "DELETE FROM movie_lookups WHERE movie_id=OLD.movie_id; " +
-                    "DELETE FROM movies_search WHERE rowid=OLD.movie_id; " +
                     "END")
         }
     }
