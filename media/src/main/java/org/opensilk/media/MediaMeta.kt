@@ -19,6 +19,8 @@ import kotlin.reflect.KProperty
 const val MIME_TYPE_DIR = DocumentsContract.Document.MIME_TYPE_DIR
 const val MIME_TYPE_CONTENT_DIRECTORY = "vnd.opensilk.org/ContentDirectory"
 const val MIME_TYPE_MOVIE = "vnd.opensilk.org/movie"
+const val MIME_TYPE_TV_SERIES = "vnd.opensilk.org/series"
+const val MIME_TYPE_TV_EPISODE = "vnd.opensilk.org/episode"
 
 
 /**
@@ -163,6 +165,10 @@ constructor(
      *
      */
     var subtitle: String by StringVal
+    /**
+     *
+     */
+    var overview: String by StringVal
     /**
      *
      */
