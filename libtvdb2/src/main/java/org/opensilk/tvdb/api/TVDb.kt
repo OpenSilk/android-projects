@@ -13,7 +13,7 @@ interface TVDb {
     fun login(@Body auth: Auth): Observable<Token>
 
     @GET("/refresh_token")
-    fun refreshToken(): Observable<Token>
+    fun refreshToken(@Header("Authorization") token: Token): Observable<Token>
 
     @GET("/search/series")
     fun searchSeries(@Header("Authorization") token: Token, @Query("name") name: String) : Observable<SeriesSearchData>
@@ -23,6 +23,10 @@ interface TVDb {
 
     @GET("/series/{id}/episodes")
     fun seriesEpisodes(@Header("Authorization") token: Token, @Path("id") id: Long): Observable<SeriesEpisodeData>
+
+    @GET("/series/{id}/images/query")
+    fun seriesImagesQuery(@Header("Authorization") token: Token, @Path("id") id: Long,
+                          @Query("keyType") keyType: String): Observable<SeriesImageQueryData>
 
     @GET("/updated/query")
     fun updated(@Header("Authorization") token: Token, @Query("fromTime") fromTime: Long): Observable<UpdateData>

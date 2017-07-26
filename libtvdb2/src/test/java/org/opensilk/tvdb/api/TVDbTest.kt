@@ -71,6 +71,14 @@ class TVDbTest {
     }
 
     @Test
+    fun series_image_poster_archer() {
+        enqueueResponse("series-image-poster-archer.json")
+        val resp = mApi.seriesImagesQuery(mToken, 1, "poster").toBlocking().first()
+        assertThat(resp.errors).isNull()
+        assertThat(resp.data[0].keyType).isEqualTo("poster")
+    }
+
+    @Test
     fun series_episodes_archer() {
         enqueueResponse("series-episodes-archer.json")
         val resp = mApi.seriesEpisodes(mToken, 1).toBlocking().first()
