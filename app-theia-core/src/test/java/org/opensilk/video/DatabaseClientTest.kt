@@ -200,16 +200,16 @@ class DatabaseClientTest {
 
     @Test
     fun testTV_setLastUpdate() {
-        mClient.tvdb.setLastUpdate(11111)
-        val ret = mClient.tvdb.getLastUpdate().toBlocking().value()
+        mClient.setTvLastUpdate(11111)
+        val ret = mClient.getTvLastUpdate().toBlocking().value()
         assertThat(ret).isEqualTo(11111)
     }
 
     @Test
     fun testTV_setToken() {
         val tok = Token("foounoetu")
-        mClient.tvdb.setToken(tok)
-        val ret = mClient.tvdb.getToken().toBlocking().value()
+        mClient.setTvToken(tok)
+        val ret = mClient.getTvToken().toBlocking().value()
         assertThat(ret).isEqualTo(tok)
     }
 
@@ -217,8 +217,8 @@ class DatabaseClientTest {
     fun testTVSeries_add_get() {
         val series = Series(id = 1, seriesName = "foo", overview =  "this overview",
                 firstAired = "2009", lastUpdated = 1111)
-        val uri = mClient.tvdb.addTvSeries(series)
-        val returned = mClient.tvdb.getTvSeries(uri.lastPathSegment.toLong()).toBlocking().value()
+        val uri = mClient.addTvSeries(series)
+        val returned = mClient.getTvSeries(uri.lastPathSegment.toLong()).toBlocking().value()
         assertThat(returned.rowId).isEqualTo(series.id)
         assertThat(returned.title).isEqualTo(series.seriesName)
         assertThat(returned.overview).isEqualTo(series.overview)
@@ -231,8 +231,8 @@ class DatabaseClientTest {
         val episode = SeriesEpisode(id = 1, episodeName = "name",
                 firstAired =  "2009", overview = "an overview", airedSeason =  1,
                 airedEpisodeNumber = 1, airedSeasonId = 1)
-        val uri = mClient.tvdb.addTvEpisode(1, episode)
-        val ret = mClient.tvdb.getTvEpisode(uri.lastPathSegment.toLong()).toBlocking().value()
+        mClient.addTvEpisodes(1, listOf(episode))
+        val ret = mClient.getTvEpisode(episode.id).toBlocking().value()
         assertThat(ret.rowId).isEqualTo(episode.id)
         assertThat(ret.title).isEqualTo(episode.episodeName)
         assertThat(ret.releaseDate).isEqualTo(episode.firstAired)
@@ -242,44 +242,43 @@ class DatabaseClientTest {
 
     @Test
     fun testTV_seriesAssociation() {
-        mClient.tvdb.setSeriesAssociation("foobar", 100)
-        assertThat(mClient.tvdb.getSeriesAssociation("foobar").toBlocking().value()).isEqualTo(100)
+        mClient.setTvSeriesAssociation("foobar", 100)
+        assertThat(mClient.getTvSeriesAssociation("foobar").toBlocking().value()).isEqualTo(100)
     }
 
     @Test
     fun testMovie_movieAssociation() {
-        mClient.moviedb.setMovieAssociation("foo", "2001", 1002)
-        assertThat(mClient.moviedb.getMovieAssociation("foo", "2001").toBlocking().value()).isEqualTo(1002)
+        mClient.setMovieAssociation("foo", "2001", 1002)
+        assertThat(mClient.getMovieAssociation("foo", "2001").toBlocking().value()).isEqualTo(1002)
     }
 
     @Test
     fun testMovie_movieAssociation_different_year() {
-        mClient.moviedb.setMovieAssociation("foo", "", 1002)
-        val retrieved = mClient.moviedb.getMovieAssociation("foo", "2001")
+        mClient.setMovieAssociation("foo", "", 1002)
+        val retrieved = mClient.getMovieAssociation("foo", "2001")
                 .onErrorReturn { 2939393 }.toBlocking().value()
         assertThat(retrieved).isEqualTo(2939393)
     }
 
     @Test
     fun testMovie_add_get() {
-        val config = TMDbConfig(TMDbConfig.Images("https://foo.com", null, null, null, null, null, null))
-        mClient.tmdb.setConfig(config)
+        mClient.setMovieImageBaseUrl("https://foo.com")
         val movie = Movie(100, "foo movie", null, "an overiview", "2001", "/paster", "/backdrop")
-        val uri = mClient.moviedb.addMovie(movie)
-        val retrieved = mClient.moviedb.getMovie(uri.lastPathSegment.toLong()).toBlocking().value()
+        val uri = mClient.addMovie(movie)
+        val retrieved = mClient.getMovie(uri.lastPathSegment.toLong()).toBlocking().value()
         assertThat(retrieved.rowId).isEqualTo(100)
         assertThat(retrieved.title).isEqualTo(movie.title)
         assertThat(retrieved.overview).isEqualTo(movie.overview)
         assertThat(retrieved.releaseDate).isEqualTo(movie.releaseDate)
         assertThat(retrieved.mimeType).isEqualTo(MIME_TYPE_MOVIE)
-        assertThat(retrieved.artworkUri).isEqualTo(mClient.tmdb.makePosterUri(config.images.baseUrl, movie.posterPath))
+        assertThat(retrieved.artworkUri).isEqualTo(mClient.makeMoviePosterUri("https://foo.com", movie.posterPath))
     }
 
     @Test
     fun testMovie_config_ops() {
         val config = TMDbConfig(TMDbConfig.Images("https://foo.com/", null, null, null, null, null, null))
-        mClient.moviedb.setConfig(config)
-        val retrieved = mClient.moviedb.getConfig()
-        assertThat(retrieved.images.baseUrl).isEqualTo(config.images.baseUrl)
+        mClient.setMovieImageBaseUrl(config.images.baseUrl)
+        val retrieved = mClient.getMovieImageBaseUrl()
+        assertThat(retrieved).isEqualTo(config.images.baseUrl)
     }
 }
