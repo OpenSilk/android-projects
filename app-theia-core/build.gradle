@@ -74,6 +74,7 @@ dependencies {
     testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
     testCompile "org.assertj:assertj-core:$test_assertJVersion"
     testCompile "org.apache.commons:commons-lang3:$commonsLangVersion"
+    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
 
 }
 
