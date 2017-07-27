@@ -20,4 +20,7 @@ object AppSchedulers {
     val callback: Scheduler by lazy {
         ExecutorScheduler(Executors.newSingleThreadExecutor())
     }
+    val background: Scheduler by lazy {
+        ExecutorScheduler(Executors.newSingleThreadExecutor())
+    }
 }
