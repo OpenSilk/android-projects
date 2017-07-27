@@ -13,7 +13,7 @@ data class Series (
         val genre: List<String> = emptyList(),
         val id: Long,
         val imdbId: String = "",
-        val lastUpdated: Long,
+        val lastUpdated: Long = 0,
         val network: String = "",
         val networkId: String = "",
         val overview: String = "",

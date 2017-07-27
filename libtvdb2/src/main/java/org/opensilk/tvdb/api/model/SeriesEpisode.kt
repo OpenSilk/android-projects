@@ -7,7 +7,7 @@ data class SeriesEpisode(
         val absoluteNumber: Int? = null,
         val airedEpisodeNumber: Int,
         val airedSeason: Int,
-        val airedSeasonId: Long,
+        val airedSeasonId: Long = 0,
         val dvdEpisodeNumber: Int? = null,
         val dvdSeason: Int? = null,
         val episodeName: String,
