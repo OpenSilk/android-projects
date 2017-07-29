@@ -3,12 +3,12 @@ package org.opensilk.video
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
-import android.os.AsyncTask
 import org.fourthline.cling.controlpoint.SubscriptionCallback
 import org.fourthline.cling.model.gena.CancelReason
 import org.fourthline.cling.model.gena.GENASubscription
 import org.fourthline.cling.model.message.UpnpResponse
 import org.fourthline.cling.model.meta.Service
+import org.fourthline.cling.model.types.ServiceId
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
 import timber.log.Timber
@@ -25,14 +25,16 @@ class UpnpGENAObserver
         private val mUpnpService: CDSUpnpService
 ) : LifecycleObserver {
 
-    private val mSubscriptions = HashSet<SubscriptionCallback>()
+    private val mSubscriptions = HashMap<ServiceId, SubscriptionCallback>()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
-        for (s in mSubscriptions) {
-            s.end()
+        synchronized(mSubscriptions) {
+            for (s in mSubscriptions.values) {
+                s.end()
+            }
+            mSubscriptions.clear()
         }
-        mSubscriptions.clear()
     }
 
     fun subscribeEvents(service: Service<*,*>) {
@@ -62,7 +64,15 @@ class UpnpGENAObserver
                                 responseStatus: UpnpResponse?, exception: Exception?, defaultMsg: String?) {
             }
         }
-        mSubscriptions.add(callback)
         mUpnpService.controlPoint.execute(callback)
+        synchronized(mSubscriptions) {
+            mSubscriptions.put(service.serviceId, callback)
+        }
+    }
+
+    fun unsubscribeEvents(service: Service<*,*>) {
+        synchronized(mSubscriptions) {
+            mSubscriptions.remove(service.serviceId)?.end()
+        }
     }
 }

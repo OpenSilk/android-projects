@@ -149,8 +149,7 @@ interface CDSBrowseLoader {
  */
 class CDSBrowseLoaderImpl
 @Inject constructor(
-        private val mDatabaseClient: DatabaseClient,
-        private val mUpnpBrowseService: UpnpBrowseService
+        private val mDatabaseClient: DatabaseClient
 ) : CDSBrowseLoader {
     override fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>> {
         val mediaRef = newMediaRef(mediaId)
@@ -159,7 +158,6 @@ class CDSBrowseLoaderImpl
             UPNP_DEVICE -> UpnpFolderId((mediaRef.mediaId as UpnpDeviceId).deviceId, "0")
             else -> TODO("Unsupported mediaid")
         }
-        mUpnpBrowseService.browse(folderId)
         return mDatabaseClient.changesObservable
                 .filter { it is UpnpFolderChange && folderId == it.folderId }
                 .flatMap {
@@ -172,8 +170,6 @@ class CDSBrowseLoaderImpl
 }
 
 class NoContentDirectoryFoundException: Exception()
-
-/**
- *
- */
 class NoBrowseResultsException: Exception()
+class DeviceNotFoundException: Exception()
+class ServiceNotFoundException: Exception()

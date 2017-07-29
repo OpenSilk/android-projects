@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.CancellationSignal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,6 +67,46 @@ class DatabaseClientTest {
         }
     }
 
+    @After
+    fun teardown() {
+        mProvider.mDatabase.close()
+    }
+
+    @Test
+    fun testHideChildren() {
+        val parentmid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "0"))
+
+        val meta = MediaMeta()
+        val mid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "bar"))
+        meta.mediaId = mid.toJson()
+        meta.parentMediaId = parentmid.toJson()
+        meta.mimeType = MIME_TYPE_DIR
+        meta.title = "a foo title"
+
+        val uri = mClient.addUpnpFolder(meta)
+        assertThat(mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId)
+                .count().toBlocking().first()).isEqualTo(1)
+
+        val meta2 = MediaMeta()
+        val mid2 = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "bar2"))
+        meta2.mediaId = mid2.toJson()
+        meta2.parentMediaId = parentmid.toJson()
+        meta2.mimeType = "video/mpeg"
+        meta2.displayName = "my display name"
+        meta2.mediaUri = Uri.parse("https://foo.com/vid.mp4")
+
+        val uri2 = mClient.addUpnpVideo(meta2)
+        assertThat(mClient.getUpnpVideos(parentmid.mediaId as UpnpFolderId)
+                .count().toBlocking().first()).isEqualTo(1)
+
+        mClient.hideChildrenOf(parentmid.mediaId as UpnpFolderId)
+
+        assertThat(mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId)
+                .isEmpty.toBlocking().first()).isTrue()
+        assertThat(mClient.getUpnpVideos(parentmid.mediaId as UpnpFolderId)
+                .isEmpty.toBlocking().first()).isTrue()
+    }
+
     @Test
     fun testUpnpVideo_multiple_add_get() {
         val parentmid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "bar"))
@@ -114,7 +155,7 @@ class DatabaseClientTest {
         assertThat(retrieved2.mediaId).isEqualTo(meta.mediaId)
     }
 
-    @Test(expected = RuntimeException::class)
+    @Test
     fun testUpnpVideo_single_add_get_remove() {
         val meta = MediaMeta()
         val mid = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "bar"))
@@ -126,7 +167,9 @@ class DatabaseClientTest {
         meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
         val uri = mClient.addUpnpVideo(meta)
         mClient.removeUpnpVideo(uri.lastPathSegment.toLong())
-        mClient.getUpnpVideo(uri.lastPathSegment.toLong()).toBlocking().value() //throws
+        val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong())
+                .onErrorReturn { null }.toBlocking().value()
+        assertThat(retrieved).isNull()
     }
 
     @Test

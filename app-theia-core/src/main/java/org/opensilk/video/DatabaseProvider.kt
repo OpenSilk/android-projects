@@ -292,6 +292,12 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.UPNP_DEVICES -> {
                 return db.update("upnp_device", values, selection, selectionArgs)
             }
+            DatabaseMatches.UPNP_FOLDERS -> {
+                return db.update("upnp_folder", values, selection, selectionArgs)
+            }
+            DatabaseMatches.UPNP_VIDEOS -> {
+                return db.update("upnp_video", values, selection, selectionArgs)
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
     }

@@ -23,4 +23,7 @@ object AppSchedulers {
     val background: Scheduler by lazy {
         ExecutorScheduler(Executors.newSingleThreadExecutor())
     }
+    val scanner: Scheduler by lazy {
+        ExecutorScheduler(Executors.newSingleThreadExecutor())
+    }
 }

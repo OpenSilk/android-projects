@@ -147,7 +147,8 @@ class Database
                     "title TEXT NOT NULL, " +
                     "subtitle TEXT, " +
                     "artwork_uri TEXT, " +
-                    "available INTEGER DEFAULT 0 " +
+                    "available INTEGER DEFAULT 0," +
+                    "update_id INTEGER DEFAULT 0 " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS upnp_folder")
             db.execSQL("CREATE TABLE upnp_folder (" +
@@ -158,8 +159,10 @@ class Database
                     "_display_name TEXT NOT NULL, " +
                     "artwork_uri TEXT, " +
                     "mime_type TEXT NOT NULL, " +
+                    "update_id INTEGER DEFAULT 0, " +
 
                     "date_added INTEGER NOT NULL," +
+                    "hidden INTEGER DEFAULT 0," +
                     "UNIQUE(device_id,folder_id) " + //milli
                     ");")
             db.execSQL("DROP TABLE IF EXISTS upnp_video")
@@ -177,6 +180,7 @@ class Database
                     "resolution TEXT, " +
 
                     "date_added INTEGER NOT NULL, " + //milli
+                    "hidden INTEGER DEFAULT 0," +
 
                     "series_id INTEGER, " +
                     "episode_id INTEGER, " +

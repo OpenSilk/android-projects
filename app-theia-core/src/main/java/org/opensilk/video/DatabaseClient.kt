@@ -225,6 +225,18 @@ class DatabaseClient
     }
 
     /**
+     * Marks hidden column on upnp folders and videos with specified parent
+     */
+    fun hideChildrenOf(parentId: UpnpFolderId) {
+        val cv = ContentValues()
+        cv.put("hidden", "1")
+        mResolver.update(mUris.upnpFolders(), cv, "device_id=? AND parent_id=?",
+                arrayOf(parentId.deviceId, parentId.folderId))
+        mResolver.update(mUris.upnpVideos(), cv, "device_id=? AND parent_id=?",
+                arrayOf(parentId.deviceId, parentId.folderId))
+    }
+
+    /**
      * add a upnp folder to the database, item should be created with Container.toMediaMeta
      */
     fun addUpnpFolder(meta: MediaMeta): Uri {
@@ -241,6 +253,7 @@ class DatabaseClient
         }
         cv.put("mime_type", meta.mimeType)
         cv.put("date_added", System.currentTimeMillis())
+        cv.put("hidden", 0)
         return mResolver.insert(uris.upnpFolders(), cv) ?: Uri.EMPTY
     }
 
@@ -252,12 +265,12 @@ class DatabaseClient
     }
 
     /**
-     * retrieve direct decedents of parent folder
+     * retrieve direct decedents of parent folder that aren't hidden
      */
     fun getUpnpFolders(parentId: UpnpFolderId): Observable<MediaMeta> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpFolders(), upnpFolderProjection,
-                    "device_id=? AND parent_id=?",
+                    "device_id=? AND parent_id=? AND hidden=0",
                     arrayOf(parentId.deviceId, parentId.folderId),
                     "_display_name", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
@@ -316,6 +329,7 @@ class DatabaseClient
         cv.put("file_size", meta.size)
         cv.put("resolution", meta.resolution)
         cv.put("date_added", System.currentTimeMillis())
+        cv.put("hidden", 0)
         return mResolver.insert(uris.upnpVideos(), cv) ?: Uri.EMPTY
     }
 
@@ -332,7 +346,7 @@ class DatabaseClient
     fun getUpnpVideos(parentId: UpnpFolderId): Observable<MediaMeta> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpVideos(), upnpVideoProjection,
-                    "device_id=? AND parent_id=?", arrayOf(parentId.deviceId, parentId.folderId),
+                    "device_id=? AND parent_id=? AND hidden=0", arrayOf(parentId.deviceId, parentId.folderId),
                     "v._display_name", s.cancellationSignal())?.use { c ->
                 val baseUrl = getMovieImageBaseUrl()
                 while (c.moveToNext()) {
@@ -419,6 +433,7 @@ class DatabaseClient
         }
         return meta
     }
+
 
     fun makeTvBannerUri(path: String): Uri {
         return mTVDbBannerUri.buildUpon().appendPath("banners").appendPath(path).build()
