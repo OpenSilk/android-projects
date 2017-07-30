@@ -1,5 +1,6 @@
 package org.opensilk.video
 
+import org.fourthline.cling.model.action.ActionException
 import org.fourthline.cling.model.action.ActionInvocation
 import org.fourthline.cling.model.message.UpnpResponse
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
@@ -37,14 +38,14 @@ class UpnpBrowseScanner
         private val mDatabaseClient: DatabaseClient
 ) {
 
-    init {
-        subscribe()
-    }
-
     private val mQueueSubject = PublishSubject<UpnpFolderId>()
+    private val mStarted = AtomicBoolean(false)
 
     fun enqueue(folderId: UpnpFolderId) {
         mQueueSubject.onNext(folderId)
+        if (mStarted.compareAndSet(false, true)) {
+            subscribe()
+        }
     }
 
     private class FolderWithMetaList(val folderId: UpnpFolderId, val list: List<MediaMeta>)
@@ -73,9 +74,25 @@ class UpnpBrowseScanner
             //TODO remove still hidden items ?? for now just leaving
             mDatabaseClient.postChange(UpnpFolderChange(fwl.folderId))
         }, { t ->
-            Timber.e(t, "UpnpBrowseScanner")
+            if (t is BrowseExceptionWithFolderId) {
+                val tt = t.cause
+                if (tt is ActionException) {
+                    Timber.e(tt, "UpnpBrowseScanner: ActionException code=${tt.errorCode} msg=${tt.message}")
+                    when (tt.errorCode) {
+                        801 -> {
+                            //TODO show user access denied
+                        }
+                    }
+                } else {
+                    Timber.e(tt, "UpnpBrowseScanner: msg=${tt?.message}")
+                }
+            } else {
+                Timber.e(t, "UpnpBrowseScanner: msg=${t.message}")
+            }
         })
     }
+
+    class BrowseExceptionWithFolderId(val folderId: UpnpFolderId, cause: Throwable): Exception(cause)
 
     /**
      * performs the browse
@@ -88,11 +105,11 @@ class UpnpBrowseScanner
                 return@create
             }
             if (browse.error.get() != null) {
-                subscriber.onError(browse.error.get())
+                subscriber.onError(BrowseExceptionWithFolderId(parentId, browse.error.get()))
                 return@create
             }
             if (browse.result.get() == null) {
-                subscriber.onError(NullPointerException())
+                subscriber.onError(BrowseExceptionWithFolderId(parentId, NullPointerException()))
                 return@create
             }
             val result = browse.result.get()
@@ -135,7 +152,7 @@ class UpnpBrowseScanner
                 }
 
             } catch (e: Exception) {
-                subscriber.onError(e)
+                subscriber.onError(BrowseExceptionWithFolderId(parentId, e))
             }
         }
     }
