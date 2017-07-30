@@ -23,6 +23,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import org.apache.commons.lang3.StringUtils
+import org.eclipse.jetty.util.log.Log
 import org.fourthline.cling.UpnpService
 import org.fourthline.cling.UpnpServiceConfiguration
 import org.fourthline.cling.UpnpServiceImpl
@@ -37,8 +38,13 @@ import org.fourthline.cling.model.types.UDAServiceType
 import org.fourthline.cling.protocol.ProtocolFactory
 import org.fourthline.cling.registry.Registry
 import org.fourthline.cling.transport.Router
+import org.fourthline.cling.transport.impl.AsyncServletStreamServerConfigurationImpl
+import org.fourthline.cling.transport.impl.AsyncServletStreamServerImpl
 import org.fourthline.cling.transport.impl.RecoveringSOAPActionProcessorImpl
+import org.fourthline.cling.transport.impl.jetty.JettyServletContainer
+import org.fourthline.cling.transport.spi.NetworkAddressFactory
 import org.fourthline.cling.transport.spi.SOAPActionProcessor
+import org.fourthline.cling.transport.spi.StreamServer
 import org.opensilk.common.dagger.ForApplication
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -57,20 +63,6 @@ class CDSUpnpService
 ) : UpnpService {
 
     private val mUpnpService = Service()
-
-    init {
-        // Fix the logging integration between java.util.logging and Android internal logging
-        org.seamless.util.logging.LoggingUtil.resetRootHandler(
-                org.seamless.android.FixedAndroidLogHandler()
-        )
-        // enable logging as needed for various categories of Cling:
-        Logger.getLogger("org.fourthline.cling").level = Level.INFO//.FINE);
-        Logger.getLogger("org.fourthline.cling.transport.spi.DatagramProcessor").level = Level.INFO
-        Logger.getLogger("org.fourthline.cling.transport.spi.DatagramIO").level = Level.INFO
-        Logger.getLogger("org.fourthline.cling.protocol.ProtocolFactory").level = Level.INFO
-        Logger.getLogger("org.fourthline.cling.model.message.UpnpHeaders").level = Level.INFO
-//            Logger.getLogger("org.fourthline.cling.transport.spi.SOAPActionProcessor").setLevel(Level.FINER);
-    }
 
     override fun getRouter(): AndroidRouter {
         return mUpnpService.router
@@ -144,6 +136,24 @@ class CDSUpnpService
      * Our custom upnp service configuration
      */
     class ServiceConfiguration : AndroidUpnpServiceConfiguration() {
+        init {
+            // Fix the logging integration between java.util.logging and Android internal logging
+            org.seamless.util.logging.LoggingUtil.resetRootHandler(
+                    org.seamless.android.FixedAndroidLogHandler()
+            )
+            // enable logging as needed for various categories of Cling:
+            Logger.getLogger("org.fourthline.cling").level = Level.INFO//.FINE);
+            Logger.getLogger("org.fourthline.cling.transport.spi.DatagramProcessor").level = Level.INFO
+            Logger.getLogger("org.fourthline.cling.transport.spi.DatagramIO").level = Level.INFO
+            Logger.getLogger("org.fourthline.cling.protocol.ProtocolFactory").level = Level.INFO
+            Logger.getLogger("org.fourthline.cling.model.message.UpnpHeaders").level = Level.INFO
+            Logger.getLogger("org.fourthline.cling.transport.spi.SOAPActionProcessor").level = Level.FINER
+
+            //fix jetty logging
+            Log.__logClass = JettyAndroidLogger::class.java.name
+            Log.__logClass = JettyAndroidLogger::class.java.name
+        }
+
         override fun getExclusiveServiceTypes(): Array<ServiceType> {
             return arrayOf(CDSserviceType)
         }
@@ -163,6 +173,16 @@ class CDSUpnpService
                     }
                 }
             }
+        }
+
+        override fun createStreamServer(networkAddressFactory: NetworkAddressFactory): StreamServer<*> {
+            // Use Jetty, start/stop a new shared instance of JettyServletContainer
+            return AsyncServletStreamServerImpl(
+                    AsyncServletStreamServerConfigurationImpl(
+                            JettyServletContainer.INSTANCE,
+                            networkAddressFactory.streamListenPort
+                    )
+            )
         }
 
         override fun getRegistryMaintenanceIntervalMillis(): Int {
