@@ -4,16 +4,12 @@ import android.content.ContentProvider
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
-import android.provider.ContactsContract
-import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.ProviderScope
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.media.playback.MediaProviderClient
 import timber.log.Timber
 import javax.inject.Inject
 

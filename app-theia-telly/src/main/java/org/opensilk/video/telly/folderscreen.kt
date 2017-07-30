@@ -16,12 +16,11 @@ import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.*
-import org.opensilk.media.playback.MediaProviderClient
+import org.opensilk.media.MediaProviderClient
 import org.opensilk.video.*
 import rx.subscriptions.CompositeSubscription
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 /**
  * Created by drew on 5/28/17.

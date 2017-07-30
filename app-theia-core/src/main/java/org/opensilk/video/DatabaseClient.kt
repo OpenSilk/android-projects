@@ -5,31 +5,23 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.ContentObserver
 import android.database.Cursor
-import android.database.sqlite.SQLiteException
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.CancellationSignal
-import com.google.android.exoplayer2.util.MimeTypes
 import dagger.Binds
 import dagger.Module
-import org.fourthline.cling.model.meta.Device
-import org.fourthline.cling.model.meta.RemoteDeviceIdentity
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.media.*
-import org.opensilk.media.playback.MediaProviderClient
+import org.opensilk.media.MediaProviderClient
 import org.opensilk.tmdb.api.model.Image
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
-import org.opensilk.tmdb.api.model.TMDbConfig
 import org.opensilk.tvdb.api.model.*
 import rx.Single
 import rx.Observable
 import rx.Subscriber
-import rx.Subscription
 import rx.lang.kotlin.BehaviorSubject
 import rx.subscriptions.Subscriptions
-import timber.log.Timber
-import java.util.*
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -133,18 +125,27 @@ class DatabaseClient
     }
 
     override fun getMediaItem(mediaRef: MediaRef): Single<MediaBrowser.MediaItem> {
+        return getMediaMeta(mediaRef).map { it.toMediaItem() }
+    }
+
+    override fun getMediaMeta(mediaRef: MediaRef): Single<MediaMeta> {
         return when (mediaRef.kind) {
-            UPNP_FOLDER -> getUpnpFolder(mediaRef.mediaId as UpnpFolderId).map { it.toMediaItem() }
-            UPNP_VIDEO -> getUpnpVideo(mediaRef.mediaId as UpnpVideoId).map { it.toMediaItem() }
-            UPNP_DEVICE -> getUpnpDevice(mediaRef.mediaId as UpnpDeviceId).map { it.toMediaItem() }
+            UPNP_FOLDER -> getUpnpFolder(mediaRef.mediaId as UpnpFolderId)
+            UPNP_VIDEO -> getUpnpVideo(mediaRef.mediaId as UpnpVideoId)
+            UPNP_DEVICE -> getUpnpDevice(mediaRef.mediaId as UpnpDeviceId)
             else -> TODO()
         }
     }
 
-    fun getVideoDescription(mediaRef: MediaRef): Single<VideoDescInfo> {
-        return Single.create { s ->
-            s.onError(NoSuchItemException())
+    override fun getMediaOverview(mediaRef: MediaRef): Single<String> {
+        return when (mediaRef.kind) {
+            UPNP_VIDEO -> getUpnpVideoOverview(mediaRef.mediaId as UpnpVideoId)
+            else -> TODO()
         }
+    }
+
+    override fun getMediaArtworkUri(mediaRef: MediaRef): Single<Uri> {
+        TODO("not implemented")
     }
 
     /**
@@ -373,6 +374,9 @@ class DatabaseClient
         }
     }
 
+    /**
+     *
+     */
     fun getUpnpVideo(videoId: UpnpVideoId): Single<MediaMeta> {
         return Single.create { s ->
             mResolver.query(uris.upnpVideos(), upnpVideoProjection,
@@ -434,6 +438,47 @@ class DatabaseClient
         return meta
     }
 
+    /**
+     *
+     */
+    fun getUpnpVideoOverview(videoId: UpnpVideoId): Single<String> {
+        return Single.create { s ->
+            mResolver.query(uris.upnpVideos(),
+                    arrayOf("e.overview as episode_overview",
+                            "m.overview as movie_overview"),
+                    "device_id=? AND item_id=?",
+                    arrayOf(videoId.deviceId, videoId.itemId),
+                    null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    if (!c.isNull(0)) {
+                        s.onSuccess(c.getString(0))
+                    } else if (!c.isNull(1)) {
+                        s.onSuccess(c.getString(1))
+                    } else {
+                        s.onError(NullPointerException())
+                    }
+                } else {
+                    s.onError(NoSuchItemException())
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    fun setUpnpVideoTvEpisodeId(videoId: UpnpVideoId, id: Long): Boolean {
+        val cv = ContentValues()
+        cv.put("episode_id", id)
+        cv.put("movie_id", "")
+        return mResolver.update(mUris.upnpVideos(), cv, "device_id=? AND item_id=?",
+                arrayOf(videoId.deviceId, videoId.itemId)) != 0
+    }
+
+    fun setUpnpVideoMovieId(videoId: UpnpVideoId, id: Long): Boolean {
+        val cv = ContentValues()
+        cv.put("episode_id", "")
+        cv.put("movie_id", id)
+        return mResolver.update(mUris.upnpVideos(), cv, "device_id=? AND item_id=?",
+                arrayOf(videoId.deviceId, videoId.itemId)) != 0
+    }
 
     fun makeTvBannerUri(path: String): Uri {
         return Uri.parse(mTVDbBannerRoot).buildUpon().appendPath(path).build()

@@ -1,11 +1,13 @@
 package org.opensilk.video.telly
 
 import android.media.browse.MediaBrowser
+import android.net.Uri
 import dagger.Binds
 import dagger.Module
-import org.opensilk.common.dagger.ActivityScope
+import org.opensilk.media.MediaMeta
 import org.opensilk.media.MediaRef
-import org.opensilk.media.playback.MediaProviderClient
+import org.opensilk.media.MediaProviderClient
+import org.opensilk.media._getMediaMeta
 import org.opensilk.video.CDSBrowseLoader
 import org.opensilk.video.CDSDevicesLoader
 import rx.Observable
@@ -54,5 +56,17 @@ class MockMediaProviderClient
 constructor(): MediaProviderClient {
     override fun getMediaItem(mediaRef: MediaRef): Single<MediaBrowser.MediaItem> {
         return Single.just(testUpnpVideoItem())
+    }
+
+    override fun getMediaMeta(mediaRef: MediaRef): Single<MediaMeta> {
+        return getMediaItem(mediaRef).map { it._getMediaMeta() }
+    }
+
+    override fun getMediaOverview(mediaRef: MediaRef): Single<String> {
+        return Single.just("Doe remy epslon flon")
+    }
+
+    override fun getMediaArtworkUri(mediaRef: MediaRef): Single<Uri> {
+        return Single.error(Exception())
     }
 }

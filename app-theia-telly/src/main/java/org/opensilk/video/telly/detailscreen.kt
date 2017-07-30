@@ -19,13 +19,16 @@ import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.media.bundle
+import org.opensilk.common.rx.subscribeIgnoreError
+import org.opensilk.media.*
+import org.opensilk.video.AppSchedulers
 import org.opensilk.video.VideoDescInfo
 import org.opensilk.video.VideoFileInfo
 import org.opensilk.video.ViewModelKey
 import org.opensilk.video.telly.databinding.DetailsFileInfoRowBinding
+import rx.Single
 import java.lang.ref.WeakReference
-import java.util.ArrayList
+import java.util.*
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -131,12 +134,12 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(DetailViewModel::class)
-        mViewModel.mediaId = arguments.getString(EXTRA_MEDIAID)
-        mViewModel.videoDescription.observe(this, Observer {
-            mOverviewRow.item = it!!
+        mViewModel.onMediaId(arguments.getString(EXTRA_MEDIAID))
+        mViewModel.videoDescription.observe(this, LiveDataObserver {
+            mOverviewRow.item = it
         })
-        mViewModel.fileInfo.observe(this, Observer {
-            mFileInfoRow.fileInfo = it!!
+        mViewModel.fileInfo.observe(this, LiveDataObserver {
+            mFileInfoRow.fileInfo = it
         })
 
         mBackgroundManager = BackgroundManager.getInstance(activity)
@@ -173,7 +176,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
             ACTIONID_PLAY, ACTIONID_RESUME, ACTIONID_START_OVER -> {
                 val intent = Intent(activity, PlaybackActivity::class.java)
                 intent.action = ACTION_PLAY
-                intent.putExtra(EXTRA_MEDIAID, mViewModel.mediaId)
+                intent.putExtra(EXTRA_MEDIAID, arguments.getString(EXTRA_MEDIAID))
                 activity.startActivity(intent)
             }
             else -> {
@@ -206,10 +209,38 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
  */
 class DetailViewModel
 @Inject constructor(
+        val mClient: MediaProviderClient
 ): ViewModel() {
-    var mediaId: String = ""
     val videoDescription = MutableLiveData<VideoDescInfo>()
     val fileInfo = MutableLiveData<VideoFileInfo>()
+
+    fun onMediaId(mediaId: String) {
+        val ref = newMediaRef(mediaId)
+        subscribeMediaItem(ref)
+    }
+
+    fun subscribeMediaItem(mediaRef: MediaRef) {
+        Single.zip(
+                mClient.getMediaMeta(mediaRef),
+                mClient.getMediaOverview(mediaRef),
+                { meta, overview ->
+                    VideoDescInfo(meta.title.elseIfBlank(meta.displayName),
+                            meta.subtitle, overview)
+                })
+                .subscribeOn(AppSchedulers.diskIo)
+                .subscribeIgnoreError {
+                    videoDescription.postValue(it)
+                }
+        mClient.getMediaMeta(mediaRef)
+                .subscribeOn(AppSchedulers.diskIo)
+                .subscribeIgnoreError {
+                    fileInfo.postValue(VideoFileInfo(
+                            it.displayName,
+                            it.size,
+                            it.duration
+                    ))
+                }
+    }
 }
 
 /**

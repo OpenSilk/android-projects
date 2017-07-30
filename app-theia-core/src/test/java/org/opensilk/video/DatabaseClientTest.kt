@@ -37,7 +37,7 @@ class DatabaseClientTest {
         mProvider.mUris = DatabaseUris("foo.authority")
 
         mClient = DatabaseClient(RuntimeEnvironment.application,
-                DatabaseUris("foo.authority"), Uri.parse("http://tvdb.foo"))
+                DatabaseUris("foo.authority"), "http://tvdb.foo")
         mClient.mResolver = object: ContentResolverGlue {
             override fun insert(uri: Uri, values: ContentValues): Uri? {
                 return mProvider.insert(uri, values)
@@ -70,6 +70,53 @@ class DatabaseClientTest {
     @After
     fun teardown() {
         mProvider.mDatabase.close()
+    }
+
+    @Test
+    fun upnpVideoOverview_movie() {
+
+        val movie = Movie(100, "foo movie", null, "an overview 1", "2001", "/paster", "/backdrop")
+        mClient.addMovie(movie)
+
+        val parentmid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "bar"))
+
+        val meta = MediaMeta()
+        val mid = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "bar"))
+        meta.mediaId = mid.toJson()
+        meta.parentMediaId = parentmid.toJson()
+        meta.mimeType = "video/mpeg"
+        meta.displayName = "my display name"
+        meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
+
+        mClient.addUpnpVideo(meta)
+        mClient.setUpnpVideoMovieId(UpnpVideoId("foo", "bar"), 100)
+
+        assertThat(mClient.getUpnpVideoOverview(UpnpVideoId("foo", "bar")).toBlocking().value())
+                .isEqualTo("an overview 1")
+    }
+
+    @Test
+    fun upnpVideoOverview_tvEpisode() {
+        val episode = SeriesEpisode(id = 1, episodeName = "name",
+                overview = "an overview", airedSeason =  1,
+                airedEpisodeNumber = 1, airedSeasonId = 1)
+        mClient.addTvEpisodes(1, listOf(episode))
+
+        val parentmid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "bar"))
+
+        val meta = MediaMeta()
+        val mid = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "bar"))
+        meta.mediaId = mid.toJson()
+        meta.parentMediaId = parentmid.toJson()
+        meta.mimeType = "video/mpeg"
+        meta.displayName = "my display name"
+        meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
+
+        mClient.addUpnpVideo(meta)
+        mClient.setUpnpVideoTvEpisodeId(UpnpVideoId("foo", "bar"), 1)
+
+        assertThat(mClient.getUpnpVideoOverview(UpnpVideoId("foo", "bar")).toBlocking().value())
+                .isEqualTo("an overview")
     }
 
     @Test
