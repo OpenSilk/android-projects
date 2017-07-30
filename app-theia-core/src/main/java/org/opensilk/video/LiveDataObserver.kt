@@ -1,4 +1,4 @@
-package org.opensilk.video.telly
+package org.opensilk.video
 
 import android.arch.lifecycle.Observer
 

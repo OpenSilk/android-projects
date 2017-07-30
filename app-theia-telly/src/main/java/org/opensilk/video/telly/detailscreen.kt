@@ -21,10 +21,7 @@ import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
-import org.opensilk.video.AppSchedulers
-import org.opensilk.video.VideoDescInfo
-import org.opensilk.video.VideoFileInfo
-import org.opensilk.video.ViewModelKey
+import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.DetailsFileInfoRowBinding
 import rx.Single
 import java.lang.ref.WeakReference
