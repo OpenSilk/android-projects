@@ -10,19 +10,15 @@ import android.media.session.PlaybackState
 import android.media.session.PlaybackState.*
 import android.net.Uri
 import android.os.*
-import android.service.media.MediaBrowserService
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
 import timber.log.Timber
-import java.util.*
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
