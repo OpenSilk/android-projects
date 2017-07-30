@@ -51,25 +51,25 @@ private const val WAIT_USERS = 1
 
 @Module
 object LookupModule {
-    @Provides @Singleton
+    @Provides @Singleton @JvmStatic
     fun provideOkHttpClient(@ForApplication context: Context): OkHttpClient {
         return OkHttpClient.Builder()
                 .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
                 .build()
     }
-    @Provides @Singleton
+    @Provides @Singleton @JvmStatic
     fun provideTVDBAuth(): Auth {
         return Auth(BuildConfig.TVDB_API_KEY)
     }
-    @Provides @Singleton @Named("tvdb_api_root")
+    @Provides @Singleton @Named("tvdb_api_root") @JvmStatic
     fun provideTVDBApiRoot(): String {
         return "https://api.thetvdb.com/"
     }
-    @Provides @Singleton @Named("tvdb_banner_root")
+    @Provides @Singleton @Named("tvdb_banner_root") @JvmStatic
     fun provideTVDBBannerRoot(): String {
         return "https://thetvdb.com/banners/"
     }
-    @Provides @Singleton
+    @Provides @Singleton @JvmStatic
     fun provideTVDBApi(@Named("tvdb_api_root") apiRoot: String, okHttpClient: OkHttpClient): TVDb {
         return Retrofit.Builder()
                 .baseUrl(HttpUrl.parse(apiRoot))
@@ -80,15 +80,15 @@ object LookupModule {
                 .build()
                 .create(TVDb::class.java)
     }
-    @Provides @Singleton @Named("moviedb_api_key")
+    @Provides @Singleton @Named("moviedb_api_key") @JvmStatic
     fun provideMovieDbApiKey(): String {
         return BuildConfig.TMDB_API_KEY;
     }
-    @Provides @Singleton @Named("moviedb_api_root")
+    @Provides @Singleton @Named("moviedb_api_root") @JvmStatic
     fun provideMovieDBApiRoot(): String {
         return "https://api.themoviedb.org/3/"
     }
-    @Provides @Singleton
+    @Provides @Singleton @JvmStatic
     fun provideMovieDB(@Named("moviedb_api_root") apiRoot: String,
                        @Named("moviedb_api_key") apiKey: String,
                        okHttpClient: OkHttpClient): TMDb {

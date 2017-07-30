@@ -117,7 +117,7 @@ class DatabaseClient
 @Inject constructor(
     @ForApplication context: Context,
     private val mUris: DatabaseUris,
-    @Named("tvdb_banner_root") private val mTVDbBannerUri: Uri
+    @Named("tvdb_banner_root") private val mTVDbBannerRoot: String
 ) : MediaProviderClient {
 
     internal var mResolver: ContentResolverGlue = DefaultContentResolverGlue(context.contentResolver)
@@ -436,7 +436,7 @@ class DatabaseClient
 
 
     fun makeTvBannerUri(path: String): Uri {
-        return mTVDbBannerUri.buildUpon().appendPath("banners").appendPath(path).build()
+        return Uri.parse(mTVDbBannerRoot).buildUpon().appendPath(path).build()
     }
 
     fun makeTvSubtitle(seriesName: String, seasonNumber: Int, episodeNumber: Int): String {

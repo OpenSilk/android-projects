@@ -34,7 +34,8 @@ import javax.inject.Singleton
                 PlaybackModule::class,
                 PlaybackServiceModule::class,
                 MediaProviderModule::class,
-                DatabaseProviderModule::class
+                DatabaseProviderModule::class,
+                LookupModule::class
         )
 )
 interface RootComponent: AppContextComponent, Injector<VideoApp>
