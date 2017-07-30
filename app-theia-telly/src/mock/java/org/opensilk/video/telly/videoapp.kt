@@ -7,9 +7,7 @@ import dagger.Module
 import dagger.Provides
 import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.video.DatabaseProviderModule
-import org.opensilk.video.PlaybackServiceModule
-import org.opensilk.video.UpnpHolderServiceModule
+import org.opensilk.video.*
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -31,7 +29,8 @@ import javax.inject.Singleton
                 MockPlaybackModule::class,
                 PlaybackServiceModule::class,
                 MockMediaProviderClientModule::class,
-                DatabaseProviderModule::class
+                DatabaseProviderModule::class,
+                LookupModule::class
                 )
 )
 interface MockRootComponent: RootComponent {
@@ -43,8 +42,6 @@ interface MockRootComponent: RootComponent {
  */
 @Module
 object MockRootModule {
-    @Provides @JvmStatic @Named("TVDBRoot")
-    fun tvdbRoot() = Uri.parse("https://thetvdb.com/")
     @Provides @Named("DatabaseAuthority") @JvmStatic
     fun databaseAuthority(@ForApplication context: Context) = context.getString(R.string.videos_authority)
 }

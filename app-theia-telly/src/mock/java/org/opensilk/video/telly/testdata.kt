@@ -51,6 +51,7 @@ fun testUpnpVideoItem(): MediaBrowser.MediaItem {
     mediaExtras.title = "Video 1"
     mediaExtras.subtitle = "Made by foo"
     mediaExtras.mimeType = "video/mp4"
+    mediaExtras.displayName = "jellyfish-3-mbps-hd-h264.mkv"
     mediaExtras.mediaUri = Uri.parse("file:///android_asset/jellyfish-3-mbps-hd-h264.mkv")
     mediaExtras.size = 1024 * 1024 * 53
     return mediaExtras.toMediaItem()

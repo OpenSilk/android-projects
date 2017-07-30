@@ -129,7 +129,6 @@ class HomeViewModel
     private val subscriptions = CompositeSubscription()
 
     fun subscribeServers() {
-        Timber.e("Subscribe Servers")
         val s = mServersLoader.observable
                 .subscribe({
                     servers.postValue(it)

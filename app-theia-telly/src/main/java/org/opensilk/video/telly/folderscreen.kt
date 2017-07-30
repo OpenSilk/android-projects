@@ -15,11 +15,9 @@ import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.media.bundle
-import org.opensilk.media.elseIfBlank
-import org.opensilk.video.CDSBrowseLoader
-import org.opensilk.video.NoBrowseResultsException
-import org.opensilk.video.ViewModelKey
+import org.opensilk.media.*
+import org.opensilk.media.playback.MediaProviderClient
+import org.opensilk.video.*
 import rx.subscriptions.CompositeSubscription
 import timber.log.Timber
 import javax.inject.Inject
@@ -87,7 +85,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(FolderViewModel::class)
-        mViewModel.mediaId = arguments.getString(EXTRA_MEDIAID)
+        mViewModel.onMediaId(arguments.getString(EXTRA_MEDIAID))
         mViewModel.mediaTitle.observe(this, Observer {
             title = it
         })
@@ -125,6 +123,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
  */
 class FolderViewModel
 @Inject constructor(
+        private val mDatabaseClient: MediaProviderClient,
         private val mBrowseLoader: CDSBrowseLoader
 ) : ViewModel() {
     val mediaTitle = MutableLiveData<String>()
@@ -132,16 +131,14 @@ class FolderViewModel
     val noBrowseResults = MutableLiveData<String>()
     val loadError = MutableLiveData<String>()
     private val subscriptions = CompositeSubscription()
-    var mediaId: String by Delegates.observable("", { _, o, n ->
-        if ("" != n && o != n) {
-            subscribeBrowseItems(n)
-            //TODO fetch title
-        }
-    })
+
+    fun onMediaId(mediaId: String) {
+        subscribeBrowseItems(mediaId)
+        subscribeTitle(newMediaRef(mediaId))
+    }
 
     fun subscribeBrowseItems(mediaId: String) {
         val s = mBrowseLoader.observable(mediaId)
-                .toList()
                 .subscribe({
                     folderItems.postValue(it)
                 }, {
@@ -152,6 +149,15 @@ class FolderViewModel
                         loadError.postValue(it.message.elseIfBlank("null"))
                     }
                 })
+        subscriptions.add(s)
+    }
+
+    fun subscribeTitle(mediaRef: MediaRef) {
+        val s = mDatabaseClient.getMediaItem(mediaRef)
+                .map(MediaBrowser.MediaItem::_getMediaMeta)
+                .subscribe {
+                    mediaTitle.postValue(it.title)
+                }
         subscriptions.add(s)
     }
 

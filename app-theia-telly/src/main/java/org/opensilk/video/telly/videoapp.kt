@@ -45,8 +45,6 @@ interface RootComponent: AppContextComponent, Injector<VideoApp>
  */
 @Module
 object RootModule {
-    @Provides @Named("TVDBRoot") @JvmStatic
-    fun tvdbRootUri() = Uri.parse("https://thetvdb.com/")
     @Provides @Named("DatabaseAuthority") @JvmStatic
     fun databaseAuthority(@ForApplication context: Context) = context.getString(R.string.videos_authority)
 }

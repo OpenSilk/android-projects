@@ -38,8 +38,8 @@ class MockCDSDevicesLoader
  */
 class MockCDSBrowseLoader
 @Inject constructor(): CDSBrowseLoader {
-    override fun observable(mediaId: String): Observable<MediaBrowser.MediaItem>
-            = Observable.from(testUpnpFolderItemList())
+    override fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>>
+            = Observable.just(testUpnpFolderItemList())
 }
 
 
