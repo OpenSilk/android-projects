@@ -123,7 +123,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 class FolderViewModel
 @Inject constructor(
         private val mDatabaseClient: MediaProviderClient,
-        private val mBrowseLoader: CDSBrowseLoader
+        private val mBrowseLoader: UpnpFoldersLoader
 ) : ViewModel() {
     val mediaTitle = MutableLiveData<String>()
     val folderItems = MutableLiveData<List<MediaBrowser.MediaItem>>()

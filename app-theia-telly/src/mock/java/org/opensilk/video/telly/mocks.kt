@@ -8,8 +8,8 @@ import org.opensilk.media.MediaMeta
 import org.opensilk.media.MediaRef
 import org.opensilk.media.MediaProviderClient
 import org.opensilk.media._getMediaMeta
-import org.opensilk.video.CDSBrowseLoader
-import org.opensilk.video.CDSDevicesLoader
+import org.opensilk.video.UpnpFoldersLoader
+import org.opensilk.video.UpnpDevicesLoader
 import rx.Observable
 import rx.Single
 import javax.inject.Inject
@@ -21,16 +21,16 @@ import javax.inject.Singleton
 @Module
 abstract class MockUpnpLoadersModule {
     @Binds
-    abstract fun provideCDSDevicesLoader(mock: MockCDSDevicesLoader): CDSDevicesLoader
+    abstract fun provideCDSDevicesLoader(mock: MockUpnpDevicesLoader): UpnpDevicesLoader
     @Binds
-    abstract fun provideCDSBrowseLoader(mock: MockCDSBrowseLoader): CDSBrowseLoader
+    abstract fun provideCDSBrowseLoader(mock: MockUpnpFoldersLoader): UpnpFoldersLoader
 }
 
 /**
  *
  */
-class MockCDSDevicesLoader
-@Inject constructor(): CDSDevicesLoader {
+class MockUpnpDevicesLoader
+@Inject constructor(): UpnpDevicesLoader {
     override val observable: Observable<List<MediaBrowser.MediaItem>>
         get() = Observable.from(arrayOf(testUpnpDeviceItem(), testUpnpVideoItem())).toList()
 }
@@ -38,8 +38,8 @@ class MockCDSDevicesLoader
 /**
  *
  */
-class MockCDSBrowseLoader
-@Inject constructor(): CDSBrowseLoader {
+class MockUpnpFoldersLoader
+@Inject constructor(): UpnpFoldersLoader {
     override fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>>
             = Observable.just(testUpnpFolderItemList())
 }

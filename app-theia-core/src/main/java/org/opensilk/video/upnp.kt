@@ -98,76 +98,7 @@ fun VideoItem.toMediaMeta(deviceId: UpnpDeviceId): MediaMeta {
     return meta
 }
 
-/**
- * This module is superseded in mock for espresso tests
- */
-@Module
-abstract class UpnpLoadersModule {
-    @Binds
-    abstract fun provideCDSDevicesLoader(impl: CDSDevicesLoaderImpl): CDSDevicesLoader
-    @Binds
-    abstract fun provideCDSBrowseLoader(impl: CDSBrowseLoaderImpl): CDSBrowseLoader
-}
 
-/**
- * The Loader for the Media Servers row in the Home Activity
- */
-interface CDSDevicesLoader {
-    val observable: Observable<List<MediaBrowser.MediaItem>>
-}
-
-/**
- * Created by drew on 5/29/17.
- */
-class CDSDevicesLoaderImpl
-@Inject constructor(
-        private val mDatabaseClient: DatabaseClient
-): CDSDevicesLoader {
-
-    override val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
-        mDatabaseClient.changesObservable
-                .filter { it is UpnpDeviceChange }
-                .map { it as UpnpDeviceChange }
-                .startWith(UpnpDeviceChange())
-                .flatMap {
-                    mDatabaseClient.getUpnpDevices()
-                            .map { it.toMediaItem() }
-                            .toList().subscribeOn(AppSchedulers.diskIo)
-                }
-        }
-}
-
-/**
- * The loader for the folder activity
- */
-interface CDSBrowseLoader {
-    fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>>
-}
-
-/**
- *
- */
-class CDSBrowseLoaderImpl
-@Inject constructor(
-        private val mDatabaseClient: DatabaseClient
-) : CDSBrowseLoader {
-    override fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>> {
-        val mediaRef = newMediaRef(mediaId)
-        val folderId = when (mediaRef.kind) {
-            UPNP_FOLDER -> mediaRef.mediaId as UpnpFolderId
-            UPNP_DEVICE -> UpnpFolderId((mediaRef.mediaId as UpnpDeviceId).deviceId, "0")
-            else -> TODO("Unsupported mediaid")
-        }
-        return mDatabaseClient.changesObservable
-                .filter { it is UpnpFolderChange && folderId == it.folderId }
-                .flatMap {
-                    Observable.concat(
-                        mDatabaseClient.getUpnpFolders(folderId).subscribeOn(AppSchedulers.diskIo),
-                        mDatabaseClient.getUpnpVideos(folderId).subscribeOn(AppSchedulers.diskIo)
-                    ).map { it.toMediaItem() }.toList()
-                }
-    }
-}
 
 class NoContentDirectoryFoundException: Exception()
 class NoBrowseResultsException: Exception()

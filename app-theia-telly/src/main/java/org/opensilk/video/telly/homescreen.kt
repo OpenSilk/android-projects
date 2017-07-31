@@ -18,11 +18,10 @@ import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.video.CDSDevicesLoader
+import org.opensilk.video.UpnpDevicesLoader
 import org.opensilk.video.ViewModelKey
 import rx.exceptions.Exceptions
 import rx.subscriptions.CompositeSubscription
-import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -123,7 +122,7 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
  */
 class HomeViewModel
 @Inject constructor(
-        private val mServersLoader: CDSDevicesLoader
+        private val mServersLoader: UpnpDevicesLoader
 ): ViewModel() {
     val servers = MutableLiveData<List<MediaBrowser.MediaItem>>()
     private val subscriptions = CompositeSubscription()
