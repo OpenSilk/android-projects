@@ -148,6 +148,21 @@ class DatabaseClient
         TODO("not implemented")
     }
 
+    override fun siblingsOf(mediaRef: MediaRef): Observable<MediaMeta> {
+        return when (mediaRef.kind) {
+            UPNP_FOLDER -> {
+                getUpnpFolder(mediaRef.mediaId as UpnpFolderId).flatMapObservable {
+                    getUpnpVideos(newMediaRef(it.parentMediaId).mediaId as UpnpFolderId)
+                }
+            }
+            UPNP_VIDEO -> {
+                getUpnpVideo(mediaRef.mediaId as UpnpVideoId).flatMapObservable {
+                    getUpnpVideos(newMediaRef(it.parentMediaId).mediaId as UpnpFolderId)
+                }
+            } else -> TODO()
+        }
+    }
+
     /**
      * Add a meta item describing a upnp device with a content directory service to the database
      * item should be created with Device.toMediaMeta

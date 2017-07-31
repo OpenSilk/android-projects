@@ -2,6 +2,7 @@ package org.opensilk.media
 
 import android.media.browse.MediaBrowser
 import android.net.Uri
+import rx.Observable
 import rx.Single
 
 /**
@@ -12,4 +13,5 @@ interface MediaProviderClient {
     fun getMediaMeta(mediaRef: MediaRef): Single<MediaMeta>
     fun getMediaOverview(mediaRef: MediaRef): Single<String>
     fun getMediaArtworkUri(mediaRef: MediaRef): Single<Uri>
+    fun siblingsOf(mediaRef: MediaRef): Observable<MediaMeta>
 }
