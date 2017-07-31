@@ -40,6 +40,14 @@ fun <T: ViewModel> Fragment.fetchViewModel(clazz: KClass<T>): T {
     return vm
 }
 
+fun <T: ViewModel> BaseVideoActivity.fetchViewModel(clazz: KClass<T>): T {
+    val vm = ViewModelProviders.of(this, (application as ViewModelProvider.Factory)).get(clazz.java)
+    if (this is LifecycleRegistryOwner && vm is LifecycleObserver) {
+        this.lifecycle.addObserver(vm)
+    }
+    return vm
+}
+
 /**
  * Created by drew on 6/1/17.
  */
