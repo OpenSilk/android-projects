@@ -54,9 +54,10 @@ object RootModule {
  */
 open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory {
 
-    open val rootComponent: RootComponent by lazy {
+    open internal val rootComponent: RootComponent by lazy {
         DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
     }
+    private val injectOnce = Once()
 
     override fun onCreate() {
         super.onCreate()
@@ -87,7 +88,9 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
      * is supposed to work.
      */
     override fun injectFoo(foo: Any) {
-        rootComponent.inject(this)
+        injectOnce.Do {
+            rootComponent.inject(this)
+        }
         if (foo is HomeFragment) {
             (foo.activity as HomeActivity).daggerComponent(mHomeBuilder, foo).inject(foo)
         } else if (foo is FolderFragment) {

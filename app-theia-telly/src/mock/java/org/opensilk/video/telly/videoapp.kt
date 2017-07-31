@@ -53,11 +53,7 @@ class MockVideoApp: VideoApp() {
     override val rootComponent: MockRootComponent by lazy {
         DaggerMockRootComponent.builder().appContextModule(AppContextModule(this)).build()
     }
-
-    override fun onCreate() {
-        super.onCreate()
-        rootComponent.injectMockApp(this)
-    }
+    private val injectOnce = Once()
 
     @Inject lateinit var mMockHomeBuilder: MockHomeComponent.Builder
     @Inject lateinit var mMockFolderBuilder: MockFolderComponent.Builder
@@ -65,6 +61,9 @@ class MockVideoApp: VideoApp() {
     @Inject lateinit var mMockPlaybackBuilder: MockPlaybackComponent.Builder
 
     override fun injectFoo(foo: Any) {
+        injectOnce.Do {
+            rootComponent.injectMockApp(this)
+        }
         if (foo is HomeFragment) {
             (foo.activity as HomeActivity).daggerComponent(mMockHomeBuilder, foo).inject(foo)
         } else if (foo is FolderFragment) {
