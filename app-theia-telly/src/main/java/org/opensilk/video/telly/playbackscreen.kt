@@ -1,6 +1,7 @@
 package org.opensilk.video.telly
 
 import android.animation.Animator
+import android.arch.lifecycle.*
 import android.content.*
 import android.databinding.DataBindingUtil
 import android.media.MediaMetadata
@@ -8,11 +9,9 @@ import android.media.browse.MediaBrowser
 import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.ResultReceiver
+import android.os.*
 import android.text.format.DateFormat
+import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
 import com.google.android.exoplayer2.*
@@ -20,21 +19,19 @@ import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.text.Cue
 import com.google.android.exoplayer2.text.TextRenderer
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
+import dagger.Binds
 import dagger.BindsInstance
 import dagger.Module
 import dagger.Subcomponent
+import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.ActivityScope
+import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.media.MediaBrowserCallback
-import org.opensilk.media.MediaControllerCallback
-import org.opensilk.media.bundle
-import org.opensilk.media.notConnected
+import org.opensilk.media.*
 import org.opensilk.media.playback.*
-import org.opensilk.video.PlaybackService
-import org.opensilk.video.VideoDescInfo
+import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.ActivityPlaybackBinding
-import org.opensilk.video.videoDescInfo
 import rx.Observable
 import rx.Scheduler
 import rx.android.schedulers.AndroidSchedulers
@@ -49,6 +46,10 @@ const val ACTION_RESUME = "org.opensilk.action.RESUME"
 const val EXTRA_PLAY_WHEN_READY = "org.opensilk.extra.PLAY_WHEN_READY"
 
 const val OVERLAY_ANIM_DURATION = 300L
+const val OVERLAY_SHOW_DURATION = 3000L
+
+const val SKIP_AHEAD_MS = 10000
+const val SKIP_BEHIND_MS = 6000
 
 /**
  * Created by drew on 6/3/17.
@@ -64,7 +65,10 @@ interface PlaybackComponent: Injector<PlaybackActivity> {
  *
  */
 @Module(subcomponents = arrayOf(PlaybackComponent::class))
-abstract class PlaybackModule
+abstract class PlaybackModule {
+    @Binds @IntoMap @ViewModelKey(PlaybackViewModel::class)
+    abstract fun bindPlaybackViewModel(viewModel: PlaybackViewModel): ViewModel
+}
 
 /**
  *
@@ -77,6 +81,47 @@ interface PlaybackActionsHandler {
     fun enterPip()
 }
 
+class PlaybackViewModel
+@Inject constructor(
+        @ForApplication private val mContext: Context,
+        private val mClient: MediaProviderClient
+) : ViewModel(), LifecycleObserver {
+    val videoDescription = MutableLiveData<VideoDescInfo>()
+
+    fun onMediaRef(mediaRef: MediaRef) {
+        mClient.getMediaMeta(mediaRef)
+                .subscribeOn(AppSchedulers.diskIo)
+                .subscribe({
+                    videoDescription.postValue(VideoDescInfo(
+                            it.title.elseIfBlank(it.displayName),
+                            it.subtitle,
+                            ""
+                    ))
+                }, {
+                    Timber.e(it, "")
+                })
+    }
+
+    val currentTime = MutableLiveData<String>()
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun registerTimeTick() {
+        currentTime.value = DateFormat.getTimeFormat(mContext).format(Date())
+        mContext.registerReceiver(timetick, IntentFilter(Intent.ACTION_TIME_TICK))
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun unregisterTimeTick() {
+        mContext.unregisterReceiver(timetick)
+    }
+
+    private val timetick = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            currentTime.value = DateFormat.getTimeFormat(context).format(Date())
+        }
+    }
+}
+
 /**
  *
  */
@@ -84,21 +129,36 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         MediaBrowserCallback.Listener, MediaControllerCallback.Listener,
         SimpleExoPlayer.VideoListener, TextRenderer.Output {
 
-    lateinit var mMainWorker: Scheduler.Worker
     lateinit var mBinding: ActivityPlaybackBinding
     lateinit var mBrowser: MediaBrowser
     lateinit var mExoPlayer: SimpleExoPlayer
+    lateinit var mMediaRef: MediaRef
+    lateinit var mViewModel: PlaybackViewModel
+    var mPlayWhenReady: Boolean = true
+    var mResumePlayback: Boolean = false
     val mMainHandler = Handler(Looper.getMainLooper())
     val mMediaControllerCallback = MediaControllerCallback(this)
     var mMediaControllerCallbackRegistered = false
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        injectMe()
         super.onCreate(savedInstanceState)
-        mMainWorker = AndroidSchedulers.mainThread().createWorker()
+
+        mMediaRef = newMediaRef(intent.getStringExtra(EXTRA_MEDIAID))
+        mPlayWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
+        mResumePlayback = intent.action == ACTION_RESUME
+
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_playback)
-        //mBinding.desc = mMediaItem.description.videoDescInfo()
         mBinding.actionHandler = this
+
+        mViewModel = fetchViewModel(PlaybackViewModel::class)
+        mViewModel.videoDescription.observe(this, LiveDataObserver {
+            mBinding.desc = it
+        })
+        mViewModel.currentTime.observe(this, LiveDataObserver {
+            mBinding.systemTimeString = it
+        })
+        mViewModel.onMediaRef(mMediaRef)
 
         mBrowser = MediaBrowser(this, ComponentName(this, PlaybackService::class.java),
                 MediaBrowserCallback(this), null)
@@ -108,14 +168,13 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     override fun onDestroy() {
         super.onDestroy()
         mBinding.actionHandler = null
-        mMainWorker.unsubscribe()
+        mMainHandler.removeCallbacksAndMessages(null)
         cleanupSessionStuffs()
         mBrowser.disconnect()
     }
 
     override fun onStart() {
         super.onStart()
-        setupCurrentTimeText()
     }
 
     override fun onStop() {
@@ -124,12 +183,69 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
 
     override fun onResume() {
         super.onResume()
-        //select playpause
-        mBinding.actionPlayPause.requestFocus()
-        //make sure overlay is showing
-        mBinding.topBar.visibility = View.INVISIBLE
-        mBinding.bottomBar.visibility = View.INVISIBLE
-        animateOverlayIn()
+        if (mBrowser.isConnected &&
+                mediaController.playbackState.state == PlaybackState.STATE_PAUSED) {
+            //select playpause
+            mBinding.actionPlayPause.requestFocus()
+            //make sure overlay is showing
+            mBinding.topBar.visibility = View.INVISIBLE
+            mBinding.bottomBar.visibility = View.INVISIBLE
+            animateOverlayIn()
+        } else {
+            mBinding.topBar.visibility = View.GONE
+            mBinding.bottomBar.visibility = View.GONE
+        }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        Timber.d("onKeyDown(%s)", KeyEvent::class.java.declaredFields.filter {
+            it.name.startsWith("KEYCODE") && it.getInt(null) == keyCode
+        }.firstOrNull()?.name)
+
+        if (isOverlayShowing()) {
+            postOverlayHideRunner()
+            return super.onKeyDown(keyCode, event)
+        } else {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    animateOverlayIn()
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    skipAhead()
+                }
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    skipBehind()
+                }
+                else -> {
+                    return super.onKeyDown(keyCode, event)
+                }
+            }
+            return true
+        }
+    }
+
+    /**
+     * Seeks ahead by SKIP_AHEAD_MS
+     */
+    fun skipAhead() {
+        if (mBrowser.notConnected()) return
+        if (mediaController.playbackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
+            val offset = SystemClock.elapsedRealtime() - mediaController.playbackState.lastPositionUpdateTime
+            val seek = mediaController.playbackState.position + offset + SKIP_AHEAD_MS
+            mediaController.transportControls.seekTo(seek)
+        }
+    }
+
+    /**
+     * Seeks back by SKIP_BEHIND_MS
+     */
+    fun skipBehind() {
+        if (mBrowser.notConnected()) return
+        if (mediaController.playbackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
+            val offset = SystemClock.elapsedRealtime() - mediaController.playbackState.lastPositionUpdateTime
+            val seek = mediaController.playbackState.position + offset - SKIP_BEHIND_MS
+            mediaController.transportControls.seekTo(seek)
+        }
     }
 
     /*
@@ -148,14 +264,9 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                         mExoPlayer = binder.player
                         attachExoPlayer()
                         val extras = PlaybackExtras()
-                        if (intent.hasExtra(EXTRA_PLAY_WHEN_READY)) {
-                            extras.playWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
-                        }
-                        if (intent.action == ACTION_RESUME) {
-                            extras.resume = true
-                        }
-                        mediaController.transportControls.playFromMediaId(
-                                intent.getStringExtra(EXTRA_MEDIAID), extras.bundle())
+                        extras.playWhenReady = mPlayWhenReady
+                        extras.resume = mResumePlayback
+                        mediaController.transportControls.playFromMediaId(mMediaRef.toJson(), extras.bundle())
                     }
                     else -> {
                         throw RuntimeException("Invalid return value on CMD_GET_EXOPLAYER val=$resultCode")
@@ -327,23 +438,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         }
     }
 
-    fun setupCurrentTimeText() {
-        Observable.create<String> { s ->
-            val timetick = object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, intent: Intent?) {
-                    s.onNext(DateFormat.getTimeFormat(context).format(Date()))
-                }
-            }
-            registerReceiver(timetick, IntentFilter(Intent.ACTION_TIME_TICK))
-            //unregister on unsubscribe
-            s.add(Subscriptions.create { unregisterReceiver(timetick) })
-            //seed initial value
-            timetick.onReceive(this, null)
-        }.subscribe { time ->
-            mBinding.systemTimeString = time
-        }
-    }
-
     fun animateOverlayIn() {
         mBinding.topBar.animate().cancel()
         if (mBinding.topBar.visibility != View.VISIBLE) {
@@ -375,9 +469,13 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                     .setListener(null)
             mBinding.actionPlayPause.requestFocus()
         }
+
+        postOverlayHideRunner()
     }
 
     fun animateOverlayOut() {
+        mMainHandler.removeCallbacks(mAnimateOutRunner)
+
         if (mBinding.topBar.visibility != View.GONE) {
             mBinding.topBar.animate().cancel()
             mBinding.topBar.animate()
@@ -402,6 +500,17 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                         }
                     })
         }
+    }
+
+    private val mAnimateOutRunner = Runnable { animateOverlayOut() }
+    fun postOverlayHideRunner() {
+        mMainHandler.removeCallbacks(mAnimateOutRunner)
+        mMainHandler.postDelayed(mAnimateOutRunner, OVERLAY_SHOW_DURATION)
+    }
+
+    fun isOverlayShowing(): Boolean {
+        return (mBinding.bottomBar.visibility != View.GONE) ||
+                (mBinding.topBar.visibility != View.GONE)
     }
 
 }
