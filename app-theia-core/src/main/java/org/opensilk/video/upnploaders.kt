@@ -68,6 +68,7 @@ class UpnpFoldersLoaderImpl
             else -> TODO("Unsupported mediaid")
         }
         return mDatabaseClient.changesObservable
+                .startWith(UpnpFolderChange(folderId))
                 .filter { it is UpnpFolderChange && folderId == it.folderId }
                 .flatMap {
                     Observable.concat(
