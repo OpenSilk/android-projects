@@ -96,10 +96,10 @@ fun <T> Subscriber<T>.cancellationSignal(): CancellationSignal {
 
 class VideoDatabaseMalfuction: Exception()
 
-interface DatabaseChange
-class UpnpDeviceChange: DatabaseChange
-class UpnpFolderChange(val folderId: UpnpFolderId): DatabaseChange
-class UpnpVideoChange(val videoId: UpnpVideoId): DatabaseChange
+sealed class DatabaseChange
+class UpnpDeviceChange: DatabaseChange()
+class UpnpFolderChange(val folderId: UpnpFolderId): DatabaseChange()
+class UpnpVideoChange(val videoId: UpnpVideoId): DatabaseChange()
 
 /**
  * Created by drew on 7/18/17.
@@ -219,6 +219,29 @@ class DatabaseClient
                     "device_id=?", arrayOf(deviceId.deviceId), null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     s.onSuccess(c.toUpnpDeviceMediaMeta())
+                } else {
+                    s.onError(NoSuchItemException())
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    fun incrementUpnpDeviceScanning(deviceId: UpnpDeviceId): Boolean {
+        return mResolver.update(mUris.upnpDeviceIncrementScanning(),
+                ContentValues(), "device_id=?", arrayOf(deviceId.deviceId)) != 0
+    }
+
+    fun decrementUpnpDeviceScanning(deviceId: UpnpDeviceId): Boolean {
+        return mResolver.update(mUris.upnpDeviceDecrementScanning(),
+                ContentValues(), "device_id=?", arrayOf(deviceId.deviceId)) != 0
+    }
+
+    fun getUpnpDeviceScanning(deviceId: UpnpDeviceId): Single<Long> {
+        return Single.create { s ->
+            mResolver.query(mUris.upnpDevices(), arrayOf("scanning"),
+                    "device_id=?", arrayOf(deviceId.deviceId), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.getLong(0))
                 } else {
                     s.onError(NoSuchItemException())
                 }

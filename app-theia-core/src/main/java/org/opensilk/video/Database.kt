@@ -7,7 +7,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import javax.inject.Inject
 
-const private val VERSION = 16
+const private val VERSION = 18
 
 /**
  * Created by drew on 7/18/17.
@@ -148,7 +148,8 @@ class Database
                     "subtitle TEXT, " +
                     "artwork_uri TEXT, " +
                     "available INTEGER DEFAULT 0," +
-                    "update_id INTEGER DEFAULT 0 " +
+                    "update_id INTEGER DEFAULT 0, " +
+                    "scanning INTEGER DEFAULT 0 " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS upnp_folder")
             db.execSQL("CREATE TABLE upnp_folder (" +

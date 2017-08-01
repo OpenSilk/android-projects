@@ -4,6 +4,8 @@ import android.content.ContentProvider
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
+import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import dagger.Module
 import dagger.Subcomponent
@@ -206,15 +208,26 @@ class DatabaseProvider: ContentProvider() {
                 return mUris.movieConfig()
             }
             DatabaseMatches.UPNP_DEVICES -> {
-                val id = db.insertWithOnConflict("upnp_device", null, values, SQLiteDatabase.CONFLICT_REPLACE)
-                return mUris.upnpDevice(id)
+                var id = db.insertWithOnConflict("upnp_device", null, values, SQLiteDatabase.CONFLICT_IGNORE)
+                if (id > 0) {
+                    return mUris.upnpDevice(id)
+                }
+                val device_id = values.getAsString("device_id")
+                values.remove("device_id")
+                id = db.query("upnp_device", arrayOf("_id"), "device_id=?", arrayOf(device_id), null,
+                        null, null)?.use { if (it.moveToNext()) it.getLong(0) else -1L } ?: -1L
+                return if (db.update("upnp_device", values, "device_id=?", arrayOf(device_id)) != 0) {
+                    mUris.upnpDevice(id)
+                } else {
+                    null
+                }
             }
             DatabaseMatches.UPNP_FOLDERS -> {
                 val id = db.insertWithOnConflict("upnp_folder", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.upnpFolder(id)
             }
             DatabaseMatches.UPNP_VIDEOS -> {
-                var id = db.insert("upnp_video", null, values)
+                var id = db.insertWithOnConflict("upnp_video", null, values, SQLiteDatabase.CONFLICT_IGNORE)
                 if (id > 0) {
                     return mUris.upnpVideo(id)
                 }
@@ -229,7 +242,7 @@ class DatabaseProvider: ContentProvider() {
                 //fetch the id
                 id = db.query("upnp_video", arrayOf("_id"), "device_id=? AND parent_id=? AND item_id=?",
                         arrayOf(device_id, parent_id, item_id), null, null, null)?.use {
-                    return@use if (it.moveToNext()) it.getLong(0) else -1 } ?: -1
+                    return@use if (it.moveToNext()) it.getLong(0) else -1L } ?: -1L
                 //update the entry
                 if (db.update("upnp_video", values, "_id=?", arrayOf(id.toString())) != 0) {
                     return mUris.upnpVideo(id)
@@ -287,6 +300,24 @@ class DatabaseProvider: ContentProvider() {
             }
             DatabaseMatches.UPNP_DEVICES -> {
                 return db.update("upnp_device", values, selection, selectionArgs)
+            }
+            DatabaseMatches.UPNP_DEVICES_SCAN_UP -> {
+                //for whatever reason using content values to update scanning in this way
+                //didnt work for me, hence the special uri
+                try {
+                    db.execSQL("UPDATE upnp_device SET scanning = scanning + 1 where $selection", selectionArgs)
+                    return 1
+                } catch (e: SQLiteException) {
+                    return 0
+                }
+            }
+            DatabaseMatches.UPNP_DEVICES_SCAN_DOWN -> {
+                try {
+                    db.execSQL("UPDATE upnp_device SET scanning = scanning - 1 where $selection", selectionArgs)
+                    return 1
+                } catch (e: SQLiteException) {
+                    return 0
+                }
             }
             DatabaseMatches.UPNP_FOLDERS -> {
                 return db.update("upnp_folder", values, selection, selectionArgs)

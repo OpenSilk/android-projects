@@ -37,6 +37,8 @@ object DatabaseMatches {
 
     val UPNP_DEVICES = 41
     val UPNP_DEVICES_ONE = 42
+    val UPNP_DEVICES_SCAN_UP = 43
+    val UPNP_DEVICES_SCAN_DOWN = 44
 
     val UPNP_FOLDERS = 51
     val UPNP_FOLDERS_ONE = 52
@@ -83,6 +85,8 @@ class DatabaseUris
 
         matcher.addURI(mAuthority, "upnp/device", DatabaseMatches.UPNP_DEVICES)
         matcher.addURI(mAuthority, "upnp/device/#", DatabaseMatches.UPNP_DEVICES_ONE)
+        matcher.addURI(mAuthority, "upnp/device/scan/up", DatabaseMatches.UPNP_DEVICES_SCAN_UP)
+        matcher.addURI(mAuthority, "upnp/device/scan/down", DatabaseMatches.UPNP_DEVICES_SCAN_DOWN)
 
         matcher.addURI(mAuthority, "upnp/folder", DatabaseMatches.UPNP_FOLDERS)
         matcher.addURI(mAuthority, "upnp/folder/#", DatabaseMatches.UPNP_FOLDERS_ONE)
@@ -193,6 +197,14 @@ class DatabaseUris
 
     fun upnpDevice(id: Long): Uri {
         return ContentUris.withAppendedId(upnpDevices(), id)
+    }
+
+    fun upnpDeviceIncrementScanning(): Uri {
+        return base().appendPath("upnp").appendPath("device").appendPath("scan").appendPath("up").build()
+    }
+
+    fun upnpDeviceDecrementScanning(): Uri {
+        return base().appendPath("upnp").appendPath("device").appendPath("scan").appendPath("down").build()
     }
 
     fun upnpFolders(): Uri {
