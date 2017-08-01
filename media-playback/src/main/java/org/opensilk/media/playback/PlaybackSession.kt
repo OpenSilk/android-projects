@@ -193,7 +193,11 @@ constructor(
 
     override fun onSeekTo(pos: Long) {
         Timber.d("onSeekTo(%d)", pos)
-        TODO()
+        if (pos < 0) {
+            mRenderer.seekTo(0)
+        } else {
+            mRenderer.seekTo(pos)
+        }
     }
 
     override fun onSetRating(rating: Rating) {
