@@ -8,7 +8,7 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.android.schedulers.HandlerScheduler
 import rx.internal.schedulers.ExecutorScheduler
 import rx.schedulers.Schedulers
-import java.util.concurrent.Executors
+import java.util.concurrent.*
 
 /**
  * Created by drew on 7/21/17.
@@ -24,6 +24,10 @@ object AppSchedulers {
         ExecutorScheduler(Executors.newSingleThreadExecutor())
     }
     val scanner: Scheduler by lazy {
-        ExecutorScheduler(Executors.newSingleThreadExecutor())
+        ExecutorScheduler(ThreadPoolExecutor(0, 2,
+                10L, TimeUnit.SECONDS,
+                LinkedBlockingQueue<Runnable>(),
+                Executors.defaultThreadFactory())
+        )
     }
 }
