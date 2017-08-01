@@ -1,4 +1,4 @@
-package org.opensilk.video
+package org.opensilk.upnp.cds.browser
 
 import org.fourthline.cling.controlpoint.ControlPoint
 import org.fourthline.cling.model.action.ActionException
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * Created by drew on 7/29/17.
  */
-class UpnpBrowseAction(
+class CDSBrowseAction(
         controlPoint: ControlPoint,
         service: Service<*,*>,
         containerId: String,
