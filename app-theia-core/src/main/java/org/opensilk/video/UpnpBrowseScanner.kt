@@ -51,9 +51,10 @@ class UpnpBrowseScanner
 
     private class FolderWithMetaList(val folderId: UpnpFolderId, val list: List<MediaMeta>)
 
-    //TODO use containerUpdateId and don't scan if no change
     private fun subscribe() {
-        mQueueSubject.onBackpressureBuffer().observeOn(AppSchedulers.scanner).flatMap { folderId ->
+        mQueueSubject.doOnNext {
+            mDatabaseClient.incrementUpnpDeviceScanning(UpnpDeviceId(it.deviceId))
+        }.onBackpressureBuffer().observeOn(AppSchedulers.scanner).flatMap { folderId ->
             cachedService(folderId).flatMap { service -> browse(service, folderId) }
                     .toList().map { list -> FolderWithMetaList(folderId, list) }
         }.subscribe({ fwl ->
@@ -72,8 +73,8 @@ class UpnpBrowseScanner
                     else -> Timber.e("Invalid kind slipped through %s for %s", ref.kind, ext.displayName)
                 }
             }
-            //TODO remove still hidden items ?? for now just leaving
             mDatabaseClient.postChange(UpnpFolderChange(fwl.folderId))
+            mDatabaseClient.decrementUpnpDeviceScanning(UpnpDeviceId(fwl.folderId.deviceId))
         }, { t ->
             if (t is BrowseExceptionWithFolderId) {
                 val tt = t.cause
