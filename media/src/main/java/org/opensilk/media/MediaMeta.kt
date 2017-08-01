@@ -284,6 +284,10 @@ constructor(
      */
     var episodeNumber: Int by IntVal
     /**
+     * Long: opaque can be used to distinguish versions of same file
+     */
+    var updateId: Long by LongVal
+    /**
      *
      */
     val extras: Bundle by lazy {
