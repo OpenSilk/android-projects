@@ -36,10 +36,6 @@ abstract class MediaProviderModule {
  */
 class NoSuchItemException: Exception()
 
-fun Int.zeroPad(len: Int): String {
-    return this.toString().padStart(len, '0')
-}
-
 /**
  * A bridge for testing
  */

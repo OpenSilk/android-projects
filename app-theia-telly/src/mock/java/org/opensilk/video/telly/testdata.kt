@@ -3,6 +3,7 @@ package org.opensilk.video.telly
 import android.net.Uri
 import org.opensilk.media.*
 import org.opensilk.video.DatabaseClient
+import org.opensilk.video.zeroPad
 
 fun insertTestData(client: DatabaseClient) {
     client.addUpnpDevice(testUpnpDeviceMeta())
@@ -37,7 +38,7 @@ fun testUpnpFolderMetas(): List<MediaMeta> {
         val mediaExtras = MediaMeta()
         mediaExtras.mediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(UPNP_DEVICE_ID_1.deviceId, ii.toString())).toJson()
         mediaExtras.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(UPNP_DEVICE_ID_1.deviceId, "0")).toJson()
-        mediaExtras.title = "Folder $ii"
+        mediaExtras.title = "Folder ${ii.zeroPad(2)}"
         mediaExtras.mimeType = MIME_TYPE_DIR
         metaList.add(mediaExtras)
     }

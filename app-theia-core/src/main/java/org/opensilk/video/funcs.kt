@@ -195,3 +195,7 @@ fun Context.findActivity(): Activity {
         throw AssertionError("Unknown context type " + javaClass.name)
     }
 }
+
+fun Int.zeroPad(len: Int): String {
+    return this.toString().padStart(len, '0')
+}
