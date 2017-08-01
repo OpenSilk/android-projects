@@ -3,6 +3,8 @@ package org.opensilk.media.playback
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.media.session.MediaSession.*
+import org.opensilk.media.MediaMeta
+import org.opensilk.media.toMediaItem
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -124,6 +126,10 @@ constructor() {
 
     fun add(desc: MediaDescription) : Boolean {
         return add(newItem(desc))
+    }
+
+    fun add(meta: MediaMeta): Boolean {
+        return add(newItem(meta.toMediaItem().description))
     }
 
     fun remove(itemId: Long) : Boolean {

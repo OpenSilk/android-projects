@@ -12,6 +12,7 @@ import android.net.Uri
 import android.os.*
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -114,6 +115,7 @@ constructor(
         Timber.d("onPlayFromMediaId(%s)", mediaId)
         onPause()
         mQueue.clear()
+        mMediaSession.setQueue(mQueue.get())
         if (!isLikelyJson(mediaId)) {
             changeState(STATE_ERROR) {
                 it.setErrorMessage("Invalid MediaId")
@@ -124,11 +126,20 @@ constructor(
         val playbackExtras = extras._playbackExtras()
         when (mediaRef.kind) {
             UPNP_VIDEO -> {
-                mDbClient.getMediaItem(mediaRef).subscribe({ item ->
-                    val meta = item._getMediaMeta()
-                    mRenderer.prepare(newMediaSource(meta.mediaUri))
-                    if (playbackExtras.resume && meta.lastPlaybackPosition > 0) {
-                        mRenderer.seekTo(meta.lastPlaybackPosition)
+                mDbClient.siblingsOf(mediaRef).skipWhile { newMediaRef(it.mediaId) != mediaRef }
+                        .toList().subscribe({ metaList ->
+                    //populate the queue
+                    metaList.forEach { mQueue.add(it) }
+                    mMediaSession.setQueue(mQueue.get())
+                    mQueue.goToNext()
+                    val mediaSource = if (metaList.size == 1) {
+                        newMediaSource(metaList[0].mediaUri)
+                    } else {
+                        ConcatenatingMediaSource(*(metaList.map { newMediaSource(it.mediaUri) }.toTypedArray()))
+                    }
+                    mRenderer.prepare(mediaSource)
+                    if (playbackExtras.resume && metaList[0].lastPlaybackPosition > 0) {
+                        mRenderer.seekTo(metaList[0].lastPlaybackPosition)
                     }
                     if (playbackExtras.playWhenReady) {
                         onPlay()
@@ -188,7 +199,7 @@ constructor(
 
     override fun onStop() {
         Timber.d("onStop()")
-        TODO()
+        onPause()
     }
 
     override fun onSeekTo(pos: Long) {
