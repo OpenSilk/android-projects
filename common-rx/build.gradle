@@ -26,8 +26,8 @@ android {
 }
 
 dependencies {
-    compile (group: 'io.reactivex', name: 'rxjava', version: rootProject.ext.rxJavaVersion)
-    compile (group: 'io.reactivex', name: 'rxkotlin', version: rootProject.ext.rxKotlinVersion)
-    compile (group: 'io.reactivex', name: 'rxandroid', version: rootProject.ext.rxAndroidVersion)
+    compile (group: 'io.reactivex', name: 'rxjava', version: '1.1.1')
+    compile (group: 'io.reactivex', name: 'rxkotlin', version: '0.60.0')
+    compile (group: 'io.reactivex', name: 'rxandroid', version: '1.1.0')
     testCompile "junit:junit:$test_junitVersion"
 }

@@ -60,7 +60,7 @@ dependencies {
 
     compile project(':common-glide')
     compile project(':common-dagger')
-    compile project(':common-rx')
+    compile project(':common-rx2')
     compile project(':media')
     compile project(':media-playback')
     compile project(':libtvdb2')
