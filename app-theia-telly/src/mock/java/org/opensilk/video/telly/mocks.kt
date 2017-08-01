@@ -69,4 +69,8 @@ constructor(): MediaProviderClient {
     override fun getMediaArtworkUri(mediaRef: MediaRef): Single<Uri> {
         return Single.error(Exception())
     }
+
+    override fun siblingsOf(mediaRef: MediaRef): Observable<MediaMeta> {
+        return Observable.just(testUpnpVideoItem(), testUpnpVideoItem()).map { it._getMediaMeta() }
+    }
 }
