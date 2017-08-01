@@ -3,6 +3,7 @@ package org.opensilk.video.telly
 import android.animation.Animator
 import android.arch.lifecycle.*
 import android.content.*
+import android.content.res.Configuration
 import android.databinding.DataBindingUtil
 import android.media.MediaMetadata
 import android.media.browse.MediaBrowser
@@ -139,10 +140,11 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     val mMainHandler = Handler(Looper.getMainLooper())
     val mMediaControllerCallback = MediaControllerCallback(this)
     var mMediaControllerCallbackRegistered = false
-
+    var mWonVisibleBehind = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Timber.d("onCreate()")
 
         mMediaRef = newMediaRef(intent.getStringExtra(EXTRA_MEDIAID))
         mPlayWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
@@ -167,6 +169,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
 
     override fun onDestroy() {
         super.onDestroy()
+        Timber.d("onDestroy()")
         mBinding.actionHandler = null
         mMainHandler.removeCallbacksAndMessages(null)
         cleanupSessionStuffs()
@@ -174,27 +177,59 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     }
 
     override fun onStart() {
+        Timber.d("onStart()")
         super.onStart()
     }
 
     override fun onStop() {
         super.onStop()
+        Timber.d("onStop()")
+        if (isFinishing || !mWonVisibleBehind) {
+            if (mBrowser.isConnected) mediaController.transportControls.pause()
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        Timber.d("onResume()")
         if (mBrowser.isConnected &&
                 mediaController.playbackState.state == PlaybackState.STATE_PAUSED) {
-            //select playpause
-            mBinding.actionPlayPause.requestFocus()
             //make sure overlay is showing
             mBinding.topBar.visibility = View.INVISIBLE
             mBinding.bottomBar.visibility = View.INVISIBLE
+            //select playpause
+            mBinding.actionPlayPause.requestFocus()
             animateOverlayIn()
         } else {
             mBinding.topBar.visibility = View.GONE
             mBinding.bottomBar.visibility = View.GONE
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Timber.d("onPause()")
+        mWonVisibleBehind = if (mBrowser.isConnected &&
+                mediaController.playbackState.state != PlaybackState.STATE_PAUSED &&
+                !isInPictureInPictureMode &&
+                !isFinishing) requestVisibleBehind(true) else false
+    }
+
+    override fun onVisibleBehindCanceled() {
+        super.onVisibleBehindCanceled()
+        Timber.d("onVisibleBehindCanceled()")
+        if (mBrowser.isConnected) mediaController.transportControls.pause()
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        if (isInPictureInPictureMode) {
+            animateOverlayOut()
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -221,6 +256,14 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                 }
             }
             return true
+        }
+    }
+
+    override fun onBackPressed() {
+        if (isOverlayShowing()) {
+            animateOverlayOut()
+        } else {
+            super.onBackPressed()
         }
     }
 
@@ -304,11 +347,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         val pbs = mediaController.playbackState
         if (pbs.hasAction(PlaybackState.ACTION_PLAY)) {
             mediaController.transportControls.play()
-        } else if (pbs.hasAction(PlaybackState.ACTION_PAUSE)) {
-            mediaController.transportControls.pause()
         } else {
-            Toast.makeText(this, "Pause not allowed", Toast.LENGTH_LONG).show()
-            Timber.w("Current state does not allow pause state=%s", pbs)
+            mediaController.transportControls.pause()
         }
     }
 
@@ -331,7 +371,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     }
 
     override fun enterPip() {
-
+        enterPictureInPictureMode()
     }
 
     /*
