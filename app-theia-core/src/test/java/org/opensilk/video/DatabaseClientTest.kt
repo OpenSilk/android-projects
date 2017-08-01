@@ -5,6 +5,7 @@ import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
 import android.os.CancellationSignal
+import com.nhaarman.mockito_kotlin.mock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
@@ -70,6 +71,7 @@ class DatabaseClientTest {
     @After
     fun teardown() {
         mProvider.mDatabase.close()
+        mClient.mResolver = mock()
     }
 
     @Test
@@ -220,7 +222,28 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testUpnpVideo_duplicate_add_does_not_replace() {
+    fun upnp_video_duplicate_add_changes_name() {
+        val meta = MediaMeta()
+        val mid = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "bar"))
+        val parentmid = MediaRef(UPNP_FOLDER, UpnpVideoId("foo", "bar"))
+        meta.mediaId = mid.toJson()
+        meta.parentMediaId = parentmid.toJson()
+        meta.mimeType = "video/mpeg"
+        meta.displayName = "my display name"
+        meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
+        val uri = mClient.addUpnpVideo(meta)
+        val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong()).toBlocking().value()
+        assertThat(retrieved.displayName).isEqualTo("my display name")
+
+        meta.displayName = "another display name"
+        val uri2 = mClient.addUpnpVideo(meta)
+        val retrieved2 = mClient.getUpnpVideo(uri2.lastPathSegment.toLong()).toBlocking().value()
+        assertThat(retrieved2.displayName).isEqualTo("another display name")
+
+    }
+
+    @Test
+    fun upnp_video_duplicate_add_does_not_replace() {
         val meta = MediaMeta()
         val mid = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "bar"))
         val parentmid = MediaRef(UPNP_FOLDER, UpnpVideoId("foo", "bar"))
@@ -240,7 +263,7 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testUpnpFolder_add_remove_get() {
+    fun UpnpFolder_add_remove_get() {
         val meta = MediaMeta()
         val mid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "bar"))
         val parentmid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "0"))
@@ -265,7 +288,62 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testUpnpDevice_add_hide_get() {
+    fun upnp_device_add_after_increment_scanning_resets_value() {
+        val meta = MediaMeta()
+        val mId = MediaRef(UPNP_DEVICE, UpnpDeviceId("foo"))
+        meta.mediaId = mId.toJson()
+        meta.mimeType = MIME_TYPE_CONTENT_DIRECTORY
+        meta.title = "a heading"
+        meta.subtitle = "a sub heading"
+
+        val uri = mClient.addUpnpDevice(meta)
+        val changed = mClient.incrementUpnpDeviceScanning(UpnpDeviceId("foo"))
+        assertThat(changed).isTrue()
+        val num = mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()
+        assertThat(num).isEqualTo(1)
+        val uri2 = mClient.addUpnpDevice(meta)
+        val num2 = mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()
+        assertThat(num2).isEqualTo(0)
+    }
+
+    @Test
+    fun upnp_device_increment_decrement_scanning() {
+        val meta = MediaMeta()
+        val mId = MediaRef(UPNP_DEVICE, UpnpDeviceId("foo"))
+        meta.mediaId = mId.toJson()
+        meta.mimeType = MIME_TYPE_CONTENT_DIRECTORY
+        meta.title = "a heading"
+
+        val uri = mClient.addUpnpDevice(meta)
+        val changed = mClient.incrementUpnpDeviceScanning(UpnpDeviceId("foo"))
+        assertThat(changed).isTrue()
+        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()).isEqualTo(1)
+        val changed2 = mClient.incrementUpnpDeviceScanning(UpnpDeviceId("foo"))
+        assertThat(changed2).isTrue()
+        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()).isEqualTo(2)
+
+        val changed3 = mClient.decrementUpnpDeviceScanning(UpnpDeviceId("foo"))
+        assertThat(changed3).isTrue()
+        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()).isEqualTo(1)
+
+    }
+
+    @Test
+    fun upnpdevice_add_twice_returns_same_id() {
+        val meta = MediaMeta()
+        val mId = MediaRef(UPNP_DEVICE, UpnpDeviceId("foo"))
+        meta.mediaId = mId.toJson()
+        meta.mimeType = MIME_TYPE_CONTENT_DIRECTORY
+        meta.displayName = "a heading"
+        meta.subtitle = "a sub heading"
+
+        val uri = mClient.addUpnpDevice(meta)
+        val uri2 = mClient.addUpnpDevice(meta)
+        assertThat(uri2).isEqualTo(uri)
+    }
+
+    @Test
+    fun UpnpDevice_add_hide_get() {
         val meta = MediaMeta()
         val mId = MediaRef(UPNP_DEVICE, UpnpDeviceId("foo"))
         meta.mediaId = mId.toJson()
@@ -289,14 +367,14 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testTV_setLastUpdate() {
+    fun TV_setLastUpdate() {
         mClient.setTvLastUpdate(11111)
         val ret = mClient.getTvLastUpdate().toBlocking().value()
         assertThat(ret).isEqualTo(11111)
     }
 
     @Test
-    fun testTV_setToken() {
+    fun TV_setToken() {
         val tok = Token("foounoetu")
         mClient.setTvToken(tok)
         val ret = mClient.getTvToken().toBlocking().value()
@@ -304,7 +382,7 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testTVSeries_add_get() {
+    fun TVSeries_add_get() {
         val series = Series(id = 1, seriesName = "foo", overview =  "this overview",
                 firstAired = "2009", lastUpdated = 1111)
         val uri = mClient.addTvSeries(series)
@@ -317,7 +395,7 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testTVEpisode_add_get(){
+    fun TVEpisode_add_get(){
         val episode = SeriesEpisode(id = 1, episodeName = "name",
                 firstAired =  "2009", overview = "an overview", airedSeason =  1,
                 airedEpisodeNumber = 1, airedSeasonId = 1)
@@ -331,19 +409,19 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testTV_seriesAssociation() {
+    fun TV_seriesAssociation() {
         mClient.setTvSeriesAssociation("foobar", 100)
         assertThat(mClient.getTvSeriesAssociation("foobar").toBlocking().value()).isEqualTo(100)
     }
 
     @Test
-    fun testMovie_movieAssociation() {
+    fun movie_movieAssociation() {
         mClient.setMovieAssociation("foo", "2001", 1002)
         assertThat(mClient.getMovieAssociation("foo", "2001").toBlocking().value()).isEqualTo(1002)
     }
 
     @Test
-    fun testMovie_movieAssociation_different_year() {
+    fun movie_movieAssociation_different_year() {
         mClient.setMovieAssociation("foo", "", 1002)
         val retrieved = mClient.getMovieAssociation("foo", "2001")
                 .onErrorReturn { 2939393 }.toBlocking().value()
@@ -351,7 +429,7 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testMovie_add_get() {
+    fun movie_add_get() {
         mClient.setMovieImageBaseUrl("https://foo.com")
         val movie = Movie(100, "foo movie", null, "an overiview", "2001", "/paster", "/backdrop")
         val uri = mClient.addMovie(movie)
@@ -365,7 +443,7 @@ class DatabaseClientTest {
     }
 
     @Test
-    fun testMovie_config_ops() {
+    fun movie_config_ops() {
         val config = TMDbConfig(TMDbConfig.Images("https://foo.com/", null, null, null, null, null, null))
         mClient.setMovieImageBaseUrl(config.images.baseUrl)
         val retrieved = mClient.getMovieImageBaseUrl()

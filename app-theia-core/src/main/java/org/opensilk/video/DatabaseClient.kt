@@ -180,6 +180,7 @@ class DatabaseClient
         }
         cv.put("available", 1)
         cv.put("update_id", meta.updateId)
+        cv.put("scanning", 0)
         return mResolver.insert(mUris.upnpDevices(), cv) ?: Uri.EMPTY
     }
 

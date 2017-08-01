@@ -208,7 +208,9 @@ class DatabaseProvider: ContentProvider() {
                 return mUris.movieConfig()
             }
             DatabaseMatches.UPNP_DEVICES -> {
-                var id = db.insertWithOnConflict("upnp_device", null, values, SQLiteDatabase.CONFLICT_IGNORE)
+                var id: Long = try {
+                    db.insertWithOnConflict("upnp_device", null, values, SQLiteDatabase.CONFLICT_FAIL)
+                } catch (ignored: SQLiteException) { -1L }
                 if (id > 0) {
                     return mUris.upnpDevice(id)
                 }
@@ -227,7 +229,9 @@ class DatabaseProvider: ContentProvider() {
                 return mUris.upnpFolder(id)
             }
             DatabaseMatches.UPNP_VIDEOS -> {
-                var id = db.insertWithOnConflict("upnp_video", null, values, SQLiteDatabase.CONFLICT_IGNORE)
+                var id: Long = try {
+                    db.insertWithOnConflict("upnp_video", null, values, SQLiteDatabase.CONFLICT_FAIL)
+                } catch (ignored: SQLiteException) { -1L }
                 if (id > 0) {
                     return mUris.upnpVideo(id)
                 }
