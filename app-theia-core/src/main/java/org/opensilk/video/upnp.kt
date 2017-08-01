@@ -61,7 +61,7 @@ fun Device<*,*,*>.toMediaMeta(): MediaMeta {
             val ident = device.identity
             if (ident is RemoteDeviceIdentity) {
                 val ru = ident.descriptorURL
-                uri = "http://" + ru.host + ":" + ru.port + uri
+                uri = "${ru.protocol}://${ru.host}:${ru.port}${uri}"
             }
         }
         meta.artworkUri = Uri.parse(uri)
@@ -90,10 +90,10 @@ fun VideoItem.toMediaMeta(deviceId: UpnpDeviceId): MediaMeta {
     val res = this.firstResource
     meta.mediaUri = Uri.parse(res.value)
     meta.mimeType = res.protocolInfo.contentFormat
-    meta.duration = parseUpnpDuration(res.duration)
+    meta.duration = if (res.duration != null) parseUpnpDuration(res.duration) else 0
     meta.bitrate = res.bitrate ?: 0L
     meta.size = res.size ?: 0L
-    meta.resolution = res.resolution
+    meta.resolution = res.resolution ?: ""
     meta.displayName = this.title
     return meta
 }
