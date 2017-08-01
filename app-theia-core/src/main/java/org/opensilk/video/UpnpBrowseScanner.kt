@@ -15,6 +15,7 @@ import org.fourthline.cling.support.model.Protocol
 import org.fourthline.cling.support.model.container.StorageFolder
 import org.fourthline.cling.support.model.item.VideoItem
 import org.opensilk.media.*
+import org.opensilk.upnp.cds.browser.CDSBrowseAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
 import org.opensilk.upnp.cds.featurelist.BasicView
@@ -42,10 +43,10 @@ class UpnpBrowseScanner
     private val mStarted = AtomicBoolean(false)
 
     fun enqueue(folderId: UpnpFolderId) {
-        mQueueSubject.onNext(folderId)
         if (mStarted.compareAndSet(false, true)) {
             subscribe()
         }
+        mQueueSubject.onNext(folderId)
     }
 
     private class FolderWithMetaList(val folderId: UpnpFolderId, val list: List<MediaMeta>)
@@ -53,8 +54,8 @@ class UpnpBrowseScanner
     //TODO use containerUpdateId and don't scan if no change
     private fun subscribe() {
         mQueueSubject.onBackpressureBuffer().observeOn(AppSchedulers.scanner).flatMap { folderId ->
-            cachedService(folderId).flatMap { browse(it, folderId) }
-                    .toList().map { FolderWithMetaList(folderId, it) }
+            cachedService(folderId).flatMap { service -> browse(service, folderId) }
+                    .toList().map { list -> FolderWithMetaList(folderId, list) }
         }.subscribe({ fwl ->
             mDatabaseClient.hideChildrenOf(fwl.folderId)
             //loop the remote meta
@@ -99,7 +100,7 @@ class UpnpBrowseScanner
      */
     private fun browse(service: Service<*,*>, parentId: UpnpFolderId) : Observable<MediaMeta> {
         return Observable.create { subscriber ->
-            val browse = UpnpBrowseAction(mUpnpService.controlPoint, service, parentId.folderId)
+            val browse = CDSBrowseAction(mUpnpService.controlPoint, service, parentId.folderId)
             browse.run()
             if (subscriber.isUnsubscribed){
                 return@create
