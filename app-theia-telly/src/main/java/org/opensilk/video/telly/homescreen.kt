@@ -18,8 +18,7 @@ import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.video.UpnpDevicesLoader
-import org.opensilk.video.ViewModelKey
+import org.opensilk.video.*
 import rx.exceptions.Exceptions
 import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
@@ -70,6 +69,7 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
+    @Inject lateinit var mNewlyAddedAdapter: NewlyAddedAdapter
     @Inject lateinit var mItemClickListener: MediaItemClickListener
 
     lateinit var mViewModel: HomeViewModel
@@ -82,14 +82,20 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(HomeViewModel::class)
-        mViewModel.subscribeServers()
-        mViewModel.servers.observe(this, Observer {
+        mViewModel.servers.observe(this, LiveDataObserver {
             mServersAdapter.clear()
             mServersAdapter.addAll(0, it)
         })
+        mViewModel.newlyAdded.observe(this, LiveDataObserver {
+            mNewlyAddedAdapter.clear()
+            mNewlyAddedAdapter.addAll(0, it)
+        })
+        mViewModel.fetchData()
 
         val foldersHeader = HeaderItem("Media Servers")
         mHomeAdapter.add(ListRow(foldersHeader, mServersAdapter))
+        val newlyAddedHeader = HeaderItem("Newly Added")
+        mHomeAdapter.add(ListRow(newlyAddedHeader, mNewlyAddedAdapter))
 
         adapter = mHomeAdapter
         onItemViewClickedListener = mItemClickListener
@@ -122,10 +128,17 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
  */
 class HomeViewModel
 @Inject constructor(
-        private val mServersLoader: UpnpDevicesLoader
+        private val mServersLoader: UpnpDevicesLoader,
+        private val mNewlyAddedLoader: NewlyAddedLoader
 ): ViewModel() {
     val servers = MutableLiveData<List<MediaBrowser.MediaItem>>()
+    val newlyAdded = MutableLiveData<List<MediaBrowser.MediaItem>>()
     private val subscriptions = CompositeSubscription()
+
+    fun fetchData() {
+        subscribeServers()
+        subscribeNewlyAdded()
+    }
 
     fun subscribeServers() {
         val s = mServersLoader.observable
@@ -138,6 +151,16 @@ class HomeViewModel
         subscriptions.add(s)
     }
 
+    fun subscribeNewlyAdded() {
+        val s = mNewlyAddedLoader.observable
+                .subscribe({
+                    newlyAdded.postValue(it)
+                }, {
+                    Exceptions.propagate(it)
+                })
+        subscriptions.add(s)
+    }
+
     override fun onCleared() {
         super.onCleared()
         subscriptions.clear()
@@ -145,13 +168,6 @@ class HomeViewModel
 
 }
 
-/**
- *
- */
 class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())
-
-/**
- *
- */
 class ServersAdapter @Inject constructor(presenter: MediaItemPresenter) : ArrayObjectAdapter(presenter)
-
+class NewlyAddedAdapter @Inject constructor(presenter: MediaItemPresenter): ArrayObjectAdapter(presenter)

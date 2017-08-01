@@ -432,6 +432,18 @@ class DatabaseClient
         }
     }
 
+    fun getRecentUpnpVideos(): Observable<MediaMeta> {
+        return Observable.create<MediaMeta> { s ->
+            mResolver.query(mUris.upnpVideos(), upnpVideoProjection, null, null,
+                    "v.date_added DESC", s.cancellationSignal())?.use { c ->
+                while (c.moveToNext()) {
+                    s.onNext(c.toUpnpVideoMediaMeta(getMovieImageBaseUrl()))
+                }
+                s.onCompleted()
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }.take(20)
+    }
+
     val upnpVideoProjection = arrayOf(
             //upnp_video columns
             "v._id", "device_id", "item_id", "parent_id", //3

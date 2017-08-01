@@ -1,47 +1,25 @@
 package org.opensilk.video
 
 import android.media.browse.MediaBrowser
-import dagger.Binds
-import dagger.Module
 import org.opensilk.media.*
 import rx.Observable
 import javax.inject.Inject
 
 /**
- * This module is superseded in mock for espresso tests
- */
-@Module
-abstract class UpnpLoadersModule {
-    @Binds
-    abstract fun provideCDSDevicesLoader(impl: UpnpDevicesLoaderImpl): UpnpDevicesLoader
-    @Binds
-    abstract fun provideCDSBrowseLoader(impl: UpnpFoldersLoaderImpl): UpnpFoldersLoader
-}
-
-/**
  * The Loader for the Media Servers row in the Home Activity
  */
-interface UpnpDevicesLoader {
-    val observable: Observable<List<MediaBrowser.MediaItem>>
-}
-
-/**
- * Created by drew on 5/29/17.
- */
-class UpnpDevicesLoaderImpl
+class UpnpDevicesLoader
 @Inject constructor(
         private val mDatabaseClient: DatabaseClient
-): UpnpDevicesLoader {
-
-    override val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
+){
+    val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
         mDatabaseClient.changesObservable
+                .observeOn(AppSchedulers.diskIo)
                 .filter { it is UpnpDeviceChange }
                 .map { it as UpnpDeviceChange }
                 .startWith(UpnpDeviceChange())
                 .flatMap {
-                    mDatabaseClient.getUpnpDevices()
-                            .map { it.toMediaItem() }
-                            .toList().subscribeOn(AppSchedulers.diskIo)
+                    mDatabaseClient.getUpnpDevices().map { it.toMediaItem() }.toList()
                 }
     }
 }
@@ -49,18 +27,11 @@ class UpnpDevicesLoaderImpl
 /**
  * The loader for the folder activity
  */
-interface UpnpFoldersLoader {
-    fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>>
-}
-
-/**
- *
- */
-class UpnpFoldersLoaderImpl
+class UpnpFoldersLoader
 @Inject constructor(
         private val mDatabaseClient: DatabaseClient
-) : UpnpFoldersLoader {
-    override fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>> {
+) {
+    fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>> {
         val mediaRef = newMediaRef(mediaId)
         val folderId = when (mediaRef.kind) {
             UPNP_FOLDER -> mediaRef.mediaId as UpnpFolderId
@@ -68,13 +39,33 @@ class UpnpFoldersLoaderImpl
             else -> TODO("Unsupported mediaid")
         }
         return mDatabaseClient.changesObservable
+                .observeOn(AppSchedulers.diskIo)
                 .startWith(UpnpFolderChange(folderId))
                 .filter { it is UpnpFolderChange && folderId == it.folderId }
                 .flatMap {
                     Observable.concat(
-                            mDatabaseClient.getUpnpFolders(folderId).subscribeOn(AppSchedulers.diskIo),
-                            mDatabaseClient.getUpnpVideos(folderId).subscribeOn(AppSchedulers.diskIo)
+                            mDatabaseClient.getUpnpFolders(folderId),
+                            mDatabaseClient.getUpnpVideos(folderId)
                     ).map { it.toMediaItem() }.toList()
+                }
+    }
+}
+
+/**
+ * Loader for newly added row in home screen
+ */
+class NewlyAddedLoader
+@Inject constructor(
+        private val mDatabaseClient: DatabaseClient
+) {
+    val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
+        mDatabaseClient.changesObservable
+                .observeOn(AppSchedulers.diskIo)
+                .filter { it is UpnpFolderChange || it is UpnpVideoChange }
+                .map { true }
+                .startWith(true)
+                .flatMap {
+                    mDatabaseClient.getRecentUpnpVideos().map { it.toMediaItem() } .toList()
                 }
     }
 }

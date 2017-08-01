@@ -74,6 +74,22 @@ class DatabaseClientTest {
         mClient.mResolver = mock()
     }
 
+    fun upnp_video_recent() {
+        val parentmid = MediaRef(UPNP_FOLDER, UpnpFolderId("foo", "bar"))
+
+        val meta = MediaMeta()
+        val mid = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "bar"))
+        meta.mediaId = mid.toJson()
+        meta.parentMediaId = parentmid.toJson()
+        meta.mimeType = "video/mpeg"
+        meta.displayName = "my display name"
+        meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
+
+        mClient.addUpnpVideo(meta)
+        //just check to make sure it works
+        assertThat(mClient.getRecentUpnpVideos().count().toBlocking().first()).isEqualTo(1)
+    }
+
     @Test
     fun upnpVideoOverview_movie() {
 
