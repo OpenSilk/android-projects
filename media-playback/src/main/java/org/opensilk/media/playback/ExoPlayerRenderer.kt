@@ -57,6 +57,7 @@ constructor(
     private var mPlaybackState: PlaybackState by Delegates.observable(PlaybackState.Builder().build(), { _, _, nv ->
         mStateChanges.onNext(nv)
     })
+    private var mLoading = false
 
     init {
         mExoPlayer.addListener(this)
@@ -205,11 +206,7 @@ constructor(
     }
 
     override fun onLoadingChanged(isLoading: Boolean) {
-        if (isLoading && mPlaybackState.state != PlaybackState.STATE_BUFFERING) {
-            changeState(PlaybackState.STATE_BUFFERING)
-        } else if (!isLoading && mPlaybackState.state == PlaybackState.STATE_BUFFERING) {
-            changeState(PlaybackState.STATE_PAUSED)
-        }
+        mLoading = isLoading
     }
 
     override fun onPositionDiscontinuity() {

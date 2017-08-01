@@ -112,7 +112,7 @@ import java.util.Locale;
   public void onTimelineChanged(Timeline timeline, Object manifest) {
     int periodCount = timeline.getPeriodCount();
     int windowCount = timeline.getWindowCount();
-    Log.d(TAG, "sourceInfo [periodCount=" + periodCount + ", windowCount=" + windowCount);
+    Log.d(TAG, "onTimelineChanged() sourceInfo [periodCount=" + periodCount + ", windowCount=" + windowCount);
     for (int i = 0; i < Math.min(periodCount, MAX_TIMELINE_ITEM_LINES); i++) {
       timeline.getPeriod(i, period);
       Log.d(TAG, "  " +  "period [" + getTimeString(period.getDurationMs()) + "]");
@@ -140,10 +140,10 @@ import java.util.Locale;
   public void onTracksChanged(TrackGroupArray ignored, TrackSelectionArray trackSelections) {
     MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
     if (mappedTrackInfo == null) {
-      Log.d(TAG, "Tracks []");
+      Log.d(TAG, "onTracksChanged() Tracks []");
       return;
     }
-    Log.d(TAG, "Tracks [");
+    Log.d(TAG, "onTracksChanged() Tracks [");
     // Log tracks associated to renderers.
     for (int rendererIndex = 0; rendererIndex < mappedTrackInfo.length; rendererIndex++) {
       TrackGroupArray rendererTrackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
