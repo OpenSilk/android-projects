@@ -7,7 +7,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import javax.inject.Inject
 
-const private val VERSION = 15
+const private val VERSION = 16
 
 /**
  * Created by drew on 7/18/17.
