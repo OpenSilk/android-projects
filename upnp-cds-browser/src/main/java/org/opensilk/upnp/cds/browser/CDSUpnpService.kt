@@ -18,10 +18,7 @@
 package org.opensilk.upnp.cds.browser
 
 import android.content.Context
-import android.os.AsyncTask
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
+import android.os.*
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.jetty.util.log.Log
 import org.fourthline.cling.UpnpService
@@ -46,6 +43,7 @@ import org.fourthline.cling.transport.spi.NetworkAddressFactory
 import org.fourthline.cling.transport.spi.SOAPActionProcessor
 import org.fourthline.cling.transport.spi.StreamServer
 import org.opensilk.common.dagger.ForApplication
+import java.lang.ref.WeakReference
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.inject.Inject
@@ -63,24 +61,31 @@ class CDSUpnpService
 ) : UpnpService {
 
     private val mUpnpService = Service()
+    var lastUsed: Long = SystemClock.elapsedRealtime()
+        private set
 
     override fun getRouter(): AndroidRouter {
+        lastUsed = SystemClock.elapsedRealtime()
         return mUpnpService.router
     }
 
     override fun getProtocolFactory(): ProtocolFactory {
+        lastUsed = SystemClock.elapsedRealtime()
         return mUpnpService.protocolFactory
     }
 
     override fun getConfiguration(): UpnpServiceConfiguration {
+        lastUsed = SystemClock.elapsedRealtime()
         return mUpnpService.configuration
     }
 
     override fun getRegistry(): Registry {
+        lastUsed = SystemClock.elapsedRealtime()
         return mUpnpService.registry
     }
 
     override fun getControlPoint(): ControlPoint {
+        lastUsed = SystemClock.elapsedRealtime()
         return mUpnpService.controlPoint
     }
 
@@ -97,7 +102,8 @@ class CDSUpnpService
     class ShutdownDelayHandler: Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             if (msg.what == 1) {
-                ShutdownTask(msg.obj as Service).execute()
+                val service = msg.obj as Service
+                ShutdownTask(service).execute()
             }
         }
     }
@@ -147,7 +153,7 @@ class CDSUpnpService
             Logger.getLogger("org.fourthline.cling.transport.spi.DatagramIO").level = Level.INFO
             Logger.getLogger("org.fourthline.cling.protocol.ProtocolFactory").level = Level.INFO
             Logger.getLogger("org.fourthline.cling.model.message.UpnpHeaders").level = Level.INFO
-            Logger.getLogger("org.fourthline.cling.transport.spi.SOAPActionProcessor").level = Level.FINER
+            Logger.getLogger("org.fourthline.cling.transport.spi.SOAPActionProcessor").level = Level.INFO// = Level.FINER
 
             //fix jetty logging
             Log.__logClass = JettyAndroidLogger::class.java.name
