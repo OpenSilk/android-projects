@@ -179,6 +179,7 @@ class DatabaseClient
             cv.put("artwork_uri", meta.artworkUri.toString())
         }
         cv.put("available", 1)
+        cv.put("update_id", meta.updateId)
         return mResolver.insert(mUris.upnpDevices(), cv) ?: Uri.EMPTY
     }
 
@@ -225,8 +226,8 @@ class DatabaseClient
         }
     }
 
-    val upnpDeviceProjection = arrayOf("_id", "device_id", "mime_type", "title",
-            "subtitle", "artwork_uri")
+    val upnpDeviceProjection = arrayOf("_id", "device_id", "mime_type", "title", //3
+            "subtitle", "artwork_uri", "update_id") //6
 
     fun Cursor.toUpnpDeviceMediaMeta(): MediaMeta {
         val c = this
@@ -237,6 +238,7 @@ class DatabaseClient
         meta.title = c.getString(3) ?: ""
         meta.subtitle = c.getString(4) ?: ""
         if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
+        meta.updateId = c.getLong(6)
         return meta
     }
 
