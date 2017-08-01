@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/common-dagger" />
             <option value="$PROJECT_DIR$/common-glide" />
             <option value="$PROJECT_DIR$/common-rx" />
+            <option value="$PROJECT_DIR$/common-rx2" />
             <option value="$PROJECT_DIR$/leanback" />
             <option value="$PROJECT_DIR$/libtmdb" />
             <option value="$PROJECT_DIR$/libtvdb" />

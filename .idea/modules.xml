@@ -12,6 +12,7 @@
       <module fileurl="file://$PROJECT_DIR$/common-dagger/common-dagger.iml" filepath="$PROJECT_DIR$/common-dagger/common-dagger.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-glide/common-glide.iml" filepath="$PROJECT_DIR$/common-glide/common-glide.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-rx/common-rx.iml" filepath="$PROJECT_DIR$/common-rx/common-rx.iml" />
+      <module fileurl="file://$PROJECT_DIR$/common-rx2/common-rx2.iml" filepath="$PROJECT_DIR$/common-rx2/common-rx2.iml" />
       <module fileurl="file://$PROJECT_DIR$/leanback/leanback.iml" filepath="$PROJECT_DIR$/leanback/leanback.iml" />
       <module fileurl="file://$PROJECT_DIR$/libtmdb/libtmdb.iml" filepath="$PROJECT_DIR$/libtmdb/libtmdb.iml" />
       <module fileurl="file://$PROJECT_DIR$/libtvdb/libtvdb.iml" filepath="$PROJECT_DIR$/libtvdb/libtvdb.iml" />
