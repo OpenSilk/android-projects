@@ -10,6 +10,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.assertj.core.api.Java6Assertions.assertThat
+import org.opensilk.media.toMediaItem
 
 /**
  * Created by drew on 6/4/17.
@@ -30,7 +31,7 @@ class MediaItemListPresenterTest {
 
     @Test
     fun test_onBindViewHolder() {
-        val item = testUpnpVideoItem()
+        val item = testUpnpVideoMetas()[0].toMediaItem()
         mPresenter.onBindViewHolder(mViewHolder, item)
         val b = mViewHolder.binding
         b.executePendingBindings()

@@ -8,6 +8,7 @@ import org.robolectric.annotation.Config
 import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
+import org.opensilk.media.toMediaItem
 import org.robolectric.Robolectric
 
 /**
@@ -29,7 +30,7 @@ class MediaItemPresenterTest {
 
     @Test
     fun test_onBindViewHolder() {
-        val item = testUpnpVideoItem()
+        val item = testUpnpVideoMetas()[0].toMediaItem()
         mPresenter.onBindViewHolder(mViewHolder, item)
         val view = mViewHolder.view as MediaItemImageCardView
         assertThat(view.titleText).isEqualTo(item.description.title)

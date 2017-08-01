@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opensilk.media._getMediaTitle
+import org.opensilk.media.toMediaItem
 
 /**
  * Created by drew on 6/4/17.
@@ -25,7 +26,7 @@ import org.opensilk.media._getMediaTitle
 @LargeTest
 class DetailActivityUITest {
 
-    val mItem = testUpnpVideoItem()
+    val mItem = testUpnpVideoMetas()[0].toMediaItem()
     @Rule @JvmField
     val mActivityRule = object : ActivityTestRule<DetailActivity>(DetailActivity::class.java) {
         override fun getActivityIntent(): Intent {

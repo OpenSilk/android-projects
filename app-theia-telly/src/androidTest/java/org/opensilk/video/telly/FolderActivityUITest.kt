@@ -20,20 +20,20 @@ class FolderActivityUITest {
     @Rule @JvmField
     val mActivityRule = object : ActivityTestRule<FolderActivity>(FolderActivity::class.java) {
         override fun getActivityIntent(): Intent {
-            return super.getActivityIntent().putExtra(EXTRA_MEDIAID, testUpnpDeviceItem().mediaId)
+            return super.getActivityIntent().putExtra(EXTRA_MEDIAID, testUpnpDeviceMeta().mediaId)
         }
     }
 
     @Test
     fun testMediaItemIsSet() {
         val frag = mActivityRule.activity.fragmentManager.findFragmentById(R.id.folder_browse_fragment) as FolderFragment
-        Assertions.assertThat(frag.arguments.getString(EXTRA_MEDIAID)).isEqualTo(testUpnpDeviceItem().mediaId)
+        Assertions.assertThat(frag.arguments.getString(EXTRA_MEDIAID)).isEqualTo(testUpnpDeviceMeta().mediaId)
     }
 
     @Test
     fun testItemsAreLoaded() {
         val frag = mActivityRule.activity.fragmentManager.findFragmentById(R.id.folder_browse_fragment) as FolderFragment
         Assertions.assertThat((frag.mFolderAdapter.get(0) as MediaBrowser.MediaItem).mediaId)
-                .isEqualTo(testUpnpFolderItem().mediaId)
+                .isEqualTo(testUpnpFolderMetas()[0].mediaId)
     }
 }
