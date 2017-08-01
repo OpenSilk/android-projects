@@ -5,7 +5,6 @@ import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
@@ -27,7 +26,6 @@ import javax.inject.Singleton
         modules = arrayOf(RootModule::class,
                 AppContextModule::class,
                 UpnpHolderServiceModule::class,
-                UpnpLoadersModule::class,
                 HomeModule::class,
                 FolderModule::class,
                 DetailModule::class,

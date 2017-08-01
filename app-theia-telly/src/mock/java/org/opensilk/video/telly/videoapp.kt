@@ -18,20 +18,15 @@ import javax.inject.Singleton
                 MockRootModule::class,
                 AppContextModule::class,
                 UpnpHolderServiceModule::class,
-                MockUpnpLoadersModule::class,
                 HomeModule::class,
-                MockHomeModule::class,
                 FolderModule::class,
-                MockFolderModule::class,
                 DetailModule::class,
-                MockDetailModule::class,
                 PlaybackModule::class,
-                MockPlaybackModule::class,
                 PlaybackServiceModule::class,
-                MockMediaProviderClientModule::class,
+                MediaProviderModule::class,
                 DatabaseProviderModule::class,
                 LookupModule::class
-                )
+        )
 )
 interface MockRootComponent: RootComponent {
     fun injectMockApp(app: MockVideoApp)
@@ -55,6 +50,17 @@ class MockVideoApp: VideoApp() {
     }
     private val injectOnce = Once()
 
+    @Inject lateinit var mDatabaseClient: DatabaseClient
+
+    override fun onCreate() {
+        super.onCreate()
+        injectOnce.Do {
+            rootComponent.injectMockApp(this)
+        }
+        insertTestData(mDatabaseClient)
+    }
+
+    /*
     @Inject lateinit var mMockHomeBuilder: MockHomeComponent.Builder
     @Inject lateinit var mMockFolderBuilder: MockFolderComponent.Builder
     @Inject lateinit var mMockDetailBuilder: MockDetailComponent.Builder
@@ -76,6 +82,7 @@ class MockVideoApp: VideoApp() {
             super.injectFoo(foo)
         }
     }
+    */
 
     override fun startUpnpService() {
         //stub

@@ -9,6 +9,7 @@ import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.toMediaItem
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
@@ -34,7 +35,7 @@ class MediaItemClickListenerTest {
 
     @Test
     fun test_OnItemClicked_DeviceItem() {
-        val item = testUpnpDeviceItem()
+        val item = testUpnpDeviceMeta().toMediaItem()
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
@@ -43,7 +44,7 @@ class MediaItemClickListenerTest {
 
     @Test
     fun test_OnItemClicked_FolderItem() {
-        val item = testUpnpFolderItem()
+        val item = testUpnpFolderMetas()[0].toMediaItem()
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
@@ -52,7 +53,7 @@ class MediaItemClickListenerTest {
 
     @Test
     fun test_OnItemClicked_VideoItem() {
-        val item = testUpnpVideoItem()
+        val item = testUpnpVideoMetas()[0].toMediaItem()
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, DetailActivity::class.java))
