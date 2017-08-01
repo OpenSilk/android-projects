@@ -54,6 +54,7 @@ dependencies {
         exclude group: 'stax', module: 'stax-api'
     }
     compile "com.squareup.retrofit2:adapter-rxjava:$retrofitVersion"
+    compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
     compile "org.apache.commons:commons-lang3:$commonsLangVersion"
     compile "commons-io:commons-io:$commonsIOVersion"
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

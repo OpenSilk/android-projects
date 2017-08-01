@@ -9,26 +9,32 @@ buildscript {
         gradleToolsVersion = "2.3.3"
 
         supportLibVersion = "25.4.0"
+        androidarchVersion = "1.0.0-alpha4"
+
         dagger2Version = "2.11"
+
         rxJavaVersion = "1.1.1"
         rxAndroidVersion = "1.1.0"
-        timberVersion = "4.1.0"
-        commonsLangVersion = "3.4"
-        okHttpVersion = "3.0.0"
-        retrofitVersion = "2.0.0"
-        mortarVersion = "0.19"
-        glideVersion = '4.0.0-RC0'
-        commonsIOVersion = "2.5"
         rxKotlinVersion = '0.60.0'
-        ankoVersion = '0.9'
+
+        timberVersion = "4.5.1"
+        okHttpVersion = "3.8.1"
+        retrofitVersion = "2.3.0"
+        mortarVersion = "0.19"
+        test_mockwebserverVersion = "3.8.1"
+
+        glideVersion = '4.0.0-RC0'
+
+        commonsIOVersion = "2.5"
+        commonsLangVersion = "3.4"
+
         clingVersion = "2.1.1"
+
         exoPlayerVersion = "r2.4.2"
-        androidarchVersion = "1.0.0-alpha4"
 
         test_junitVersion = "4.12"
         test_robolectricVersion = "3.3.2"
         test_assertJVersion = "2.8.0"
-        test_mockwebserverVersion = "3.2.0"
         test_supportTestVersion = "0.5" //test runner and rules
         test_espressoVersion = "2.2.2"
         test_mockitokotlinVersion = "1.5.0"
