@@ -63,6 +63,10 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
         super.onCreate()
         Timber.plant(DebugTreeWithThreadName())
 
+        startUpnpService()
+    }
+
+    open fun startUpnpService() {
         //Start upnp service
         startService(Intent(this, UpnpHolderService::class.java))
     }

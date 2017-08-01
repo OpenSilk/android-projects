@@ -76,4 +76,8 @@ class MockVideoApp: VideoApp() {
             super.injectFoo(foo)
         }
     }
+
+    override fun startUpnpService() {
+        //stub
+    }
 }
