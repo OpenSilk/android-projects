@@ -187,3 +187,26 @@ fun Context.findActivity(): Activity {
 fun Int.zeroPad(len: Int): String {
     return this.toString().padStart(len, '0')
 }
+
+fun formatTime(seconds: Long, sb: StringBuilder) {
+    var seconds = seconds
+    var minutes = seconds / 60
+    val hours = minutes / 60
+    seconds -= minutes * 60
+    minutes -= hours * 60
+
+    sb.setLength(0)
+    if (hours > 0) {
+        sb.append(hours).append(':')
+        if (minutes < 10) {
+            sb.append('0')
+        }
+    }
+    sb.append(minutes).append(':')
+    if (seconds < 10) {
+        sb.append('0')
+    }
+    sb.append(seconds)
+}
+
+

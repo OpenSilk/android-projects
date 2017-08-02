@@ -132,6 +132,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     val mMediaControllerCallback = MediaControllerCallback(this)
     var mMediaControllerCallbackRegistered = false
     var mWonVisibleBehind = false
+    val mTotalTimeStringBuilder = StringBuilder()
+    val mCurrentTimeStringBuilder = StringBuilder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -570,13 +572,15 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         val current = pbs.position + if (pbs.state == PlaybackState.STATE_PLAYING) {
             (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
         } else 0L
-        mBinding.currentTimeString = humanReadableDuration(current)
+        formatTime(current / 1000L, mCurrentTimeStringBuilder)
+        mBinding.currentTimeString = mCurrentTimeStringBuilder.toString()
     }
 
     fun updateTotalTimeText() {
         if (mBrowser.notConnected()) return
         val duration = mediaController.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
-        mBinding.totalTimeString = humanReadableDuration(duration)
+        formatTime(duration / 1000L, mTotalTimeStringBuilder)
+        mBinding.totalTimeString = mTotalTimeStringBuilder.toString()
     }
 
     fun updateVideoDescription() {
