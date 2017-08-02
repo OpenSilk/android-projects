@@ -64,7 +64,8 @@ class NewlyAddedLoader
                 .filter { it is UpnpFolderChange || it is UpnpVideoChange }
                 .map { true }
                 .startWith(true)
-                .sample(3, TimeUnit.SECONDS)
+                //we accept any change, during scan we will be flooded
+                .throttleFirst(3, TimeUnit.SECONDS)
                 .observeOn(AppSchedulers.diskIo)
                 .flatMapSingle {
                     mDatabaseClient.getRecentUpnpVideos().map { it.toMediaItem() }.toList()
