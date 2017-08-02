@@ -62,6 +62,7 @@ class UpnpDevicesObserver
                 mDatabaseClient.postChange(UpnpDeviceChange())
                 mUpnpGENAObserver.subscribeEvents(service)
                 if (changed || scanning) {
+                    Timber.i("${metaDevice.title} Starting Scan")
                     mUpnpBrowseScanner.enqueue(UpnpFolderId(deviceId.deviceId, "0"))
                 }
             })
