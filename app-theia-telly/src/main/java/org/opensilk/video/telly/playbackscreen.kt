@@ -401,10 +401,11 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     }
 
     override fun onMetadataChanged(metadata: MediaMetadata) {
+        Timber.d("onMetadataChanged(%s)", metadata.description.title)
         mBinding.desc = VideoDescInfo(
-                metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE) ?: "",
-                metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE) ?: "",
-                metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION) ?: ""
+                metadata.description.title?.toString() ?: "",
+                metadata.description.subtitle?.toString() ?: "",
+                metadata.description.description?.toString() ?: ""
         )
     }
 
@@ -502,10 +503,12 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         }
 
         postOverlayHideRunner()
+        restartProgressRunner()
     }
 
     fun animateOverlayOut() {
         mMainHandler.removeCallbacks(mAnimateOutRunner)
+        mMainHandler.removeCallbacks(mProgressRunner)
 
         if (mBinding.topBar.visibility != View.GONE) {
             mBinding.topBar.animate().cancel()
@@ -534,6 +537,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     }
 
     private val mAnimateOutRunner = Runnable { animateOverlayOut() }
+
     fun postOverlayHideRunner() {
         mMainHandler.removeCallbacks(mAnimateOutRunner)
         mMainHandler.postDelayed(mAnimateOutRunner, OVERLAY_SHOW_DURATION)
@@ -544,6 +548,31 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                 (mBinding.topBar.visibility != View.GONE)
     }
 
+    private val mProgressRunner = object: Runnable {
+        override fun run() {
+            updateProgress()
+            mMainHandler.postDelayed(this, 500)
+        }
+    }
+
+    fun restartProgressRunner() {
+        mMainHandler.removeCallbacks(mProgressRunner)
+        mMainHandler.post(mProgressRunner)
+    }
+
+    fun updateProgress() {
+        if (mBrowser.notConnected()) return
+        val pbs = mediaController.playbackState
+        val current = pbs.position + (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
+        val duration = mediaController.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+        if (duration == 0L || duration < current) {
+            mBinding.progress.max
+            mBinding.progressVal = 0
+        } else {
+            //permyriad calculation (no floating point)
+            mBinding.progressVal = ((1000*current + duration/2)/duration).toInt()
+        }
+    }
 }
 
 open class DefaultAnimatorListener: Animator.AnimatorListener {
