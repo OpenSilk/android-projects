@@ -1,6 +1,8 @@
 package org.opensilk.video
 
 import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.functions.Function
 import io.reactivex.subjects.PublishSubject
 import org.fourthline.cling.model.action.ActionException
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
@@ -17,6 +19,7 @@ import org.opensilk.media.*
 import org.opensilk.upnp.cds.browser.CDSBrowseAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
+import org.opensilk.upnp.cds.featurelist.BasicView
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -48,8 +51,14 @@ class UpnpBrowseScanner
         mQueueSubject.doOnNext {
             mDatabaseClient.incrementUpnpDeviceScanning(UpnpDeviceId(it.deviceId))
         }.observeOn(AppSchedulers.scanner, true, 10000).flatMapSingle { folderId ->
-            cachedService(folderId).flatMap { service ->
-                browse(service, folderId)
+            return@flatMapSingle if (folderId.folderId == "0") {
+                cachedService(folderId).flatMap { service ->
+                    featureList(service, folderId).onErrorResumeNext(Function { browse(service, folderId) })
+                }
+            } else {
+                cachedService(folderId).flatMap { service ->
+                    browse(service, folderId)
+                }
             }.toList().map { list ->
                 FolderWithMetaList(folderId, list)
             }
@@ -211,6 +220,40 @@ class UpnpBrowseScanner
             //ensure we don't leak our listener
             subscriber.setCancellable { mUpnpService.registry.removeListener(listener) }
             mUpnpService.controlPoint.search(UDAServiceTypeHeader(CDSserviceType))
+        }
+    }
+
+    /**
+     * featureList uses proprietary action to fetch the virtual folder with only video items
+     * it then remaps the children of that folder to the root container (id = "0")
+     * so the loader sees the video folders when requesting root
+     */
+    private fun featureList(service: Service<*,*>, parentId: UpnpFolderId): Observable<MediaMeta> {
+        return Single.create<String> { s ->
+            val action = UpnpFeatureListAction(mUpnpService.controlPoint, service)
+            action.run()
+            if (s.isDisposed) {
+                return@create
+            }
+            if (action.error.get() != null) {
+                s.onError(action.error.get())
+                return@create
+            }
+            action.features.get()?.features?.firstOrNull {
+                it is BasicView && !it.videoItemId.isNullOrBlank()
+            }?.let {
+                s.onSuccess((it as BasicView).videoItemId)
+            } ?: s.onError(NullPointerException())
+        }.flatMapObservable { id ->
+            browse(service, parentId.copy(folderId = id))
+        }.map { meta ->
+            val oldParent = newMediaRef(meta.parentMediaId)
+            when (oldParent.kind) {
+                UPNP_FOLDER -> {
+                    meta.parentMediaId = oldParent.copy(mediaId = parentId).toJson()
+                } //else TODO error
+            }
+            return@map meta
         }
     }
 
