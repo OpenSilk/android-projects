@@ -57,7 +57,6 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     compile project(':common-dagger')
-    compile project(':common-rx')
 
     testCompile "junit:junit:$test_junitVersion"
     testCompile "org.robolectric:robolectric:$test_robolectricVersion"

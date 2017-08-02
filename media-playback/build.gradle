@@ -32,7 +32,6 @@ dependencies {
     compile "com.google.android.exoplayer:extension-ffmpeg-x86:r2.4.2-SNAPSHOT"
 
     compile project(':common-dagger')
-    compile project(':common-rx')
     compile project(':media')
 
     testCompile "junit:junit:$test_junitVersion"
