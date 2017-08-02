@@ -7,7 +7,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import javax.inject.Inject
 
-const private val VERSION = 18
+const private val VERSION = 19
 
 /**
  * Created by drew on 7/18/17.
@@ -44,7 +44,9 @@ class Database
                     "_display_name TEXT NOT NULL, " +
                     "overview TEXT," +
                     "first_aired TEXT, " +
-                    "banner TEXT " +
+                    "banner TEXT, " +
+                    "poster TEXT, " +
+                    "backdrop TEXT " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS tv_series_search")
             db.execSQL("CREATE VIRTUAL TABLE tv_series_search USING fts3 (" +
@@ -72,10 +74,9 @@ class Database
                     "path TEXT NOT NULL, " +
                     "type TEXT NOT NULL, " +
                     "type2 TEXT NOT NULL, " +
+                    "resolution TEXT NOT NULL, " +
                     "rating FLOAT, " +
                     "rating_count INTEGER, " +
-                    "thumb_path TEXT, " +
-                    "resolution TEXT, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS tv_actors;")
@@ -119,14 +120,12 @@ class Database
             db.execSQL("DROP TABLE IF EXISTS movie_images;")
             db.execSQL("CREATE TABLE movie_images (" +
                     "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "movie_id INTEGER NOT NULL, " +
+                    "file_path TEXT NOT NULL, " +
                     "image_type TEXT NOT NULL, " + //poster|backdrop
-
-                    "height INTEGER NOT NULL, " +
-                    "width INTEGER NOT NULL, " +
-                    "file_path TEXT NOT NULL UNIQUE, " +
+                    "resolution TEXT NOT NULL, " +
                     "vote_average FLOAT, " +
                     "vote_count INTEGER " +
+                    "movie_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS movie_lookups;")
             db.execSQL("CREATE TABLE movie_lookups (" +

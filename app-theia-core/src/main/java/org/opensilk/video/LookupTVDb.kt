@@ -55,9 +55,9 @@ constructor(
         if (ref.kind != UPNP_VIDEO) {
             return Observable.error(IllegalMediaKindException())
         }
-        val name = meta.extras.getString(LOOKUP_NAME, "")
-        val seasonNumber = meta.extras.getInt(LOOKUP_SEASON_NUM, 0)
-        val episodeNumber = meta.extras.getInt(LOOKUP_EPISODE_NUM, 0)
+        val name = meta.lookupName
+        val seasonNumber = meta.seasonNumber
+        val episodeNumber = meta.episodeNumber
 
         val cacheObservable = mClient.getTvSeriesAssociation(name)
                 //pull all episodes for series
@@ -92,7 +92,7 @@ constructor(
             }
         }.map { swi ->
             //insert into database
-            val uri = mClient.addTvSeries(swi.series)
+            val uri = mClient.addTvSeries(swi.series, swi.posters.firstOrNull(), swi.fanart.firstOrNull())
             mClient.addTvEpisodes(swi.series.id, swi.episodes)
             mClient.addTvImages(swi.series.id, swi.posters)
             mClient.addTvImages(swi.series.id, swi.fanart)

@@ -138,8 +138,8 @@ class LookupService
 
     override fun lookupObservable(meta: MediaMeta): Observable<MediaMeta> {
         val title = meta.displayName
-        if (meta.extras.containsKey(LOOKUP_NAME)) {
-            return if (meta.extras.containsKey(LOOKUP_SEASON_NUM)) {
+        if (meta.lookupName !=  "") {
+            return if (meta.seasonNumber != 0) {
                 mTVDb.lookupObservable(meta)
             } else {
                 mMovieDb.lookupObservable(meta)
@@ -151,19 +151,22 @@ class LookupService
             if (name.isNullOrBlank() || seasonNum <= 0 || episodeNum <= 0) {
                 return Observable.error(LookupException())
             }
-            meta.extras.putString(LOOKUP_NAME, name)
-            meta.extras.putInt(LOOKUP_SEASON_NUM, seasonNum)
-            meta.extras.putInt(LOOKUP_EPISODE_NUM, episodeNum)
+            meta.lookupName = name
+            meta.seasonNumber = seasonNum
+            meta.episodeNumber = episodeNum
             return mTVDb.lookupObservable(meta)
         } else if (matchesMovie(title)) {
             val name = extractMovieName(title)
             val year = extractMovieYear(title)
             if (name.isNullOrBlank()) {
                 return Observable.error(LookupException())
+            } else {
+                meta.lookupName = name!!
+                if (!year.isNullOrBlank()) {
+                    meta.releaseYear = year!!.toInt()
+                }
+                return mMovieDb.lookupObservable(meta)
             }
-            meta.extras.putString(LOOKUP_NAME, name)
-            meta.extras.putString(LOOKUP_YEAR, year)
-            return mMovieDb.lookupObservable(meta)
         } else {
             return Observable.error(LookupException())
         }

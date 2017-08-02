@@ -56,11 +56,11 @@ constructor(
         if (mediaRef.kind != UPNP_VIDEO) {
             return Observable.error(IllegalMediaKindException())
         }
-        val name = meta.extras.getString(LOOKUP_NAME, "")
+        val name = meta.lookupName
         if (name.isBlank()) {
             return Observable.error(IllegalArgumentException())
         }
-        val year = meta.extras.getString(LOOKUP_YEAR, "")
+        val year = meta.releaseYear.toString()
 
         val cacheObservable = mClient.getMovieAssociation(name, year)
                 .map { id -> mClient.uris.movie(id) }.toObservable()

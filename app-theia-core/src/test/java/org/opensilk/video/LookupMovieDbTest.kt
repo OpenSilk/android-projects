@@ -79,7 +79,7 @@ class LookupMovieDbTest {
         val year = ""
         val meta = MediaMeta()
         meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "1")).toJson()
-        meta.extras.putString(LOOKUP_NAME, name)
+        meta.lookupName = name
 
         val config = TMDbConfig(TMDbConfig.Images("/foo", null, null, null, null, null, null))
         val movie = Movie(1, name, name, null, null, null, null)
@@ -130,7 +130,7 @@ class LookupMovieDbTest {
         val year = ""
         val meta = MediaMeta()
         meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "1")).toJson()
-        meta.extras.putString(LOOKUP_NAME, name)
+        meta.lookupName = name
 
         val config = TMDbConfig(TMDbConfig.Images("/foo", null, null, null, null, null, null))
 

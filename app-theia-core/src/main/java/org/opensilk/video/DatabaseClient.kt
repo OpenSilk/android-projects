@@ -381,9 +381,8 @@ class DatabaseClient
             mResolver.query(mUris.upnpVideos(), upnpVideoProjection,
                     "device_id=? AND parent_id=? AND hidden=0", arrayOf(parentId.deviceId, parentId.folderId),
                     "v._display_name", s.cancellationSignal())?.use { c ->
-                val baseUrl = getMovieImageBaseUrl()
                 while (c.moveToNext()) {
-                    s.onNext(c.toUpnpVideoMediaMeta(baseUrl))
+                    s.onNext(c.toUpnpVideoMediaMeta())
                 }
                 s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
@@ -398,7 +397,7 @@ class DatabaseClient
             mResolver.query(mUris.upnpVideo(id), upnpVideoProjection,
                     null, null, null, null)?.use { c ->
                 if (c.moveToFirst()) {
-                    s.onSuccess(c.toUpnpVideoMediaMeta(getMovieImageBaseUrl()))
+                    s.onSuccess(c.toUpnpVideoMediaMeta())
                 } else {
                     s.onError(NoSuchItemException())
                 }
@@ -415,7 +414,7 @@ class DatabaseClient
                     "device_id=? AND item_id=?",
                     arrayOf(videoId.deviceId, videoId.itemId), null, null)?.use { c ->
                 if (c.moveToFirst()) {
-                    s.onSuccess(c.toUpnpVideoMediaMeta(getMovieImageBaseUrl()))
+                    s.onSuccess(c.toUpnpVideoMediaMeta())
                 } else {
                     s.onError(NoSuchItemException())
                 }
@@ -428,7 +427,7 @@ class DatabaseClient
             mResolver.query(mUris.upnpVideos(), upnpVideoProjection, null, null,
                     " v.date_added DESC LIMIT 20 ", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
-                    s.onNext(c.toUpnpVideoMediaMeta(getMovieImageBaseUrl()))
+                    s.onNext(c.toUpnpVideoMediaMeta())
                 }
                 s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
@@ -444,15 +443,16 @@ class DatabaseClient
             "episode_number", "season_number", //12
             //series columns
             "s._id as series_id", "s._display_name as series_title", //14
+            "s.poster as series_poster", "s.backdrop as series_backdrop", //16
             //movie columns
-            "m._id as movie_id", "m._display_name as movie_title",  //16
-            "m.poster_path as movie_poster", //17
-            "m.backdrop_path as movie_backdrop") //18
+            "m._id as movie_id", "m._display_name as movie_title",  //18
+            "m.poster_path as movie_poster", //19
+            "m.backdrop_path as movie_backdrop") //20
 
     /**
      * helper to convert cursor to mediameta using above projection
      */
-    fun Cursor.toUpnpVideoMediaMeta(baseUrl: String): MediaMeta {
+    fun Cursor.toUpnpVideoMediaMeta(): MediaMeta {
         val c = this
         val meta = MediaMeta()
         meta.rowId = c.getLong(0)
@@ -465,18 +465,25 @@ class DatabaseClient
         meta.duration = c.getLong(7)
         meta.size = c.getLong(8)
         if (!c.isNull(9)) {
-            meta.extras.putLong("episode", c.getLong(9))
-            meta.extras.putLong("series", c.getLong(13))
+            //meta.extras.putLong("episode", c.getLong(9))
+            //meta.extras.putLong("series", c.getLong(13))
             meta.title = c.getString(10)
             meta.subtitle = makeTvSubtitle(c.getString(14), c.getInt(11), c.getInt(12))
-        } else if (!c.isNull(15)) {
-            meta.extras.putLong("movie", c.getLong(15))
-            meta.title = c.getString(16)
-            if (!c.isNull(17) && baseUrl != "") {
-                meta.artworkUri = makeMoviePosterUri(baseUrl, c.getString(19))
+            if (!c.isNull(15)) {
+                meta.artworkUri = makeTvBannerUri(c.getString(15))
             }
-            if (!c.isNull(18) && baseUrl != "") {
-                meta.backdropUri = makeMovieBackdropUri(baseUrl, c.getString(20))
+            if (!c.isNull(16)) {
+                meta.backdropUri = makeTvBannerUri(c.getString(16))
+            }
+        } else if (!c.isNull(17)) {
+            //meta.extras.putLong("movie", c.getLong(17))
+            meta.title = c.getString(18)
+            val movieBaseUrl = getMovieImageBaseUrl()
+            if (!c.isNull(19) && movieBaseUrl != "") {
+                meta.artworkUri = makeMoviePosterUri(movieBaseUrl, c.getString(19))
+            }
+            if (!c.isNull(20) && movieBaseUrl != "") {
+                meta.backdropUri = makeMovieBackdropUri(movieBaseUrl, c.getString(20))
             }
         }
         return meta
@@ -572,13 +579,16 @@ class DatabaseClient
         }
     }
 
-    fun addTvSeries(series: Series): Uri {
+    fun addTvSeries(series: Series, poster: SeriesImageQuery? = null,
+                    backdrop: SeriesImageQuery? = null): Uri {
         val values = ContentValues(10)
         values.put("_id", series.id)
         values.put("_display_name", series.seriesName)
         values.put("overview", series.overview)
         values.put("first_aired", series.firstAired)
         values.put("banner", series.banner)
+        values.put("poster", poster?.fileName)
+        values.put("backdrop", backdrop?.fileName)
         return mResolver.insert(mUris.tvSeries(), values) ?: Uri.EMPTY
     }
 
@@ -689,10 +699,10 @@ class DatabaseClient
         values.put("resolution", banner.resolution)
     }
 
-    fun getTvImages(seriesId: Long): io.reactivex.Observable<MediaMeta> {
-        return io.reactivex.Observable.create { s ->
+    fun getTvPosters(seriesId: Long): Observable<MediaMeta> {
+        return Observable.create { s ->
             mResolver.query(mUris.tvBanners(), tvBannerProjection,
-                    "series_id=?", arrayOf(seriesId.toString()),
+                    "series_id=? and type=?", arrayOf(seriesId.toString(), "poster"),
                     "rating DESC", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
                     s.onNext(c.toTvBannerMediaMeta())
@@ -702,15 +712,27 @@ class DatabaseClient
         }
     }
 
-    val tvBannerProjection = arrayOf("_id", "path", "type", "type2")
+    fun getTvBackdrops(seriesId: Long): Observable<MediaMeta> {
+        return Observable.create { s ->
+            mResolver.query(mUris.tvBanners(), tvBannerProjection,
+                    "series_id=? and type=?", arrayOf(seriesId.toString(), "fanart"),
+                    "rating DESC", s.cancellationSignal())?.use { c ->
+                while (c.moveToNext()) {
+                    s.onNext(c.toTvBannerMediaMeta())
+                }
+                s.onComplete()
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    val tvBannerProjection = arrayOf("_id", "path", "resolution")
 
     fun Cursor.toTvBannerMediaMeta(): MediaMeta {
         val meta = MediaMeta()
         meta.mimeType = MIME_TYPE_JPEG
         meta.rowId = getLong(0)
         meta.artworkUri = makeTvBannerUri(getString(1))
-        meta.extras.putString("type", getString(2))
-        meta.extras.putString("type2", getString(3))
+        meta.resolution = getString(2)
         return meta
     }
 
@@ -825,9 +847,8 @@ class DatabaseClient
 
     fun ContentValues.makeImageValues(image: Image): ContentValues {
         val values = this
-        values.put("height", image.height)
-        values.put("width", image.width)
         values.put("file_path", image.filePath)
+        values.put("resolution", "${image.width}x${image.height}")
         values.put("vote_average", image.voteAverage)
         values.put("vote_count", image.voteCount)
         return values

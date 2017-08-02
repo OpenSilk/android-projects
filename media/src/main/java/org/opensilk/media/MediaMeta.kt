@@ -1,19 +1,12 @@
 package org.opensilk.media
 
-import android.graphics.Movie
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
-import android.media.tv.TvContract
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Parcel
-import android.os.Parcelable
 import android.provider.DocumentsContract
 import android.provider.MediaStore
-import android.webkit.MimeTypeMap
-import java.util.HashMap
-import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 const val MIME_TYPE_DIR = DocumentsContract.Document.MIME_TYPE_DIR
@@ -290,12 +283,7 @@ constructor(
     /**
      *
      */
-    val extras: Bundle by lazy {
-        if (!meta.containsKey("__extras")) {
-            meta.putBundle("__extras", Bundle())
-        }
-        return@lazy meta.getBundle("__extras")
-    }
+    var lookupName: String by StringVal
 
     /*
      * Scratch space until better solution are found
@@ -317,35 +305,30 @@ constructor(
      */
     var __internal4: String by StringVal
 
-
-    override fun equals(other: Any?): Boolean {
-        if (other == null) return false
-        if (other !is MediaMeta) return false
-        return other.mediaId == mediaId
-    }
 }
 
 fun String?.elseIfBlank(alternate: String): String {
-    return if (isNullOrBlank()) {
+    return if (this.isNullOrBlank()) {
         alternate
     } else {
-        this ?: alternate
+        this!!
     }
 }
 
 fun MediaMeta.toMediaItem(): MediaBrowser.MediaItem {
     val bob = MediaDescription.Builder()
-    if (mediaId.isEmpty() || title.isEmpty()) {
-        throw IllegalArgumentException("Must set mediaId and title")
+    if (mediaId.isEmpty()) {
+        throw IllegalArgumentException("Must set mediaId")
     }
     if ((isVideo || isAudio) && mediaUri == Uri.EMPTY) {
         throw IllegalArgumentException("mediaUri must be set on playable files")
     }
     bob.setMediaId(mediaId)
-            .setTitle(title)
+            .setTitle(title.elseIfBlank(displayName))
             .setSubtitle(subtitle)
+            .setDescription(overview)
             .setIconUri(artworkUri)
-            ._setMediaMeta(this)
+            .setExtras(this.meta)
     if (Build.VERSION.SDK_INT >= 23) {
         bob.setMediaUri(mediaUri)
     }

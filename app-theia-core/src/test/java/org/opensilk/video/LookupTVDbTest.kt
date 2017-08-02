@@ -107,9 +107,9 @@ class LookupTVDbTest {
 
         val meta = MediaMeta()
         meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "1")).toJson()
-        meta.extras.putString(LOOKUP_NAME, name)
-        meta.extras.putInt(LOOKUP_SEASON_NUM, seasonN)
-        meta.extras.putInt(LOOKUP_EPISODE_NUM, episodeN)
+        meta.lookupName = name
+        meta.seasonNumber = seasonN
+        meta.episodeNumber = episodeN
 
         val seriesSearch = SeriesSearch(id = 1, seriesName = name)
         val seriesSearchData = SeriesSearchData(listOf(seriesSearch))
@@ -178,9 +178,9 @@ class LookupTVDbTest {
 
         val meta = MediaMeta()
         meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "1")).toJson()
-        meta.extras.putString(LOOKUP_NAME, name)
-        meta.extras.putInt(LOOKUP_SEASON_NUM, seasonN)
-        meta.extras.putInt(LOOKUP_EPISODE_NUM, episodeN)
+        meta.lookupName = name
+        meta.seasonNumber = seasonN
+        meta.episodeNumber = episodeN
 
         val seriesUri = Uri.parse("foo.com/1")
         val seriesMeta = MediaMeta()
