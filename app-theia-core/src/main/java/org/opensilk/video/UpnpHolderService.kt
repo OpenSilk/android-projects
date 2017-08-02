@@ -39,15 +39,11 @@ class UpnpHolderService: android.app.Service() {
     private val mBinder = HolderBinder()
     @Inject lateinit var mUpnpService: CDSUpnpService
     @Inject lateinit var mUpnpDevicesObserver: UpnpDevicesObserver
-    @Inject lateinit var mUpnpGenaObserver: UpnpGENAObserver
-    @Inject lateinit var mUpnpMaintObserver: UpnpMaintenanceObserver
 
     override fun onCreate() {
         super.onCreate()
         injectMe()
         lifecycle.addObserver(mUpnpDevicesObserver)
-        lifecycle.addObserver(mUpnpGenaObserver)
-        lifecycle.addObserver(mUpnpMaintObserver)
     }
 
     override fun onDestroy() {
