@@ -426,13 +426,13 @@ class DatabaseClient
     fun getRecentUpnpVideos(): Observable<MediaMeta> {
         return Observable.create<MediaMeta> { s ->
             mResolver.query(mUris.upnpVideos(), upnpVideoProjection, null, null,
-                    "v.date_added DESC", s.cancellationSignal())?.use { c ->
+                    " v.date_added DESC LIMIT 20 ", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
                     s.onNext(c.toUpnpVideoMediaMeta(getMovieImageBaseUrl()))
                 }
                 s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
-        }.take(20)
+        }
     }
 
     val upnpVideoProjection = arrayOf(
