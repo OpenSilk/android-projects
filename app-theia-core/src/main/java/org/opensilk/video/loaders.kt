@@ -14,10 +14,10 @@ class UpnpDevicesLoader
 ){
     val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
         mDatabaseClient.changesObservable
-                .observeOn(AppSchedulers.diskIo)
                 .filter { it is UpnpDeviceChange }
                 .map { it as UpnpDeviceChange }
                 .startWith(UpnpDeviceChange())
+                .observeOn(AppSchedulers.diskIo)
                 .flatMapSingle {
                     mDatabaseClient.getUpnpDevices().map { it.toMediaItem() }.toList()
                 }
@@ -39,9 +39,9 @@ class UpnpFoldersLoader
             else -> TODO("Unsupported mediaid")
         }
         return mDatabaseClient.changesObservable
-                .observeOn(AppSchedulers.diskIo)
                 .startWith(UpnpFolderChange(folderId))
                 .filter { it is UpnpFolderChange && folderId == it.folderId }
+                .observeOn(AppSchedulers.diskIo)
                 .flatMapSingle {
                     Observable.concat(
                             mDatabaseClient.getUpnpFolders(folderId),
@@ -60,10 +60,10 @@ class NewlyAddedLoader
 ) {
     val observable: Observable<List<MediaBrowser.MediaItem>> by lazy {
         mDatabaseClient.changesObservable
-                .observeOn(AppSchedulers.diskIo)
                 .filter { it is UpnpFolderChange || it is UpnpVideoChange }
                 .map { true }
                 .startWith(true)
+                .observeOn(AppSchedulers.diskIo)
                 .flatMapSingle {
                     mDatabaseClient.getRecentUpnpVideos().map { it.toMediaItem() }.toList()
                 }
