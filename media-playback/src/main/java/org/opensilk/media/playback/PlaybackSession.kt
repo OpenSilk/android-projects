@@ -72,6 +72,20 @@ constructor(
         //subscribe to renderer changes
         mRenderer.stateChanges.subscribe {
             updateState(it)
+            when (it.state) {
+                STATE_PAUSED, STATE_PLAYING -> {
+                    val rendererDuration = mRenderer.player.duration
+                    val metaDuration = mMediaSession.controller
+                            .metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0
+                    if (rendererDuration != metaDuration) {
+                        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
+                            val meta = item.description._getMediaMeta()
+                            meta.duration = rendererDuration
+                            updateMetadata(meta)
+                        })
+                    }
+                }
+            }
         }
 
     }
@@ -129,10 +143,19 @@ constructor(
             UPNP_VIDEO -> {
                 mDbClient.siblingsOf(mediaRef).skipWhile { newMediaRef(it.mediaId) != mediaRef }
                         .toList().subscribe({ metaList ->
+                    if (metaList.isEmpty()) {
+                        onStop()
+                        changeState(STATE_ERROR) {
+                            it.setErrorMessage("MediaId produced empty list")
+                        }
+                        return@subscribe
+                    }
                     //populate the queue
                     metaList.forEach { mQueue.add(it) }
                     mMediaSession.setQueue(mQueue.get())
-                    mQueue.goToNext()
+                    //update meta
+                    updateMetadata(metaList[0])
+                    //assemble mediasource
                     val mediaSource = if (metaList.size == 1) {
                         newMediaSource(metaList[0].mediaUri)
                     } else {
@@ -226,20 +249,18 @@ constructor(
      * End mediasession callback methods
      */
 
-    fun updateMetadata(media: MediaBrowser.MediaItem) {
-        val meta = media._getMediaMeta()
+    fun updateMetadata(meta: MediaMeta) {
         val bob = MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, meta.mediaId)
-                .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, meta.title)
+                .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, meta.title.elseIfBlank(meta.displayName))
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, meta.subtitle)
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, meta.duration)
         if (meta.artworkUri != Uri.EMPTY) {
             bob.putString(MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI, meta.artworkUri.toString())
         }
-        val desc = media.description
-        if (desc.iconBitmap != null) {
-            bob.putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, desc.iconBitmap)
-        }
+//        if (desc.iconBitmap != null) {
+//            bob.putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, desc.iconBitmap)
+//        }
         mMediaSession.setMetadata(bob.build())
     }
 
