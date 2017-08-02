@@ -22,8 +22,8 @@ import org.opensilk.tmdb.api.model.MovieList
 import org.opensilk.tmdb.api.model.TMDbConfig
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import rx.Observable
-import rx.Single
+import io.reactivex.Observable
+import io.reactivex.Single
 
 /**
  * Created by drew on 7/26/17.
@@ -60,13 +60,13 @@ class LookupMovieDbTest {
         whenever(mApi.configurationObservable())
                 .thenReturn(Observable.just(config))
 
-        val ret = mLookup.mConfigObservable.toBlocking().first()
+        val ret = mLookup.mConfigObservable.blockingFirst()
         assertThat(ret).isSameAs(config)
 
         verify(mApi).configurationObservable()
         verify(mClient).setMovieImageBaseUrl(config.images.baseUrl)
 
-        val ret2 = mLookup.mConfigObservable.toBlocking().first()
+        val ret2 = mLookup.mConfigObservable.blockingFirst()
         assertThat(ret2).isSameAs(config)
 
         verifyNoMoreInteractions(mApi)
@@ -105,7 +105,7 @@ class LookupMovieDbTest {
         whenever(mClient.getMovie(1))
                 .thenReturn(Single.just(movieMeta))
 
-        val list = mLookup.lookupObservable(meta).toList().toBlocking().first()
+        val list = mLookup.lookupObservable(meta).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0]).isSameAs(movieMeta)
 
@@ -147,7 +147,7 @@ class LookupMovieDbTest {
         whenever(mClient.getMovie(1))
                 .thenReturn(Single.just(movieMeta))
 
-        val list = mLookup.lookupObservable(meta).toList().toBlocking().first()
+        val list = mLookup.lookupObservable(meta).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0]).isSameAs(movieMeta)
 

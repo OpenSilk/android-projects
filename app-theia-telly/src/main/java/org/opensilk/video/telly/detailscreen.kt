@@ -1,6 +1,9 @@
 package org.opensilk.video.telly
 
-import android.arch.lifecycle.*
+import android.arch.lifecycle.LifecycleRegistry
+import android.arch.lifecycle.LifecycleRegistryOwner
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
@@ -16,6 +19,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
+import io.reactivex.Single
+import io.reactivex.functions.BiFunction
+import io.reactivex.functions.Consumer
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
@@ -23,7 +29,6 @@ import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.DetailsFileInfoRowBinding
-import rx.Single
 import java.lang.ref.WeakReference
 import java.util.*
 import javax.inject.Inject
@@ -217,26 +222,26 @@ class DetailViewModel
     }
 
     fun subscribeMediaItem(mediaRef: MediaRef) {
-        Single.zip(
+        Single.zip<MediaMeta, String, VideoDescInfo>(
                 mClient.getMediaMeta(mediaRef),
                 mClient.getMediaOverview(mediaRef),
-                { meta, overview ->
+                BiFunction { meta, overview ->
                     VideoDescInfo(meta.title.elseIfBlank(meta.displayName),
                             meta.subtitle, overview)
                 })
                 .subscribeOn(AppSchedulers.diskIo)
-                .subscribeIgnoreError {
+                .subscribeIgnoreError(Consumer {
                     videoDescription.postValue(it)
-                }
+                })
         mClient.getMediaMeta(mediaRef)
                 .subscribeOn(AppSchedulers.diskIo)
-                .subscribeIgnoreError {
+                .subscribeIgnoreError(Consumer {
                     fileInfo.postValue(VideoFileInfo(
                             it.displayName,
                             it.size,
                             it.duration
                     ))
-                }
+                })
     }
 }
 

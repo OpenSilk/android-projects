@@ -15,8 +15,8 @@ import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import rx.Observable
-import rx.Single
+import io.reactivex.Observable
+import io.reactivex.Single
 
 /**
  * Created by drew on 7/26/17.
@@ -45,7 +45,7 @@ class LookupTVDbTest {
         whenever(mApi.login(mAuth))
                 .thenReturn(Observable.just(mToken))
 
-        val tkn = mLookup.mTokenObservable.toBlocking().first()
+        val tkn = mLookup.mTokenObservable.blockingFirst()
         assertThat(tkn).isSameAs(mToken)
 
         verify(mApi).login(mAuth)
@@ -63,7 +63,7 @@ class LookupTVDbTest {
         whenever(mApi.refreshToken(mToken))
                 .thenReturn(Observable.just(mToken))
 
-        val tkn = mLookup.mTokenObservable.toBlocking().first()
+        val tkn = mLookup.mTokenObservable.blockingFirst()
         assertThat(tkn).isSameAs(mToken)
 
         verify(mApi).refreshToken(mToken)
@@ -84,14 +84,14 @@ class LookupTVDbTest {
         whenever(mApi.refreshToken(mToken))
                 .thenReturn(Observable.just(mToken))
 
-        val tkn = mLookup.mTokenObservable.toBlocking().first()
+        val tkn = mLookup.mTokenObservable.blockingFirst()
         assertThat(tkn).isSameAs(mToken)
 
         verify(mApi).refreshToken(mToken)
         verify(mClient).getTvToken()
         verify(mClient).setTvToken(mToken)
 
-        val tkn2 = mLookup.mTokenObservable.toBlocking().first()
+        val tkn2 = mLookup.mTokenObservable.blockingFirst()
         assertThat(tkn2).isSameAs(mToken)
 
         verifyNoMoreInteractions(mApi)
@@ -145,7 +145,7 @@ class LookupTVDbTest {
         whenever(mClient.getTvEpisodes(1))
                 .thenReturn(Observable.just(seriesMeta))
 
-        val list = mLookup.lookupObservable(meta).toList().toBlocking().first()
+        val list = mLookup.lookupObservable(meta).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0]).isSameAs(seriesMeta)
 
@@ -195,7 +195,7 @@ class LookupTVDbTest {
         whenever(mClient.getTvEpisodes(1))
                 .thenReturn(Observable.just(seriesMeta))
 
-        val list = mLookup.lookupObservable(meta).toList().toBlocking().first()
+        val list = mLookup.lookupObservable(meta).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0]).isSameAs(seriesMeta)
 

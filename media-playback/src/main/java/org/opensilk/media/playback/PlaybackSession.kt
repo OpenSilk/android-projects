@@ -16,6 +16,7 @@ import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import io.reactivex.functions.Consumer
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
@@ -258,7 +259,7 @@ constructor(
     }
 
     fun applyCommonState(builder: PlaybackState.Builder) {
-        mQueue.getCurrent().subscribeIgnoreError({ builder.setActiveQueueItemId(it.queueId) })
+        mQueue.getCurrent().subscribeIgnoreError(Consumer { builder.setActiveQueueItemId(it.queueId) })
     }
 
     fun generateActions(state: Int): Long {

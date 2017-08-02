@@ -20,6 +20,7 @@ package org.opensilk.video
 import android.content.Context
 import dagger.Module
 import dagger.Provides
+import io.reactivex.Observable
 import okhttp3.Cache
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -32,9 +33,8 @@ import org.opensilk.tvdb.api.LanguageInterceptor
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.Auth
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
-import rx.Observable
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -73,7 +73,7 @@ object LookupModule {
     fun provideTVDBApi(@Named("tvdb_api_root") apiRoot: String, okHttpClient: OkHttpClient): TVDb {
         return Retrofit.Builder()
                 .baseUrl(HttpUrl.parse(apiRoot))
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(MoshiConverterFactory.create())
                 .validateEagerly(true)
                 .client(okHttpClient.newBuilder().addInterceptor(LanguageInterceptor()).build())
@@ -94,7 +94,7 @@ object LookupModule {
                        okHttpClient: OkHttpClient): TMDb {
         return Retrofit.Builder()
                 .baseUrl(HttpUrl.parse(apiRoot))
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(MoshiConverterFactory.create())
                 .client(okHttpClient.newBuilder().addInterceptor(ApiKeyInterceptor(apiKey)).build())
                 .build()

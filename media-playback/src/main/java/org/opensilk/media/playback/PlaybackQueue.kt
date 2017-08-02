@@ -3,6 +3,7 @@ package org.opensilk.media.playback
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.media.session.MediaSession.*
+import io.reactivex.Single
 import org.opensilk.media.MediaMeta
 import org.opensilk.media.toMediaItem
 import java.util.*
@@ -29,8 +30,8 @@ constructor() {
         val EMPTY_ITEM: QueueItem = QueueItem(EMPTY_DESCRIPTION, 0)
     }
 
-    fun getCurrent(): rx.Single<QueueItem> {
-        return rx.Single.create { s ->
+    fun getCurrent(): Single<QueueItem> {
+        return Single.create { s ->
             if (mCurrent == EMPTY_ITEM) {
                 s.onError(NoSuchElementException())
                 return@create
@@ -39,8 +40,8 @@ constructor() {
         }
     }
 
-    fun getNext(): rx.Single<QueueItem> {
-        return rx.Single.create { s ->
+    fun getNext(): Single<QueueItem> {
+        return Single.create { s ->
             var idx = mQueue.indexOf(mCurrent)
             if (idx < 0) {
                 s.onError(NoSuchElementException())
@@ -55,8 +56,8 @@ constructor() {
         }
     }
 
-    fun goToPrevious(): rx.Single<QueueItem> {
-        return rx.Single.create { s ->
+    fun goToPrevious(): Single<QueueItem> {
+        return Single.create { s ->
             if (mHistory.isEmpty()) {
                 s.onError(NoSuchElementException())
                 return@create
@@ -72,8 +73,8 @@ constructor() {
         }
     }
 
-    fun goToNext(): rx.Single<QueueItem> {
-        return rx.Single.create { s ->
+    fun goToNext(): Single<QueueItem> {
+        return Single.create { s ->
             var idx = mQueue.indexOf(mCurrent)
             if (idx < 0) {
                 s.onError(NoSuchElementException())
@@ -92,8 +93,8 @@ constructor() {
         }
     }
 
-    fun goToItem(itemId: Long): rx.Single<QueueItem> {
-        return rx.Single.create { s ->
+    fun goToItem(itemId: Long): Single<QueueItem> {
+        return Single.create { s ->
             val nxt = mQueue.firstOrNull { it.queueId == itemId }
             if (nxt == null) {
                 s.onError(NoSuchElementException())

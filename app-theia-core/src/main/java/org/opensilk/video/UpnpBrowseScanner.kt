@@ -1,11 +1,10 @@
 package org.opensilk.video
 
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import org.fourthline.cling.model.action.ActionException
-import org.fourthline.cling.model.action.ActionInvocation
-import org.fourthline.cling.model.message.UpnpResponse
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
 import org.fourthline.cling.model.meta.Device
-import org.fourthline.cling.model.meta.RemoteService
 import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.model.types.UDN
 import org.fourthline.cling.registry.DefaultRegistryListener
@@ -18,12 +17,6 @@ import org.opensilk.media.*
 import org.opensilk.upnp.cds.browser.CDSBrowseAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
-import org.opensilk.upnp.cds.featurelist.BasicView
-import org.opensilk.upnp.cds.featurelist.Features
-import org.opensilk.upnp.cds.featurelist.XGetFeatureListCallback
-import rx.Observable
-import rx.lang.kotlin.PublishSubject
-import rx.subscriptions.Subscriptions
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -39,7 +32,7 @@ class UpnpBrowseScanner
         private val mDatabaseClient: DatabaseClient
 ) {
 
-    private val mQueueSubject = PublishSubject<UpnpFolderId>()
+    private val mQueueSubject = PublishSubject.create<UpnpFolderId>()
     private val mStarted = AtomicBoolean(false)
 
     fun enqueue(folderId: UpnpFolderId) {
@@ -54,9 +47,12 @@ class UpnpBrowseScanner
     private fun subscribe() {
         mQueueSubject.doOnNext {
             mDatabaseClient.incrementUpnpDeviceScanning(UpnpDeviceId(it.deviceId))
-        }.onBackpressureBuffer().observeOn(AppSchedulers.scanner).flatMap { folderId ->
-            cachedService(folderId).flatMap { service -> browse(service, folderId) }
-                    .toList().map { list -> FolderWithMetaList(folderId, list) }
+        }.observeOn(AppSchedulers.scanner, true, 10000).flatMapSingle { folderId ->
+            cachedService(folderId).flatMap { service ->
+                browse(service, folderId)
+            }.toList().map { list ->
+                FolderWithMetaList(folderId, list)
+            }
         }.subscribe({ fwl ->
             mDatabaseClient.hideChildrenOf(fwl.folderId)
             //loop the remote meta
@@ -103,7 +99,7 @@ class UpnpBrowseScanner
         return Observable.create { subscriber ->
             val browse = CDSBrowseAction(mUpnpService.controlPoint, service, parentId.folderId)
             browse.run()
-            if (subscriber.isUnsubscribed){
+            if (subscriber.isDisposed){
                 return@create
             }
             if (browse.error.get() != null) {
@@ -116,7 +112,7 @@ class UpnpBrowseScanner
             }
             val result = browse.result.get()
             if (result.countLong == 0L) {// && result.totalMatchesLong == 720L) {
-                subscriber.onCompleted()
+                subscriber.onComplete()
                 return@create
             }
             try {
@@ -147,10 +143,10 @@ class UpnpBrowseScanner
 
                 if (result.countLong == result.totalMatchesLong) {
                     //they sent everything
-                    subscriber.onCompleted()
+                    subscriber.onComplete()
                 } else {
                     //TODO handle pagination
-                    subscriber.onCompleted()
+                    subscriber.onComplete()
                 }
 
             } catch (e: Exception) {
@@ -176,11 +172,11 @@ class UpnpBrowseScanner
                 subscriber.onError(ServiceNotFoundException())
                 return@create
             }
-            if (subscriber.isUnsubscribed) {
+            if (subscriber.isDisposed) {
                 return@create
             }
             subscriber.onNext(rs)
-            subscriber.onCompleted()
+            subscriber.onComplete()
         }
     }
 
@@ -194,7 +190,7 @@ class UpnpBrowseScanner
             val listener = object : DefaultRegistryListener() {
                 internal var once = AtomicBoolean(true)
                 override fun deviceAdded(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
-                    if (subscriber.isUnsubscribed) {
+                    if (subscriber.isDisposed) {
                         return
                     }
                     if (udn == device.identity.udn) {
@@ -202,7 +198,7 @@ class UpnpBrowseScanner
                         if (rs != null) {
                             if (once.compareAndSet(true, false)) {
                                 subscriber.onNext(rs)
-                                subscriber.onCompleted()
+                                subscriber.onComplete()
                             }
                         } else {
                             subscriber.onError(NoContentDirectoryFoundException())
@@ -213,40 +209,8 @@ class UpnpBrowseScanner
             //register listener
             mUpnpService.registry.addListener(listener)
             //ensure we don't leak our listener
-            subscriber.add(Subscriptions.create { mUpnpService.registry.removeListener(listener) })
+            subscriber.setCancellable { mUpnpService.registry.removeListener(listener) }
             mUpnpService.controlPoint.search(UDAServiceTypeHeader(CDSserviceType))
-        }
-    }
-
-    private fun featureList(cdservice: RemoteService): Observable.OnSubscribe<String> {
-        return Observable.OnSubscribe<String> { subscriber ->
-            val callback = object : XGetFeatureListCallback(cdservice) {
-                override fun received(actionInvocation: ActionInvocation<out Service<*, *>>?, features: Features?) {
-                    if (subscriber.isUnsubscribed) {
-                        return
-                    }
-                    features?.features?.firstOrNull { (it is BasicView && !it.videoItemId.isNullOrBlank()) }?.let {
-                        sendNext((it as BasicView).videoItemId)
-                        return
-                    }
-                    //the above failed send default root id
-                    sendNext("0")
-                }
-
-                override fun failure(invocation: ActionInvocation<out Service<*, *>>?,
-                                     operation: UpnpResponse?, defaultMsg: String?) {
-                    sendNext("0")
-                }
-
-                private fun sendNext(n : String) {
-                    if (subscriber.isUnsubscribed) {
-                        return
-                    }
-                    subscriber.onNext(n)
-                    subscriber.onCompleted()
-                }
-            }
-            mUpnpService.controlPoint.execute(callback)
         }
     }
 

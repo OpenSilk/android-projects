@@ -2,7 +2,7 @@ package org.opensilk.tvdb.api
 
 import org.opensilk.tvdb.api.model.*
 import retrofit2.http.*
-import rx.Observable
+import io.reactivex.Observable
 
 /**
  * Created by drew on 7/25/17.

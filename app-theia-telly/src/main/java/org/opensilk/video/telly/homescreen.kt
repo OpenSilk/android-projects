@@ -1,6 +1,9 @@
 package org.opensilk.video.telly
 
-import android.arch.lifecycle.*
+import android.arch.lifecycle.LifecycleRegistry
+import android.arch.lifecycle.LifecycleRegistryOwner
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.media.browse.MediaBrowser
 import android.os.Bundle
@@ -15,12 +18,15 @@ import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.exceptions.Exceptions
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.video.*
-import rx.exceptions.Exceptions
-import rx.subscriptions.CompositeSubscription
+import org.opensilk.video.LiveDataObserver
+import org.opensilk.video.NewlyAddedLoader
+import org.opensilk.video.UpnpDevicesLoader
+import org.opensilk.video.ViewModelKey
 import javax.inject.Inject
 
 
@@ -133,7 +139,7 @@ class HomeViewModel
 ): ViewModel() {
     val servers = MutableLiveData<List<MediaBrowser.MediaItem>>()
     val newlyAdded = MutableLiveData<List<MediaBrowser.MediaItem>>()
-    private val subscriptions = CompositeSubscription()
+    private val disposables = CompositeDisposable()
 
     fun fetchData() {
         subscribeServers()
@@ -148,7 +154,7 @@ class HomeViewModel
                     Exceptions.propagate(it) //TODO handle errors
                 }
         )
-        subscriptions.add(s)
+        disposables.add(s)
     }
 
     fun subscribeNewlyAdded() {
@@ -158,12 +164,12 @@ class HomeViewModel
                 }, {
                     Exceptions.propagate(it)
                 })
-        subscriptions.add(s)
+        disposables.add(s)
     }
 
     override fun onCleared() {
         super.onCleared()
-        subscriptions.clear()
+        disposables.clear()
     }
 
 }

@@ -87,7 +87,7 @@ class DatabaseClientTest {
 
         mClient.addUpnpVideo(meta)
         //just check to make sure it works
-        assertThat(mClient.getRecentUpnpVideos().count().toBlocking().first()).isEqualTo(1)
+        assertThat(mClient.getRecentUpnpVideos().count().blockingGet()).isEqualTo(1)
     }
 
     @Test
@@ -109,7 +109,7 @@ class DatabaseClientTest {
         mClient.addUpnpVideo(meta)
         mClient.setUpnpVideoMovieId(UpnpVideoId("foo", "bar"), 100)
 
-        assertThat(mClient.getUpnpVideoOverview(UpnpVideoId("foo", "bar")).toBlocking().value())
+        assertThat(mClient.getUpnpVideoOverview(UpnpVideoId("foo", "bar")).blockingGet())
                 .isEqualTo("an overview 1")
     }
 
@@ -133,7 +133,7 @@ class DatabaseClientTest {
         mClient.addUpnpVideo(meta)
         mClient.setUpnpVideoTvEpisodeId(UpnpVideoId("foo", "bar"), 1)
 
-        assertThat(mClient.getUpnpVideoOverview(UpnpVideoId("foo", "bar")).toBlocking().value())
+        assertThat(mClient.getUpnpVideoOverview(UpnpVideoId("foo", "bar")).blockingGet())
                 .isEqualTo("an overview")
     }
 
@@ -150,7 +150,7 @@ class DatabaseClientTest {
 
         val uri = mClient.addUpnpFolder(meta)
         assertThat(mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId)
-                .count().toBlocking().first()).isEqualTo(1)
+                .count().blockingGet()).isEqualTo(1)
 
         val meta2 = MediaMeta()
         val mid2 = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "bar2"))
@@ -162,14 +162,14 @@ class DatabaseClientTest {
 
         val uri2 = mClient.addUpnpVideo(meta2)
         assertThat(mClient.getUpnpVideos(parentmid.mediaId as UpnpFolderId)
-                .count().toBlocking().first()).isEqualTo(1)
+                .count().blockingGet()).isEqualTo(1)
 
         mClient.hideChildrenOf(parentmid.mediaId as UpnpFolderId)
 
         assertThat(mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId)
-                .isEmpty.toBlocking().first()).isTrue()
+                .isEmpty.blockingGet()).isTrue()
         assertThat(mClient.getUpnpVideos(parentmid.mediaId as UpnpFolderId)
-                .isEmpty.toBlocking().first()).isTrue()
+                .isEmpty.blockingGet()).isTrue()
     }
 
     @Test
@@ -194,7 +194,7 @@ class DatabaseClientTest {
 
         val uri = mClient.addUpnpVideo(meta)
         val uri2 = mClient.addUpnpVideo(meta2)
-        val retrieved = mClient.getUpnpVideos(parentmid.mediaId as UpnpFolderId).toList().toBlocking().first()
+        val retrieved = mClient.getUpnpVideos(parentmid.mediaId as UpnpFolderId).toList().blockingGet()
         assertThat(retrieved).isNotNull
         assertThat(retrieved.size).isEqualTo(2)
         assertThat(retrieved).containsAll(listOf(meta, meta2))
@@ -212,11 +212,11 @@ class DatabaseClientTest {
         meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
         val uri = mClient.addUpnpVideo(meta)
 
-        val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong()).toBlocking().value()
+        val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong()).blockingGet()
         assertThat(retrieved.mediaId).isEqualTo(meta.mediaId)
         //todo more assertions
 
-        val retrieved2 = mClient.getUpnpVideo(mid.mediaId as UpnpVideoId).toBlocking().value()
+        val retrieved2 = mClient.getUpnpVideo(mid.mediaId as UpnpVideoId).blockingGet()
         assertThat(retrieved2.mediaId).isEqualTo(meta.mediaId)
     }
 
@@ -233,7 +233,7 @@ class DatabaseClientTest {
         val uri = mClient.addUpnpVideo(meta)
         mClient.removeUpnpVideo(uri.lastPathSegment.toLong())
         val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong())
-                .onErrorReturn { null }.toBlocking().value()
+                .onErrorReturn { null }.blockingGet()
         assertThat(retrieved).isNull()
     }
 
@@ -248,12 +248,12 @@ class DatabaseClientTest {
         meta.displayName = "my display name"
         meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
         val uri = mClient.addUpnpVideo(meta)
-        val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong()).toBlocking().value()
+        val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong()).blockingGet()
         assertThat(retrieved.displayName).isEqualTo("my display name")
 
         meta.displayName = "another display name"
         val uri2 = mClient.addUpnpVideo(meta)
-        val retrieved2 = mClient.getUpnpVideo(uri2.lastPathSegment.toLong()).toBlocking().value()
+        val retrieved2 = mClient.getUpnpVideo(uri2.lastPathSegment.toLong()).blockingGet()
         assertThat(retrieved2.displayName).isEqualTo("another display name")
 
     }
@@ -269,12 +269,12 @@ class DatabaseClientTest {
         meta.displayName = "my display name"
         meta.mediaUri = Uri.parse("https://foo.com/vid.mp4")
         val uri = mClient.addUpnpVideo(meta)
-        val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong()).toBlocking().value()
+        val retrieved = mClient.getUpnpVideo(uri.lastPathSegment.toLong()).blockingGet()
         assertThat(retrieved).isNotNull()
         assertThat(retrieved.mediaId).isEqualTo(meta.mediaId)
         val uri2 = mClient.addUpnpVideo(meta)
         assertThat(uri2).isEqualTo(uri)
-        val retrieved2 = mClient.getUpnpVideo(uri2.lastPathSegment.toLong()).toBlocking().value()
+        val retrieved2 = mClient.getUpnpVideo(uri2.lastPathSegment.toLong()).blockingGet()
         assertThat(retrieved2.mediaId).isEqualTo(meta.mediaId)
     }
 
@@ -290,16 +290,16 @@ class DatabaseClientTest {
         meta.artworkUri = Uri.parse("http://foo.com")
         mClient.addUpnpFolder(meta)
 
-        val list = mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId).toList().toBlocking().first()
+        val list = mClient.getUpnpFolders(parentmid.mediaId as UpnpFolderId).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0].mediaId).isEqualTo(meta.mediaId)
 
-        val retrieved = mClient.getUpnpFolder(mid.mediaId as UpnpFolderId).toBlocking().value()
+        val retrieved = mClient.getUpnpFolder(mid.mediaId as UpnpFolderId).blockingGet()
         assertThat(retrieved.mediaId).isEqualTo(meta.mediaId)
 
         //TODO more assertions on item
         mClient.removeUpnpFolder(list[0].rowId)
-        val list2 = mClient.getUpnpDevices().toList().toBlocking().first()
+        val list2 = mClient.getUpnpDevices().toList().blockingGet()
         assertThat(list2.size).isEqualTo(0)
     }
 
@@ -315,10 +315,10 @@ class DatabaseClientTest {
         val uri = mClient.addUpnpDevice(meta)
         val changed = mClient.incrementUpnpDeviceScanning(UpnpDeviceId("foo"))
         assertThat(changed).isTrue()
-        val num = mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()
+        val num = mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).blockingGet()
         assertThat(num).isEqualTo(1)
         val uri2 = mClient.addUpnpDevice(meta)
-        val num2 = mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()
+        val num2 = mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).blockingGet()
         assertThat(num2).isEqualTo(0)
     }
 
@@ -333,14 +333,14 @@ class DatabaseClientTest {
         val uri = mClient.addUpnpDevice(meta)
         val changed = mClient.incrementUpnpDeviceScanning(UpnpDeviceId("foo"))
         assertThat(changed).isTrue()
-        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()).isEqualTo(1)
+        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).blockingGet()).isEqualTo(1)
         val changed2 = mClient.incrementUpnpDeviceScanning(UpnpDeviceId("foo"))
         assertThat(changed2).isTrue()
-        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()).isEqualTo(2)
+        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).blockingGet()).isEqualTo(2)
 
         val changed3 = mClient.decrementUpnpDeviceScanning(UpnpDeviceId("foo"))
         assertThat(changed3).isTrue()
-        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).toBlocking().value()).isEqualTo(1)
+        assertThat(mClient.getUpnpDeviceScanning(UpnpDeviceId("foo")).blockingGet()).isEqualTo(1)
 
     }
 
@@ -369,23 +369,23 @@ class DatabaseClientTest {
         meta.artworkUri = Uri.parse("http://foo.com")
         mClient.addUpnpDevice(meta)
 
-        val list = mClient.getUpnpDevices().toList().toBlocking().first()
+        val list = mClient.getUpnpDevices().toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0].mediaId).isEqualTo(meta.mediaId)
         //todo more assertions on item
 
-        val retrieved = mClient.getUpnpDevice(mId.mediaId as UpnpDeviceId).toBlocking().value()
+        val retrieved = mClient.getUpnpDevice(mId.mediaId as UpnpDeviceId).blockingGet()
         assertThat(retrieved.mediaId).isEqualTo(meta.mediaId)
 
         mClient.hideUpnpDevice((mId.mediaId as UpnpDeviceId).deviceId)
-        val list2 = mClient.getUpnpDevices().toList().toBlocking().first()
+        val list2 = mClient.getUpnpDevices().toList().blockingGet()
         assertThat(list2.size).isEqualTo(0)
     }
 
     @Test
     fun TV_setLastUpdate() {
         mClient.setTvLastUpdate(11111)
-        val ret = mClient.getTvLastUpdate().toBlocking().value()
+        val ret = mClient.getTvLastUpdate().blockingGet()
         assertThat(ret).isEqualTo(11111)
     }
 
@@ -393,7 +393,7 @@ class DatabaseClientTest {
     fun TV_setToken() {
         val tok = Token("foounoetu")
         mClient.setTvToken(tok)
-        val ret = mClient.getTvToken().toBlocking().value()
+        val ret = mClient.getTvToken().blockingGet()
         assertThat(ret).isEqualTo(tok)
     }
 
@@ -402,7 +402,7 @@ class DatabaseClientTest {
         val series = Series(id = 1, seriesName = "foo", overview =  "this overview",
                 firstAired = "2009", lastUpdated = 1111)
         val uri = mClient.addTvSeries(series)
-        val returned = mClient.getTvSeries(uri.lastPathSegment.toLong()).toBlocking().value()
+        val returned = mClient.getTvSeries(uri.lastPathSegment.toLong()).blockingGet()
         assertThat(returned.rowId).isEqualTo(series.id)
         assertThat(returned.title).isEqualTo(series.seriesName)
         assertThat(returned.overview).isEqualTo(series.overview)
@@ -416,7 +416,7 @@ class DatabaseClientTest {
                 firstAired =  "2009", overview = "an overview", airedSeason =  1,
                 airedEpisodeNumber = 1, airedSeasonId = 1)
         mClient.addTvEpisodes(1, listOf(episode))
-        val ret = mClient.getTvEpisode(episode.id).toBlocking().value()
+        val ret = mClient.getTvEpisode(episode.id).blockingGet()
         assertThat(ret.rowId).isEqualTo(episode.id)
         assertThat(ret.title).isEqualTo(episode.episodeName)
         assertThat(ret.releaseDate).isEqualTo(episode.firstAired)
@@ -427,20 +427,20 @@ class DatabaseClientTest {
     @Test
     fun TV_seriesAssociation() {
         mClient.setTvSeriesAssociation("foobar", 100)
-        assertThat(mClient.getTvSeriesAssociation("foobar").toBlocking().value()).isEqualTo(100)
+        assertThat(mClient.getTvSeriesAssociation("foobar").blockingGet()).isEqualTo(100)
     }
 
     @Test
     fun movie_movieAssociation() {
         mClient.setMovieAssociation("foo", "2001", 1002)
-        assertThat(mClient.getMovieAssociation("foo", "2001").toBlocking().value()).isEqualTo(1002)
+        assertThat(mClient.getMovieAssociation("foo", "2001").blockingGet()).isEqualTo(1002)
     }
 
     @Test
     fun movie_movieAssociation_different_year() {
         mClient.setMovieAssociation("foo", "", 1002)
         val retrieved = mClient.getMovieAssociation("foo", "2001")
-                .onErrorReturn { 2939393 }.toBlocking().value()
+                .onErrorReturn { 2939393 }.blockingGet()
         assertThat(retrieved).isEqualTo(2939393)
     }
 
@@ -449,7 +449,7 @@ class DatabaseClientTest {
         mClient.setMovieImageBaseUrl("https://foo.com")
         val movie = Movie(100, "foo movie", null, "an overiview", "2001", "/paster", "/backdrop")
         val uri = mClient.addMovie(movie)
-        val retrieved = mClient.getMovie(uri.lastPathSegment.toLong()).toBlocking().value()
+        val retrieved = mClient.getMovie(uri.lastPathSegment.toLong()).blockingGet()
         assertThat(retrieved.rowId).isEqualTo(100)
         assertThat(retrieved.title).isEqualTo(movie.title)
         assertThat(retrieved.overview).isEqualTo(movie.overview)

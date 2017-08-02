@@ -12,13 +12,15 @@ import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Consumer
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.*
-import org.opensilk.media.MediaProviderClient
-import org.opensilk.video.*
-import rx.subscriptions.CompositeSubscription
+import org.opensilk.video.NoBrowseResultsException
+import org.opensilk.video.UpnpFoldersLoader
+import org.opensilk.video.ViewModelKey
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -129,7 +131,7 @@ class FolderViewModel
     val folderItems = MutableLiveData<List<MediaBrowser.MediaItem>>()
     val noBrowseResults = MutableLiveData<String>()
     val loadError = MutableLiveData<String>()
-    private val subscriptions = CompositeSubscription()
+    private val disposables = CompositeDisposable()
 
     fun onMediaId(mediaId: String) {
         subscribeBrowseItems(mediaId)
@@ -148,21 +150,21 @@ class FolderViewModel
                         loadError.postValue(it.message.elseIfBlank("null"))
                     }
                 })
-        subscriptions.add(s)
+        disposables.add(s)
     }
 
     fun subscribeTitle(mediaRef: MediaRef) {
         val s = mDatabaseClient.getMediaItem(mediaRef)
                 .map(MediaBrowser.MediaItem::_getMediaMeta)
-                .subscribe {
+                .subscribe(Consumer {
                     mediaTitle.postValue(it.title)
-                }
-        subscriptions.add(s)
+                })
+        disposables.add(s)
     }
 
     override fun onCleared() {
         super.onCleared()
-        subscriptions.clear()
+        disposables.clear()
     }
 }
 

@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.os.SystemClock
-import org.opensilk.common.dagger.ServiceScope
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import java.lang.ref.WeakReference
 import javax.inject.Inject

@@ -3,6 +3,8 @@ package org.opensilk.video
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
+import io.reactivex.Single
+import io.reactivex.functions.Function3
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
 import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.Service
@@ -15,8 +17,8 @@ import org.opensilk.media.newMediaRef
 import org.opensilk.upnp.cds.browser.CDSGetSystemUpdateIDAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
-import rx.Single
 import timber.log.Timber
+import java.util.function.BiFunction
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,11 +48,11 @@ class UpnpDevicesObserver
         device.findService(CDSserviceType)?.let { service ->
             val metaDevice = service.device.toMediaMeta()
             val deviceId = newMediaRef(metaDevice.mediaId).mediaId as UpnpDeviceId
-            Single.zip(
+            Single.zip<MediaMeta, Long, Long, UpnpDeviceUpdateIdScanning>(
                     mDatabaseClient.getUpnpDevice(deviceId).onErrorReturn { metaDevice },
                     updateId(service).onErrorReturn { 0 },
                     mDatabaseClient.getUpnpDeviceScanning(deviceId).onErrorReturn { -1 },
-                    { dev, id, s -> UpnpDeviceUpdateIdScanning(dev, id, s) }
+                    Function3 { dev, id, s -> UpnpDeviceUpdateIdScanning(dev, id, s) }
             ).subscribe({ dwu ->
                 Timber.i("${metaDevice.title} SystemUpdateID: old=${dwu.device.updateId} new=${dwu.updateId}")
                 val changed = dwu.updateId != dwu.device.updateId
@@ -81,7 +83,7 @@ class UpnpDevicesObserver
         return Single.create { s ->
             val action = CDSGetSystemUpdateIDAction(mUpnpService.controlPoint, service)
             action.run()
-            if (s.isUnsubscribed) {
+            if (s.isDisposed) {
                 return@create
             }
             if (action.error.get() != null) {

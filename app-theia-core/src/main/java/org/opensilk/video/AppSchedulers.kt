@@ -1,14 +1,13 @@
 package org.opensilk.video
 
-import android.os.Build
-import android.os.Handler
-import android.os.HandlerThread
-import rx.Scheduler
-import rx.android.schedulers.AndroidSchedulers
-import rx.android.schedulers.HandlerScheduler
-import rx.internal.schedulers.ExecutorScheduler
-import rx.schedulers.Schedulers
-import java.util.concurrent.*
+import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.internal.schedulers.ExecutorScheduler
+import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by drew on 7/21/17.

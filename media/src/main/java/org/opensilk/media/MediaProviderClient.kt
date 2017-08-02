@@ -2,8 +2,8 @@ package org.opensilk.media
 
 import android.media.browse.MediaBrowser
 import android.net.Uri
-import rx.Observable
-import rx.Single
+import io.reactivex.Observable
+import io.reactivex.Single
 
 /**
  * Created by drew on 6/26/17.

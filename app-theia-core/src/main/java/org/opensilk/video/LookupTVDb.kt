@@ -17,12 +17,14 @@
 
 package org.opensilk.video
 
+import io.reactivex.Observable
+import io.reactivex.functions.Function
+import io.reactivex.functions.Function4
 import org.opensilk.media.MediaMeta
 import org.opensilk.media.UPNP_VIDEO
 import org.opensilk.media.newMediaRef
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
-import rx.Observable
 import javax.inject.Inject
 
 /**
@@ -42,7 +44,7 @@ constructor(
                 // make sure it is still valid
                 .flatMap { token -> mApi.refreshToken(token) }
                 //if above fails do fresh login
-                .onErrorResumeNext { mApi.login(mTVDbAuth) }
+                .onErrorResumeNext(Function { mApi.login(mTVDbAuth) })
                 .doOnNext { token -> mClient.setTvToken(token) }
                 //only run this once
                 .replay(1).autoConnect()
@@ -72,18 +74,19 @@ constructor(
             }
         }.flatMap { data ->
             //only take first five series
-            Observable.from(data.data).take(5)
+            Observable.fromIterable(data.data).take(5)
         }.flatMap { ss ->
             //fetch full series metadata
             Observable.defer {
                 LookupService.waitTurn()
                 mTokenObservable.flatMap { token ->
-                    Observable.zip(
+                    Observable.zip<SeriesData, SeriesEpisodeData, SeriesImageQueryData,
+                            SeriesImageQueryData, SeriesEpisodesImages>(
                             mApi.series(token, ss.id),
                             mApi.seriesEpisodes(token, ss.id),
                             mApi.seriesImagesQuery(token, ss.id, "poster"),
                             mApi.seriesImagesQuery(token, ss.id, "fanart"),
-                            { s, e, p, f -> SeriesEpisodesImages(s.data, e.data, p.data, f.data) }
+                            Function4 { s, e, p, f -> SeriesEpisodesImages(s.data, e.data, p.data, f.data) }
                     )
                 }
             }

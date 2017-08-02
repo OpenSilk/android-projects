@@ -17,6 +17,8 @@
 
 package org.opensilk.video
 
+import io.reactivex.Observable
+import io.reactivex.functions.BiFunction
 import org.opensilk.media.MediaMeta
 import org.opensilk.media.UPNP_VIDEO
 import org.opensilk.media.newMediaRef
@@ -24,7 +26,6 @@ import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
 import org.opensilk.tmdb.api.model.TMDbConfig
-import rx.Observable
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -77,16 +78,16 @@ constructor(
             return@flatMap if (list.results == null) {
                 Observable.empty()
             } else {
-                Observable.from(list.results).take(5)
+                Observable.fromIterable(list.results).take(5)
             }
         }.flatMap { movie ->
             //fetch movie and images
             return@flatMap Observable.defer {
                 LookupService.waitTurn()
-                return@defer Observable.zip(
+                return@defer Observable.zip<Movie, ImageList, MovieWithImages>(
                         mApi.movieObservable(movie.id, "en"),
                         mApi.movieImagesObservable(movie.id, "en"),
-                        { m, i -> MovieWithImages(m, i) }
+                        BiFunction { m, i -> MovieWithImages(m, i) }
                 ).map {
                     val uri = mClient.addMovie(it.movie)
                     mClient.addMovieImages(it.images)

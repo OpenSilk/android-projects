@@ -1,8 +1,8 @@
 package org.opensilk.video
 
 import android.media.browse.MediaBrowser
+import io.reactivex.Observable
 import org.opensilk.media.*
-import rx.Observable
 import javax.inject.Inject
 
 /**
@@ -18,7 +18,7 @@ class UpnpDevicesLoader
                 .filter { it is UpnpDeviceChange }
                 .map { it as UpnpDeviceChange }
                 .startWith(UpnpDeviceChange())
-                .flatMap {
+                .flatMapSingle {
                     mDatabaseClient.getUpnpDevices().map { it.toMediaItem() }.toList()
                 }
     }
@@ -42,7 +42,7 @@ class UpnpFoldersLoader
                 .observeOn(AppSchedulers.diskIo)
                 .startWith(UpnpFolderChange(folderId))
                 .filter { it is UpnpFolderChange && folderId == it.folderId }
-                .flatMap {
+                .flatMapSingle {
                     Observable.concat(
                             mDatabaseClient.getUpnpFolders(folderId),
                             mDatabaseClient.getUpnpVideos(folderId)
@@ -64,8 +64,8 @@ class NewlyAddedLoader
                 .filter { it is UpnpFolderChange || it is UpnpVideoChange }
                 .map { true }
                 .startWith(true)
-                .flatMap {
-                    mDatabaseClient.getRecentUpnpVideos().map { it.toMediaItem() } .toList()
+                .flatMapSingle {
+                    mDatabaseClient.getRecentUpnpVideos().map { it.toMediaItem() }.toList()
                 }
     }
 }

@@ -13,8 +13,8 @@ import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import org.opensilk.common.dagger.ForApplication
-import rx.Observable
-import rx.subjects.BehaviorSubject
+import io.reactivex.Observable
+import io.reactivex.subjects.BehaviorSubject
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -75,7 +75,7 @@ constructor(
         get() = mExoPlayer
 
     val stateChanges: Observable<PlaybackState>
-        get() = mStateChanges.asObservable()
+        get() = mStateChanges.hide()
 
     private fun changeState(state: Int) {
         changeState(state, {})

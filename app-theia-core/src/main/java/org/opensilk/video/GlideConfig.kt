@@ -1,16 +1,10 @@
 package org.opensilk.video
 
 import android.content.Context
-import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.Registry
 import com.bumptech.glide.annotation.GlideModule
-import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
-import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.module.LibraryGlideModule
-import okhttp3.CacheControl
-import org.opensilk.common.dagger.getDaggerComponent
 import timber.log.Timber
-import java.io.InputStream
 
 /**
  * Created by drew on 6/3/17.

@@ -11,8 +11,8 @@ import android.media.session.PlaybackState.*
 import android.net.Uri
 import android.os.PowerManager
 import org.opensilk.common.dagger.ForApplication
-import rx.Observable
-import rx.subjects.PublishSubject
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates

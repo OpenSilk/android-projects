@@ -10,18 +10,19 @@ import android.net.Uri
 import android.os.CancellationSignal
 import dagger.Binds
 import dagger.Module
+import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.common.dagger.ForApplication
+import org.opensilk.common.rx.cancellationSignal
 import org.opensilk.media.*
-import org.opensilk.media.MediaProviderClient
 import org.opensilk.tmdb.api.model.Image
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
-import org.opensilk.tvdb.api.model.*
-import rx.Single
-import rx.Observable
-import rx.Subscriber
-import rx.lang.kotlin.BehaviorSubject
-import rx.subscriptions.Subscriptions
+import org.opensilk.tvdb.api.model.Series
+import org.opensilk.tvdb.api.model.SeriesEpisode
+import org.opensilk.tvdb.api.model.SeriesImageQuery
+import org.opensilk.tvdb.api.model.Token
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -84,12 +85,6 @@ private class DefaultContentResolverGlue(private val mResolver: ContentResolver)
     }
 }
 
-fun <T> Subscriber<T>.cancellationSignal(): CancellationSignal {
-    val cancelation = CancellationSignal()
-    this.add(Subscriptions.create { cancelation.cancel() })
-    return cancelation
-}
-
 class VideoDatabaseMalfuction: Exception()
 
 sealed class DatabaseChange
@@ -111,10 +106,10 @@ class DatabaseClient
     internal var mResolver: ContentResolverGlue = DefaultContentResolverGlue(context.contentResolver)
     val uris = mUris
 
-    private val mChangesSubject = BehaviorSubject<DatabaseChange>()
+    private val mChangesSubject = BehaviorSubject.create<DatabaseChange>()
 
     val changesObservable: Observable<DatabaseChange>
-        get() = mChangesSubject.asObservable()
+        get() = mChangesSubject.hide()
 
     fun postChange(event: DatabaseChange) {
         mChangesSubject.onNext(event)
@@ -205,7 +200,7 @@ class DatabaseClient
                 while (c.moveToNext()) {
                     s.onNext(c.toUpnpDeviceMediaMeta())
                 }
-                s.onCompleted()
+                s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
@@ -314,7 +309,7 @@ class DatabaseClient
                 while (c.moveToNext()) {
                     s.onNext(c.toUpnpFolderMediaMeta())
                 }
-                s.onCompleted()
+                s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
@@ -390,7 +385,7 @@ class DatabaseClient
                 while (c.moveToNext()) {
                     s.onNext(c.toUpnpVideoMediaMeta(baseUrl))
                 }
-                s.onCompleted()
+                s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
@@ -435,7 +430,7 @@ class DatabaseClient
                 while (c.moveToNext()) {
                     s.onNext(c.toUpnpVideoMediaMeta(getMovieImageBaseUrl()))
                 }
-                s.onCompleted()
+                s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
         }.take(20)
     }
@@ -635,7 +630,7 @@ class DatabaseClient
                 while (c.moveToNext()) {
                     s.onNext(c.toTvEpisodeMediaMeta())
                 }
-                s.onCompleted()
+                s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
@@ -694,15 +689,15 @@ class DatabaseClient
         values.put("resolution", banner.resolution)
     }
 
-    fun getTvImages(seriesId: Long): rx.Observable<MediaMeta> {
-        return rx.Observable.create { s ->
+    fun getTvImages(seriesId: Long): io.reactivex.Observable<MediaMeta> {
+        return io.reactivex.Observable.create { s ->
             mResolver.query(mUris.tvBanners(), tvBannerProjection,
                     "series_id=?", arrayOf(seriesId.toString()),
                     "rating DESC", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
                     s.onNext(c.toTvBannerMediaMeta())
                 }
-                s.onCompleted()
+                s.onComplete()
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }

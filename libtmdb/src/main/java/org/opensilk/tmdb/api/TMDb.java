@@ -25,6 +25,8 @@ import org.opensilk.tmdb.api.model.TvSeason;
 import org.opensilk.tmdb.api.model.TvSeries;
 import org.opensilk.tmdb.api.model.TvSeriesList;
 
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -34,63 +36,63 @@ import retrofit2.http.Query;
  */
 public interface TMDb {
     @GET("configuration")
-    rx.Single<TMDbConfig> configuration();
+    Single<TMDbConfig> configuration();
 
     @GET("search/movie")
-    rx.Single<MovieList> searchMovie(@Query("query") String query, @Query("language") String language);
+    Single<MovieList> searchMovie(@Query("query") String query, @Query("language") String language);
 
     @GET("search/movie")
-    rx.Single<MovieList> searchMovie(@Query("query") String query, @Query("year") String year, @Query("language") String language);
+    Single<MovieList> searchMovie(@Query("query") String query, @Query("year") String year, @Query("language") String language);
 
     @GET("movie/{id}")
-    rx.Single<Movie> movie(@Path("id") long id, @Query("language") String language);
+    Single<Movie> movie(@Path("id") long id, @Query("language") String language);
 
     @GET("movie/{id}/images")
-    rx.Single<ImageList> movieImages(@Path("id") long id, @Query("language") String language);
+    Single<ImageList> movieImages(@Path("id") long id, @Query("language") String language);
 
     @GET("search/tv")
-    rx.Single<TvSeriesList> searchTv(@Query("query") String query, @Query("language") String language);
+    Single<TvSeriesList> searchTv(@Query("query") String query, @Query("language") String language);
 
     @GET("search/tv")
-    rx.Single<TvSeriesList> searchTv(@Query("query") String query, @Query("first_air_date_year") String year, @Query("language") String language);
+    Single<TvSeriesList> searchTv(@Query("query") String query, @Query("first_air_date_year") String year, @Query("language") String language);
 
     @GET("tv/{id}")
-    rx.Single<TvSeries> tvSeries(@Path("id") long id, @Query("language") String language);
+    Single<TvSeries> tvSeries(@Path("id") long id, @Query("language") String language);
 
     @GET("tv/{id}/season/{season_number}")
-    rx.Single<TvSeason> tvSeason(@Path("id") long id, @Path("season_number") int season_number, @Query("language") String language);
+    Single<TvSeason> tvSeason(@Path("id") long id, @Path("season_number") int season_number, @Query("language") String language);
 
     @GET("tv/{id}/season/{season_number}/episode/{episode_number}")
-    rx.Single<TvEpisode> tvEpisode(@Path("id") long id, @Path("season_number") int season_number, @Path("episode_number") int episode_number, @Query("language") String language);
+    Single<TvEpisode> tvEpisode(@Path("id") long id, @Path("season_number") int season_number, @Path("episode_number") int episode_number, @Query("language") String language);
 
     @GET("configuration")
-    rx.Observable<TMDbConfig> configurationObservable();
+    Observable<TMDbConfig> configurationObservable();
 
     @GET("search/movie")
-    rx.Observable<MovieList> searchMovieObservable(@Query("query") String query, @Query("language") String language);
+    Observable<MovieList> searchMovieObservable(@Query("query") String query, @Query("language") String language);
 
     @GET("search/movie")
-    rx.Observable<MovieList> searchMovieObservable(@Query("query") String query, @Query("year") String year, @Query("language") String language);
+    Observable<MovieList> searchMovieObservable(@Query("query") String query, @Query("year") String year, @Query("language") String language);
 
     @GET("movie/{id}")
-    rx.Observable<Movie> movieObservable(@Path("id") long id, @Query("language") String language);
+    Observable<Movie> movieObservable(@Path("id") long id, @Query("language") String language);
 
     @GET("movie/{id}/images")
-    rx.Observable<ImageList> movieImagesObservable(@Path("id") long id, @Query("language") String language);
+    Observable<ImageList> movieImagesObservable(@Path("id") long id, @Query("language") String language);
 
     @GET("search/tv")
-    rx.Observable<TvSeriesList> searchTvObservable(@Query("query") String query, @Query("language") String language);
+    Observable<TvSeriesList> searchTvObservable(@Query("query") String query, @Query("language") String language);
 
     @GET("search/tv")
-    rx.Observable<TvSeriesList> searchTvObservable(@Query("query") String query, @Query("first_air_date_year") String year, @Query("language") String language);
+    Observable<TvSeriesList> searchTvObservable(@Query("query") String query, @Query("first_air_date_year") String year, @Query("language") String language);
 
     @GET("tv/{id}")
-    rx.Observable<TvSeries> tvSeriesObservable(@Path("id") long id, @Query("language") String language);
+    Observable<TvSeries> tvSeriesObservable(@Path("id") long id, @Query("language") String language);
 
     @GET("tv/{id}/season/{season_number}")
-    rx.Observable<TvSeason> tvSeasonObservable(@Path("id") long id, @Path("season_number") int season_number, @Query("language") String language);
+    Observable<TvSeason> tvSeasonObservable(@Path("id") long id, @Path("season_number") int season_number, @Query("language") String language);
 
     @GET("tv/{id}/season/{season_number}/episode/{episode_number}")
-    rx.Observable<TvEpisode> tvEpisodeObservable(@Path("id") long id, @Path("season_number") int season_number, @Path("episode_number") int episode_number, @Query("language") String language);
+    Observable<TvEpisode> tvEpisodeObservable(@Path("id") long id, @Path("season_number") int season_number, @Path("episode_number") int episode_number, @Query("language") String language);
 
 }

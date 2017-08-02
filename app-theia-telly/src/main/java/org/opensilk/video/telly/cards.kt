@@ -15,11 +15,11 @@ import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
-import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.dagger.ScreenScope
 import org.opensilk.media.*
-import org.opensilk.video.*
+import org.opensilk.video.findActivity
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
+import org.opensilk.video.videoDescInfo
+import org.opensilk.video.videoProgressInfo
 import javax.inject.Inject
 
 /**

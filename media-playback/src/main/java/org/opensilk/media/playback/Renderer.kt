@@ -1,7 +1,7 @@
 package org.opensilk.media.playback
 
 import android.net.Uri
-import rx.Observable
+import io.reactivex.Observable
 
 /**
  * Created by drew on 3/16/17.

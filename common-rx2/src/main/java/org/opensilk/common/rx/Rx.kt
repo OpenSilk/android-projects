@@ -1,6 +1,8 @@
 package org.opensilk.common.rx
 
+import android.os.CancellationSignal
 import io.reactivex.Observable
+import io.reactivex.ObservableEmitter
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -35,4 +37,10 @@ fun <T> Single<T>.subscribeIgnoreError(action: Consumer<T>): Disposable {
 
 fun <T> Single<T>.observeOnMainThread(): Single<T> {
     return this.observeOn(AndroidSchedulers.mainThread())
+}
+
+fun <T> ObservableEmitter<T>.cancellationSignal(): CancellationSignal {
+    val c = CancellationSignal()
+    this.setCancellable({ c.cancel() })
+    return c
 }

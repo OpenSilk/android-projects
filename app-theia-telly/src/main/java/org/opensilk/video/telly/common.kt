@@ -1,7 +1,6 @@
 package org.opensilk.video.telly
 
 import android.arch.lifecycle.*
-import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import org.opensilk.common.dagger.Injector

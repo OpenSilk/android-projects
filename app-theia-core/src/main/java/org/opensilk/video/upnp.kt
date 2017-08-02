@@ -1,44 +1,12 @@
 package org.opensilk.video
 
-import android.content.Context
-import android.database.ContentObserver
-import android.media.browse.MediaBrowser
 import android.net.Uri
-import android.os.Handler
 import android.provider.DocumentsContract
-import dagger.Binds
-import dagger.Module
-import org.fourthline.cling.model.action.ActionInvocation
-import org.fourthline.cling.model.message.UpnpResponse
-import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
-import org.fourthline.cling.model.meta.*
-import org.fourthline.cling.model.types.UDAServiceType
-import org.fourthline.cling.model.types.UDN
-import org.fourthline.cling.model.types.UnsignedIntegerFourBytes
-import org.fourthline.cling.registry.DefaultRegistryListener
-import org.fourthline.cling.registry.Registry
-import org.fourthline.cling.support.contentdirectory.callback.Browse
-import org.fourthline.cling.support.model.BrowseFlag
-import org.fourthline.cling.support.model.DIDLContent
-import org.fourthline.cling.support.model.Protocol
+import org.fourthline.cling.model.meta.Device
+import org.fourthline.cling.model.meta.RemoteDeviceIdentity
 import org.fourthline.cling.support.model.container.Container
-import org.fourthline.cling.support.model.container.StorageFolder
 import org.fourthline.cling.support.model.item.VideoItem
-import org.opensilk.common.dagger.ForApplication
 import org.opensilk.media.*
-import org.opensilk.upnp.cds.browser.CDSUpnpService
-import org.opensilk.upnp.cds.browser.CDSserviceType
-import org.opensilk.upnp.cds.featurelist.BasicView
-import org.opensilk.upnp.cds.featurelist.Features
-import org.opensilk.upnp.cds.featurelist.XGetFeatureListCallback
-import rx.Observable
-import rx.Subscriber
-import rx.android.schedulers.AndroidSchedulers
-import rx.android.schedulers.HandlerScheduler
-import rx.subscriptions.Subscriptions
-import timber.log.Timber
-import java.util.concurrent.atomic.AtomicBoolean
-import javax.inject.Inject
 
 
 fun Device<*,*,*>.toMediaMeta(): MediaMeta {
