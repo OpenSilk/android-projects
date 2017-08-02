@@ -33,6 +33,12 @@
         <variable
             name="progressVal"
             type="Integer"/>
+        <variable
+            name="currentTimeString"
+            type="String"/>
+        <variable
+            name="totalTimeString"
+            type="String"/>
     </data>
     <FrameLayout
         android:layout_width="match_parent"
@@ -72,7 +78,9 @@
             android:layout_marginStart="64dp"
             android:layout_marginEnd="64dp"
             android:layout_marginTop="16dp"
-            android:layoutDirection="ltr">
+            android:layoutDirection="ltr"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <TextView
                 android:id="@+id/media_title"
@@ -81,7 +89,7 @@
                 android:text="@{desc.title}"
                 tools:text="title"
                 android:textSize="34sp"
-                style="?android:textAppearanceLarge"/>
+                style="?android:textAppearanceMedium"/>
 
             <TextView
                 android:id="@+id/system_time"
@@ -90,7 +98,7 @@
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
                 android:text="@{systemTimeString}"
-                style="?android:textAppearanceLarge"
+                style="?android:textAppearanceMedium"
                 tools:text="10:12"/>
 
         </RelativeLayout>
@@ -104,7 +112,9 @@
             android:layout_marginStart="132dp"
             android:layout_marginEnd="132dp"
             android:layout_marginBottom="20dp"
-            android:layoutDirection="ltr">
+            android:layoutDirection="ltr"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <ProgressBar
                 android:id="@+id/progress"
@@ -127,6 +137,7 @@
                 android:layout_below="@id/progress"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
+                android:text="@{currentTimeString}"
                 style="?attr/playbackControlsTimeStyle"
                 tools:text="0:0"/>
 
@@ -138,6 +149,7 @@
                 android:layout_below="@id/progress"
                 android:layout_marginEnd="16dp"
                 android:paddingTop="8dp"
+                android:text="@{totalTimeString}"
                 style="?attr/playbackControlsTimeStyle"
                 tools:text="123:33"/>
 
@@ -194,7 +206,6 @@
                     android:src="@drawable/lb_ic_pip"
                     style="?playbackControlsButtonStyle"
                     android:background="?android:selectableItemBackgroundBorderless"/>
-
 
             </LinearLayout>
 

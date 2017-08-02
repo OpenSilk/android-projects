@@ -183,17 +183,10 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     override fun onResume() {
         super.onResume()
         Timber.d("onResume()")
-        if (mBrowser.isConnected &&
-                mediaController.playbackState.state == PlaybackState.STATE_PAUSED) {
-            //make sure overlay is showing
-            mBinding.topBar.visibility = View.INVISIBLE
-            mBinding.bottomBar.visibility = View.INVISIBLE
-            //select playpause
-            mBinding.actionPlayPause.requestFocus()
+        if (mBrowser.isConnected) {
             animateOverlayIn()
         } else {
-            mBinding.topBar.visibility = View.GONE
-            mBinding.bottomBar.visibility = View.GONE
+            animateOverlayOut()
         }
     }
 
@@ -389,7 +382,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         Timber.d("onPlaybackStateChanged(%s)", state._stringify())
         when (state.state) {
             PlaybackState.STATE_PLAYING -> {
-                animateOverlayOut()
+                postOverlayHideRunner()
             }
             PlaybackState.STATE_PAUSED -> {
                 animateOverlayIn()
@@ -402,11 +395,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
 
     override fun onMetadataChanged(metadata: MediaMetadata) {
         Timber.d("onMetadataChanged(%s)", metadata.description.title)
-        mBinding.desc = VideoDescInfo(
-                metadata.description.title?.toString() ?: "",
-                metadata.description.subtitle?.toString() ?: "",
-                metadata.description.description?.toString() ?: ""
-        )
+        updateVideoDescription()
+        updateTotalTimeText()
     }
 
     override fun onSessionDestroyed() {
@@ -463,10 +453,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
 
     private fun unregisterMediaControllerCallback() {
         if (mMediaControllerCallbackRegistered) {
-            mediaController?.let {
-                it.unregisterCallback(mMediaControllerCallback)
-                mMediaControllerCallbackRegistered = false
-            }
+            mMediaControllerCallbackRegistered = false
+            mediaController?.unregisterCallback(mMediaControllerCallback)
         }
     }
 
@@ -499,8 +487,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                     .setDuration(OVERLAY_ANIM_DURATION)
                     .translationY(0.0f)
                     .setListener(null)
-            mBinding.actionPlayPause.requestFocus()
         }
+        mBinding.actionPlayPause.requestFocus()
 
         postOverlayHideRunner()
         restartProgressRunner()
@@ -551,6 +539,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     private val mProgressRunner = object: Runnable {
         override fun run() {
             updateProgress()
+            updateCurrentTimeText()
             mMainHandler.postDelayed(this, 500)
         }
     }
@@ -563,15 +552,40 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     fun updateProgress() {
         if (mBrowser.notConnected()) return
         val pbs = mediaController.playbackState
-        val current = pbs.position + (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
+        val current = pbs.position + if (pbs.state == PlaybackState.STATE_PLAYING) {
+            (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
+        } else 0L
         val duration = mediaController.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
         if (duration == 0L || duration < current) {
-            mBinding.progress.max
             mBinding.progressVal = 0
         } else {
             //permyriad calculation (no floating point)
             mBinding.progressVal = ((1000*current + duration/2)/duration).toInt()
         }
+    }
+
+    fun updateCurrentTimeText() {
+        if (mBrowser.notConnected()) return
+        val pbs = mediaController.playbackState
+        val current = pbs.position + if (pbs.state == PlaybackState.STATE_PLAYING) {
+            (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
+        } else 0L
+        mBinding.currentTimeString = humanReadableDuration(current)
+    }
+
+    fun updateTotalTimeText() {
+        if (mBrowser.notConnected()) return
+        val duration = mediaController.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+        mBinding.totalTimeString = humanReadableDuration(duration)
+    }
+
+    fun updateVideoDescription() {
+        val metadata = mediaController?.metadata
+        mBinding.desc = VideoDescInfo(
+                metadata?.description?.title?.toString() ?: "",
+                metadata?.description?.subtitle?.toString() ?: "",
+                metadata?.description?.description?.toString() ?: ""
+        )
     }
 }
 
