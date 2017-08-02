@@ -3,6 +3,7 @@ package org.opensilk.video
 import android.media.browse.MediaBrowser
 import io.reactivex.Observable
 import org.opensilk.media.*
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
@@ -63,6 +64,7 @@ class NewlyAddedLoader
                 .filter { it is UpnpFolderChange || it is UpnpVideoChange }
                 .map { true }
                 .startWith(true)
+                .sample(3, TimeUnit.SECONDS)
                 .observeOn(AppSchedulers.diskIo)
                 .flatMapSingle {
                     mDatabaseClient.getRecentUpnpVideos().map { it.toMediaItem() }.toList()
