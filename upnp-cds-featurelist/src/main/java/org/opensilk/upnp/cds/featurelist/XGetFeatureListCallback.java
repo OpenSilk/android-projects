@@ -19,9 +19,11 @@ package org.opensilk.upnp.cds.featurelist;
 
 import org.fourthline.cling.controlpoint.ActionCallback;
 import org.fourthline.cling.model.action.ActionArgumentValue;
+import org.fourthline.cling.model.action.ActionException;
 import org.fourthline.cling.model.action.ActionInvocation;
 import org.fourthline.cling.model.meta.Action;
 import org.fourthline.cling.model.meta.Service;
+import org.fourthline.cling.model.types.ErrorCode;
 
 import java.lang.reflect.Method;
 
@@ -38,12 +40,15 @@ public abstract class XGetFeatureListCallback extends ActionCallback {
     public void success(ActionInvocation actionInvocation) {
         ActionArgumentValue aav = actionInvocation.getOutput(new FeatureListArgument());
         if (aav == null) {
+            actionInvocation.setFailure(new ActionException(ErrorCode.ACTION_FAILED, "Failed to get Response"));
             failure(actionInvocation, null);
         } else {
             try {
                 Features f = new FeaturesParser().parse(aav.toString());
                 received(actionInvocation, f);
             } catch (Exception e) {
+                actionInvocation.setFailure(new ActionException(ErrorCode.ACTION_FAILED,
+                        "Failed to parse FeatureList", e));
                 failure(actionInvocation, null);
             }
         }
