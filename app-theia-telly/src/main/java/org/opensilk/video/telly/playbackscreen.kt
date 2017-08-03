@@ -13,7 +13,9 @@ import android.media.session.PlaybackState
 import android.os.*
 import android.text.format.DateFormat
 import android.view.KeyEvent
+import android.view.SurfaceView
 import android.view.View
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.text.Cue
 import com.google.android.exoplayer2.text.TextRenderer
@@ -21,6 +23,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
+import io.reactivex.Scheduler
+import io.reactivex.disposables.Disposables
+import io.reactivex.functions.Consumer
+import io.reactivex.schedulers.Schedulers
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.Injector
@@ -30,6 +36,7 @@ import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.ActivityPlaybackBinding
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 const val ACTION_PLAY = "org.opensilk.action.PLAY"
@@ -75,30 +82,25 @@ interface PlaybackActionsHandler {
 
 class PlaybackViewModel
 @Inject constructor(
-        @ForApplication private val mContext: Context,
-        private val mClient: MediaProviderClient
-) : ViewModel(), LifecycleObserver {
-    val videoDescription = MutableLiveData<VideoDescInfo>()
+        @ForApplication private val mContext: Context
+) : ViewModel(), LifecycleObserver,
+        MediaBrowserCallback.Listener, MediaControllerCallback.Listener,
+        SimpleExoPlayer.VideoListener, TextRenderer.Output {
 
-    fun onMediaRef(mediaRef: MediaRef) {
-        mClient.getMediaMeta(mediaRef)
-                .subscribeOn(AppSchedulers.diskIo)
-                .subscribe({
-                    videoDescription.postValue(VideoDescInfo(
-                            it.title.elseIfBlank(it.displayName),
-                            it.subtitle,
-                            ""
-                    ))
-                }, {
-                    Timber.e(it, "")
-                })
+    private lateinit var mMediaRef: MediaRef
+    private lateinit var mPlaybackExtras: PlaybackExtras
+
+    fun onMediaRef(mediaRef: MediaRef, playbackExtras: PlaybackExtras) {
+        mMediaRef = mediaRef
+        mPlaybackExtras = playbackExtras
+        loadMediaRef()
     }
 
-    val currentTime = MutableLiveData<String>()
+    val systemTime = MutableLiveData<String>()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun registerTimeTick() {
-        currentTime.value = DateFormat.getTimeFormat(mContext).format(Date())
+        systemTime.value = DateFormat.getTimeFormat(mContext).format(Date())
         mContext.registerReceiver(timetick, IntentFilter(Intent.ACTION_TIME_TICK))
     }
 
@@ -109,64 +111,361 @@ class PlaybackViewModel
 
     private val timetick = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            currentTime.value = DateFormat.getTimeFormat(context).format(Date())
+            systemTime.value = DateFormat.getTimeFormat(context).format(Date())
         }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        if (mMediaControllerCallbackRegistered) {
+            mMediaController.unregisterCallback(mMediaControllerCallback)
+        }
+        mExoPlayer?.clearVideoListener(this)
+        mExoPlayer?.clearTextOutput(this)
+        mBrowser.disconnect()
+        stopProgressRunner()
+        mOnAcquireExoPlayer.clear()
+    }
+
+    /*
+     * start mediasession / browser stuffs
+     */
+
+    private var mBrowser: MediaBrowser = MediaBrowser(mContext,
+            ComponentName(mContext, PlaybackService::class.java), MediaBrowserCallback(this), null)
+    private lateinit var mMediaController: MediaController
+    private val mMediaControllerCallback = MediaControllerCallback(this)
+    private var mMediaControllerCallbackRegistered = false
+    private var mExoPlayer: SimpleExoPlayer? = null
+    private val mOnAcquireExoPlayer = ArrayDeque<Consumer<SimpleExoPlayer>>()
+    private var mConnectingBrowser = false
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    fun connectMediaBrowser() {
+        if (!mBrowser.isConnected && !mConnectingBrowser) {
+            mConnectingBrowser = true
+            mBrowser.connect()
+        }
+    }
+
+    private val mPlaybackState: PlaybackState
+        get() = if (isConnected) mMediaController.playbackState else
+            PlaybackState.Builder().setState(PlaybackState.STATE_NONE, 0, 1.0f).build()
+
+    private val isConnected: Boolean
+        get() = mBrowser.isConnected
+
+    private fun loadMediaRef() {
+        if (isConnected) {
+            mMediaController.transportControls.playFromMediaId(
+                    mMediaRef.toJson(), mPlaybackExtras.bundle())
+        }
+    }
+
+    fun pausePlayback() {
+        if (isConnected) {
+            mMediaController.transportControls.pause()
+        }
+    }
+
+    fun skipAhead() {
+        if (mPlaybackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
+            val offset = SystemClock.elapsedRealtime() - mPlaybackState.lastPositionUpdateTime
+            val seek = mPlaybackState.position + offset + SKIP_AHEAD_MS
+            mMediaController.transportControls.seekTo(seek)
+        }
+    }
+
+    fun skipBehind() {
+        if (mPlaybackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
+            val offset = SystemClock.elapsedRealtime() - mPlaybackState.lastPositionUpdateTime
+            val seek = mPlaybackState.position + offset - SKIP_BEHIND_MS
+            mMediaController.transportControls.seekTo(seek)
+        }
+    }
+
+    /**
+     * Sets the surface view exoplayer is to use, if we have not acquired the exoplayer yet
+     * we add it to the queue, and set it when we acquire it.
+     */
+    fun attachSurface(view: SurfaceView) {
+        mExoPlayer?.setVideoSurfaceView(view) ?: mOnAcquireExoPlayer.add(Consumer {
+            it.setVideoSurfaceView(view)
+        })
+    }
+
+    /**
+     * Detach the surface
+     */
+    fun detachSurface(view: SurfaceView) {
+        mExoPlayer?.clearVideoSurfaceView(view)
+    }
+
+    /*
+     * start browser callback
+     */
+
+    override fun onBrowserConnected() {
+        mConnectingBrowser = false
+        mMediaController = MediaController(mContext, mBrowser.sessionToken)
+        mMediaController.registerCallback(mMediaControllerCallback)
+        mMediaControllerCallbackRegistered = true
+        fetchExoPlayer()
+    }
+
+    override fun onBrowserDisconnected() {
+        mConnectingBrowser = false
+        if (mMediaControllerCallbackRegistered) {
+            mMediaController.unregisterCallback(mMediaControllerCallback)
+        }
+        mExoPlayer?.clearVideoListener(this)
+        mExoPlayer?.clearTextOutput(this)
+        mExoPlayer?.clearVideoSurface()
+        mExoPlayer = null
+    }
+
+    /*
+     * end browser callback
+     */
+
+    private fun fetchExoPlayer() {
+        mMediaController.sendCommand(CMD_GET_EXOPLAYER, bundle(), object : ResultReceiver(Handler(Looper.getMainLooper())) {
+            override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+                when (resultCode) {
+                    CMD_RESULT_OK -> {
+                        val binder = resultData!!.getBinder(CMD_RESULT_ARG1) as PlaybackSession.SessionBinder
+                        val player = binder.player
+                        player.setVideoListener(this@PlaybackViewModel)
+                        player.setTextOutput(this@PlaybackViewModel)
+                        while (!mOnAcquireExoPlayer.isEmpty()) {
+                            mOnAcquireExoPlayer.poll().accept(player)
+                        }
+                        mExoPlayer = player
+                        loadMediaRef()
+                    }
+                    else -> {
+                        throw RuntimeException("Invalid return value on CMD_GET_EXOPLAYER val=$resultCode")
+                    }
+                }
+            }
+        })
+    }
+
+    fun togglePlayPause() {
+        if (mPlaybackState.hasAction(PlaybackState.ACTION_PLAY)) {
+            mMediaController.transportControls.play()
+        } else {
+            mMediaController.transportControls.pause()
+        }
+    }
+
+    fun skipPrevious() {
+        if (mPlaybackState.hasAction(PlaybackState.ACTION_SKIP_TO_PREVIOUS)) {
+            mMediaController.transportControls.skipToPrevious()
+        }
+    }
+
+    fun skipNext() {
+        if (mPlaybackState.hasAction(PlaybackState.ACTION_SKIP_TO_NEXT)) {
+            mMediaController.transportControls.skipToNext()
+        }
+    }
+
+    /*
+     * start media session callback
+     */
+
+    val videoDescription = MutableLiveData<VideoDescInfo>()
+    val playbackTotalTimeSeconds = MutableLiveData<Long>()
+    val playbackState = MutableLiveData<PlaybackState>()
+
+    override fun onExtrasChanged(extras: Bundle) {
+    }
+
+    override fun onSessionEvent(event: String, extras: Bundle) {
+    }
+
+    override fun onQueueChanged(queue: List<MediaSession.QueueItem>) {
+    }
+
+    override fun onQueueTitleChanged(title: String) {
+    }
+
+    override fun onPlaybackStateChanged(state: PlaybackState) {
+        Timber.d("onPlaybackStateChanged(%s)", state._stringify())
+        playbackState.postValue(state)
+    }
+
+    override fun onMetadataChanged(metadata: MediaMetadata) {
+        Timber.d("onMetadataChanged(%s)", metadata.description.title)
+        videoDescription.postValue(VideoDescInfo(
+                metadata.description?.title?.toString() ?: "",
+                metadata.description?.subtitle?.toString() ?: "",
+                metadata.description?.description?.toString() ?: ""
+        ))
+        playbackTotalTimeSeconds.postValue(
+                (metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)) / 1000
+        )
+    }
+
+    override fun onSessionDestroyed() {
+        if (mMediaControllerCallbackRegistered) {
+            mMediaController.unregisterCallback(mMediaControllerCallback)
+        }
+        mExoPlayer?.clearVideoListener(this)
+        mExoPlayer?.clearTextOutput(this)
+        mExoPlayer?.clearVideoSurface()
+        mBrowser.disconnect()
+    }
+
+    override fun onAudioInfoChanged(info: MediaController.PlaybackInfo) {
+        Timber.d("onAudioInfoChanged")
+    }
+
+    /*
+     * end media session callback
+     */
+
+    /*
+     * Start exoplayer callbacks
+     */
+
+    val aspectRatio = MutableLiveData<Float>()
+    val captions = MutableLiveData<List<Cue>>()
+
+    override fun onVideoSizeChanged(width: Int, height: Int, unappliedRotationDegrees: Int, pixelWidthHeightRatio: Float) {
+        val aspectRatio: Float = if (height == 0) 1f else (width.toFloat() * pixelWidthHeightRatio) / height.toFloat()
+        this.aspectRatio.postValue(aspectRatio)
+    }
+
+    override fun onRenderedFirstFrame() {
+
+    }
+
+    override fun onCues(cues: MutableList<Cue>?) {
+        captions.postValue(cues)
+    }
+
+    /*
+     * end exoplayer callbacks
+     */
+
+    val playbackCurrentTimeSeconds = MutableLiveData<Long>()
+    val playbackCurrentProgress = MutableLiveData<Int>()
+
+    private var mProgressDisposable = Disposables.disposed()
+    private val mProgressRunner = Runnable {
+        val pbs = mPlaybackState
+        val current = pbs.position + if (pbs.state == PlaybackState.STATE_PLAYING) {
+            (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
+        } else 0L
+        val duration = mMediaController.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+
+        // update progress
+        if (duration == 0L || duration < current) {
+            playbackCurrentProgress.postValue(0)
+        } else {
+            //permyriad calculation (no floating point)
+            playbackCurrentProgress.postValue(((1000*current + duration/2)/duration).toInt())
+        }
+        //update current time text
+        playbackCurrentTimeSeconds.postValue(current / 1000L)
+    }
+
+    fun startProgressRunner() {
+        mProgressDisposable.dispose()
+        mProgressDisposable = AppSchedulers.background
+                .schedulePeriodicallyDirect(mProgressRunner, 0, 500, TimeUnit.MILLISECONDS)
+    }
+
+    fun stopProgressRunner() {
+        mProgressDisposable.dispose()
+    }
+
 }
 
 /**
  *
  */
-class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
-        MediaBrowserCallback.Listener, MediaControllerCallback.Listener,
-        SimpleExoPlayer.VideoListener, TextRenderer.Output {
+class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
 
     lateinit var mBinding: ActivityPlaybackBinding
-    lateinit var mBrowser: MediaBrowser
-    lateinit var mExoPlayer: SimpleExoPlayer
-    lateinit var mMediaRef: MediaRef
     lateinit var mViewModel: PlaybackViewModel
-    var mPlayWhenReady: Boolean = true
-    var mResumePlayback: Boolean = false
     val mMainHandler = Handler(Looper.getMainLooper())
-    val mMediaControllerCallback = MediaControllerCallback(this)
-    var mMediaControllerCallbackRegistered = false
-    var mWonVisibleBehind = false
     val mTotalTimeStringBuilder = StringBuilder()
     val mCurrentTimeStringBuilder = StringBuilder()
+    var mPlaybackState = PlaybackState.STATE_NONE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.d("onCreate()")
 
-        mMediaRef = newMediaRef(intent.getStringExtra(EXTRA_MEDIAID))
-        mPlayWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
-        mResumePlayback = intent.action == ACTION_RESUME
-
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_playback)
         mBinding.actionHandler = this
 
         mViewModel = fetchViewModel(PlaybackViewModel::class)
-        mViewModel.videoDescription.observe(this, LiveDataObserver {
-            mBinding.desc = it
-        })
-        mViewModel.currentTime.observe(this, LiveDataObserver {
-            mBinding.systemTimeString = it
-        })
-        mViewModel.onMediaRef(mMediaRef)
 
-        mBrowser = MediaBrowser(this, ComponentName(this, PlaybackService::class.java),
-                MediaBrowserCallback(this), null)
-        mBrowser.connect()
+        mViewModel.systemTime.observe(this, LiveDataObserver { time ->
+            mBinding.systemTimeString = time
+        })
+        mViewModel.videoDescription.observe(this, LiveDataObserver { desc ->
+            mBinding.desc = desc
+        })
+        mViewModel.playbackTotalTimeSeconds.observe(this, LiveDataObserver { duration ->
+            formatTime(duration, mTotalTimeStringBuilder)
+            mBinding.totalTimeString = mTotalTimeStringBuilder.toString()
+        })
+        mViewModel.playbackCurrentTimeSeconds.observe(this, LiveDataObserver { current ->
+            formatTime(current, mCurrentTimeStringBuilder)
+            mBinding.currentTimeString = mCurrentTimeStringBuilder.toString()
+        })
+        mViewModel.playbackState.observe(this, LiveDataObserver { state ->
+            when (state.state) {
+                PlaybackState.STATE_PLAYING -> {
+                    postOverlayHideRunner()
+                }
+                PlaybackState.STATE_PAUSED -> {
+                    animateOverlayIn()
+                }
+                PlaybackState.STATE_STOPPED -> {
+                    finish()
+                }
+            }
+        })
+        mViewModel.captions.observe(this, LiveDataObserver { cues ->
+            mBinding.subtitles.setCues(cues)
+        })
+        mViewModel.aspectRatio.observe(this, LiveDataObserver { ratio ->
+            mBinding.surfaceContainer.setAspectRatio(ratio)
+        })
+
+        mViewModel.attachSurface(mBinding.videoSurface)
+
+        handleIntent(this.intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        Timber.d("onNewIntent()")
+        if (intent != null) {
+            handleIntent(intent)
+        }
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val mediaRef = newMediaRef(intent.getStringExtra(EXTRA_MEDIAID))
+        val playbackExtras = PlaybackExtras()
+        playbackExtras.playWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
+        playbackExtras.resume = intent.action == ACTION_RESUME
+        mViewModel.onMediaRef(mediaRef, playbackExtras)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Timber.d("onDestroy()")
         mBinding.actionHandler = null
+        mViewModel.detachSurface(mBinding.videoSurface)
         mMainHandler.removeCallbacksAndMessages(null)
-        cleanupSessionStuffs()
-        mBrowser.disconnect()
     }
 
     override fun onStart() {
@@ -177,34 +476,31 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     override fun onStop() {
         super.onStop()
         Timber.d("onStop()")
-        if (isFinishing || !mWonVisibleBehind) {
-            if (mBrowser.isConnected) mediaController.transportControls.pause()
-        }
+        mViewModel.pausePlayback()
     }
 
     override fun onResume() {
         super.onResume()
         Timber.d("onResume()")
-        if (mBrowser.isConnected) {
-            animateOverlayIn()
-        } else {
-            animateOverlayOut()
-        }
+        animateOverlayIn()
     }
 
     override fun onPause() {
         super.onPause()
         Timber.d("onPause()")
-        mWonVisibleBehind = if (mBrowser.isConnected &&
-                mediaController.playbackState.state != PlaybackState.STATE_PAUSED &&
-                !isInPictureInPictureMode &&
-                !isFinishing) requestVisibleBehind(true) else false
+        if (!isInPictureInPictureMode) {
+            val won = if (mPlaybackState == PlaybackState.STATE_PLAYING && !isFinishing)
+                requestVisibleBehind(true) else false
+            if (!won) {
+                mViewModel.pausePlayback()
+            }
+        }
     }
 
     override fun onVisibleBehindCanceled() {
         super.onVisibleBehindCanceled()
         Timber.d("onVisibleBehindCanceled()")
-        if (mBrowser.isConnected) mediaController.transportControls.pause()
+        mViewModel.pausePlayback()
     }
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
@@ -232,10 +528,10 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                     animateOverlayIn()
                 }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    skipAhead()
+                    mViewModel.skipAhead()
                 }
                 KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    skipBehind()
+                    mViewModel.skipBehind()
                 }
                 else -> {
                     return super.onKeyDown(keyCode, event)
@@ -253,107 +549,28 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         }
     }
 
-    /**
-     * Seeks ahead by SKIP_AHEAD_MS
-     */
-    fun skipAhead() {
-        if (mBrowser.notConnected()) return
-        if (mediaController.playbackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
-            val offset = SystemClock.elapsedRealtime() - mediaController.playbackState.lastPositionUpdateTime
-            val seek = mediaController.playbackState.position + offset + SKIP_AHEAD_MS
-            mediaController.transportControls.seekTo(seek)
-        }
-    }
-
-    /**
-     * Seeks back by SKIP_BEHIND_MS
-     */
-    fun skipBehind() {
-        if (mBrowser.notConnected()) return
-        if (mediaController.playbackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
-            val offset = SystemClock.elapsedRealtime() - mediaController.playbackState.lastPositionUpdateTime
-            val seek = mediaController.playbackState.position + offset - SKIP_BEHIND_MS
-            mediaController.transportControls.seekTo(seek)
-        }
-    }
-
-    /*
-     * start browser callback
-     */
-
-    override fun onBrowserConnected() {
-        mediaController = MediaController(this, mBrowser.sessionToken)
-        mediaController.registerCallback(mMediaControllerCallback, mMainHandler)
-        mMediaControllerCallbackRegistered = true
-        mediaController.sendCommand(CMD_GET_EXOPLAYER, bundle(), object : ResultReceiver(null) {
-            override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-                when (resultCode) {
-                    CMD_RESULT_OK -> {
-                        val binder = resultData!!.getBinder(CMD_RESULT_ARG1) as PlaybackSession.SessionBinder
-                        mExoPlayer = binder.player
-                        attachExoPlayer()
-                        val extras = PlaybackExtras()
-                        extras.playWhenReady = mPlayWhenReady
-                        extras.resume = mResumePlayback
-                        mediaController.transportControls.playFromMediaId(mMediaRef.toJson(), extras.bundle())
-                    }
-                    else -> {
-                        throw RuntimeException("Invalid return value on CMD_GET_EXOPLAYER val=$resultCode")
-                    }
-                }
-            }
-        })
-    }
-
-    override fun onBrowserDisconnected() {
-        cleanupSessionStuffs()
-    }
-
-    /*
-     * end browser callback
-     */
-
     /*
      * start playback actions handler
      */
 
     override fun toggleCaptions() {
-        if (mBrowser.notConnected()) return
-
-        if (mBinding.subtitles.visibility == View.VISIBLE) {
-            mBinding.subtitles.visibility = View.INVISIBLE
-        } else {
+        if (mBinding.subtitles.visibility != View.VISIBLE) {
             mBinding.subtitles.visibility = View.VISIBLE
+        } else {
+            mBinding.subtitles.visibility = View.INVISIBLE
         }
     }
 
     override fun togglePlayPause() {
-        if (mBrowser.notConnected()) return
-
-        val pbs = mediaController.playbackState
-        if (pbs.hasAction(PlaybackState.ACTION_PLAY)) {
-            mediaController.transportControls.play()
-        } else {
-            mediaController.transportControls.pause()
-        }
+        mViewModel.togglePlayPause()
     }
 
     override fun skipPrevious() {
-        if (mBrowser.notConnected()) return
-
-        val pbs = mediaController.playbackState
-        if (pbs.hasAction(PlaybackState.ACTION_SKIP_TO_PREVIOUS)) {
-            mediaController.transportControls.skipToPrevious()
-        }
+        mViewModel.skipPrevious()
     }
 
     override fun skipNext() {
-        if (mBrowser.notConnected()) return
-
-        val pbs = mediaController.playbackState
-        if (pbs.hasAction(PlaybackState.ACTION_SKIP_TO_NEXT)) {
-            mediaController.transportControls.skipToNext()
-        }
+        mViewModel.skipNext()
     }
 
     override fun enterPip() {
@@ -363,102 +580,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     /*
      * end playback actions handler
      */
-
-    /*
-     * start media session callback
-     */
-
-    override fun onExtrasChanged(extras: Bundle) {
-    }
-
-    override fun onSessionEvent(event: String, extras: Bundle) {
-    }
-
-    override fun onQueueChanged(queue: List<MediaSession.QueueItem>) {
-    }
-
-    override fun onQueueTitleChanged(title: String) {
-    }
-
-    override fun onPlaybackStateChanged(state: PlaybackState) {
-        Timber.d("onPlaybackStateChanged(%s)", state._stringify())
-        when (state.state) {
-            PlaybackState.STATE_PLAYING -> {
-                postOverlayHideRunner()
-            }
-            PlaybackState.STATE_PAUSED -> {
-                animateOverlayIn()
-            }
-            PlaybackState.STATE_STOPPED -> {
-                finish()
-            }
-        }
-    }
-
-    override fun onMetadataChanged(metadata: MediaMetadata) {
-        Timber.d("onMetadataChanged(%s)", metadata.description.title)
-        updateVideoDescription()
-        updateTotalTimeText()
-    }
-
-    override fun onSessionDestroyed() {
-        cleanupSessionStuffs()
-        mBrowser.disconnect()
-    }
-
-    override fun onAudioInfoChanged(info: MediaController.PlaybackInfo) {
-        Timber.d("onAudioInfoChanged")
-    }
-
-    /*
-     * end media session callback
-     */
-
-    /*
-     * Start exoplayer callbacks
-     */
-
-    override fun onVideoSizeChanged(width: Int, height: Int, unappliedRotationDegrees: Int, pixelWidthHeightRatio: Float) {
-        val aspectRatio: Float = if (height == 0) 1f else (width.toFloat() * pixelWidthHeightRatio) / height.toFloat()
-        mBinding.surfaceContainer.setAspectRatio(aspectRatio)
-    }
-
-    override fun onRenderedFirstFrame() {
-
-    }
-
-    override fun onCues(cues: MutableList<Cue>?) {
-        mBinding.subtitles.onCues(cues)
-    }
-
-    /*
-     * end exoplayer callbacks
-     */
-
-    private fun cleanupSessionStuffs() {
-        detachExoPlayer()
-        unregisterMediaControllerCallback()
-        mediaController = null
-    }
-
-    private fun attachExoPlayer() {
-        mExoPlayer.setVideoSurfaceView(mBinding.videoSurface)
-        mExoPlayer.setVideoListener(this)
-        mExoPlayer.setTextOutput(this)
-    }
-
-    private fun detachExoPlayer() {
-        mExoPlayer.clearVideoSurfaceView(mBinding.videoSurface)
-        mExoPlayer.clearVideoListener(this)
-        mExoPlayer.clearTextOutput(this)
-    }
-
-    private fun unregisterMediaControllerCallback() {
-        if (mMediaControllerCallbackRegistered) {
-            mMediaControllerCallbackRegistered = false
-            mediaController?.unregisterCallback(mMediaControllerCallback)
-        }
-    }
 
     fun animateOverlayIn() {
         mBinding.topBar.animate().cancel()
@@ -493,12 +614,12 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         mBinding.actionPlayPause.requestFocus()
 
         postOverlayHideRunner()
-        restartProgressRunner()
+        mViewModel.startProgressRunner()
     }
 
     fun animateOverlayOut() {
         mMainHandler.removeCallbacks(mAnimateOutRunner)
-        mMainHandler.removeCallbacks(mProgressRunner)
+        mViewModel.stopProgressRunner()
 
         if (mBinding.topBar.visibility != View.GONE) {
             mBinding.topBar.animate().cancel()
@@ -538,59 +659,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
                 (mBinding.topBar.visibility != View.GONE)
     }
 
-    private val mProgressRunner = object: Runnable {
-        override fun run() {
-            updateProgress()
-            updateCurrentTimeText()
-            mMainHandler.postDelayed(this, 500)
-        }
-    }
 
-    fun restartProgressRunner() {
-        mMainHandler.removeCallbacks(mProgressRunner)
-        mMainHandler.post(mProgressRunner)
-    }
 
-    fun updateProgress() {
-        if (mBrowser.notConnected()) return
-        val pbs = mediaController.playbackState
-        val current = pbs.position + if (pbs.state == PlaybackState.STATE_PLAYING) {
-            (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
-        } else 0L
-        val duration = mediaController.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
-        if (duration == 0L || duration < current) {
-            mBinding.progressVal = 0
-        } else {
-            //permyriad calculation (no floating point)
-            mBinding.progressVal = ((1000*current + duration/2)/duration).toInt()
-        }
-    }
-
-    fun updateCurrentTimeText() {
-        if (mBrowser.notConnected()) return
-        val pbs = mediaController.playbackState
-        val current = pbs.position + if (pbs.state == PlaybackState.STATE_PLAYING) {
-            (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
-        } else 0L
-        formatTime(current / 1000L, mCurrentTimeStringBuilder)
-        mBinding.currentTimeString = mCurrentTimeStringBuilder.toString()
-    }
-
-    fun updateTotalTimeText() {
-        if (mBrowser.notConnected()) return
-        val duration = mediaController.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
-        formatTime(duration / 1000L, mTotalTimeStringBuilder)
-        mBinding.totalTimeString = mTotalTimeStringBuilder.toString()
-    }
-
-    fun updateVideoDescription() {
-        val metadata = mediaController?.metadata
-        mBinding.desc = VideoDescInfo(
-                metadata?.description?.title?.toString() ?: "",
-                metadata?.description?.subtitle?.toString() ?: "",
-                metadata?.description?.description?.toString() ?: ""
-        )
-    }
 }
 
 open class DefaultAnimatorListener: Animator.AnimatorListener {
