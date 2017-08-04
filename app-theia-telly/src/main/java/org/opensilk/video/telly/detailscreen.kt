@@ -20,8 +20,10 @@ import dagger.Provides
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
 import io.reactivex.Single
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
+import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
@@ -37,15 +39,19 @@ import kotlin.properties.Delegates
 /*
  ids for detail actions
  */
-const val ACTIONID_RESUME = 100L
-const val ACTIONID_START_OVER = 101L
+private const val POS_RESUME = 0
+private const val POS_PLAY = 2
+private const val POS_RESTART = POS_PLAY //restart replaces play
+
+private const val ACTIONID_RESUME = 100L
+private const val ACTIONID_START_OVER = 101L
 //
 //
-const val ACTIONID_PLAY = 200L
+private const val ACTIONID_PLAY = 200L
 //
 //
-const val ACTIONID_GET_DESCRIPTION = 300L
-const val ACTIONID_REMOVE_DESCRIPTION = 301L
+private const val ACTIONID_GET_DESCRIPTION = 300L
+private const val ACTIONID_REMOVE_DESCRIPTION = 301L
 
 const val SHARED_ELEMENT_NAME = "hero"
 
@@ -143,6 +149,16 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         mViewModel.fileInfo.observe(this, LiveDataObserver {
             mFileInfoRow.fileInfo = it
         })
+        mViewModel.resumePosition.observe(this, LiveDataObserver { pos ->
+            if (pos > 0) {
+                mOverviewActionsAdapter.set(POS_RESUME, Action(ACTIONID_RESUME,
+                        getString(R.string.btn_resume) + " (${humanReadableDuration(pos)})"))
+                mOverviewActionsAdapter.set(POS_RESTART, Action(ACTIONID_START_OVER,
+                        getString(R.string.btn_restart)))
+            } else {
+                setupDefaultActions()
+            }
+        })
 
         mBackgroundManager = BackgroundManager.getInstance(activity)
 
@@ -160,7 +176,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
 
         adapter = rowsAdapter
 
-        setupActions()
+        setupDefaultActions()
     }
 
     override fun onStart() {
@@ -175,16 +191,21 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
 
     override fun onActionClicked(action: Action) {
         when (action.id) {
-            ACTIONID_PLAY, ACTIONID_RESUME, ACTIONID_START_OVER -> {
-                val intent = Intent(activity, PlaybackActivity::class.java)
-                intent.action = ACTION_PLAY
-                intent.putExtra(EXTRA_MEDIAID, arguments.getString(EXTRA_MEDIAID))
-                activity.startActivity(intent)
+            ACTIONID_PLAY, ACTIONID_START_OVER -> {
+                activity.startActivity(makePlayIntent().setAction(ACTION_PLAY))
+            }
+            ACTIONID_RESUME -> {
+                activity.startActivity(makePlayIntent().setAction(ACTION_RESUME))
             }
             else -> {
                 Toast.makeText(activity, "UNIMPLEMENTED", Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun makePlayIntent() : Intent {
+        return Intent(activity, PlaybackActivity::class.java)
+                .putExtra(EXTRA_MEDIAID, arguments.getString(EXTRA_MEDIAID))
     }
 
     fun loadBackdropImage() {
@@ -193,8 +214,9 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         //TODO load image
     }
 
-    fun setupActions() {
-        mOverviewActionsAdapter.set(ACTIONID_PLAY.toInt(), Action(ACTIONID_PLAY, "Play"))
+    fun setupDefaultActions() {
+        mOverviewActionsAdapter.clear()
+        mOverviewActionsAdapter.set(POS_PLAY, Action(ACTIONID_PLAY, getString(R.string.btn_play)))
     }
 
     private val lifecycleRegistry: LifecycleRegistry by lazy {
@@ -211,18 +233,23 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
  */
 class DetailViewModel
 @Inject constructor(
-        val mClient: MediaProviderClient
+        val mClient: DatabaseClient
 ): ViewModel() {
     val videoDescription = MutableLiveData<VideoDescInfo>()
     val fileInfo = MutableLiveData<VideoFileInfo>()
+    val resumePosition = MutableLiveData<Long>()
+
+    private val disponables = CompositeDisposable()
 
     fun onMediaId(mediaId: String) {
         val ref = newMediaRef(mediaId)
-        subscribeMediaItem(ref)
+        subscribeVideoDescription(ref)
+        subscribeFileInfo(ref)
+        subscribeLastPosition(ref)
     }
 
-    fun subscribeMediaItem(mediaRef: MediaRef) {
-        Single.zip<MediaMeta, String, VideoDescInfo>(
+    fun subscribeVideoDescription(mediaRef: MediaRef) {
+        val s = Single.zip<MediaMeta, String, VideoDescInfo>(
                 mClient.getMediaMeta(mediaRef),
                 mClient.getMediaOverview(mediaRef),
                 BiFunction { meta, overview ->
@@ -233,7 +260,11 @@ class DetailViewModel
                 .subscribeIgnoreError(Consumer {
                     videoDescription.postValue(it)
                 })
-        mClient.getMediaMeta(mediaRef)
+        disponables.add(s)
+    }
+
+    fun subscribeFileInfo(mediaRef: MediaRef) {
+        val s = mClient.getMediaMeta(mediaRef)
                 .subscribeOn(AppSchedulers.diskIo)
                 .subscribeIgnoreError(Consumer {
                     fileInfo.postValue(VideoFileInfo(
@@ -242,6 +273,27 @@ class DetailViewModel
                             it.duration
                     ))
                 })
+        disponables.add(s)
+    }
+
+    fun subscribeLastPosition(mediaRef: MediaRef) {
+        val s = mClient.changesObservable
+                .filter { it is UpnpVideoChange && it.videoId == mediaRef.mediaId }
+                .map { true }
+                .startWith(true)
+                .observeOn(AppSchedulers.diskIo)
+                .flatMapSingle {
+                    mClient.getLastPlaybackPosition(mediaRef).onErrorReturn { 0 }
+                }
+                .subscribeIgnoreError(Consumer {
+                    resumePosition.postValue(it)
+                })
+        disponables.add(s)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        disponables.clear()
     }
 }
 
@@ -249,7 +301,7 @@ class DetailViewModel
  *
  */
 class FileInfoRow
-@Inject constructor(): Row(HeaderItem("File Info")) { //TODO use string resource
+@Inject constructor(@ForApplication context: Context): Row(HeaderItem(context.getString(R.string.header_file_info))) {
 
     interface Listener {
         fun onItemChanged(fileInfoRow: FileInfoRow)
