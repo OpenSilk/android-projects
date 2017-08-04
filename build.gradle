@@ -9,7 +9,7 @@ buildscript {
         gradleToolsVersion = "2.3.3"
 
         supportLibVersion = "25.4.0"
-        androidarchVersion = "1.0.0-alpha4"
+        androidarchVersion = "1.0.0-alpha5"
 
         dagger2Version = "2.11"
 

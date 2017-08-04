@@ -1,0 +1,70 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+}
+
+dependencies {
+    kapt "com.google.guava:guava:$kapt_guavaVersion"
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.android.databinding:compiler:$gradleToolsVersion"
+    kapt "android.arch.lifecycle:compiler:$androidarchVersion"
+    kapt "android.arch.persistence.room:compiler:$androidarchVersion"
+
+    compile "com.android.support:leanback-v17:$supportLibVersion"
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    compile "android.arch.lifecycle:runtime:$androidarchVersion"
+    compile "android.arch.lifecycle:extensions:$androidarchVersion"
+    compile "android.arch.persistence.room:runtime:$androidarchVersion"
+    //compile "android.arch.persistence.room:rxjava2:$androidarchVersion"
+
+    compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    compile "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+    compile "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
+
+    compile "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
+    compile "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
+
+    compile "com.jakewharton.timber:timber:$timberVersion"
+
+    compile project(':common-dagger')
+    compile project(':common-rx2')
+
+    testCompile "junit:junit:$test_junitVersion"
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
+    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testCompile "org.apache.commons:commons-lang3:$commonsLangVersion"
+    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
+    testCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+}
