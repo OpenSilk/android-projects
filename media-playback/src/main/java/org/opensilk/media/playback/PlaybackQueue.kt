@@ -3,6 +3,7 @@ package org.opensilk.media.playback
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.media.session.MediaSession.*
+import io.reactivex.Maybe
 import io.reactivex.Single
 import org.opensilk.media.MediaMeta
 import org.opensilk.media.toMediaItem
@@ -12,6 +13,8 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
+
+class NoCurrentItemException: Exception("Queue is not initialized")
 
 /**
  * Created by drew on 2/24/17.
@@ -23,32 +26,35 @@ constructor() {
     private val mIdGen = AtomicLong(1)
     private val mQueue = LinkedList<QueueItem>()
     private val mHistory = LinkedList<Long>()
-    private var mCurrent: QueueItem = EMPTY_ITEM
+    private var mCurrent = -1
+    private var mWrap = true
 
-    companion object {
-        val EMPTY_DESCRIPTION: MediaDescription = MediaDescription.Builder().build()
-        val EMPTY_ITEM: QueueItem = QueueItem(EMPTY_DESCRIPTION, 0)
+    fun setWrap(wrap: Boolean) {
+        mWrap = wrap
     }
 
     fun getCurrent(): Single<QueueItem> {
         return Single.create { s ->
-            if (mCurrent == EMPTY_ITEM) {
-                s.onError(NoSuchElementException())
+            if (mCurrent < 0) {
+                s.onError(NoCurrentItemException())
                 return@create
             }
-            s.onSuccess(mCurrent)
+            s.onSuccess(mQueue[mCurrent])
         }
     }
 
-    fun getNext(): Single<QueueItem> {
-        return Single.create { s ->
-            var idx = mQueue.indexOf(mCurrent)
-            if (idx < 0) {
-                s.onError(NoSuchElementException())
+    fun getNext(): Maybe<QueueItem> {
+        return Maybe.create { s ->
+            if (mCurrent < 0) {
+                s.onError(NoCurrentItemException())
                 return@create
             }
-            idx += 1
+            var idx = mCurrent + 1
             if (idx >= mQueue.size) {
+                if (!mWrap) {
+                    s.onComplete()
+                    return@create
+                }
                 idx = 0
             }
             val nxt = mQueue[idx]
@@ -56,60 +62,55 @@ constructor() {
         }
     }
 
-    fun goToPrevious(): Single<QueueItem> {
-        return Single.create { s ->
+    fun goToPrevious(): Maybe<QueueItem> {
+        return Maybe.create { s ->
             if (mHistory.isEmpty()) {
-                s.onError(NoSuchElementException())
+                s.onComplete()
                 return@create
             }
             val id = mHistory.removeLast()
-            val nxt = mQueue.firstOrNull { it.queueId == id }
-            if (nxt == null) {
+            val nxt = mQueue.indexOfLast { it.queueId == id }
+            if (nxt < 0) {
                 s.onError(NoSuchElementException())
                 return@create
             }
             mCurrent = nxt
-            s.onSuccess(nxt)
+            s.onSuccess(mQueue[nxt])
         }
     }
 
-    fun goToNext(): Single<QueueItem> {
-        return Single.create { s ->
-            var idx = mQueue.indexOf(mCurrent)
-            if (idx < 0) {
-                s.onError(NoSuchElementException())
+    fun goToNext(): Maybe<QueueItem> {
+        return Maybe.create { s ->
+            if (mCurrent < 0) {
+                s.onError(NoCurrentItemException())
                 return@create
             }
-            idx += 1
+            var idx = mCurrent + 1
             if (idx >= mQueue.size) {
+                if (!mWrap) {
+                    s.onComplete()
+                    return@create
+                }
                 idx = 0
             }
-            val nxt = mQueue[idx]
-            if (mCurrent.queueId > 0) {
-                mHistory.add(mCurrent.queueId)
-            }
-            mCurrent = nxt
-            s.onSuccess(nxt)
+            mHistory.add(mQueue[mCurrent].queueId)
+            mCurrent = idx
+            s.onSuccess(mQueue[mCurrent])
         }
     }
 
     fun goToItem(itemId: Long): Single<QueueItem> {
         return Single.create { s ->
-            val nxt = mQueue.firstOrNull { it.queueId == itemId }
-            if (nxt == null) {
+            val nxt = mQueue.indexOfFirst { it.queueId == itemId }
+            if (nxt < 0) {
                 s.onError(NoSuchElementException())
                 return@create
             }
-            val idx = mQueue.indexOf(nxt)
-            if (idx < 0) {
-                s.onError(NoSuchElementException())
-                return@create
+            if (mCurrent >= 0) {
+                mHistory.add(mQueue[mCurrent].queueId)
             }
-            if (mCurrent.queueId > 0) {
-                mHistory.add(mCurrent.queueId)
-            }
-            mCurrent = mQueue[idx]
-            s.onSuccess(mCurrent)
+            mCurrent = nxt
+            s.onSuccess(mQueue[mCurrent])
         }
     }
 
@@ -120,7 +121,7 @@ constructor() {
     fun add(item: QueueItem) : Boolean {
         val success = mQueue.add(item)
         if (success && mQueue.size == 1) {
-            mCurrent = item
+            mCurrent = 0
         }
         return success
     }
@@ -134,21 +135,25 @@ constructor() {
     }
 
     fun remove(itemId: Long) : Boolean {
-        var idx = mQueue.indexOf(mCurrent)
-        val success = mQueue.removeIf { it.queueId == itemId }
-        if (success && mCurrent.queueId == itemId) {
-            if (idx < 0 || idx >= mQueue.size) {
-                idx = 0 //reset if last item
-            }
-            mCurrent = mQueue[idx]
+        val idx = mQueue.indexOfFirst { it.queueId == itemId }
+        if (idx < 0) {
+            return false
         }
-        return success
+        mQueue.removeAt(idx)
+        if (mCurrent >= mQueue.size) {
+            if (mWrap) {
+                mCurrent = 0
+            } else {
+                mCurrent = -1
+            }
+        }
+        return true
     }
 
     fun clear() {
         mQueue.clear()
         mHistory.clear()
-        mCurrent = EMPTY_ITEM
+        mCurrent = -1
     }
 
     fun get(): List<QueueItem> {
