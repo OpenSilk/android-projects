@@ -149,10 +149,10 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         mViewModel.fileInfo.observe(this, LiveDataObserver {
             mFileInfoRow.fileInfo = it
         })
-        mViewModel.resumePosition.observe(this, LiveDataObserver { pos ->
-            if (pos > 0) {
+        mViewModel.resumeInfo.observe(this, LiveDataObserver { (lastPosition, lastCompletion) ->
+            if (lastCompletion in 1..979) {
                 mOverviewActionsAdapter.set(POS_RESUME, Action(ACTIONID_RESUME,
-                        getString(R.string.btn_resume) + " (${humanReadableDuration(pos)})"))
+                        getString(R.string.btn_resume) + " (${humanReadableDuration(lastPosition)})"))
                 mOverviewActionsAdapter.set(POS_RESTART, Action(ACTIONID_START_OVER,
                         getString(R.string.btn_restart)))
             } else {
@@ -228,6 +228,8 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
     }
 }
 
+data class ResumeInfo(val lastPosition: Long = 0, val lastCompletion: Int = 0)
+
 /**
  *
  */
@@ -237,7 +239,7 @@ class DetailViewModel
 ): ViewModel() {
     val videoDescription = MutableLiveData<VideoDescInfo>()
     val fileInfo = MutableLiveData<VideoFileInfo>()
-    val resumePosition = MutableLiveData<Long>()
+    val resumeInfo = MutableLiveData<ResumeInfo>()
 
     private val disponables = CompositeDisposable()
 
@@ -283,10 +285,14 @@ class DetailViewModel
                 .startWith(true)
                 .observeOn(AppSchedulers.diskIo)
                 .flatMapSingle {
-                    mClient.getLastPlaybackPosition(mediaRef).onErrorReturn { 0 }
+                    Single.zip<Long, Int, ResumeInfo>(
+                            mClient.getLastPlaybackPosition(mediaRef),
+                            mClient.getLastPlaybackCompletion(mediaRef),
+                            BiFunction { pos, comp -> ResumeInfo(pos, comp) }
+                    ).onErrorReturn { ResumeInfo() }
                 }
                 .subscribeIgnoreError(Consumer {
-                    resumePosition.postValue(it)
+                    resumeInfo.postValue(it)
                 })
         disponables.add(s)
     }
