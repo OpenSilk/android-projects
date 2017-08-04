@@ -188,6 +188,11 @@ constructor(
                 changeState(STATE_BUFFERING)
             }
             ExoPlayer.STATE_ENDED -> {
+                //update pos on last played
+                mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
+                    val ref = newMediaRef(item.description.mediaId)
+                    mDbClient.setLastPlaybackPosition(ref, mExoPlayer.duration, mExoPlayer.duration)
+                })
                 mQueue.goToNext().subscribe({ item ->
                     val meta = item.description._getMediaMeta()
                     prepareMedia(meta)
@@ -304,7 +309,7 @@ constructor(
                             newMediaRef(it.mediaId) != mediaRef
                         }.firstOrError(),
                         //get playback position for resume
-                        mDbClient.getLastPlaybackPosition(mediaRef),
+                        mDbClient.getLastPlaybackPosition(mediaRef).onErrorReturn { 0 },
                         BiFunction { list, pos -> MetaWithPos(list, pos) }
                 ).subscribe({ mwp ->
                     val meta = mwp.meta
@@ -363,6 +368,12 @@ constructor(
             Timber.i("Ignoring duplicate pause() call")
             return
         }
+        //save current pos
+        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
+            val ref = newMediaRef(item.description.mediaId)
+            mDbClient.setLastPlaybackPosition(ref,
+                    mExoPlayer.currentPosition, mExoPlayer.duration)
+        })
         pause()
         changeState(STATE_PAUSED)
     }
@@ -378,6 +389,11 @@ constructor(
 
     override fun onSkipToNext() {
         Timber.d("onSkipToNext()")
+        //clear last pos for current item
+        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
+            val ref = newMediaRef(item.description.mediaId)
+            mDbClient.setLastPlaybackPosition(ref, 0, 1)
+        })
         mQueue.goToNext().subscribe({
             val meta = it.description._getMediaMeta()
             pause()
@@ -394,6 +410,11 @@ constructor(
 
     override fun onSkipToPrevious() {
         Timber.d("onSkipToPrevious()")
+        //clear last pos for current item
+        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
+            val ref = newMediaRef(item.description.mediaId)
+            mDbClient.setLastPlaybackPosition(ref, 0, 1)
+        })
         mQueue.goToPrevious().subscribe({
             val meta = it.description._getMediaMeta()
             pause()
@@ -420,6 +441,12 @@ constructor(
 
     override fun onStop() {
         Timber.d("onStop()")
+        //save current pos
+        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
+            val ref = newMediaRef(item.description.mediaId)
+            mDbClient.setLastPlaybackPosition(ref,
+                    mExoPlayer.currentPosition, mExoPlayer.duration)
+        })
         stop()
         changeState(STATE_STOPPED)
     }
