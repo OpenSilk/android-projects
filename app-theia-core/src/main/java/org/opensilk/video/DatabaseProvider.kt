@@ -142,6 +142,9 @@ class DatabaseProvider: ContentProvider() {
                 realSelection = "v._id=${uri.lastPathSegment}"
                 realSelectionArgs = null
             }
+            DatabaseMatches.PLAYBACK_POSITION -> {
+                table = "media_position"
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
         if (id != -1L) {
@@ -252,6 +255,10 @@ class DatabaseProvider: ContentProvider() {
                 } else {
                     return null
                 }
+            }
+            DatabaseMatches.PLAYBACK_POSITION -> {
+                db.insertWithOnConflict("media_position", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                return Uri.EMPTY
             }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }

@@ -45,6 +45,8 @@ object DatabaseMatches {
 
     val UPNP_VIDEOS = 61
     val UPNP_VIDEOS_ONE = 62
+
+    val PLAYBACK_POSITION = 71
 }
 
 /**
@@ -93,6 +95,8 @@ class DatabaseUris
 
         matcher.addURI(mAuthority, "upnp/video", DatabaseMatches.UPNP_VIDEOS)
         matcher.addURI(mAuthority, "upnp/video/#", DatabaseMatches.UPNP_VIDEOS_ONE)
+
+        matcher.addURI(mAuthority, "playback/position", DatabaseMatches.PLAYBACK_POSITION)
     }
 
     private fun base(): Uri.Builder {
@@ -221,6 +225,10 @@ class DatabaseUris
 
     fun upnpVideo(id: Long): Uri {
         return ContentUris.withAppendedId(upnpVideos(), id)
+    }
+
+    fun playbackPosition(): Uri {
+        return base().appendPath("playback").appendPath("position").build()
     }
 
 }

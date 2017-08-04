@@ -7,7 +7,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import javax.inject.Inject
 
-const private val VERSION = 19
+const private val VERSION = 20
 
 /**
  * Created by drew on 7/18/17.
@@ -135,8 +135,9 @@ class Database
             db.execSQL("DROP TABLE IF EXISTS media_position")
             db.execSQL("CREATE TABLE media_position (" +
                     "_display_name TEXT NOT NULL PRIMARY KEY, " +
-                    "last_played INTEGER, " + //milli
-                    "last_position INTEGER DEFAULT -1 " +
+                    "last_played INTEGER NOT NULL, " + //milli
+                    "last_position INTEGER NOT NULL, " +
+                    "last_completion INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS upnp_device")
             db.execSQL("CREATE TABLE upnp_device (" +

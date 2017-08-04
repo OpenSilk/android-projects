@@ -209,4 +209,12 @@ fun formatTime(seconds: Long, sb: StringBuilder) {
     sb.append(seconds)
 }
 
+/**
+ * myriad scale (0-1000)
+ */
+fun calculateCompletion(current: Long, duration: Long): Int {
+    //permyriad calculation (no floating point)
+    return ((1000*current + duration/2)/duration).toInt()
+}
+
 

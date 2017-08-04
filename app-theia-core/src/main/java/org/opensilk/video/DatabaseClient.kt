@@ -12,9 +12,11 @@ import dagger.Binds
 import dagger.Module
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.functions.Consumer
 import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.cancellationSignal
+import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
 import org.opensilk.tmdb.api.model.Image
 import org.opensilk.tmdb.api.model.ImageList
@@ -155,11 +157,59 @@ class DatabaseClient
     }
 
     override fun getLastPlaybackPosition(mediaRef: MediaRef): Single<Long> {
-        return Single.just(0)
+        when (mediaRef.kind) {
+            UPNP_VIDEO -> {
+                return getUpnpVideo(mediaRef.mediaId as UpnpVideoId).flatMap { meta ->
+                    Single.create<Long> { s ->
+                        mResolver.query(mUris.playbackPosition(), arrayOf("last_position"),
+                                "_display_name=?", arrayOf(meta.displayName), null, null)?.use { c ->
+                            if (c.moveToFirst()) {
+                                s.onSuccess(c.getLong(0))
+                            } else {
+                                s.onError(NoSuchItemException())
+                            }
+                        } ?: s.onError(VideoDatabaseMalfuction())
+                    }
+                }
+            } else -> TODO()
+        }
     }
 
-    override fun setLastPlaybackPosition(mediaRef: MediaRef) {
+    fun getLastPlaybackCompletion(mediaRef: MediaRef): Single<Int> {
+        when (mediaRef.kind) {
+            UPNP_VIDEO -> {
+                return getUpnpVideo(mediaRef.mediaId as UpnpVideoId).flatMap { meta ->
+                    Single.create<Int> { s ->
+                        mResolver.query(mUris.playbackPosition(), arrayOf("last_completion"),
+                                "_display_name=?", arrayOf(meta.displayName), null, null)?.use { c ->
+                            if (c.moveToFirst()) {
+                                s.onSuccess(c.getInt(0))
+                            } else {
+                                s.onError(NoSuchItemException())
+                            }
+                        } ?: s.onError(VideoDatabaseMalfuction())
+                    }
+                }
+            } else -> TODO()
+        }
+    }
 
+    override fun setLastPlaybackPosition(mediaRef: MediaRef, position: Long, duration: Long) {
+        when (mediaRef.kind) {
+            UPNP_VIDEO -> {
+                getUpnpVideo(mediaRef.mediaId as UpnpVideoId)
+                        .subscribeOn(AppSchedulers.diskIo)
+                        .subscribeIgnoreError(Consumer { meta ->
+                            val values = ContentValues()
+                            values.put("_display_name", meta.displayName)
+                            values.put("last_played", System.currentTimeMillis())
+                            values.put("last_position", position)
+                            values.put("last_completion", calculateCompletion(position, duration))
+                            mResolver.insert(mUris.playbackPosition(), values)
+                            postChange(UpnpVideoChange(mediaRef.mediaId as UpnpVideoId))
+                        })
+            } else -> TODO()
+        }
     }
 
     /**
