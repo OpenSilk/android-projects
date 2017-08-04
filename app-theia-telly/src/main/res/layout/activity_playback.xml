@@ -21,6 +21,8 @@
         tools:context="org.opensilk.video.telly.PlaybackActivity"
         tools:deviceIds="tv">
     <data>
+        <import type="android.view.View"/>
+        <import type="android.text.TextUtils"/>
         <variable
             name="desc"
             type="org.opensilk.video.VideoDescInfo"/>
@@ -32,13 +34,19 @@
             type="org.opensilk.video.telly.PlaybackActionsHandler"/>
         <variable
             name="progressVal"
-            type="Integer"/>
+            type="int"/>
         <variable
             name="currentTimeString"
             type="String"/>
         <variable
             name="totalTimeString"
             type="String"/>
+        <variable
+            name="errorMsg"
+            type="String"/>
+        <variable
+            name="isPlaying"
+            type="boolean"/>
     </data>
     <FrameLayout
         android:layout_width="match_parent"
@@ -89,7 +97,7 @@
                 android:text="@{desc.title}"
                 tools:text="title"
                 android:textSize="34sp"
-                style="?android:textAppearanceMedium"/>
+                style="?android:textAppearanceLarge"/>
 
             <TextView
                 android:id="@+id/system_time"
@@ -98,7 +106,7 @@
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
                 android:text="@{systemTimeString}"
-                style="?android:textAppearanceMedium"
+                style="?android:textAppearanceLarge"
                 tools:text="10:12"/>
 
         </RelativeLayout>
@@ -169,6 +177,8 @@
                     android:onClick="@{() -> actionHandler.toggleCaptions()}"
                     android:src="@drawable/lb_ic_cc"
                     style="?playbackControlsButtonStyle"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:background="?android:selectableItemBackgroundBorderless"/>
 
                 <ImageButton
@@ -178,6 +188,8 @@
                     android:onClick="@{() -> actionHandler.skipPrevious()}"
                     android:src="@drawable/lb_ic_skip_previous"
                     style="?playbackControlsButtonStyle"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:background="?android:selectableItemBackgroundBorderless"/>
 
                 <ImageButton
@@ -185,9 +197,12 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:onClick="@{() -> actionHandler.togglePlayPause()}"
-                    android:src="@drawable/lb_ic_play"
+                    android:src="@{isPlaying ? @drawable/lb_ic_pause : @drawable/lb_ic_play}"
                     style="?playbackControlsButtonStyle"
-                    android:background="?android:selectableItemBackgroundBorderless"/>
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:background="?android:selectableItemBackgroundBorderless"
+                    tools:src="@drawable/lb_ic_play"/>
 
                 <ImageButton
                     android:id="@+id/action_skip_next"
@@ -196,6 +211,8 @@
                     android:onClick="@{() -> actionHandler.skipNext()}"
                     android:src="@drawable/lb_ic_skip_next"
                     style="?playbackControlsButtonStyle"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:background="?android:selectableItemBackgroundBorderless"/>
 
                 <ImageButton
@@ -205,11 +222,40 @@
                     android:onClick="@{() -> actionHandler.enterPip()}"
                     android:src="@drawable/lb_ic_pip"
                     style="?playbackControlsButtonStyle"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:background="?android:selectableItemBackgroundBorderless"/>
 
             </LinearLayout>
 
         </RelativeLayout>
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:visibility="@{(TextUtils.isEmpty(errorMsg)) ? View.GONE : View.VISIBLE}">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/playback_error"
+                android:textAppearance="?android:textAppearanceMedium"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{errorMsg}"
+                tools:text="Unable to play video"
+                android:textAppearance="?android:textAppearanceMedium"
+                />
+
+        </LinearLayout>
+
 
     </FrameLayout>
 </layout>

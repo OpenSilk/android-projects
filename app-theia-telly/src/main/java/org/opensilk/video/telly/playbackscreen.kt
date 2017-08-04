@@ -340,15 +340,21 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         })
         mViewModel.playbackState.observe(this, LiveDataObserver { state ->
             mPlaybackState = state.state
+            mBinding.isPlaying = state.state == PlaybackState.STATE_PLAYING
             when (state.state) {
                 PlaybackState.STATE_PLAYING -> {
                     postOverlayHideRunner()
+                    mBinding.actionPlayPause.setImageResource(R.drawable.lb_ic_pause)
                 }
                 PlaybackState.STATE_PAUSED -> {
                     animateOverlayIn()
                 }
                 PlaybackState.STATE_STOPPED -> {
                     finish()
+                }
+                PlaybackState.STATE_ERROR -> {
+                    mBinding.errorMsg = state.errorMessage?.toString()
+                            ?: getString(R.string.unknown_error)
                 }
             }
         })

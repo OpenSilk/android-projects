@@ -46,6 +46,7 @@ class PlaybackActivityUITest {
         assertThat(mediaId).isEqualTo(testUpnpVideoMetas()[0].mediaId)
     }
 
+    /*
     @Test
     fun test_media_title_is_displayed_and_updated() {
         Espresso.onView(ViewMatchers.withId(R.id.media_title)).check(ViewAssertions.matches(
@@ -60,6 +61,7 @@ class PlaybackActivityUITest {
                 ViewMatchers.withText("Video 2")
         ))
     }
+    */
 
     @Test
     fun test_action_captions_btn_hides_subtitles() {
