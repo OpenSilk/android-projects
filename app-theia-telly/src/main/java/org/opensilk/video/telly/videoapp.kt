@@ -32,7 +32,6 @@ import javax.inject.Singleton
                 FolderModule::class,
                 DetailModule::class,
                 PlaybackModule::class,
-                PlaybackServiceModule::class,
                 MediaProviderModule::class,
                 DatabaseProviderModule::class,
                 LookupModule::class
@@ -83,7 +82,6 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
     @Inject lateinit var mDetailBuilder: DetailComponent.Builder
     @Inject lateinit var mPlaybackBuilder: PlaybackComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
-    @Inject lateinit var mPlaybackServiceBuilder: PlaybackServiceComponent.Builder
     @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
 
     /**
@@ -105,8 +103,6 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
             foo.daggerComponent(mPlaybackBuilder, foo).inject(foo)
         } else if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.build().inject(foo)
-        } else if (foo is PlaybackService) {
-            mPlaybackServiceBuilder.build().inject(foo)
         } else if (foo is DatabaseProvider) {
             mDatabaseProviderBuilder.build().inject(foo)
         } else {

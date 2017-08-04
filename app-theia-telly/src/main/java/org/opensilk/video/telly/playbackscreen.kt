@@ -1,6 +1,7 @@
 package org.opensilk.video.telly
 
 import android.animation.Animator
+import android.app.PendingIntent
 import android.arch.lifecycle.*
 import android.content.*
 import android.content.res.Configuration
@@ -82,18 +83,36 @@ interface PlaybackActionsHandler {
 
 class PlaybackViewModel
 @Inject constructor(
-        @ForApplication private val mContext: Context
-) : ViewModel(), LifecycleObserver,
-        MediaBrowserCallback.Listener, MediaControllerCallback.Listener,
+        @ForApplication private val mContext: Context,
+        private val mPlaybackSession: PlaybackSession
+) : ViewModel(), LifecycleObserver, MediaControllerCallback.Listener,
         SimpleExoPlayer.VideoListener, TextRenderer.Output {
 
-    private lateinit var mMediaRef: MediaRef
-    private lateinit var mPlaybackExtras: PlaybackExtras
+    private val mExoPlayer = mPlaybackSession.player
+    private val mTransportControls = mPlaybackSession.controller.transportControls
+
+    private val mPlaybackState: PlaybackState
+            get() = mPlaybackSession.controller.playbackState ?: PlaybackState.Builder().build()
+
+    private val mMediaMetadata: MediaMetadata?
+            get() = mPlaybackSession.controller.metadata
+
+    private val mMediaControllerCallback = MediaControllerCallback(this)
+
+    init {
+        mPlaybackSession.controller.registerCallback(mMediaControllerCallback)
+        mPlaybackSession.session.setMediaButtonReceiver(null) //recommends by android
+        mExoPlayer.setVideoListener(this)
+        mExoPlayer.setTextOutput(this)
+    }
 
     fun onMediaRef(mediaRef: MediaRef, playbackExtras: PlaybackExtras) {
-        mMediaRef = mediaRef
-        mPlaybackExtras = playbackExtras
-        loadMediaRef()
+        mTransportControls.playFromMediaId(mediaRef.toJson(), playbackExtras.bundle())
+
+        val intent = Intent(mContext, PlaybackActivity::class.java)
+                .setAction(ACTION_RESUME).putExtra(EXTRA_MEDIAID, mediaRef.toJson())
+        val pendingIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+        mPlaybackSession.session.setSessionActivity(pendingIntent)
     }
 
     val systemTime = MutableLiveData<String>()
@@ -117,62 +136,23 @@ class PlaybackViewModel
 
     override fun onCleared() {
         super.onCleared()
-        if (mMediaControllerCallbackRegistered) {
-            mMediaController.unregisterCallback(mMediaControllerCallback)
-        }
-        mExoPlayer?.clearVideoListener(this)
-        mExoPlayer?.clearTextOutput(this)
-        mBrowser.disconnect()
         stopProgressRunner()
-        mOnAcquireExoPlayer.clear()
+        mPlaybackSession.release()
     }
 
     /*
-     * start mediasession / browser stuffs
+     * start mediasession stuffs
      */
 
-    private var mBrowser: MediaBrowser = MediaBrowser(mContext,
-            ComponentName(mContext, PlaybackService::class.java), MediaBrowserCallback(this), null)
-    private lateinit var mMediaController: MediaController
-    private val mMediaControllerCallback = MediaControllerCallback(this)
-    private var mMediaControllerCallbackRegistered = false
-    private var mExoPlayer: SimpleExoPlayer? = null
-    private val mOnAcquireExoPlayer = ArrayDeque<Consumer<SimpleExoPlayer>>()
-    private var mConnectingBrowser = false
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun connectMediaBrowser() {
-        if (!mBrowser.isConnected && !mConnectingBrowser) {
-            mConnectingBrowser = true
-            mBrowser.connect()
-        }
-    }
-
-    private val mPlaybackState: PlaybackState
-        get() = if (isConnected) mMediaController.playbackState else
-            PlaybackState.Builder().setState(PlaybackState.STATE_NONE, 0, 1.0f).build()
-
-    private val isConnected: Boolean
-        get() = mBrowser.isConnected
-
-    private fun loadMediaRef() {
-        if (isConnected) {
-            mMediaController.transportControls.playFromMediaId(
-                    mMediaRef.toJson(), mPlaybackExtras.bundle())
-        }
-    }
-
     fun pausePlayback() {
-        if (isConnected) {
-            mMediaController.transportControls.pause()
-        }
+        mTransportControls.pause()
     }
 
     fun skipAhead() {
         if (mPlaybackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
             val offset = SystemClock.elapsedRealtime() - mPlaybackState.lastPositionUpdateTime
             val seek = mPlaybackState.position + offset + SKIP_AHEAD_MS
-            mMediaController.transportControls.seekTo(seek)
+            mTransportControls.seekTo(seek)
         }
     }
 
@@ -180,94 +160,35 @@ class PlaybackViewModel
         if (mPlaybackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
             val offset = SystemClock.elapsedRealtime() - mPlaybackState.lastPositionUpdateTime
             val seek = mPlaybackState.position + offset - SKIP_BEHIND_MS
-            mMediaController.transportControls.seekTo(seek)
+            mTransportControls.seekTo(seek)
         }
     }
 
-    /**
-     * Sets the surface view exoplayer is to use, if we have not acquired the exoplayer yet
-     * we add it to the queue, and set it when we acquire it.
-     */
     fun attachSurface(view: SurfaceView) {
-        mExoPlayer?.setVideoSurfaceView(view) ?: mOnAcquireExoPlayer.add(Consumer {
-            it.setVideoSurfaceView(view)
-        })
+        mExoPlayer.setVideoSurfaceView(view)
     }
 
-    /**
-     * Detach the surface
-     */
     fun detachSurface(view: SurfaceView) {
-        mExoPlayer?.clearVideoSurfaceView(view)
-    }
-
-    /*
-     * start browser callback
-     */
-
-    override fun onBrowserConnected() {
-        mConnectingBrowser = false
-        mMediaController = MediaController(mContext, mBrowser.sessionToken)
-        mMediaController.registerCallback(mMediaControllerCallback)
-        mMediaControllerCallbackRegistered = true
-        fetchExoPlayer()
-    }
-
-    override fun onBrowserDisconnected() {
-        mConnectingBrowser = false
-        if (mMediaControllerCallbackRegistered) {
-            mMediaController.unregisterCallback(mMediaControllerCallback)
-        }
-        mExoPlayer?.clearVideoListener(this)
-        mExoPlayer?.clearTextOutput(this)
-        mExoPlayer?.clearVideoSurface()
-        mExoPlayer = null
-    }
-
-    /*
-     * end browser callback
-     */
-
-    private fun fetchExoPlayer() {
-        mMediaController.sendCommand(CMD_GET_EXOPLAYER, bundle(), object : ResultReceiver(Handler(Looper.getMainLooper())) {
-            override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-                when (resultCode) {
-                    CMD_RESULT_OK -> {
-                        val binder = resultData!!.getBinder(CMD_RESULT_ARG1) as PlaybackSession.SessionBinder
-                        val player = binder.player
-                        player.setVideoListener(this@PlaybackViewModel)
-                        player.setTextOutput(this@PlaybackViewModel)
-                        while (!mOnAcquireExoPlayer.isEmpty()) {
-                            mOnAcquireExoPlayer.poll().accept(player)
-                        }
-                        mExoPlayer = player
-                        loadMediaRef()
-                    }
-                    else -> {
-                        throw RuntimeException("Invalid return value on CMD_GET_EXOPLAYER val=$resultCode")
-                    }
-                }
-            }
-        })
+        mExoPlayer.clearVideoSurfaceView(view)
     }
 
     fun togglePlayPause() {
         if (mPlaybackState.hasAction(PlaybackState.ACTION_PLAY)) {
-            mMediaController.transportControls.play()
+            mTransportControls.play()
         } else {
-            mMediaController.transportControls.pause()
+            mTransportControls.pause()
         }
     }
 
     fun skipPrevious() {
         if (mPlaybackState.hasAction(PlaybackState.ACTION_SKIP_TO_PREVIOUS)) {
-            mMediaController.transportControls.skipToPrevious()
+            mTransportControls.skipToPrevious()
         }
     }
 
     fun skipNext() {
         if (mPlaybackState.hasAction(PlaybackState.ACTION_SKIP_TO_NEXT)) {
-            mMediaController.transportControls.skipToNext()
+            mTransportControls.skipToNext()
         }
     }
 
@@ -309,13 +230,8 @@ class PlaybackViewModel
     }
 
     override fun onSessionDestroyed() {
-        if (mMediaControllerCallbackRegistered) {
-            mMediaController.unregisterCallback(mMediaControllerCallback)
-        }
-        mExoPlayer?.clearVideoListener(this)
-        mExoPlayer?.clearTextOutput(this)
-        mExoPlayer?.clearVideoSurface()
-        mBrowser.disconnect()
+        Timber.e("onSessionDestroyed()")
+        //we should be unregistered before destroy is called
     }
 
     override fun onAudioInfoChanged(info: MediaController.PlaybackInfo) {
@@ -355,11 +271,10 @@ class PlaybackViewModel
 
     private var mProgressDisposable = Disposables.disposed()
     private val mProgressRunner = Runnable {
-        val pbs = mPlaybackState
-        val current = pbs.position + if (pbs.state == PlaybackState.STATE_PLAYING) {
-            (SystemClock.elapsedRealtime() - pbs.lastPositionUpdateTime)
+        val current = mPlaybackState.position + if (mPlaybackState.state == PlaybackState.STATE_PLAYING) {
+            (SystemClock.elapsedRealtime() - mPlaybackState.lastPositionUpdateTime)
         } else 0L
-        val duration = mMediaController.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+        val duration = mMediaMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
 
         // update progress
         if (duration == 0L || duration < current) {
@@ -419,7 +334,11 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
             formatTime(current, mCurrentTimeStringBuilder)
             mBinding.currentTimeString = mCurrentTimeStringBuilder.toString()
         })
+        mViewModel.playbackCurrentProgress.observe(this, LiveDataObserver { current ->
+            mBinding.progressVal = current
+        })
         mViewModel.playbackState.observe(this, LiveDataObserver { state ->
+            mPlaybackState = state.state
             when (state.state) {
                 PlaybackState.STATE_PLAYING -> {
                     postOverlayHideRunner()
@@ -489,10 +408,10 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         super.onPause()
         Timber.d("onPause()")
         if (!isInPictureInPictureMode) {
-            val won = if (mPlaybackState == PlaybackState.STATE_PLAYING && !isFinishing)
-                requestVisibleBehind(true) else false
-            if (!won) {
-                mViewModel.pausePlayback()
+            if (mPlaybackState == PlaybackState.STATE_PLAYING) {
+                if (!requestVisibleBehind(true)) {
+                    mViewModel.pausePlayback()
+                }
             }
         }
     }
@@ -658,8 +577,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         return (mBinding.bottomBar.visibility != View.GONE) ||
                 (mBinding.topBar.visibility != View.GONE)
     }
-
-
 
 }
 

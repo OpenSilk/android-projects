@@ -22,7 +22,6 @@ import javax.inject.Singleton
                 FolderModule::class,
                 DetailModule::class,
                 PlaybackModule::class,
-                PlaybackServiceModule::class,
                 MediaProviderModule::class,
                 DatabaseProviderModule::class,
                 LookupModule::class

@@ -49,7 +49,6 @@
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"/>
 
         <service android:name="org.opensilk.video.UpnpHolderService"/>
-        <service android:name="org.opensilk.video.PlaybackService"/>
 
         <provider
             android:name="org.opensilk.video.DatabaseProvider"

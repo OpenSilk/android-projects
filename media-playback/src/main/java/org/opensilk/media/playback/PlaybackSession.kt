@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaMetadata
 import android.media.Rating
-import android.media.browse.MediaBrowser
+import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.media.session.PlaybackState.*
@@ -36,20 +36,8 @@ constructor(
         private val mRenderer: ExoPlayerRenderer
 ) : MediaSession.Callback() {
 
-    /**
-     * Allows us to pass a reference to this class through a bundle
-     * This is not valid for ipc.
-     * We use this so we can comply with mediasession api instead of
-     * doing out-of-band calls to set the surfaces
-     */
-    inner class SessionBinder: Binder() {
-        val player: SimpleExoPlayer
-            get() = mRenderer.player
-    }
-
     private val mMediaSession: MediaSession = MediaSession(mContext, BuildConfig.APPLICATION_ID)
     private var mMainHandler: Handler = Handler(Looper.getMainLooper())
-    private var mBinder = SessionBinder()
 
     private val mDataSourceFactory = DefaultDataSourceFactory(mContext,
             mContext.packageName + "/" + BuildConfig.VERSION_NAME)
@@ -59,8 +47,17 @@ constructor(
         mMediaSession.setPlaybackState(nv)
     })
 
+    val session: MediaSession
+        get() = mMediaSession
+
     val token: MediaSession.Token
         get() = mMediaSession.sessionToken
+
+    val controller: MediaController
+        get() = mMediaSession.controller
+
+    val player: SimpleExoPlayer
+        get() = mRenderer.player
 
     init {
         mMediaSession.setCallback(this, mMainHandler)
@@ -74,9 +71,8 @@ constructor(
             updateState(it)
             when (it.state) {
                 STATE_PAUSED, STATE_PLAYING -> {
-                    val rendererDuration = mRenderer.player.duration
-                    val metaDuration = mMediaSession.controller
-                            .metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0
+                    val rendererDuration = player.duration
+                    val metaDuration = controller.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0
                     if (rendererDuration != metaDuration) {
                         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
                             val meta = item.description._getMediaMeta()
@@ -93,10 +89,7 @@ constructor(
     fun release() {
         mMediaSession.isActive = false
         mMediaSession.release()
-
         mRenderer.release()
-
-
     }
 
     private fun newMediaSource(uri: Uri): MediaSource {
@@ -109,11 +102,6 @@ constructor(
 
     override fun onCommand(command: String, args: Bundle?, cb: ResultReceiver?) {
         Timber.d("onCommand(%s)", command)
-        when (command) {
-            CMD_GET_EXOPLAYER -> {
-                cb!!.send(CMD_RESULT_OK, bundle()._putBinder(CMD_RESULT_ARG1, mBinder))
-            }
-        }
     }
 
     override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
@@ -252,6 +240,7 @@ constructor(
     fun updateMetadata(meta: MediaMeta) {
         val bob = MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, meta.mediaId)
+                .putString(MediaMetadata.METADATA_KEY_TITLE, meta.title.elseIfBlank(meta.displayName))
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, meta.title.elseIfBlank(meta.displayName))
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, meta.subtitle)
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, meta.duration)
