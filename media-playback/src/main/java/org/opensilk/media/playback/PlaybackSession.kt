@@ -124,25 +124,36 @@ constructor(
      * AudioManager listener
      */
 
+    fun Int._stringifyAudioFocusChange(): String? {
+        return AudioManager::class.java.declaredFields.filter {
+            it.name.startsWith("AUDIOFOCUS_") && it.type == Int::class.java && it.get(null) == this
+        }.firstOrNull()?.name
+    }
+
     override fun onAudioFocusChange(focusChange: Int) {
-        Timber.d("onAudioFocusChange()")
-        when (focusChange) {
-            AudioManager.AUDIOFOCUS_LOSS,
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                mPlayOnFocusGain = false
-                if (mExoPlayer.playWhenReady) {
-                    onPause()
-                    mPlayOnFocusGain = focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+        Timber.d("onAudioFocusChange(${focusChange._stringifyAudioFocusChange()})")
+        if (focusChange < 0) { //focus lost
+            when (focusChange) {
+                AudioManager.AUDIOFOCUS_LOSS,
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                    mPlayOnFocusGain = false
+                    if (mExoPlayer.playWhenReady) {
+                        onPause()
+                        mPlayOnFocusGain = focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+                    }
+                }
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                    mExoPlayer.volume = VOLUME_DUCK
+                    mPlayOnFocusGain = true
+                }
+                AudioManager.AUDIOFOCUS_GAIN -> {
+
                 }
             }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                mExoPlayer.volume = VOLUME_DUCK
-            }
-            AudioManager.AUDIOFOCUS_GAIN -> {
-                mExoPlayer.volume = VOLUME_NORMAL
-                mExoPlayer.playWhenReady = mPlayOnFocusGain
-                mPlayOnFocusGain = false
-            }
+        } else { //focusgain
+            mExoPlayer.volume = VOLUME_NORMAL
+            mExoPlayer.playWhenReady = mPlayOnFocusGain
+            mPlayOnFocusGain = false
         }
     }
 
@@ -283,7 +294,7 @@ constructor(
         }
     }
 
-    private class MetaWithPos(val meta: MediaMeta, val pos: Long)
+    private class MetaWithPos(val list: List<MediaMeta>, val pos: Long)
 
     override fun onPlayFromMediaId(mediaId: String, extras: Bundle?) {
         Timber.d("onPlayFromMediaId(%s)", mediaId)
@@ -300,22 +311,21 @@ constructor(
         val playbackExtras = extras._playbackExtras()
         when (mediaRef.kind) {
             UPNP_VIDEO -> {
-                Single.zip<MediaMeta, Long, MetaWithPos>(
+                Single.zip<List<MediaMeta>, Long, MetaWithPos>(
                         mDbClient.siblingsOf(mediaRef).doOnNext {
                             //everyone gets added to the queue
                             mQueue.add(it)
-                        }.skipWhile {
-                            //but we only want to load ourselves
-                            newMediaRef(it.mediaId) != mediaRef
-                        }.firstOrError(),
+                        }.toList(),
                         //get playback position for resume
                         mDbClient.getLastPlaybackPosition(mediaRef).onErrorReturn { 0 },
                         BiFunction { list, pos -> MetaWithPos(list, pos) }
                 ).subscribe({ mwp ->
-                    val meta = mwp.meta
+                    val meta = mwp.list.first { newMediaRef(it.mediaId) == mediaRef }
                     val lastPlaybackPosition = if (playbackExtras.resume) mwp.pos else 0
                     //fixup the queue
-                    mQueue.get().first { newMediaRef(it.description.mediaId) == mediaRef }.let {
+                    mQueue.get().first {
+                        newMediaRef(it.description.mediaId) == mediaRef
+                    }.let {
                         mQueue.goToItem(it.queueId)
                     }
                     mMediaSession.setQueue(mQueue.get())
@@ -324,14 +334,17 @@ constructor(
                         play()
                     }
                 }, { t ->
-                    onStop()
+                    stop()
                     changeState(STATE_ERROR) {
                         it.setErrorMessage(t.message)
                     }
                 })
             }
-            UPNP_FOLDER -> {
-                TODO()
+            else -> {
+                stop()
+                changeState(STATE_ERROR) {
+                    it.setErrorMessage("Unsupported media kind=${mediaRef.kind}")
+                }
             }
         }
     }
