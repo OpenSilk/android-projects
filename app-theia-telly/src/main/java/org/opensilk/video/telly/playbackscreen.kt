@@ -104,6 +104,7 @@ class PlaybackViewModel
         mPlaybackSession.session.setMediaButtonReceiver(null) //recommends by android
         mExoPlayer.setVideoListener(this)
         mExoPlayer.setTextOutput(this)
+        mTransportControls.sendCustomAction(ACTION_SET_REPEAT, bundle(KEY_REPEAT, VAL_REPEAT_OFF))
     }
 
     fun onMediaRef(mediaRef: MediaRef, playbackExtras: PlaybackExtras) {
