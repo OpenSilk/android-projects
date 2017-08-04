@@ -14,4 +14,6 @@ interface MediaProviderClient {
     fun getMediaOverview(mediaRef: MediaRef): Single<String>
     fun getMediaArtworkUri(mediaRef: MediaRef): Single<Uri>
     fun siblingsOf(mediaRef: MediaRef): Observable<MediaMeta>
+    fun getLastPlaybackPosition(mediaRef: MediaRef): Single<Long>
+    fun setLastPlaybackPosition(mediaRef: MediaRef)
 }

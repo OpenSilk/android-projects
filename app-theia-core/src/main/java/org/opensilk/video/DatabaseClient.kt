@@ -154,6 +154,14 @@ class DatabaseClient
         }
     }
 
+    override fun getLastPlaybackPosition(mediaRef: MediaRef): Single<Long> {
+        return Single.just(0)
+    }
+
+    override fun setLastPlaybackPosition(mediaRef: MediaRef) {
+
+    }
+
     /**
      * Add a meta item describing a upnp device with a content directory service to the database
      * item should be created with Device.toMediaMeta
