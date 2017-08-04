@@ -208,6 +208,7 @@ class PlaybackViewModel
     }
 
     override fun onQueueChanged(queue: List<MediaSession.QueueItem>) {
+        Timber.d("onQueueChanged(size=${queue.size}")
     }
 
     override fun onQueueTitleChanged(title: String) {
