@@ -37,8 +37,7 @@ private val GRACE_PERIOD = 600_000L //10min
 class UpnpDevicesObserver
 @Inject constructor(
         private val mUpnpService: CDSUpnpService,
-        private val mDatabaseClient: DatabaseClient,
-        private val mUpnpBrowseScanner: UpnpBrowseScanner
+        private val mDatabaseClient: DatabaseClient
 ) : DefaultRegistryListener(), LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -130,23 +129,14 @@ class UpnpDevicesObserver
 
             override fun eventReceived(subscription: GENASubscription<out Service<*, *>>) {
                 val device = subscription.service.device
-                for ((key, value) in subscription.currentValues) {
+                val values = subscription.currentValues
+                for ((key, value) in values) {
                     Timber.d("${device.details.friendlyName}: $key: $value")
-                    when (key) {
-                        "SystemUpdateID" -> {
-                            val deviceId = UpnpDeviceId(device.identity.udn.identifierString)
-                            val updateId = value.value.toString().toLongOrNull()
-                            if (updateId != null) {
-                                mDatabaseClient.getUpnpDevice(deviceId).subscribeIgnoreError(Consumer { meta ->
-                                    if (meta.updateId != updateId) {
-                                        Timber.d("Starting scan on ${device.details.friendlyName}: " +
-                                                "lastUpdate=${meta.updateId} newUpdate=$updateId")
-                                        mUpnpBrowseScanner.scan(deviceId, updateId)
-                                    }
-                                })
-                            }
-                        }
-                    }
+                }
+                if (values.containsKey("SystemUpdateID")) {
+                    handleSystemUpdateId(
+                            values["SystemUpdateID"]?.value?.toString()?.toLong(),
+                            UpnpDeviceId(device.identity.udn.identifierString))
                 }
             }
 
@@ -181,6 +171,20 @@ class UpnpDevicesObserver
             }
             mSubscriptions.clear()
         }
+    }
+
+    /**
+     * compares new updateId with old value, and updates if changed
+     */
+    private fun handleSystemUpdateId(updateId: Long?, deviceId: UpnpDeviceId) {
+        if (updateId == null) return
+        mDatabaseClient.getUpnpDevice(deviceId)
+                .subscribeIgnoreError(Consumer { meta ->
+                    if (meta.updateId != updateId) {
+                        mDatabaseClient.setUpnpDeviceSystemUpdateId(deviceId, updateId)
+                        mDatabaseClient.postChange(UpnpUpdateIdChange())
+                    }
+                })
     }
 
     private val mHandler = SuspendHandler(WeakReference(mUpnpService))

@@ -91,6 +91,7 @@ private class DefaultContentResolverGlue(private val mResolver: ContentResolver)
 class VideoDatabaseMalfuction: Exception()
 
 sealed class DatabaseChange
+class UpnpUpdateIdChange: DatabaseChange()
 class UpnpDeviceChange: DatabaseChange()
 class UpnpFolderChange(val folderId: UpnpFolderId): DatabaseChange()
 class UpnpVideoChange(val videoId: UpnpVideoId): DatabaseChange()

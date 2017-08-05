@@ -1,11 +1,10 @@
 package org.opensilk.video
 
+import io.reactivex.Completable
+import io.reactivex.CompletableSource
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.disposables.Disposable
-import io.reactivex.disposables.Disposables
 import io.reactivex.functions.Function
-import org.fourthline.cling.model.action.ActionException
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
 import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.Service
@@ -22,131 +21,46 @@ import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
 import org.opensilk.upnp.cds.featurelist.BasicView
 import timber.log.Timber
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Created by drew on 7/29/17.
  */
-@Singleton
-class UpnpBrowseScanner
+class UpnpBrowseLoader
 @Inject constructor(
         private val mUpnpService: CDSUpnpService,
         private val mDatabaseClient: DatabaseClient
 ) {
 
-    private val runningSessions = HashSet<Session>()
-
-    inner class Session(val upnpDeviceId: UpnpDeviceId) {
-
-        val mQueue = LinkedBlockingQueue<UpnpFolderId>()
-
-        var sub: Disposable = Disposables.fromAction {
-            synchronized(runningSessions) {
-                runningSessions.remove(this)
+    fun completable(upnpFolderId: UpnpFolderId, updateId: Long = 0): Completable {
+        return if (upnpFolderId.folderId == "0") {
+            //for root folder, look for feature list, falling back to normal browse
+            cachedService(upnpFolderId).flatMap { service ->
+                featureList(service, upnpFolderId)
+                        .onErrorResumeNext(Function { browse(service, upnpFolderId) })
             }
-        }
-
-        fun enqueue(folderId: UpnpFolderId) {
-            mQueue.offer(folderId)
-            mDatabaseClient.incrementUpnpDeviceScanning(UpnpDeviceId(folderId.deviceId))
-        }
-
-        fun runQueue(): Observable<UpnpFolderId> {
-            return Observable.create<UpnpFolderId> { s ->
-                s.setCancellable {
-                    synchronized(runningSessions) {
-                        runningSessions.remove(this)
-                    }
-                }
-                while (!s.isDisposed) {
-                    try {
-                        val next = mQueue.poll(60, TimeUnit.SECONDS)
-                        if (next != null) {
-                            s.onNext(next)
-                        }
-                    } catch (e: InterruptedException) {
-                        if (mQueue.isEmpty()) {
-                            break
-                        }
+        } else {
+            //else just do browse
+            cachedService(upnpFolderId).flatMap { service ->
+                browse(service, upnpFolderId)
+            }
+        }.toList().flatMapCompletable { itemList ->
+            CompletableSource { s ->
+                mDatabaseClient.hideChildrenOf(upnpFolderId)
+                for (item in itemList) {
+                    //insert/update remote item in database
+                    val ref = newMediaRef(item.mediaId)
+                    when (ref.kind) {
+                        UPNP_FOLDER -> mDatabaseClient.addUpnpFolder(item)
+                        UPNP_VIDEO -> mDatabaseClient.addUpnpVideo(item)
+                        else -> Timber.e("Invalid kind slipped through %s for %s", ref.kind, item.displayName)
                     }
                 }
                 s.onComplete()
             }
         }
-
     }
-
-    private class FolderWithMetaList(val folderId: UpnpFolderId, val list: List<MediaMeta>)
-
-    fun scan(upnpDeviceId: UpnpDeviceId, updateId: Long) {
-        val session = Session(upnpDeviceId)
-        //cancel any previous scan sessions so we can start fresh
-        synchronized(runningSessions) {
-            runningSessions.firstOrNull { it.upnpDeviceId == upnpDeviceId }?.sub?.dispose()
-            runningSessions.add(session)
-        }
-        session.enqueue(UpnpFolderId(upnpDeviceId.deviceId, "0"))
-        session.sub = session.runQueue().subscribeOn(AppSchedulers.newThread).flatMapSingle { folderId ->
-            return@flatMapSingle if (folderId.folderId == "0") {
-                //for root folder, look for feature list, falling back to normal browse
-                cachedService(folderId).flatMap { service ->
-                    featureList(service, folderId).onErrorResumeNext(Function { browse(service, folderId) })
-                }
-            } else {
-                //else just do browse
-                cachedService(folderId).flatMap { service ->
-                    browse(service, folderId)
-                }
-            }.toList().map { list ->
-                //carry along the folder id with the list
-                FolderWithMetaList(folderId, list)
-            }
-        }.subscribe({ fwl ->
-            mDatabaseClient.hideChildrenOf(fwl.folderId)
-            //loop the remote meta
-            for (ext in fwl.list) {
-                //insert/update remote item in database
-                val ref = newMediaRef(ext.mediaId)
-                when (ref.kind) {
-                    UPNP_FOLDER -> {
-                        mDatabaseClient.addUpnpFolder(ext)
-                        //scan children as well
-                        session.enqueue(ref.mediaId as UpnpFolderId)
-                    }
-                    UPNP_VIDEO -> mDatabaseClient.addUpnpVideo(ext)
-                    else -> Timber.e("Invalid kind slipped through %s for %s", ref.kind, ext.displayName)
-                }
-            }
-            mDatabaseClient.postChange(UpnpFolderChange(fwl.folderId))
-            mDatabaseClient.decrementUpnpDeviceScanning(UpnpDeviceId(fwl.folderId.deviceId))
-        }, { t ->
-            mDatabaseClient.setUpnpDeviceSystemUpdateId(upnpDeviceId, 0)
-            if (t is BrowseExceptionWithFolderId) {
-                val tt = t.cause
-                if (tt is ActionException) {
-                    Timber.e(tt, "UpnpBrowseScanner: ActionException code=${tt.errorCode} msg=${tt.message}")
-                    when (tt.errorCode) {
-                        801 -> {
-                            //TODO show user access denied
-                        }
-                    }
-                } else {
-                    Timber.e(tt, "UpnpBrowseScanner: msg=${tt?.message}")
-                }
-            } else {
-                Timber.e(t, "UpnpBrowseScanner: msg=${t.message}")
-            }
-        }, {
-            Timber.d("Scan complete for $upnpDeviceId")
-            mDatabaseClient.setUpnpDeviceSystemUpdateId(upnpDeviceId, updateId)
-        })
-    }
-
-    class BrowseExceptionWithFolderId(val folderId: UpnpFolderId, cause: Throwable): Exception(cause)
 
     /**
      * performs the browse
@@ -159,11 +73,11 @@ class UpnpBrowseScanner
                 return@create
             }
             if (browse.error.get() != null) {
-                subscriber.onError(BrowseExceptionWithFolderId(parentId, browse.error.get()))
+                subscriber.onError(browse.error.get())
                 return@create
             }
             if (browse.result.get() == null) {
-                subscriber.onError(BrowseExceptionWithFolderId(parentId, NullPointerException()))
+                subscriber.onError(NullPointerException())
                 return@create
             }
             val result = browse.result.get()
@@ -206,7 +120,7 @@ class UpnpBrowseScanner
                 }
 
             } catch (e: Exception) {
-                subscriber.onError(BrowseExceptionWithFolderId(parentId, e))
+                subscriber.onError(e)
             }
         }
     }
