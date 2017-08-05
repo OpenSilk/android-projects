@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.CancellationSignal
 import dagger.Binds
 import dagger.Module
+import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.Consumer
@@ -130,12 +131,6 @@ class DatabaseClient
         }
     }
 
-    override fun getMediaOverview(mediaRef: MediaRef): Single<String> {
-        return when (mediaRef.kind) {
-            UPNP_VIDEO -> getUpnpVideoOverview(mediaRef.mediaId as UpnpVideoId)
-            else -> TODO()
-        }
-    }
 
     override fun getMediaArtworkUri(mediaRef: MediaRef): Single<Uri> {
         TODO("not implemented")
@@ -212,6 +207,14 @@ class DatabaseClient
         }
     }
 
+
+    fun getMediaOverview(mediaRef: MediaRef): Maybe<String> {
+        return when (mediaRef.kind) {
+            UPNP_VIDEO -> getUpnpVideoOverview(mediaRef.mediaId as UpnpVideoId)
+            else -> TODO()
+        }
+    }
+
     /**
      * Add a meta item describing a upnp device with a content directory service to the database
      * item should be created with Device.toMediaMeta
@@ -228,8 +231,7 @@ class DatabaseClient
             cv.put("artwork_uri", meta.artworkUri.toString())
         }
         cv.put("available", 1)
-        cv.put("update_id", meta.updateId)
-        cv.put("scanning", 0)
+        cv.put("scanning", 0) //reset here
         return mResolver.insert(mUris.upnpDevices(), cv) ?: Uri.EMPTY
     }
 
@@ -274,6 +276,12 @@ class DatabaseClient
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
+    }
+
+    fun setUpnpDeviceSystemUpdateId(deviceId: UpnpDeviceId, updateId: Long): Boolean {
+        val values = ContentValues()
+        values.put("update_id", updateId)
+        return mResolver.update(mUris.upnpDevices(), values, "device_id=?", arrayOf(deviceId.deviceId)) != 0
     }
 
     fun incrementUpnpDeviceScanning(deviceId: UpnpDeviceId): Boolean {
@@ -550,8 +558,8 @@ class DatabaseClient
     /**
      *
      */
-    fun getUpnpVideoOverview(videoId: UpnpVideoId): Single<String> {
-        return Single.create { s ->
+    fun getUpnpVideoOverview(videoId: UpnpVideoId): Maybe<String> {
+        return Maybe.create { s ->
             mResolver.query(uris.upnpVideos(),
                     arrayOf("e.overview as episode_overview",
                             "m.overview as movie_overview"),
@@ -564,7 +572,7 @@ class DatabaseClient
                     } else if (!c.isNull(1)) {
                         s.onSuccess(c.getString(1))
                     } else {
-                        s.onError(NullPointerException())
+                        s.onComplete()
                     }
                 } else {
                     s.onError(NoSuchItemException())

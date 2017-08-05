@@ -253,10 +253,9 @@ class DetailViewModel
     fun subscribeVideoDescription(mediaRef: MediaRef) {
         val s = Single.zip<MediaMeta, String, VideoDescInfo>(
                 mClient.getMediaMeta(mediaRef),
-                mClient.getMediaOverview(mediaRef),
+                mClient.getMediaOverview(mediaRef).toSingle(""),
                 BiFunction { meta, overview ->
-                    VideoDescInfo(meta.title.elseIfBlank(meta.displayName),
-                            meta.subtitle, overview)
+                    VideoDescInfo(meta.title.elseIfBlank(meta.displayName), meta.subtitle, overview)
                 })
                 .subscribeOn(AppSchedulers.diskIo)
                 .subscribeIgnoreError(Consumer {
