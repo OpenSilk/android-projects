@@ -15,17 +15,14 @@
     <application
         android:name=".VideoApp"
         android:allowBackup="true"
-        android:banner="@drawable/silk_video_banner"
-        android:icon="@drawable/silk_video_banner"
+        android:banner="@drawable/tv_banner"
+        android:icon="@drawable/tv_banner"
         android:label="@string/app_name"
-        android:logo="@drawable/silk_video_banner"
+        android:logo="@drawable/tv_banner"
         android:supportsRtl="true"
         android:theme="@style/Theme.Leanback">
         <activity
             android:name=".HomeActivity"
-            android:icon="@drawable/silk_video_banner"
-            android:label="@string/app_name"
-            android:logo="@drawable/silk_video_banner"
             android:screenOrientation="landscape"
             android:theme="@style/LandingTheme">
             <intent-filter>
