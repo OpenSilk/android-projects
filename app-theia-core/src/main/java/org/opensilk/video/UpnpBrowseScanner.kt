@@ -21,6 +21,8 @@ import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
 import org.opensilk.upnp.cds.featurelist.BasicView
 import timber.log.Timber
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,22 +37,38 @@ class UpnpBrowseScanner
         private val mDatabaseClient: DatabaseClient
 ) {
 
-    private val mQueueSubject = PublishSubject.create<UpnpFolderId>()
-    private val mStarted = AtomicBoolean(false)
+    inner class Session {
+        val mQueue = LinkedBlockingQueue<UpnpFolderId>()
 
-    fun enqueue(folderId: UpnpFolderId) {
-        if (mStarted.compareAndSet(false, true)) {
-            subscribe()
+        fun enqueue(folderId: UpnpFolderId) {
+            mQueue.offer(folderId)
         }
-        mQueueSubject.onNext(folderId)
+
+        fun runQueue(): Observable<UpnpFolderId> {
+            return Observable.create<UpnpFolderId> { s ->
+                while (!s.isDisposed) {
+                    try {
+                        val next = mQueue.poll(60, TimeUnit.SECONDS)
+                        if (next != null) {
+                            s.onNext(next)
+                        }
+                    } catch (e: InterruptedException) {
+                        if (mQueue.isEmpty()) {
+                            break
+                        }
+                    }
+                }
+                s.onComplete()
+            }
+        }
     }
 
     private class FolderWithMetaList(val folderId: UpnpFolderId, val list: List<MediaMeta>)
 
-    private fun subscribe() {
-        mQueueSubject.doOnNext {
-            mDatabaseClient.incrementUpnpDeviceScanning(UpnpDeviceId(it.deviceId))
-        }.observeOn(AppSchedulers.scanner, true, 10000).flatMapSingle { folderId ->
+    fun scan(upnpDeviceId: UpnpDeviceId, updateId: Long) {
+        val session = Session()
+        session.enqueue(UpnpFolderId(upnpDeviceId.deviceId, "0"))
+        session.runQueue().subscribeOn(AppSchedulers.newThread).flatMapSingle { folderId ->
             return@flatMapSingle if (folderId.folderId == "0") {
                 cachedService(folderId).flatMap { service ->
                     featureList(service, folderId).onErrorResumeNext(Function { browse(service, folderId) })
@@ -72,7 +90,7 @@ class UpnpBrowseScanner
                     UPNP_FOLDER -> {
                         mDatabaseClient.addUpnpFolder(ext)
                         //scan children as well
-                        mQueueSubject.onNext(ref.mediaId as UpnpFolderId)
+                        session.enqueue(ref.mediaId as UpnpFolderId)
                     }
                     UPNP_VIDEO -> mDatabaseClient.addUpnpVideo(ext)
                     else -> Timber.e("Invalid kind slipped through %s for %s", ref.kind, ext.displayName)
@@ -81,6 +99,7 @@ class UpnpBrowseScanner
             mDatabaseClient.postChange(UpnpFolderChange(fwl.folderId))
             mDatabaseClient.decrementUpnpDeviceScanning(UpnpDeviceId(fwl.folderId.deviceId))
         }, { t ->
+            mDatabaseClient.setUpnpDeviceSystemUpdateId(upnpDeviceId, 0)
             if (t is BrowseExceptionWithFolderId) {
                 val tt = t.cause
                 if (tt is ActionException) {
@@ -96,8 +115,11 @@ class UpnpBrowseScanner
             } else {
                 Timber.e(t, "UpnpBrowseScanner: msg=${t.message}")
             }
+        }, {
+            mDatabaseClient.setUpnpDeviceSystemUpdateId(upnpDeviceId, updateId)
         })
     }
+
 
     class BrowseExceptionWithFolderId(val folderId: UpnpFolderId, cause: Throwable): Exception(cause)
 

@@ -89,13 +89,12 @@ class UpnpDevicesObserver
                 Timber.i("${metaDevice.title} SystemUpdateID: old=${dwu.device.updateId} new=${dwu.updateId}")
                 val changed = dwu.updateId != dwu.device.updateId
                 val scanning = dwu.scanning != 0L
-                metaDevice.updateId = dwu.updateId
                 mDatabaseClient.addUpnpDevice(metaDevice)
                 mDatabaseClient.postChange(UpnpDeviceChange())
                 subscribeEvents(service)
                 if (changed || scanning) {
                     Timber.i("${metaDevice.title} Starting Scan")
-                    mUpnpBrowseScanner.enqueue(UpnpFolderId(deviceId.deviceId, "0"))
+                    mUpnpBrowseScanner.scan(deviceId, dwu.updateId)
                 }
             })
         }

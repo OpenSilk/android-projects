@@ -29,4 +29,6 @@ object AppSchedulers {
                 Executors.defaultThreadFactory())
         )
     }
+    val newThread: Scheduler
+        get() = Schedulers.newThread()
 }
