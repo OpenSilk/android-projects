@@ -7,6 +7,7 @@ import io.reactivex.Maybe
 import io.reactivex.Single
 import org.opensilk.media.MediaMeta
 import org.opensilk.media.toMediaItem
+import timber.log.Timber
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -35,6 +36,7 @@ constructor() {
 
     fun getCurrent(): Single<QueueItem> {
         return Single.create { s ->
+            Timber.d("getCurrent()")
             if (mCurrent < 0) {
                 s.onError(NoCurrentItemException())
                 return@create
@@ -45,6 +47,7 @@ constructor() {
 
     fun getNext(): Maybe<QueueItem> {
         return Maybe.create { s ->
+            Timber.d("getNext()")
             if (mCurrent < 0) {
                 s.onError(NoCurrentItemException())
                 return@create
@@ -64,6 +67,7 @@ constructor() {
 
     fun goToPrevious(): Maybe<QueueItem> {
         return Maybe.create { s ->
+            Timber.d("goToPrevious()")
             if (mHistory.isEmpty()) {
                 s.onComplete()
                 return@create
@@ -81,6 +85,7 @@ constructor() {
 
     fun goToNext(): Maybe<QueueItem> {
         return Maybe.create { s ->
+            Timber.d("goToNext()")
             if (mCurrent < 0) {
                 s.onError(NoCurrentItemException())
                 return@create
@@ -99,19 +104,16 @@ constructor() {
         }
     }
 
-    fun goToItem(itemId: Long): Single<QueueItem> {
-        return Single.create { s ->
-            val nxt = mQueue.indexOfFirst { it.queueId == itemId }
-            if (nxt < 0) {
-                s.onError(NoSuchElementException())
-                return@create
-            }
-            if (mCurrent >= 0) {
-                mHistory.add(mQueue[mCurrent].queueId)
-            }
-            mCurrent = nxt
-            s.onSuccess(mQueue[mCurrent])
+    fun setCurrent(itemId: Long) {
+        Timber.d("setCurrent()")
+        val nxt = mQueue.indexOfFirst { it.queueId == itemId }
+        if (nxt < 0) {
+            throw NoSuchElementException()
         }
+        if (mCurrent >= 0 && mCurrent < mQueue.size) {
+            mHistory.add(mQueue[mCurrent].queueId)
+        }
+        mCurrent = nxt
     }
 
     fun newItem(mediaDescription: MediaDescription): QueueItem {

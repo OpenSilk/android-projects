@@ -26,6 +26,7 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
 import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.common.dagger.ForApplication
+import org.opensilk.common.misc.AlphanumComparator
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
 import timber.log.Timber
@@ -101,6 +102,7 @@ constructor(
         mExoPlayer.setAudioDebugListener(eventLogger)
         mExoPlayer.setVideoDebugListener(eventLogger)
         mExoPlayer.setMetadataOutput(eventLogger)
+        mExoPlayer.audioStreamType = C.STREAM_TYPE_MUSIC
 
         mWakeLock.setReferenceCounted(false)
 
@@ -312,10 +314,7 @@ constructor(
         when (mediaRef.kind) {
             UPNP_VIDEO -> {
                 Single.zip<List<MediaMeta>, Long, MetaWithPos>(
-                        mDbClient.siblingsOf(mediaRef).doOnNext {
-                            //everyone gets added to the queue
-                            mQueue.add(it)
-                        }.toList(),
+                        mDbClient.siblingsOf(mediaRef).toSortedList(AlphanumComparator),
                         //get playback position for resume
                         mDbClient.getLastPlaybackPosition(mediaRef).onErrorReturn { 0 },
                         BiFunction { list, pos -> MetaWithPos(list, pos) }
@@ -323,12 +322,16 @@ constructor(
                     val meta = mwp.list.first { newMediaRef(it.mediaId) == mediaRef }
                     val lastPlaybackPosition = if (playbackExtras.resume) mwp.pos else 0
                     //fixup the queue
+                    mwp.list.forEach {
+                        mQueue.add(it)
+                    }
                     mQueue.get().first {
                         newMediaRef(it.description.mediaId) == mediaRef
                     }.let {
-                        mQueue.goToItem(it.queueId)
+                        mQueue.setCurrent(it.queueId)
                     }
                     mMediaSession.setQueue(mQueue.get())
+                    //play it
                     prepareMedia(meta, lastPlaybackPosition)
                     if (playbackExtras.playWhenReady) {
                         play()
