@@ -8,7 +8,7 @@ import android.os.Looper
 import android.os.Message
 import android.os.SystemClock
 import io.reactivex.Single
-import io.reactivex.functions.Function3
+import io.reactivex.functions.Consumer
 import org.fourthline.cling.controlpoint.SubscriptionCallback
 import org.fourthline.cling.model.gena.CancelReason
 import org.fourthline.cling.model.gena.GENASubscription
@@ -19,19 +19,17 @@ import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.model.types.ServiceId
 import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
+import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.MediaMeta
 import org.opensilk.media.UpnpDeviceId
-import org.opensilk.media.UpnpFolderId
-import org.opensilk.media.newMediaRef
 import org.opensilk.upnp.cds.browser.CDSGetSystemUpdateIDAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
 import timber.log.Timber
-import java.lang.Exception
 import java.lang.ref.WeakReference
-import java.util.function.BiFunction
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.Exception
 
 private val GRACE_PERIOD = 600_000L //10min
 
@@ -79,24 +77,9 @@ class UpnpDevicesObserver
     override fun deviceAdded(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
         device.findService(CDSserviceType)?.let { service ->
             val metaDevice = service.device.toMediaMeta()
-            val deviceId = newMediaRef(metaDevice.mediaId).mediaId as UpnpDeviceId
-            Single.zip<MediaMeta, Long, Long, UpnpDeviceUpdateIdScanning>(
-                    mDatabaseClient.getUpnpDevice(deviceId).onErrorReturn { metaDevice },
-                    updateId(service).onErrorReturn { 0 },
-                    mDatabaseClient.getUpnpDeviceScanning(deviceId).onErrorReturn { -1 },
-                    Function3 { dev, id, s -> UpnpDeviceUpdateIdScanning(dev, id, s) }
-            ).subscribe({ dwu ->
-                Timber.i("${metaDevice.title} SystemUpdateID: old=${dwu.device.updateId} new=${dwu.updateId}")
-                val changed = dwu.updateId != dwu.device.updateId
-                val scanning = dwu.scanning != 0L
-                mDatabaseClient.addUpnpDevice(metaDevice)
-                mDatabaseClient.postChange(UpnpDeviceChange())
-                subscribeEvents(service)
-                if (changed || scanning) {
-                    Timber.i("${metaDevice.title} Starting Scan")
-                    mUpnpBrowseScanner.scan(deviceId, dwu.updateId)
-                }
-            })
+            mDatabaseClient.addUpnpDevice(metaDevice)
+            mDatabaseClient.postChange(UpnpDeviceChange())
+            subscribeEvents(service)
         }
     }
 
@@ -146,9 +129,24 @@ class UpnpDevicesObserver
             }
 
             override fun eventReceived(subscription: GENASubscription<out Service<*, *>>) {
-                val device = subscription.service.device.details.friendlyName
+                val device = subscription.service.device
                 for ((key, value) in subscription.currentValues) {
-                    Timber.d("$device: ${key}:${value}")
+                    Timber.d("${device.details.friendlyName}: $key: $value")
+                    when (key) {
+                        "SystemUpdateID" -> {
+                            val deviceId = UpnpDeviceId(device.identity.udn.identifierString)
+                            val updateId = value.value.toString().toLongOrNull()
+                            if (updateId != null) {
+                                mDatabaseClient.getUpnpDevice(deviceId).subscribeIgnoreError(Consumer { meta ->
+                                    if (meta.updateId != updateId) {
+                                        Timber.d("Starting scan on ${device.details.friendlyName}: " +
+                                                "lastUpdate=${meta.updateId} newUpdate=$updateId")
+                                        mUpnpBrowseScanner.scan(deviceId, updateId)
+                                    }
+                                })
+                            }
+                        }
+                    }
                 }
             }
 

@@ -2,8 +2,9 @@ package org.opensilk.video
 
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.Disposables
 import io.reactivex.functions.Function
-import io.reactivex.subjects.PublishSubject
 import org.fourthline.cling.model.action.ActionException
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
 import org.fourthline.cling.model.meta.Device
@@ -37,15 +38,30 @@ class UpnpBrowseScanner
         private val mDatabaseClient: DatabaseClient
 ) {
 
-    inner class Session {
+    private val runningSessions = HashSet<Session>()
+
+    inner class Session(val upnpDeviceId: UpnpDeviceId) {
+
         val mQueue = LinkedBlockingQueue<UpnpFolderId>()
+
+        var sub: Disposable = Disposables.fromAction {
+            synchronized(runningSessions) {
+                runningSessions.remove(this)
+            }
+        }
 
         fun enqueue(folderId: UpnpFolderId) {
             mQueue.offer(folderId)
+            mDatabaseClient.incrementUpnpDeviceScanning(UpnpDeviceId(folderId.deviceId))
         }
 
         fun runQueue(): Observable<UpnpFolderId> {
             return Observable.create<UpnpFolderId> { s ->
+                s.setCancellable {
+                    synchronized(runningSessions) {
+                        runningSessions.remove(this)
+                    }
+                }
                 while (!s.isDisposed) {
                     try {
                         val next = mQueue.poll(60, TimeUnit.SECONDS)
@@ -61,23 +77,32 @@ class UpnpBrowseScanner
                 s.onComplete()
             }
         }
+
     }
 
     private class FolderWithMetaList(val folderId: UpnpFolderId, val list: List<MediaMeta>)
 
     fun scan(upnpDeviceId: UpnpDeviceId, updateId: Long) {
-        val session = Session()
+        val session = Session(upnpDeviceId)
+        //cancel any previous scan sessions so we can start fresh
+        synchronized(runningSessions) {
+            runningSessions.firstOrNull { it.upnpDeviceId == upnpDeviceId }?.sub?.dispose()
+            runningSessions.add(session)
+        }
         session.enqueue(UpnpFolderId(upnpDeviceId.deviceId, "0"))
-        session.runQueue().subscribeOn(AppSchedulers.newThread).flatMapSingle { folderId ->
+        session.sub = session.runQueue().subscribeOn(AppSchedulers.newThread).flatMapSingle { folderId ->
             return@flatMapSingle if (folderId.folderId == "0") {
+                //for root folder, look for feature list, falling back to normal browse
                 cachedService(folderId).flatMap { service ->
                     featureList(service, folderId).onErrorResumeNext(Function { browse(service, folderId) })
                 }
             } else {
+                //else just do browse
                 cachedService(folderId).flatMap { service ->
                     browse(service, folderId)
                 }
             }.toList().map { list ->
+                //carry along the folder id with the list
                 FolderWithMetaList(folderId, list)
             }
         }.subscribe({ fwl ->
@@ -116,10 +141,10 @@ class UpnpBrowseScanner
                 Timber.e(t, "UpnpBrowseScanner: msg=${t.message}")
             }
         }, {
+            Timber.d("Scan complete for $upnpDeviceId")
             mDatabaseClient.setUpnpDeviceSystemUpdateId(upnpDeviceId, updateId)
         })
     }
-
 
     class BrowseExceptionWithFolderId(val folderId: UpnpFolderId, cause: Throwable): Exception(cause)
 
