@@ -19,6 +19,7 @@ package org.opensilk.upnp.cds.browser
 
 import android.content.Context
 import android.os.*
+import okhttp3.OkHttpClient
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.jetty.util.log.Log
 import org.fourthline.cling.UpnpService
@@ -41,6 +42,7 @@ import org.fourthline.cling.transport.impl.RecoveringSOAPActionProcessorImpl
 import org.fourthline.cling.transport.impl.jetty.JettyServletContainer
 import org.fourthline.cling.transport.spi.NetworkAddressFactory
 import org.fourthline.cling.transport.spi.SOAPActionProcessor
+import org.fourthline.cling.transport.spi.StreamClient
 import org.fourthline.cling.transport.spi.StreamServer
 import org.opensilk.common.dagger.ForApplication
 import java.lang.ref.WeakReference
@@ -57,10 +59,31 @@ val CDSserviceType = UDAServiceType("ContentDirectory", 1)
 @Singleton
 class CDSUpnpService
 @Inject constructor(
-        @ForApplication private val mContext: Context
+        @ForApplication private val mContext: Context,
+        okHttpClient: OkHttpClient
 ) : UpnpService {
 
-    private val mUpnpService = Service()
+    companion object {
+        init {
+            // Fix the logging integration between java.util.logging and Android internal logging
+            org.seamless.util.logging.LoggingUtil.resetRootHandler(
+                    org.seamless.android.FixedAndroidLogHandler()
+            )
+            // enable logging as needed for various categories of Cling:
+            //Logger.getLogger("org.fourthline.cling").level = Level.INFO// Level.FINE
+            //Logger.getLogger("org.fourthline.cling.transport.spi.DatagramProcessor").level = Level.INFO
+            //Logger.getLogger("org.fourthline.cling.transport.spi.DatagramIO").level = Level.INFO
+            //Logger.getLogger("org.fourthline.cling.protocol.ProtocolFactory").level = Level.INFO
+            //Logger.getLogger("org.fourthline.cling.model.message.UpnpHeaders").level = Level.INFO
+            //Logger.getLogger("org.fourthline.cling.transport.spi.SOAPActionProcessor").level = Level.FINER
+            //Logger.getLogger("org.fourthline.cling.transport.spi.StreamClient").level = Level.FINER
+            //fix jetty logging
+            Log.__logClass = JettyAndroidLogger::class.java.name
+            Log.__logClass = JettyAndroidLogger::class.java.name
+        }
+    }
+
+    private val mUpnpService = Service(ServiceConfiguration(okHttpClient))
     var lastUsed: Long = SystemClock.elapsedRealtime()
         private set
 
@@ -128,7 +151,7 @@ class CDSUpnpService
     /**
      * Our custom upnp service class
      */
-    inner class Service: UpnpServiceImpl(ServiceConfiguration()) {
+    inner class Service(serviceConfig: ServiceConfiguration): UpnpServiceImpl(serviceConfig) {
         override fun createRouter(protocolFactory: ProtocolFactory, registry: Registry?): Router {
             return AndroidRouter(getConfiguration(), protocolFactory, mContext)
         }
@@ -141,24 +164,7 @@ class CDSUpnpService
     /**
      * Our custom upnp service configuration
      */
-    class ServiceConfiguration : AndroidUpnpServiceConfiguration() {
-        init {
-            // Fix the logging integration between java.util.logging and Android internal logging
-            org.seamless.util.logging.LoggingUtil.resetRootHandler(
-                    org.seamless.android.FixedAndroidLogHandler()
-            )
-            // enable logging as needed for various categories of Cling:
-            Logger.getLogger("org.fourthline.cling").level = Level.INFO//.FINE);
-            Logger.getLogger("org.fourthline.cling.transport.spi.DatagramProcessor").level = Level.INFO
-            Logger.getLogger("org.fourthline.cling.transport.spi.DatagramIO").level = Level.INFO
-            Logger.getLogger("org.fourthline.cling.protocol.ProtocolFactory").level = Level.INFO
-            Logger.getLogger("org.fourthline.cling.model.message.UpnpHeaders").level = Level.INFO
-            Logger.getLogger("org.fourthline.cling.transport.spi.SOAPActionProcessor").level = Level.INFO// = Level.FINER
-
-            //fix jetty logging
-            Log.__logClass = JettyAndroidLogger::class.java.name
-            Log.__logClass = JettyAndroidLogger::class.java.name
-        }
+    class ServiceConfiguration(private val mOkHttpClient: OkHttpClient) : AndroidUpnpServiceConfiguration() {
 
         override fun getExclusiveServiceTypes(): Array<ServiceType> {
             return arrayOf(CDSserviceType)
@@ -181,19 +187,17 @@ class CDSUpnpService
             }
         }
 
-        override fun createStreamServer(networkAddressFactory: NetworkAddressFactory): StreamServer<*> {
-            // Use Jetty, start/stop a new shared instance of JettyServletContainer
-            return AsyncServletStreamServerImpl(
-                    AsyncServletStreamServerConfigurationImpl(
-                            JettyServletContainer.INSTANCE,
-                            networkAddressFactory.streamListenPort
-                    )
-            )
+        /**
+         * Replace jetty implementation with our custom okhttp implementation
+         */
+        override fun createStreamClient(): StreamClient<*> {
+            return OkStreamClient(mOkHttpClient, OkStreamClientConfig(syncProtocolExecutorService))
         }
 
         override fun getRegistryMaintenanceIntervalMillis(): Int {
-            return 2500//10000;
+            return 2000
         }
+
     }
 
 }

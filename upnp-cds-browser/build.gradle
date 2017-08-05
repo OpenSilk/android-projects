@@ -56,7 +56,9 @@ dependencies {
 
     compile "org.eclipse.jetty:jetty-server:8.1.22.v20160922"
     compile "org.eclipse.jetty:jetty-servlet:8.1.22.v20160922"
-    compile "org.eclipse.jetty:jetty-client:8.1.22.v20160922"
+    //compile "org.eclipse.jetty:jetty-client:8.1.22.v20160922"
+
+    compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
     compile project(':common-dagger')
 
