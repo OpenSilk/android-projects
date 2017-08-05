@@ -11,7 +11,6 @@ import io.reactivex.Single
 interface MediaProviderClient {
     fun getMediaItem(mediaRef: MediaRef): Single<MediaBrowser.MediaItem>
     fun getMediaMeta(mediaRef: MediaRef): Single<MediaMeta>
-    fun getMediaOverview(mediaRef: MediaRef): Single<String>
     fun getMediaArtworkUri(mediaRef: MediaRef): Single<Uri>
     fun siblingsOf(mediaRef: MediaRef): Observable<MediaMeta>
     fun getLastPlaybackPosition(mediaRef: MediaRef): Single<Long>
