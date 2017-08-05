@@ -64,7 +64,7 @@ constructor(
     })
     private val mTrackSelector: DefaultTrackSelector = DefaultTrackSelector()
     private var mExoPlayer: SimpleExoPlayer = ExoPlayerFactory.newSimpleInstance(
-            DefaultRenderersFactory(mContext, null, DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON),
+            DefaultRenderersFactory(mContext, null, DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER),
             mTrackSelector)
     private val mAudioManager: AudioManager = mContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val mAudioBecomingNoisyIntentFilter: IntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
