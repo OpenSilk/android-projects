@@ -39,7 +39,7 @@ abstract class UpnpBrowseLoaderModule {
  * Loader used by the UpnpFoldersLoader
  */
 interface UpnpBrowseLoader {
-    fun getDirectChildren(upnpFolderId: UpnpFolderId): Single<List<MediaMeta>>
+    fun getDirectChildren(upnpFolderId: UpnpFolderId): Single<List<MediaRef>>
 }
 
 /**
@@ -50,12 +50,11 @@ class UpnpBrowseLoaderImpl
         private val mUpnpService: CDSUpnpService
 ): UpnpBrowseLoader {
 
-    override fun getDirectChildren(upnpFolderId: UpnpFolderId): Single<List<MediaMeta>> {
+    override fun getDirectChildren(upnpFolderId: UpnpFolderId): Single<List<MediaRef>> {
         return if (upnpFolderId.folderId == UPNP_ROOT_ID) {
             //for root folder, look for feature list, falling back to normal browse
             cachedService(upnpFolderId).flatMap { service ->
-                featureList(service, upnpFolderId)
-                        .onErrorResumeNext(Function { browse(service, upnpFolderId) })
+                featureList(service, upnpFolderId).onErrorResumeNext(browse(service, upnpFolderId))
             }
         } else {
             //else just do browse
@@ -68,7 +67,7 @@ class UpnpBrowseLoaderImpl
     /**
      * performs the browse
      */
-    private fun browse(service: Service<*,*>, parentId: UpnpFolderId) : Observable<MediaMeta> {
+    private fun browse(service: Service<*,*>, parentId: UpnpFolderId) : Observable<MediaRef> {
         return Observable.create { subscriber ->
             val browse = CDSBrowseAction(mUpnpService.controlPoint, service, parentId.folderId)
             browse.run()
@@ -192,7 +191,7 @@ class UpnpBrowseLoaderImpl
      * it then remaps the children of that folder to the root container (id = "0")
      * so the loader sees the video folders when requesting root
      */
-    private fun featureList(service: Service<*,*>, parentId: UpnpFolderId): Observable<MediaMeta> {
+    private fun featureList(service: Service<*,*>, parentId: UpnpFolderId): Observable<MediaRef> {
         return Single.create<String> { s ->
             val action = UpnpFeatureListAction(mUpnpService.controlPoint, service)
             action.run()
@@ -211,13 +210,11 @@ class UpnpBrowseLoaderImpl
         }.flatMapObservable { id ->
             browse(service, parentId.copy(folderId = id))
         }.map { meta ->
-            val oldParent = newMediaRef(meta.parentMediaId)
-            when (oldParent.kind) {
-                UPNP_FOLDER -> {
-                    meta.parentMediaId = oldParent.copy(mediaId = parentId).toJson()
-                } //else TODO error
+            return@map when (meta) {
+                is UpnpFolderRef -> meta.copy(parentId = parentId)
+                is UpnpVideoRef -> meta.copy(parentId = parentId)
+                else -> meta
             }
-            return@map meta
         }
     }
 

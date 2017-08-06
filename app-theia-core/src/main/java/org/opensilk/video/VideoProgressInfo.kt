@@ -21,8 +21,3 @@ data class VideoProgressInfo(
         return@lazy (completion * 100).toInt()
     }
 }
-
-fun MediaDescription.videoProgressInfo(): VideoProgressInfo {
-    val metaExtras = _getMediaMeta()
-    return VideoProgressInfo(metaExtras.lastPlaybackPosition, metaExtras.duration)
-}

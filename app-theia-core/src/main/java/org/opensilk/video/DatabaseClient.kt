@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.ContentObserver
 import android.database.Cursor
-import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.CancellationSignal
 import dagger.Binds
@@ -19,12 +18,6 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.cancellationSignal
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
-import org.opensilk.tmdb.api.model.Image
-import org.opensilk.tmdb.api.model.ImageList
-import org.opensilk.tmdb.api.model.Movie
-import org.opensilk.tvdb.api.model.Series
-import org.opensilk.tvdb.api.model.SeriesEpisode
-import org.opensilk.tvdb.api.model.SeriesImageQuery
 import org.opensilk.tvdb.api.model.Token
 import javax.inject.Inject
 import javax.inject.Named
@@ -119,50 +112,46 @@ class DatabaseClient
         mChangesSubject.onNext(event)
     }
 
-    override fun getMediaItem(mediaRef: MediaRef): Single<MediaBrowser.MediaItem> {
-        return getMediaMeta(mediaRef).map { it.toMediaItem() }
-    }
-
-    override fun getMediaMeta(mediaRef: MediaRef): Single<MediaMeta> {
-        return when (mediaRef.kind) {
-            UPNP_FOLDER -> getUpnpFolder(mediaRef.mediaId as UpnpFolderId)
-            UPNP_VIDEO -> getUpnpVideo(mediaRef.mediaId as UpnpVideoId)
-            UPNP_DEVICE -> getUpnpDevice(mediaRef.mediaId as UpnpDeviceId)
+    override fun getMediaMeta(mediaId: MediaId): Maybe<out MediaRef> {
+        return when (mediaId) {
+            is UpnpFolderId -> getUpnpFolder(mediaId)
+            is UpnpVideoId -> getUpnpVideo(mediaId)
+            is UpnpDeviceId -> getUpnpDevice(mediaId)
             else -> TODO()
         }
     }
 
 
-    override fun getMediaArtworkUri(mediaRef: MediaRef): Single<Uri> {
+    override fun getMediaArtworkUri(mediaId: MediaId): Maybe<Uri> {
         TODO("not implemented")
     }
 
-    override fun siblingsOf(mediaRef: MediaRef): Observable<MediaMeta> {
-        return when (mediaRef.kind) {
-            UPNP_FOLDER -> {
-                getUpnpFolder(mediaRef.mediaId as UpnpFolderId).flatMapObservable {
-                    getUpnpVideos(newMediaRef(it.parentMediaId).mediaId as UpnpFolderId)
+    override fun siblingsOf(mediaId: MediaId): Observable<UpnpVideoRef> {
+        return when (mediaId) {
+            is UpnpFolderId -> {
+                getUpnpFolder(mediaId).flatMapObservable {
+                    getUpnpVideosUnder(it.parentId)
                 }
             }
-            UPNP_VIDEO -> {
-                getUpnpVideo(mediaRef.mediaId as UpnpVideoId).flatMapObservable {
-                    getUpnpVideos(newMediaRef(it.parentMediaId).mediaId as UpnpFolderId)
+            is UpnpVideoId -> {
+                getUpnpVideo(mediaId).flatMapObservable {
+                    getUpnpVideosUnder(it.parentId)
                 }
             } else -> TODO()
         }
     }
 
-    override fun getLastPlaybackPosition(mediaRef: MediaRef): Single<Long> {
-        when (mediaRef.kind) {
-            UPNP_VIDEO -> {
-                return getUpnpVideo(mediaRef.mediaId as UpnpVideoId).flatMap { meta ->
-                    Single.create<Long> { s ->
+    override fun getLastPlaybackPosition(mediaId: MediaId): Maybe<Long> {
+        when (mediaId) {
+            is UpnpVideoId -> {
+                return getUpnpVideo(mediaId).flatMap { meta ->
+                    Maybe.create<Long> { s ->
                         mResolver.query(mUris.playbackPosition(), arrayOf("last_position"),
-                                "_display_name=?", arrayOf(meta.displayName), null, null)?.use { c ->
+                                "_display_name=?", arrayOf(meta.meta.mediaTitle), null, null)?.use { c ->
                             if (c.moveToFirst()) {
                                 s.onSuccess(c.getLong(0))
                             } else {
-                                s.onError(NoSuchItemException())
+                                s.onComplete()
                             }
                         } ?: s.onError(VideoDatabaseMalfuction())
                     }
@@ -171,17 +160,17 @@ class DatabaseClient
         }
     }
 
-    fun getLastPlaybackCompletion(mediaRef: MediaRef): Single<Int> {
-        when (mediaRef.kind) {
-            UPNP_VIDEO -> {
-                return getUpnpVideo(mediaRef.mediaId as UpnpVideoId).flatMap { meta ->
-                    Single.create<Int> { s ->
+    fun getLastPlaybackCompletion(mediaId: MediaId): Maybe<Int> {
+        when (mediaId) {
+            is UpnpVideoId -> {
+                return getUpnpVideo(mediaId).flatMap { meta ->
+                    Maybe.create<Int> { s ->
                         mResolver.query(mUris.playbackPosition(), arrayOf("last_completion"),
-                                "_display_name=?", arrayOf(meta.displayName), null, null)?.use { c ->
+                                "_display_name=?", arrayOf(meta.meta.mediaTitle), null, null)?.use { c ->
                             if (c.moveToFirst()) {
                                 s.onSuccess(c.getInt(0))
                             } else {
-                                s.onError(NoSuchItemException())
+                                s.onComplete()
                             }
                         } ?: s.onError(VideoDatabaseMalfuction())
                     }
@@ -190,28 +179,28 @@ class DatabaseClient
         }
     }
 
-    override fun setLastPlaybackPosition(mediaRef: MediaRef, position: Long, duration: Long) {
-        when (mediaRef.kind) {
-            UPNP_VIDEO -> {
-                getUpnpVideo(mediaRef.mediaId as UpnpVideoId)
+    override fun setLastPlaybackPosition(mediaId: MediaId, position: Long, duration: Long) {
+        when (mediaId) {
+            is UpnpVideoId -> {
+                getUpnpVideo(mediaId)
                         .subscribeOn(AppSchedulers.diskIo)
                         .subscribeIgnoreError(Consumer { meta ->
                             val values = ContentValues()
-                            values.put("_display_name", meta.displayName)
+                            values.put("_display_name", meta.meta.mediaTitle)
                             values.put("last_played", System.currentTimeMillis())
                             values.put("last_position", position)
                             values.put("last_completion", calculateCompletion(position, duration))
                             mResolver.insert(mUris.playbackPosition(), values)
-                            postChange(UpnpVideoChange(mediaRef.mediaId as UpnpVideoId))
+                            postChange(UpnpVideoChange(mediaId))
                         })
             } else -> TODO()
         }
     }
 
 
-    fun getMediaOverview(mediaRef: MediaRef): Maybe<String> {
-        return when (mediaRef.kind) {
-            UPNP_VIDEO -> getUpnpVideoOverview(mediaRef.mediaId as UpnpVideoId)
+    fun getMediaOverview(mediaId: MediaId): Maybe<String> {
+        return when (mediaId) {
+            is UpnpVideoId -> getUpnpVideoOverview(mediaId)
             else -> TODO()
         }
     }
@@ -220,17 +209,12 @@ class DatabaseClient
      * Add a meta item describing a upnp device with a content directory service to the database
      * item should be created with Device.toMediaMeta
      */
-    fun addUpnpDevice(meta: MediaMeta): Uri {
-        val id = newMediaRef(meta.mediaId)
-        if (id.kind != UPNP_DEVICE) throw IllegalArgumentException("media.kind not UPNP_DEVICE")
+    fun addUpnpDevice(meta: UpnpDeviceRef): Uri {
         val cv = ContentValues()
-        cv.put("device_id", (id.mediaId as UpnpDeviceId).deviceId)
-        cv.put("mime_type", meta.mimeType)
-        cv.put("title", meta.title)
-        cv.put("subtitle", meta.subtitle)
-        if (meta.artworkUri != Uri.EMPTY) {
-            cv.put("artwork_uri", meta.artworkUri.toString())
-        }
+        cv.put("device_id", meta.id.deviceId)
+        cv.put("title", meta.meta.title)
+        cv.put("subtitle", meta.meta.subtitle)
+        cv.put("artwork_uri", if (meta.meta.artworkUri.isEmpty()) "" else meta.meta.artworkUri.toString())
         cv.put("available", 1)
         cv.put("scanning", 0) //reset here
         return mResolver.insert(mUris.upnpDevices(), cv) ?: Uri.EMPTY
@@ -254,7 +238,7 @@ class DatabaseClient
     /**
      * retrieves all the upnp devices marked as available
      */
-    fun getUpnpDevices(): Observable<MediaMeta> {
+    fun getUpnpDevices(): Observable<UpnpDeviceRef> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpDevices(), upnpDeviceProjection,
                     "available=1", null, "title", s.cancellationSignal())?.use { c ->
@@ -266,14 +250,14 @@ class DatabaseClient
         }
     }
 
-    fun getUpnpDevice(deviceId: UpnpDeviceId): Single<MediaMeta> {
-        return Single.create { s ->
+    fun getUpnpDevice(deviceId: UpnpDeviceId): Maybe<UpnpDeviceRef> {
+        return Maybe.create { s ->
             mResolver.query(mUris.upnpDevices(), upnpDeviceProjection,
                     "device_id=?", arrayOf(deviceId.deviceId), null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     s.onSuccess(c.toUpnpDeviceMediaMeta())
                 } else {
-                    s.onError(NoSuchItemException())
+                    s.onComplete()
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
@@ -282,7 +266,8 @@ class DatabaseClient
     fun setUpnpDeviceSystemUpdateId(deviceId: UpnpDeviceId, updateId: Long): Boolean {
         val values = ContentValues()
         values.put("update_id", updateId)
-        return mResolver.update(mUris.upnpDevices(), values, "device_id=?", arrayOf(deviceId.deviceId)) != 0
+        return mResolver.update(mUris.upnpDevices(), values,
+                "device_id=?", arrayOf(deviceId.deviceId)) != 0
     }
 
     fun getUpnpDeviceSystemUpdateId(deviceId: UpnpDeviceId): Maybe<Long> {
@@ -308,33 +293,37 @@ class DatabaseClient
                 ContentValues(), "device_id=?", arrayOf(deviceId.deviceId)) != 0
     }
 
-    fun getUpnpDeviceScanning(deviceId: UpnpDeviceId): Single<Long> {
-        return Single.create { s ->
+    fun getUpnpDeviceScanning(deviceId: UpnpDeviceId): Maybe<Long> {
+        return Maybe.create { s ->
             mResolver.query(mUris.upnpDevices(), arrayOf("scanning"),
                     "device_id=?", arrayOf(deviceId.deviceId), null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     s.onSuccess(c.getLong(0))
                 } else {
-                    s.onError(NoSuchItemException())
+                    s.onComplete()
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
-    val upnpDeviceProjection = arrayOf("_id", "device_id", "mime_type", "title", //3
-            "subtitle", "artwork_uri", "update_id") //6
+    val upnpDeviceProjection = arrayOf("_id", "device_id", "title", //2
+            "subtitle", "artwork_uri", "update_id") //5
 
-    fun Cursor.toUpnpDeviceMediaMeta(): MediaMeta {
-        val c = this
-        val meta = MediaMeta()
-        meta.rowId = c.getLong(0)
-        meta.mediaId = MediaRef(UPNP_DEVICE, UpnpDeviceId(c.getString(1))).toJson()
-        meta.mimeType = c.getString(2)
-        meta.title = c.getString(3) ?: ""
-        meta.subtitle = c.getString(4) ?: ""
-        if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
-        meta.updateId = c.getLong(6)
-        return meta
+    fun Cursor.toUpnpDeviceMediaMeta(): UpnpDeviceRef {
+        var mediaId = UpnpDeviceId(getString(1))
+        var title = getString(2)
+        var subtitle = getString(3) ?: ""
+        var artworkUri = if (!isNull(4)) Uri.parse(getString(4)) else Uri.EMPTY
+        var updateId = getLong(5)
+        return UpnpDeviceRef(
+                mediaId,
+                UpnpDeviceMeta(
+                        title = title,
+                        subtitle = subtitle,
+                        artworkUri = artworkUri,
+                        updateId = updateId
+                )
+        )
     }
 
     /**
@@ -352,35 +341,22 @@ class DatabaseClient
     /**
      * add a upnp folder to the database, item should be created with Container.toMediaMeta
      */
-    fun addUpnpFolder(meta: MediaMeta): Uri {
-        val id = newMediaRef(meta.mediaId)
-        if (id.kind != UPNP_FOLDER) throw IllegalArgumentException("meta.kind not UPNP_FOLDER")
-        val parentId = newMediaRef(meta.parentMediaId)
+    fun addUpnpFolder(meta: UpnpFolderRef): Uri {
         val cv = ContentValues()
-        cv.put("device_id", (id.mediaId as UpnpFolderId).deviceId)
-        cv.put("folder_id", (id.mediaId as UpnpFolderId).folderId)
-        cv.put("parent_id", (parentId.mediaId as UpnpFolderId).folderId)
-        cv.put("_display_name", meta.title)
-        if (meta.artworkUri != Uri.EMPTY) {
-            cv.put("artwork_uri", meta.artworkUri.toString())
-        }
-        cv.put("mime_type", meta.mimeType)
+        cv.put("device_id", meta.id.deviceId)
+        cv.put("folder_id", meta.id.folderId)
+        cv.put("parent_id", meta.parentId.folderId)
+        cv.put("_display_name", meta.meta.title)
+        cv.put("artwork_uri", if (meta.meta.artworkUri.isEmpty()) "" else meta.meta.artworkUri.toString())
         cv.put("date_added", System.currentTimeMillis())
         cv.put("hidden", 0)
         return mResolver.insert(uris.upnpFolders(), cv) ?: Uri.EMPTY
     }
 
     /**
-     * removes specified folder from database
-     */
-    fun removeUpnpFolder(rowid: Long): Boolean {
-        return mResolver.delete(uris.upnpFolder(rowid), null, null) != 0
-    }
-
-    /**
      * retrieve direct decedents of parent folder that aren't hidden
      */
-    fun getUpnpFolders(parentId: UpnpFolderId): Observable<MediaMeta> {
+    fun getUpnpFoldersUnder(parentId: UpnpFolderId): Observable<UpnpFolderRef> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpFolders(), upnpFolderProjection,
                     "device_id=? AND parent_id=? AND hidden=0",
@@ -394,69 +370,62 @@ class DatabaseClient
         }
     }
 
-    fun getUpnpFolder(folderId: UpnpFolderId): Single<MediaMeta> {
-        return Single.create { s ->
+    fun getUpnpFolder(folderId: UpnpFolderId): Maybe<UpnpFolderRef> {
+        return Maybe.create { s ->
             mResolver.query(uris.upnpFolders(), upnpFolderProjection,
                     "device_id=? AND folder_id=?",
                     arrayOf(folderId.deviceId, folderId.folderId), null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     s.onSuccess(c.toUpnpFolderMediaMeta())
                 } else {
-                    s.onError(NoSuchItemException())
+                    s.onComplete()
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
     val upnpFolderProjection = arrayOf("_id", "device_id", "folder_id",
-            "parent_id", "_display_name", "artwork_uri", "mime_type")
+            "parent_id", "_display_name", "artwork_uri")
 
-    fun Cursor.toUpnpFolderMediaMeta(): MediaMeta {
-        val c = this
-        val meta = MediaMeta()
-        meta.rowId = c.getLong(0)
-        meta.mediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(2))).toJson()
-        meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
-        meta.title = c.getString(4)
-        if (!c.isNull(5)) meta.artworkUri = Uri.parse(c.getString(5))
-        meta.mimeType = c.getString(6)
-        return meta
+    fun Cursor.toUpnpFolderMediaMeta(): UpnpFolderRef {
+        var mediaId = UpnpFolderId(getString(1), getString(2))
+        val parentId = UpnpFolderId(getString(1), getString(3))
+        var title = getString(4)
+        var arworkUri = if (!isNull(5)) Uri.parse(getString(5)) else Uri.EMPTY
+        return UpnpFolderRef(
+                mediaId,
+                parentId,
+                UpnpFolderMeta(
+                        title = title,
+                        artworkUri = arworkUri
+                )
+        )
     }
 
     /**
      * Adds upnp video to database, item should be created with VideoItem.toMediaMeta
      */
-    fun addUpnpVideo(meta: MediaMeta): Uri {
-        val id = newMediaRef(meta.mediaId)
-        if (id.kind != UPNP_VIDEO) throw IllegalArgumentException("media.kind not UPNP_VIDEO")
-        val parentId = newMediaRef(meta.parentMediaId)
+    fun addUpnpVideo(meta: UpnpVideoRef): Uri {
         val cv = ContentValues()
-        cv.put("device_id", (id.mediaId as UpnpVideoId).deviceId)
-        cv.put("item_id", (id.mediaId as UpnpVideoId).itemId)
-        cv.put("parent_id", (parentId.mediaId as UpnpFolderId).folderId)
-        cv.put("_display_name", meta.displayName)
-        cv.put("mime_type", meta.mimeType)
-        cv.put("media_uri", meta.mediaUri.toString())
-        cv.put("duration", meta.duration)
-        cv.put("bitrate", meta.bitrate)
-        cv.put("file_size", meta.size)
-        cv.put("resolution", meta.resolution)
+        cv.put("device_id", meta.id.deviceId)
+        cv.put("item_id", meta.id.itemId)
+        cv.put("parent_id", meta.parentId.folderId)
+        cv.put("_display_name", meta.meta.mediaTitle)
+        cv.put("mime_type", meta.meta.mimeType)
+        cv.put("media_uri", meta.meta.mediaUri.toString())
+        cv.put("duration", meta.meta.duration)
+        cv.put("bitrate", meta.meta.bitrate)
+        cv.put("file_size", meta.meta.size)
+        cv.put("resolution", meta.meta.resolution)
         cv.put("date_added", System.currentTimeMillis())
         cv.put("hidden", 0)
         return mResolver.insert(uris.upnpVideos(), cv) ?: Uri.EMPTY
     }
 
     /**
-     * remove specified video from database
-     */
-    fun removeUpnpVideo(id: Long): Boolean {
-        return mResolver.delete(uris.upnpVideo(id), null, null) != 0
-    }
-
-    /**
      * retrieve upnp videos, direct decedents of parent
      */
-    fun getUpnpVideos(parentId: UpnpFolderId): Observable<MediaMeta> {
+    fun getUpnpVideosUnder(parentId: UpnpFolderId): Observable<UpnpVideoRef> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpVideos(), upnpVideoProjection,
                     "device_id=? AND parent_id=? AND hidden=0", arrayOf(parentId.deviceId, parentId.folderId),
@@ -472,38 +441,22 @@ class DatabaseClient
     /**
      * retrieve specified upnp video
      */
-    fun getUpnpVideo(id: Long): Single<MediaMeta> {
-        return Single.create { s ->
-            mResolver.query(mUris.upnpVideo(id), upnpVideoProjection,
-                    null, null, null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toUpnpVideoMediaMeta())
-                } else {
-                    s.onError(NoSuchItemException())
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
-    }
-
-    /**
-     *
-     */
-    fun getUpnpVideo(videoId: UpnpVideoId): Single<MediaMeta> {
-        return Single.create { s ->
+    fun getUpnpVideo(videoId: UpnpVideoId): Maybe<UpnpVideoRef> {
+        return Maybe.create { s ->
             mResolver.query(uris.upnpVideos(), upnpVideoProjection,
                     "device_id=? AND item_id=?",
                     arrayOf(videoId.deviceId, videoId.itemId), null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     s.onSuccess(c.toUpnpVideoMediaMeta())
                 } else {
-                    s.onError(NoSuchItemException())
+                    s.onComplete()
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
-    fun getRecentUpnpVideos(): Observable<MediaMeta> {
-        return Observable.create<MediaMeta> { s ->
+    fun getRecentUpnpVideos(): Observable<UpnpVideoRef> {
+        return Observable.create { s ->
             mResolver.query(mUris.upnpVideos(), upnpVideoProjection, null, null,
                     " v.date_added DESC LIMIT 20 ", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
@@ -532,40 +485,60 @@ class DatabaseClient
     /**
      * helper to convert cursor to mediameta using above projection
      */
-    fun Cursor.toUpnpVideoMediaMeta(): MediaMeta {
+    fun Cursor.toUpnpVideoMediaMeta(): UpnpVideoRef {
         val c = this
-        val meta = MediaMeta()
-        meta.rowId = c.getLong(0)
-        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId(c.getString(1), c.getString(2))).toJson()
-        meta.parentMediaId = MediaRef(UPNP_FOLDER, UpnpFolderId(c.getString(1), c.getString(3))).toJson()
-        meta.displayName = c.getString(4)
-        meta.title = c.getString(4)
-        meta.mimeType = c.getString(5)
-        meta.mediaUri = Uri.parse(c.getString(6))
-        meta.duration = c.getLong(7)
-        meta.size = c.getLong(8)
+        var mediaId = UpnpVideoId(c.getString(1), c.getString(2))
+        var parentId = UpnpFolderId(c.getString(1), c.getString(3))
+        var displayName = c.getString(4)
+        var title = c.getString(4)
+        var mimeType = c.getString(5)
+        var mediaUri = Uri.parse(c.getString(6))
+        var duration = c.getLong(7)
+        var size = c.getLong(8)
+        var subtitle = ""
+        var artworkUri = Uri.EMPTY
+        var backdropUri = Uri.EMPTY
+        var episodeId: TvEpisodeId? = null
+        var movieId: MovieId? = null
         if (!c.isNull(9)) {
-            meta.title = c.getString(10)
-            meta.subtitle = makeTvSubtitle(c.getString(14), c.getInt(12), c.getInt(11))
+            episodeId = TvEpisodeId(c.getLong(9), c.getLong(13))
+            title = c.getString(10)
+            subtitle = makeTvSubtitle(c.getString(14), c.getInt(12), c.getInt(11))
             if (!c.isNull(15)) {
-                meta.artworkUri = makeTvBannerUri(c.getString(15))
+                artworkUri = makeTvBannerUri(c.getString(15))
             }
             if (!c.isNull(16)) {
-                meta.backdropUri = makeTvBannerUri(c.getString(16))
+                backdropUri = makeTvBannerUri(c.getString(16))
             }
-            meta.isParsed = true
         } else if (!c.isNull(17)) {
-            meta.title = c.getString(18)
+            movieId = MovieId(c.getLong(17))
+            title = c.getString(18)
             val movieBaseUrl = getMovieImageBaseUrl()
             if (!c.isNull(19) && movieBaseUrl != "") {
-                meta.artworkUri = makeMoviePosterUri(movieBaseUrl, c.getString(19))
+                artworkUri = makeMoviePosterUri(movieBaseUrl, c.getString(19))
             }
             if (!c.isNull(20) && movieBaseUrl != "") {
-                meta.backdropUri = makeMovieBackdropUri(movieBaseUrl, c.getString(20))
+                backdropUri = makeMovieBackdropUri(movieBaseUrl, c.getString(20))
             }
-            meta.isParsed = true
         }
-        return meta
+        return UpnpVideoRef(
+                id = mediaId,
+                parentId = parentId,
+                tvEpisodeId =  episodeId,
+                movieId = movieId,
+                meta = UpnpVideoMeta(
+                        title = title,
+                        subtitle = subtitle,
+                        artworkUri = artworkUri,
+                        backdropUri = backdropUri,
+                        mediaTitle = displayName,
+                        mediaUri = mediaUri,
+                        mimeType = mimeType,
+                        duration = duration,
+                        size = size
+                        //resolution =
+                )
+        )
     }
 
     /**
@@ -625,14 +598,14 @@ class DatabaseClient
         mResolver.insert(mUris.tvConfig(), cv)
     }
 
-    fun getTvLastUpdate(): Single<Long> {
-        return Single.create { s ->
+    fun getTvLastUpdate(): Maybe<Long> {
+        return Maybe.create { s ->
             mResolver.query(mUris.tvConfig(), arrayOf("value"),
                     "key='last_update'", null, null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     s.onSuccess(c.getString(0).toLong())
                 } else {
-                    s.onSuccess(0)
+                    s.onComplete()
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
@@ -652,69 +625,74 @@ class DatabaseClient
                 if (c.moveToFirst()) {
                     s.onSuccess(Token(c.getString(0)))
                 } else {
-                    s.onError(NoSuchItemException())
+                    s.onError(Exception("Token not found"))
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
-    fun addTvSeries(series: Series, poster: SeriesImageQuery? = null,
-                    backdrop: SeriesImageQuery? = null): Uri {
+
+    fun addTvSeries(series: TvSeriesRef): Uri {
         val values = ContentValues(10)
-        values.put("_id", series.id)
-        values.put("_display_name", series.seriesName)
-        values.put("overview", series.overview)
-        values.put("first_aired", series.firstAired)
-        values.put("banner", series.banner)
-        values.put("poster", poster?.fileName)
-        values.put("backdrop", backdrop?.fileName)
+        values.put("_id", series.id.seriesId)
+        values.put("_display_name", series.meta.title)
+        values.put("overview", series.meta.overview)
+        values.put("first_aired", series.meta.releaseDate)
+        values.put("poster", series.meta.posterPath)
+        values.put("backdrop", series.meta.backdropPath)
         return mResolver.insert(mUris.tvSeries(), values) ?: Uri.EMPTY
     }
 
-    fun getTvSeries(seriesId: Long): Single<MediaMeta> {
-        return Single.create { s ->
-            mResolver.query(mUris.tvSeries(),
-                    arrayOf("_display_name", "overview", "first_aired", "_id"),
-                    "_id=?", arrayOf(seriesId.toString()), null, null)?.use { c ->
+    fun getTvSeries(seriesId: TvSeriesId): Maybe<TvSeriesRef> {
+        return Maybe.create { s ->
+            mResolver.query(mUris.tvSeries(seriesId.seriesId),
+                    tvSeriesProjection, null, null, null, null)?.use { c ->
                 if (c.moveToFirst()) {
-                    val meta = MediaMeta()
-                    meta.mimeType = MIME_TYPE_TV_SERIES
-                    meta.title = c.getString(0)
-                    meta.overview = c.getString(1)
-                    meta.releaseDate = c.getString(2)
-                    meta.rowId = c.getLong(3)
+                    val meta = TvSeriesRef(
+                            TvSeriesId(c.getLong(3)),
+                            TvSeriesMeta(
+                                    title = c.getString(0),
+                                    overview = if (!c.isNull(1)) c.getString(1) else "",
+                                    releaseDate = c.getString(2),
+                                    posterPath = if (!c.isNull(4)) c.getString(4) else "",
+                                    backdropPath = if (!c.isNull(5)) c.getString(5) else ""
+                            )
+                    )
                     s.onSuccess(meta)
                 } else {
-                    s.onError(NoSuchItemException())
+                    s.onComplete()
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
-    fun addTvEpisodes(seriesId: Long, episodes: List<SeriesEpisode>) {
+    val tvSeriesProjection = arrayOf("_display_name", "overview",
+            "first_aired", "_id", "poster", "backdrop")
+
+    fun addTvEpisodes(episodes: List<TvEpisodeRef>) {
         val values = Array(episodes.size, { ContentValues() })
         for ((ii, episode) in episodes.withIndex()) {
-            val cv = values[ii]
-            cv.putTvEpisodeValues(episode)
-            cv.put("series_id", seriesId)
+            values[ii].putTvEpisodeValues(episode)
         }
         mResolver.bulkInsert(mUris.tvEpisodes(), values)
     }
 
-    fun ContentValues.putTvEpisodeValues(episode: SeriesEpisode) {
+
+    fun ContentValues.putTvEpisodeValues(episode: TvEpisodeRef) {
         val values = this
-        values.put("_id", episode.id)
-        values.put("_display_name", episode.episodeName)
-        values.put("overview", episode.overview)
-        values.put("first_aired", episode.firstAired)
-        values.put("episode_number", episode.airedEpisodeNumber)
-        values.put("season_number", episode.airedSeason)
+        values.put("_id", episode.id.episodeId)
+        values.put("series_id", episode.id.seriesId)
+        values.put("_display_name", episode.meta.title)
+        values.put("overview", episode.meta.overview)
+        values.put("first_aired", episode.meta.releaseDate)
+        values.put("episode_number", episode.meta.episodeNumber)
+        values.put("season_number", episode.meta.seasonNumber)
     }
 
-    fun getTvEpisodes(seriesId: Long): Observable<MediaMeta> {
+    fun getTvEpisodesForTvSeries(seriesId: TvSeriesId): Observable<TvEpisodeRef> {
         return Observable.create { s ->
             mResolver.query(mUris.tvEpisodes(), tvEpisodesProjection,
-                    "series_id=?", arrayOf(seriesId.toString()),
+                    "series_id=${seriesId.seriesId}", null,
                     null, s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
                     s.onNext(c.toTvEpisodeMediaMeta())
@@ -724,14 +702,14 @@ class DatabaseClient
         }
     }
 
-    fun getTvEpisode(episodeId: Long): Single<MediaMeta> {
-        return Single.create { s ->
-            mResolver.query(mUris.tvEpisode(episodeId), tvEpisodesProjection,
+    fun getTvEpisode(episodeId: TvEpisodeId): Maybe<TvEpisodeRef> {
+        return Maybe.create { s ->
+            mResolver.query(mUris.tvEpisode(episodeId.episodeId), tvEpisodesProjection,
                     null, null, null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     s.onSuccess(c.toTvEpisodeMediaMeta())
                 } else {
-                    s.onError(NoSuchItemException())
+                    s.onComplete()
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
@@ -742,47 +720,43 @@ class DatabaseClient
             "episode_number", "season_number",
             "overview", "series_id")
 
-    fun Cursor.toTvEpisodeMediaMeta(): MediaMeta {
-        val meta = MediaMeta()
-        meta.mimeType = MIME_TYPE_TV_EPISODE
-        meta.rowId = getLong(0)
-        meta.title = getString(1)
-        meta.releaseDate = getString(2)
-        meta.episodeNumber = getInt(3)
-        meta.seasonNumber = getInt(4)
-        if (!isNull(5)) {
-            meta.overview = getString(5)
-        }
-        meta.foreignRowId = getLong(6)
-        return meta
+    fun Cursor.toTvEpisodeMediaMeta(): TvEpisodeRef {
+        return TvEpisodeRef(
+                TvEpisodeId(getLong(0), getLong(6)),
+                TvEpisodeMeta(
+                        title = getString(1),
+                        releaseDate = getString(2),
+                        episodeNumber = getInt(3),
+                        seasonNumber = getInt(4),
+                        overview = if (!isNull(5)) getString(5) else ""
+                )
+        )
     }
 
-    fun addTvImages(seriesId: Long, banners: List<SeriesImageQuery>) {
+    fun addTvImages(banners: List<TvImageRef>) {
         val values = Array(banners.size, { ContentValues() })
         for ((ii, image) in banners.withIndex()) {
-            val cv = values[ii]
-            cv.putTvImageValues(image)
-            cv.put("series_id", seriesId)
+            values[ii].putTvImageValues(image)
         }
         mResolver.bulkInsert(mUris.tvBanners(), values)
     }
 
-    fun ContentValues.putTvImageValues(banner: SeriesImageQuery) {
+    fun ContentValues.putTvImageValues(banner: TvImageRef) {
         val values = this
-        values.put("_id", banner.id)
-        values.put("path", banner.fileName)
-        values.put("type", banner.keyType)
-        values.put("type2", banner.subKey)
-        values.put("rating", banner.ratingsInfo.average)
-        values.put("rating_count", banner.ratingsInfo.count)
-        values.put("thumb_path", banner.thumbnail)
-        values.put("resolution", banner.resolution)
+        values.put("_id", banner.id.imageId)
+        values.put("series_id", banner.id.seriesId)
+        values.put("path", banner.meta.path)
+        values.put("type", banner.meta.type)
+        values.put("type2", banner.meta.subType)
+        values.put("rating", banner.meta.rating)
+        values.put("rating_count", banner.meta.ratingCount)
+        values.put("resolution", banner.meta.resolution)
     }
 
-    fun getTvPosters(seriesId: Long): Observable<MediaMeta> {
+    fun getTvPosters(seriesId: TvSeriesId): Observable<TvImageRef> {
         return Observable.create { s ->
             mResolver.query(mUris.tvBanners(), tvBannerProjection,
-                    "series_id=? and type=?", arrayOf(seriesId.toString(), "poster"),
+                    "series_id=? and type=?", arrayOf(seriesId.seriesId.toString(), "poster"),
                     "rating DESC", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
                     s.onNext(c.toTvBannerMediaMeta())
@@ -792,10 +766,10 @@ class DatabaseClient
         }
     }
 
-    fun getTvBackdrops(seriesId: Long): Observable<MediaMeta> {
+    fun getTvBackdrops(seriesId: TvSeriesId): Observable<TvImageRef> {
         return Observable.create { s ->
             mResolver.query(mUris.tvBanners(), tvBannerProjection,
-                    "series_id=? and type=?", arrayOf(seriesId.toString(), "fanart"),
+                    "series_id=? and type=?", arrayOf(seriesId.seriesId.toString(), "fanart"),
                     "rating DESC", s.cancellationSignal())?.use { c ->
                 while (c.moveToNext()) {
                     s.onNext(c.toTvBannerMediaMeta())
@@ -805,36 +779,22 @@ class DatabaseClient
         }
     }
 
-    val tvBannerProjection = arrayOf("_id", "path", "resolution")
+    val tvBannerProjection = arrayOf("_id", "series_id",
+            "path", "type", "type2", "rating",
+            "rating_count", "resolution")
 
-    fun Cursor.toTvBannerMediaMeta(): MediaMeta {
-        val meta = MediaMeta()
-        meta.mimeType = MIME_TYPE_JPEG
-        meta.rowId = getLong(0)
-        meta.artworkUri = makeTvBannerUri(getString(1))
-        meta.resolution = getString(2)
-        return meta
-    }
-
-    fun getTvSeriesAssociation(query: String): Single<Long> {
-        return Single.create { s ->
-            mResolver.query(mUris.tvLookups(),
-                    arrayOf("series_id"), "q=?", arrayOf(query), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.getLong(0))
-                } else {
-                    s.onError(NoSuchItemException())
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
-    }
-
-    fun setTvSeriesAssociation(query: String, series_id: Long) {
-        val cv = ContentValues(2)
-        cv.put("q", query)
-        cv.put("series_id", series_id)
-        val uri = mResolver.insert(mUris.tvLookups(), cv)
-        //
+    fun Cursor.toTvBannerMediaMeta(): TvImageRef {
+        return TvImageRef(
+                TvImageId(getLong(0),getLong(1)),
+                TvImageMeta(
+                        path =  getString(2),
+                        type = getString(3),
+                        subType = if (!isNull(4)) getString(4) else "",
+                        rating = if (!isNull(5)) getFloat(5) else 0f,
+                        ratingCount = if (!isNull(6)) getInt(6) else 0,
+                        resolution = if (!isNull(7)) getString(7) else ""
+                )
+        )
     }
 
     fun makeMoviePosterUri(base: String, path: String): Uri {
@@ -865,37 +825,23 @@ class DatabaseClient
         } ?: throw VideoDatabaseMalfuction()
     }
 
-    fun addMovie(movie: Movie): Uri {
+    fun addMovie(movie: MovieRef): Uri {
         val values = ContentValues(10)
-        values.put("_id", movie.id)
-        values.put("_display_name", movie.title)
-        values.put("overview", movie.overview)
-        values.put("release_date", movie.releaseDate)
-        values.put("poster_path", movie.posterPath)
-        values.put("backdrop_path", movie.backdropPath)
+        values.put("_id", movie.id.movieId)
+        values.put("_display_name", movie.meta.title)
+        values.put("overview", movie.meta.overview)
+        values.put("release_date", movie.meta.releaseDate)
+        values.put("poster_path", movie.meta.posterPath)
+        values.put("backdrop_path", movie.meta.backdropPath)
         return mResolver.insert(mUris.movies(), values) ?: Uri.EMPTY
     }
 
-    fun getMovie(movieId: Long): Maybe<MediaMeta> {
+    fun getMovie(movieId: MovieId): Maybe<MovieRef> {
         return Maybe.create { s ->
-            mResolver.query(mUris.movie(movieId), arrayOf("_display_name", "overview",
-                    "release_date", "poster_path", "backdrop_path", "_id"), null,
+            mResolver.query(mUris.movie(movieId.movieId), movieProjection, null,
                     null, null, null )?.use { c ->
                 if (c.moveToFirst()) {
-                    val baseUrl = getMovieImageBaseUrl()
-                    val meta = MediaMeta()
-                    meta.mimeType = MIME_TYPE_MOVIE
-                    meta.title = c.getString(0)
-                    meta.overview = c.getString(1)
-                    meta.releaseDate = c.getString(2)
-                    if (!c.isNull(3) && baseUrl != "") {
-                        meta.artworkUri = makeMoviePosterUri(baseUrl, c.getString(3))
-                    }
-                    if (!c.isNull(4) && baseUrl != "") {
-                        meta.backdropUri = makeMovieBackdropUri(baseUrl, c.getString(4))
-                    }
-                    meta.rowId = c.getLong(5)
-                    s.onSuccess(meta)
+                    s.onSuccess(c.toMovieRef())
                 } else {
                     s.onComplete()
                 }
@@ -903,57 +849,48 @@ class DatabaseClient
         }
     }
 
-    fun addMovieImages(imageList: ImageList) {
-        val numPosters = if (imageList.posters != null) imageList.posters.size else 0
-        val numBackdrops = if (imageList.posters != null) imageList.backdrops.size else 0
-        val contentValues = Array(numPosters + numBackdrops, { ContentValues() })
-        var idx = 0
-        if (numPosters > 0) {
-            for (image in imageList.posters) {
-                val values = contentValues[idx++]
-                values.makeImageValues(image)
-                values.put("movie_id", imageList.id)
-                values.put("image_type", "poster")
-            }
-        }
-        if (numBackdrops > 0) {
-            for (image in imageList.backdrops) {
-                val values = contentValues[idx++]
-                values.makeImageValues(image)
-                values.put("movie_id", imageList.id)
-                values.put("image_type", "backdrop")
-            }
+    val movieProjection = arrayOf("_display_name", "overview",
+            "release_date", "poster_path", "backdrop_path", "_id")
+
+    fun Cursor.toMovieRef(): MovieRef {
+        val title = getString(0)
+        val overview = getString(1) ?: ""
+        val releaseDate = getString(2) ?: ""
+        val arwork = if (!isNull(3)) getString(3) else ""
+        val backdrop = if (!isNull(4)) getString(4) else ""
+        val rowId = getLong(5)
+        return MovieRef(
+                MovieId(rowId),
+                MovieMeta(
+                        title = title,
+                        overview = overview,
+                        releaseDate = releaseDate,
+                        posterPath = arwork,
+                        backdropPath = backdrop
+                )
+        )
+    }
+
+    fun addMovieImages(images: List<MovieImageRef>) {
+        val contentValues = Array(images.size, { ContentValues() })
+        for ((idx, image) in images.withIndex()) {
+            contentValues[idx].makeImageValues(image)
         }
         mResolver.bulkInsert(mUris.movieImages(), contentValues)
     }
 
-    fun ContentValues.makeImageValues(image: Image): ContentValues {
+    fun ContentValues.makeImageValues(image: MovieImageRef): ContentValues {
         val values = this
-        values.put("file_path", image.filePath)
-        values.put("resolution", "${image.width}x${image.height}")
-        values.put("vote_average", image.voteAverage)
-        values.put("vote_count", image.voteCount)
-        return values
-    }
-
-    fun setMovieAssociation(movie: String, year: String, id: Long) {
-        val contentValues = ContentValues(2)
-        contentValues.put("q", "$movie::$year")
-        contentValues.put("movie_id", id)
-        mResolver.insert(mUris.movieLookups(), contentValues)
-    }
-
-    fun getMovieAssociation(movie: String, year: String): Single<Long> {
-        return Single.create { s ->
-            mResolver.query(mUris.movieLookups(),
-                    arrayOf("movie_id"), "q=?", arrayOf("$movie::$year"), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.getLong(0))
-                } else {
-                    s.onError(NoSuchItemException())
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
+        if (image.id.imageId > 0) {
+            values.put("_id", image.id.imageId)
         }
+        values.put("movie_id", image.id.movieId)
+        values.put("image_type", image.meta.type)
+        values.put("file_path", image.meta.path)
+        values.put("resolution", image.meta.resolution)
+        values.put("vote_average", image.meta.rating)
+        values.put("vote_count", image.meta.ratingCount)
+        return values
     }
 
 }

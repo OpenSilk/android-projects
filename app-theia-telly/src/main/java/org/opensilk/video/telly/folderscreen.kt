@@ -94,9 +94,6 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
             mFolderAdapter.clear()
             mFolderAdapter.addAll(0, it)
         })
-        mViewModel.noBrowseResults.observe(this, Observer {
-            Toast.makeText(context, "This folder is empty", Toast.LENGTH_LONG).show()
-        })
         mViewModel.loadError.observe(this, Observer {
             Toast.makeText(context, "An error occurred. msg=$it", Toast.LENGTH_LONG).show()
         })
@@ -129,36 +126,36 @@ class FolderViewModel
 ) : ViewModel() {
     val mediaTitle = MutableLiveData<String>()
     val folderItems = MutableLiveData<List<MediaBrowser.MediaItem>>()
-    val noBrowseResults = MutableLiveData<String>()
     val loadError = MutableLiveData<String>()
     private val disposables = CompositeDisposable()
 
     fun onMediaId(mediaId: String) {
-        val mediaRef = newMediaRef(mediaId)
-        subscribeBrowseItems(mediaRef)
-        subscribeTitle(mediaRef)
+        val mediaRef = parseMediaId(mediaId)
+        when (mediaRef) {
+            is UpnpFolderId -> {
+                subscribeBrowseItems(mediaRef)
+                subscribeTitle(mediaRef)
+            }
+        }
     }
 
-    fun subscribeBrowseItems(mediaRef: MediaRef) {
-        val s = mBrowseLoader.observable(mediaRef)
+    fun subscribeBrowseItems(mediaId: UpnpFolderId) {
+        val s = mBrowseLoader.observable(mediaId)
+                .map { list -> list.map { it.toMediaItem() } }
                 .subscribe({
                     folderItems.postValue(it)
                 }, {
-                    if (it is NoBrowseResultsException) {
-                        noBrowseResults.postValue("This folder is empty")
-                    } else {
-                        Timber.e(it, "Loader error msg=${it.message}.")
-                        loadError.postValue(it.message.elseIfBlank("null"))
-                    }
+                    Timber.e(it, "Loader error msg=${it.message}.")
+                    loadError.postValue(it.message.elseIfBlank("null"))
                 })
         disposables.add(s)
     }
 
-    fun subscribeTitle(mediaRef: MediaRef) {
-        val s = mDatabaseClient.getMediaItem(mediaRef)
-                .map(MediaBrowser.MediaItem::_getMediaMeta)
+    fun subscribeTitle(mediaId: UpnpFolderId) {
+        val s = mDatabaseClient.getMediaMeta(mediaId)
+                .map({ it.toMediaItem() })
                 .subscribe(Consumer {
-                    mediaTitle.postValue(it.title)
+                    mediaTitle.postValue(it.description.title?.toString())
                 })
         disposables.add(s)
     }

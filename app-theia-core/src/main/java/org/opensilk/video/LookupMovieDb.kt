@@ -22,9 +22,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import io.reactivex.rxkotlin.toMaybe
-import org.opensilk.media.MediaMeta
-import org.opensilk.media.UPNP_VIDEO
-import org.opensilk.media.newMediaRef
+import org.opensilk.media.*
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
@@ -54,15 +52,12 @@ constructor(
                 }.replay(1).autoConnect()
     }
 
-    override fun lookupObservable(meta: MediaMeta): Observable<MediaMeta> {
-        if (!meta.isVideo) {
-            return Observable.error(IllegalMediaKindException())
-        }
-        val name = meta.lookupName
+    override fun lookupObservable(lookup: LookupRequest): Observable<out MediaRef> {
+        val name = lookup.lookupName
         if (name.isBlank()) {
             return Observable.error(IllegalArgumentException())
         }
-        val year = meta.releaseYear
+        val year = lookup.releaseYear
 
         val networkObservable = Observable.defer {
             //do search
@@ -79,17 +74,17 @@ constructor(
             return@flatMapMaybe if (result == null) {
                 Maybe.empty()
             } else {
-                mClient.getMovie(result.id)
+                Timber.d("Found movie ${result.title}")
+                mClient.getMovie(MovieId(result.id))
                         .switchIfEmpty(fetchCompleteMovieInfo(result))
             }
         }
 
-        return mConfigObservable.flatMap({ _ ->
-            return@flatMap networkObservable
-        }).switchIfEmpty(Observable.error(LookupException("Empty movie data")))
+        return mConfigObservable.flatMap({ networkObservable })
+                .switchIfEmpty(Observable.error(LookupException("Empty movie data")))
     }
 
-    private fun fetchCompleteMovieInfo(movie: Movie): Maybe<MediaMeta> {
+    private fun fetchCompleteMovieInfo(movie: Movie): Maybe<MovieRef> {
         //fetch movie and images
         return Maybe.defer {
             LookupService.waitTurn()
@@ -97,12 +92,16 @@ constructor(
                     mApi.movieObservable(movie.id, "en").firstElement(),
                     mApi.movieImagesObservable(movie.id, "en").firstElement(),
                     BiFunction { m, i -> MovieWithImages(m, i) }
-            ).map {
-                val uri = mClient.addMovie(it.movie)
-                mClient.addMovieImages(it.images)
-                return@map uri
-            }.flatMap { uri ->
-                mClient.getMovie(uri.lastPathSegment.toLong())
+            ).map { mwi ->
+                val ref = mwi.movie.toMovieRef()
+                val posters = mwi.images.posters.map { it.toMovieImageRef(mwi.movie.id, "poster") }
+                val backdrops = mwi.images.backdrops.map { it.toMovieImageRef(mwi.movie.id, "backdrop") }
+                mClient.addMovie(ref)
+                mClient.addMovieImages(posters)
+                mClient.addMovieImages(backdrops)
+                return@map ref.id
+            }.flatMap { id ->
+                mClient.getMovie(id)
             }
         }
     }

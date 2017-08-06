@@ -31,12 +31,7 @@ fun MediaBrowser.MediaItem._getMediaUri(): Uri {
 }
 
 fun MediaDescription._getMediaUri(): Uri {
-    return if (Build.VERSION.SDK_INT >= 23) {
-        this.mediaUri
-    } else {
-        val metaExtras = MediaMeta.from(this)
-        metaExtras.mediaUri
-    }
+    return extras.getParcelable(KEY_MEDIA_URI)
 }
 
 fun MediaBrowser.MediaItem._getMediaTitle(): String {

@@ -19,7 +19,6 @@ import org.opensilk.media.*
 import org.opensilk.video.findActivity
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
 import org.opensilk.video.videoDescInfo
-import org.opensilk.video.videoProgressInfo
 import javax.inject.Inject
 
 /**
@@ -139,7 +138,7 @@ class MediaItemListPresenter
             val description = mediaItem.description
             val metaExtras = mediaItem._getMediaMeta()
             //set progress
-            binding.progressInfo = description.videoProgressInfo()
+            //TODO binding.progressInfo = description.videoProgressInfo()
             //set description
             binding.desc = description.videoDescInfo()
             //load icon
@@ -182,14 +181,14 @@ class MediaItemClickListener
                                rowViewHolder: RowPresenter.ViewHolder?, row: Row?) {
         val context = itemViewHolder.view.findActivity()
         val mediaItem = item as MediaBrowser.MediaItem
-        val mediaId = newMediaRef(mediaItem.mediaId)
-        when (mediaId.kind) {
-            UPNP_DEVICE, UPNP_FOLDER -> {
+        val mediaId = parseMediaId(mediaItem.mediaId)
+        when (mediaId) {
+            is UpnpDeviceId, is UpnpFolderId -> {
                 val intent = Intent(context, FolderActivity::class.java)
                 intent.putExtra(EXTRA_MEDIAID, mediaItem.mediaId)
                 context.startActivity(intent)
             }
-            UPNP_VIDEO -> {
+            is UpnpVideoId -> {
                 val intent = Intent(context, DetailActivity::class.java)
                 intent.putExtra(EXTRA_MEDIAID, mediaItem.mediaId)
                 val bundle = if (itemViewHolder is MediaItemPresenter.ViewHolder) {

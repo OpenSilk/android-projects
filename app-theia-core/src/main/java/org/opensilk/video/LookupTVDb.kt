@@ -18,11 +18,11 @@
 package org.opensilk.video
 
 import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.functions.BiConsumer
 import io.reactivex.functions.Function
-import io.reactivex.functions.Function4
-import org.opensilk.media.MediaMeta
-import org.opensilk.media.UPNP_VIDEO
-import org.opensilk.media.newMediaRef
+import io.reactivex.functions.Function5
+import org.opensilk.media.*
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
 import timber.log.Timber
@@ -41,29 +41,24 @@ constructor(
 
     internal val mTokenObservable: Observable<Token> by lazy {
         //pull cached token
-        mClient.getTvToken().toObservable()
+        mClient.getTvToken()
                 // make sure it is still valid
                 .flatMap { token -> mApi.refreshToken(token) }
                 //if above fails do fresh login
-                .onErrorResumeNext(Function { mApi.login(mTVDbAuth) })
-                .doOnNext { token -> mClient.setTvToken(token) }
+                .onErrorResumeNext({ mApi.login(mTVDbAuth) })
+                .doOnSuccess { token -> mClient.setTvToken(token) }
                 //only run this once
-                .replay(1).autoConnect()
+                .toObservable().replay(1).autoConnect()
     }
 
-    override fun lookupObservable(meta: MediaMeta): Observable<MediaMeta> {
-        if (!meta.isVideo) {
-            return Observable.error(IllegalMediaKindException())
-        }
-        val name = meta.lookupName
-        val seasonNumber = meta.seasonNumber
-        val episodeNumber = meta.episodeNumber
+    override fun lookupObservable(lookup: LookupRequest): Observable<out MediaRef> {
+        val name = lookup.lookupName
+        val seasonNumber = lookup.seasonNumber
+        val episodeNumber = lookup.episodeNumber
 
-        //note this will likely emit multiple episodes, one for each matching
-        //series, the first emission should be the best match
-        val networkObservable = mTokenObservable.flatMap { token ->
+        val networkObservable = mTokenObservable.flatMapSingle { token ->
             //get list of series matching name
-            Observable.defer {
+            Single.defer {
                 LookupService.waitTurn()
                 Timber.d("Searching name=$name")
                 mApi.searchSeries(token, name)
@@ -73,56 +68,76 @@ constructor(
                 Timber.d("Found series ${it.seriesName}")
             }
         }.flatMap { ss ->
-            mClient.getTvEpisodes(ss.id).switchIfEmpty(fetchCompleteSeriesInfo(ss))
+            mClient.getTvEpisodesForTvSeries(TvSeriesId(ss.id))
+                    .switchIfEmpty(fetchCompleteSeriesInfo(ss))
         }
 
-        Timber.d("TV Lookup for ${meta.displayName} name=$name, s=$seasonNumber, e=$episodeNumber")
+        Timber.d("TV Lookup name=$name, s=$seasonNumber, e=$episodeNumber")
 
         return networkObservable
                 //find our episode
-                .filter { it.seasonNumber == seasonNumber && it.episodeNumber == episodeNumber }
+                .filter { it.meta.seasonNumber == seasonNumber && it.meta.episodeNumber == episodeNumber }
                 //no episodes is an error
                 .switchIfEmpty(Observable.error(LookupException("Empty episode data")))
     }
 
-    class SeriesEpisodesImages(val series: Series, val episodes: List<SeriesEpisode>,
-                               val posters: List<SeriesImageQuery>, val fanart: List<SeriesImageQuery>)
+    private class SeriesEpisodesImages(val series: Series,
+                               val episodes: SeriesEpisodeData,
+                               val posters: SeriesImageQueryData,
+                               val fanart: SeriesImageQueryData,
+                               val season: SeriesImageQueryData)
 
-    private fun fetchCompleteSeriesInfo(ss: SeriesSearch): Observable<MediaMeta> {
+    private data class SeriesEpisodesList(val episodes: MutableList<SeriesEpisode> = ArrayList())
+
+    private fun fetchCompleteSeriesInfo(ss: SeriesSearch): Observable<TvEpisodeRef> {
         //fetch full series metadata
         return Observable.defer {
             LookupService.waitTurn()
-            mTokenObservable.flatMap { token ->
-                Observable.zip<Series, List<SeriesEpisode>, List<SeriesImageQuery>,
-                        List<SeriesImageQuery>, SeriesEpisodesImages>(
-                        mApi.series(token, ss.id).map { it.data },
-                        fetchPaginatedEpisodes(token, ss.id, 1).toList().toObservable(),
-                        mApi.seriesImagesQuery(token, ss.id, "poster").map { it.data },
-                        mApi.seriesImagesQuery(token, ss.id, "fanart").map { it.data },
-                        Function4 { s, e, p, f -> SeriesEpisodesImages(s, e, p, f) }
+            mTokenObservable.flatMapSingle { token ->
+                Single.zip(listOf(
+                        mApi.series(token, ss.id),
+                        fetchPaginatedEpisodes(token, ss.id, 1)
+                                .collectInto(SeriesEpisodesList(), { (episodes), e -> episodes.add(e) }),
+                        mApi.seriesImagesQuery(token, ss.id, "poster"),
+                        mApi.seriesImagesQuery(token, ss.id, "fanart"),
+                        mApi.seriesImagesQuery(token, ss.id, "season")),
+                        { SeriesEpisodesImages(
+                                it[0] as Series,
+                                it[1] as SeriesEpisodeData,
+                                it[2] as SeriesImageQueryData,
+                                it[3] as SeriesImageQueryData,
+                                it[4] as SeriesImageQueryData) }
                 )
             }
         }.map { swi ->
-            Timber.d("Fetched series ${swi.series.seriesName} ${swi.episodes.size} episodes")
-            for (e in swi.episodes) {
-                Timber.d("Episode ${e.episodeName} s${e.airedSeason}e${e.airedEpisodeNumber}")
-            }
+            Timber.d("Fetched series ${swi.series.seriesName} ${swi.episodes.data.size} episodes")
+            //for (e in swi.episodes.data) {
+            //    Timber.d("Episode ${e.episodeName} s${e.airedSeason}e${e.airedEpisodeNumber}")
+            //}
             //insert into database
-            val uri = mClient.addTvSeries(swi.series, swi.posters.firstOrNull(), swi.fanart.firstOrNull())
-            mClient.addTvEpisodes(swi.series.id, swi.episodes)
-            mClient.addTvImages(swi.series.id, swi.posters)
-            mClient.addTvImages(swi.series.id, swi.fanart)
-            return@map uri
-        }.flatMap { uri ->
+            val ref = swi.series.toTvSeriesRef(swi.posters.data.firstOrNull(), swi.fanart.data.firstOrNull())
+            val episodes = swi.episodes.data.map { ep -> ep.toTvEpisodeRef(swi.series.id,
+                    swi.season.data.firstOrNull { (it.subKey?.toIntOrNull() ?: -1) == ep.airedSeason },
+                    swi.fanart.data.firstOrNull()) }
+            val posters = swi.posters.data.map { it.toTvImage(swi.series.id) }
+            val bakcdrops = swi.posters.data.map { it.toTvImage(swi.series.id) }
+            val seasons = swi.posters.data.map { it.toTvImage(swi.series.id) }
+            mClient.addTvSeries(ref)
+            mClient.addTvEpisodes(episodes)
+            mClient.addTvImages(posters)
+            mClient.addTvImages(bakcdrops)
+            mClient.addTvImages(seasons)
+            return@map ref.id
+        }.flatMap { id ->
             //pull episodes back from database
-            mClient.getTvEpisodes(uri.lastPathSegment.toLong())
+            mClient.getTvEpisodesForTvSeries(id)
         }
     }
 
     private fun fetchPaginatedEpisodes(token: Token, seriesId: Long, page: Int): Observable<SeriesEpisode> {
-        return mApi.seriesEpisodes(token, seriesId, page).flatMap { data ->
+        return mApi.seriesEpisodes(token, seriesId, page).flatMapObservable { data ->
             val next = data.links?.next
-            return@flatMap if (next == null) {
+            return@flatMapObservable if (next == null) {
                 Observable.fromIterable(data.data)
             } else {
                 Observable.fromIterable(data.data)

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
+import android.media.MediaDescription
 import android.media.MediaMetadata
 import android.media.Rating
 import android.media.session.MediaController
@@ -31,6 +32,7 @@ import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.experimental.CoroutineContext
 import kotlin.properties.Delegates
 
 const val ACTION_SET_REPEAT = "org.opensilk.media.ACTION_SET_REPEAT"
@@ -203,14 +205,13 @@ constructor(
             ExoPlayer.STATE_ENDED -> {
                 //update pos on last played
                 mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-                    val ref = newMediaRef(item.description.mediaId)
+                    val ref = parseMediaId(item.description.mediaId)
                     mDbClient.setLastPlaybackPosition(ref, mExoPlayer.duration, mExoPlayer.duration)
                 })
                 mQueue.goToNext().subscribe({ item ->
-                    val meta = item.description._getMediaMeta()
-                    prepareMedia(meta)
+                    prepareMedia(item.description._getMediaUri())
                     mExoPlayer.playWhenReady = true
-                    updateMetadata(meta)
+                    updateMetadata(item.description)
                 }, { error ->
                     stop()
                     changeState(STATE_ERROR) {
@@ -232,9 +233,8 @@ constructor(
                 val metaDuration = controller.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0
                 if (rendererDuration != metaDuration) {
                     mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-                        val meta = item.description._getMediaMeta()
-                        meta.duration = rendererDuration
-                        updateMetadata(meta)
+                        item.description.extras.putLong(KEY_DURATION, rendererDuration)
+                        updateMetadata(item.description)
                     })
                 }
             }
@@ -296,7 +296,7 @@ constructor(
         }
     }
 
-    private class MetaWithPos(val list: List<MediaMeta>, val pos: Long)
+    private class MetaWithPos(val list: List<MediaRef>, val pos: Long)
 
     override fun onPlayFromMediaId(mediaId: String, extras: Bundle?) {
         Timber.d("onPlayFromMediaId(%s)", mediaId)
@@ -309,33 +309,33 @@ constructor(
             }
             return
         }
-        val mediaRef = newMediaRef(mediaId)
+        val mediaRef = parseMediaId(mediaId)
         val playbackExtras = extras._playbackExtras()
-        when (mediaRef.kind) {
-            UPNP_VIDEO -> {
-                Single.zip<List<MediaMeta>, Long, MetaWithPos>(
-                        mDbClient.siblingsOf(mediaRef).toSortedList(AlphanumComparator),
+        when (mediaRef) {
+            is UpnpVideoId -> {
+                Single.zip<List<MediaRef>, Long, MetaWithPos>(
+                        mDbClient.siblingsOf(mediaRef).toList(),
                         //get playback position for resume
-                        mDbClient.getLastPlaybackPosition(mediaRef).onErrorReturn { 0 },
+                        mDbClient.getLastPlaybackPosition(mediaRef)
+                                .defaultIfEmpty(0).toSingle(),
                         BiFunction { list, pos -> MetaWithPos(list, pos) }
                 ).subscribe({ mwp ->
-                    val meta = mwp.list.first { newMediaRef(it.mediaId) == mediaRef }
                     val lastPlaybackPosition = if (playbackExtras.resume) mwp.pos else 0
                     //fixup the queue
                     mwp.list.forEach {
-                        mQueue.add(it)
-                    }
-                    mQueue.get().first {
-                        newMediaRef(it.description.mediaId) == mediaRef
-                    }.let {
-                        mQueue.setCurrent(it.queueId)
+                        mQueue.add(it.toMediaDescription())
                     }
                     mMediaSession.setQueue(mQueue.get())
+                    val current = mQueue.get().first {
+                        parseMediaId(it.description.mediaId) == mediaRef
+                    }
+                    mQueue.setCurrent(current.queueId)
                     //play it
-                    prepareMedia(meta, lastPlaybackPosition)
+                    prepareMedia(current.description._getMediaUri(), lastPlaybackPosition)
                     if (playbackExtras.playWhenReady) {
                         play()
                     }
+                    updateMetadata(current.description)
                 }, { t ->
                     stop()
                     changeState(STATE_ERROR) {
@@ -346,17 +346,15 @@ constructor(
             else -> {
                 stop()
                 changeState(STATE_ERROR) {
-                    it.setErrorMessage("Unsupported media kind=${mediaRef.kind}")
+                    it.setErrorMessage("Unsupported media kind=${mediaRef::class}")
                 }
             }
         }
     }
 
-    private fun prepareMedia(meta: MediaMeta, lastPlaybackPosition: Long = 0) {
-        //update meta
-        updateMetadata(meta)
+    private fun prepareMedia(mediaUri: Uri, lastPlaybackPosition: Long = 0) {
         //assemble mediasource
-        val mediaSource = newMediaSource(meta.mediaUri)
+        val mediaSource = newMediaSource(mediaUri)
         mExoPlayer.prepare(mediaSource)
         if (lastPlaybackPosition > 0) {
             mExoPlayer.seekTo(lastPlaybackPosition)
@@ -386,7 +384,7 @@ constructor(
         }
         //save current pos
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = newMediaRef(item.description.mediaId)
+            val ref = parseMediaId(item.description.mediaId)
             mDbClient.setLastPlaybackPosition(ref,
                     mExoPlayer.currentPosition, mExoPlayer.duration)
         })
@@ -407,15 +405,14 @@ constructor(
         Timber.d("onSkipToNext()")
         //clear last pos for current item
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = newMediaRef(item.description.mediaId)
+            val ref = parseMediaId(item.description.mediaId)
             mDbClient.setLastPlaybackPosition(ref, 0, 1)
         })
         mQueue.goToNext().subscribe({
-            val meta = it.description._getMediaMeta()
             pause()
-            prepareMedia(meta)
+            prepareMedia(it.description._getMediaUri())
             play()
-            updateMetadata(meta)
+            updateMetadata(it.description)
         }, { error ->
             stop()
             changeState(STATE_ERROR) {
@@ -428,15 +425,14 @@ constructor(
         Timber.d("onSkipToPrevious()")
         //clear last pos for current item
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = newMediaRef(item.description.mediaId)
+            val ref = parseMediaId(item.description.mediaId)
             mDbClient.setLastPlaybackPosition(ref, 0, 1)
         })
         mQueue.goToPrevious().subscribe({
-            val meta = it.description._getMediaMeta()
             pause()
-            prepareMedia(meta)
+            prepareMedia(it.description._getMediaUri())
             play()
-            updateMetadata(meta)
+            updateMetadata(it.description)
         }, { error ->
             stop()
             changeState(STATE_ERROR) {
@@ -459,7 +455,7 @@ constructor(
         Timber.d("onStop()")
         //save current pos
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = newMediaRef(item.description.mediaId)
+            val ref = parseMediaId(item.description.mediaId)
             mDbClient.setLastPlaybackPosition(ref,
                     mExoPlayer.currentPosition, mExoPlayer.duration)
         })
@@ -500,15 +496,15 @@ constructor(
      * End mediasession callback methods
      */
 
-    private fun updateMetadata(meta: MediaMeta) {
+    private fun updateMetadata(desc: MediaDescription) {
         val bob = MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, meta.mediaId)
-                .putString(MediaMetadata.METADATA_KEY_TITLE, meta.title.elseIfBlank(meta.displayName))
-                .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, meta.title.elseIfBlank(meta.displayName))
-                .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, meta.subtitle)
-                .putLong(MediaMetadata.METADATA_KEY_DURATION, meta.duration)
-        if (meta.artworkUri != Uri.EMPTY) {
-            bob.putString(MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI, meta.artworkUri.toString())
+        bob.putString(MediaMetadata.METADATA_KEY_MEDIA_ID, desc.mediaId)
+                .putText(MediaMetadata.METADATA_KEY_TITLE, desc.title)
+                .putText(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, desc.title)
+                .putText(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, desc.subtitle)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, desc.extras.getLong(KEY_DURATION, 0))
+        if (!desc.iconUri.isEmpty()) {
+            bob.putString(MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI, desc.iconUri.toString())
         }
         //TODO load bitmap
         mMediaSession.setMetadata(bob.build())

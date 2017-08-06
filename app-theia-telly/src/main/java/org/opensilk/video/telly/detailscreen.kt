@@ -27,6 +27,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
+import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
@@ -273,33 +274,37 @@ class DetailViewModel
 
     fun onMediaId(mediaId: String) {
         disponables.clear()
-        val ref = newMediaRef(mediaId)
-        subscribeVideoDescription(ref)
-        subscribeFileInfo(ref)
-        subscribeLastPosition(ref)
-        subscribePosterUri(ref)
-        subscribeBackdropUri(ref)
+        val ref = parseMediaId(mediaId)
+        when (ref) {
+            is UpnpVideoId -> {
+                subscribeVideoDescription(ref)
+                subscribeFileInfo(ref)
+                subscribeLastPosition(ref)
+                subscribePosterUri(ref)
+                subscribeBackdropUri(ref)
+            }
+        }
+
     }
 
-    fun changes(mediaRef: MediaRef): Observable<Boolean> {
+    fun changes(mediaId: UpnpVideoId): Observable<Boolean> {
         return mClient.changesObservable
-                .filter { it is UpnpVideoChange && it.videoId == mediaRef.mediaId }
+                .filter { it is UpnpVideoChange && it.videoId == mediaId }
                 .map { true }
                 .startWith(true)
     }
 
-    fun cachedMeta(mediaRef: MediaRef): Observable<MediaMeta> {
-        return changes(mediaRef)
-                .flatMapSingle {
-                    mClient.getUpnpVideo(mediaRef.mediaId as UpnpVideoId)
-                            .subscribeOn(AppSchedulers.diskIo)
+    fun cachedMeta(mediaId: UpnpVideoId): Observable<UpnpVideoRef> {
+        return changes(mediaId)
+                .flatMapMaybe {
+                    mClient.getUpnpVideo(mediaId).subscribeOn(AppSchedulers.diskIo)
                 }
     }
 
-    fun subscribeVideoDescription(mediaRef: MediaRef) {
-        val s = cachedMeta(mediaRef).flatMapMaybe { meta ->
-            mClient.getMediaOverview(mediaRef).defaultIfEmpty("").map { overview ->
-                VideoDescInfo(meta.title.elseIfBlank(meta.displayName), meta.subtitle, overview)
+    fun subscribeVideoDescription(mediaId: UpnpVideoId) {
+        val s = cachedMeta(mediaId).flatMapMaybe { meta ->
+            mClient.getMediaOverview(mediaId).defaultIfEmpty("").map { overview ->
+                VideoDescInfo(meta.meta.title.elseIfBlank(meta.meta.mediaTitle), meta.meta.subtitle, overview)
             }
         }.subscribeIgnoreError(Consumer {
             videoDescription.postValue(it)
@@ -307,23 +312,23 @@ class DetailViewModel
         disponables.add(s)
     }
 
-    fun subscribeFileInfo(mediaRef: MediaRef) {
-        val s = cachedMeta(mediaRef).map { meta ->
-            VideoFileInfo(meta.displayName, meta.size, meta.duration)
+    fun subscribeFileInfo(mediaId: UpnpVideoId) {
+        val s = cachedMeta(mediaId).map { meta ->
+            VideoFileInfo(meta.meta.mediaTitle, meta.meta.size, meta.meta.duration)
         }.subscribeIgnoreError(Consumer {
             fileInfo.postValue(it)
         })
         disponables.add(s)
     }
 
-    fun subscribeLastPosition(mediaRef: MediaRef) {
-        val s = changes(mediaRef)
-                .flatMapSingle {
-                    Single.zip<Long, Int, ResumeInfo>(
-                            mClient.getLastPlaybackPosition(mediaRef),
-                            mClient.getLastPlaybackCompletion(mediaRef),
+    fun subscribeLastPosition(mediaId: UpnpVideoId) {
+        val s = changes(mediaId)
+                .flatMapMaybe {
+                    Maybe.zip<Long, Int, ResumeInfo>(
+                            mClient.getLastPlaybackPosition(mediaId),
+                            mClient.getLastPlaybackCompletion(mediaId),
                             BiFunction { pos, comp -> ResumeInfo(pos, comp) }
-                    ).onErrorReturn { ResumeInfo() }.subscribeOn(AppSchedulers.diskIo)
+                    ).defaultIfEmpty(ResumeInfo()).subscribeOn(AppSchedulers.diskIo)
                 }
                 .subscribeIgnoreError(Consumer {
                     resumeInfo.postValue(it)
@@ -331,9 +336,9 @@ class DetailViewModel
         disponables.add(s)
     }
 
-    fun subscribePosterUri(mediaRef: MediaRef) {
-        val s = cachedMeta(mediaRef)
-                .map { it.artworkUri }
+    fun subscribePosterUri(mediaId: UpnpVideoId) {
+        val s = cachedMeta(mediaId)
+                .map { it.meta.artworkUri }
                 .filter { it != Uri.EMPTY }
                 .subscribeIgnoreError(Consumer {
                     posterUri.postValue(it)
@@ -341,9 +346,9 @@ class DetailViewModel
         disponables.add(s)
     }
 
-    fun subscribeBackdropUri(mediaRef: MediaRef) {
-        val s = cachedMeta(mediaRef)
-                .map { it.backdropUri }
+    fun subscribeBackdropUri(mediaId: UpnpVideoId) {
+        val s = cachedMeta(mediaId)
+                .map { it.meta.backdropUri }
                 .filter { it != Uri.EMPTY }
                 .subscribeIgnoreError(Consumer {
                     backdropUri.postValue(it)

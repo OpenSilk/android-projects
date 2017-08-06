@@ -19,6 +19,11 @@ fun Bundle._putInt(key: String, data: Int): Bundle {
     return this
 }
 
+fun Bundle._putLong(key: String, data: Long): Bundle {
+    this.putLong(key, data)
+    return this
+}
+
 fun bundle(key: String, data: String): Bundle {
     return bundle()._putString(key, data)
 }

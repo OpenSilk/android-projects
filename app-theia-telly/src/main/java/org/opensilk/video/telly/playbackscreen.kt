@@ -107,11 +107,11 @@ class PlaybackViewModel
         mTransportControls.sendCustomAction(ACTION_SET_REPEAT, bundle(KEY_REPEAT, VAL_REPEAT_OFF))
     }
 
-    fun onMediaRef(mediaRef: MediaRef, playbackExtras: PlaybackExtras) {
-        mTransportControls.playFromMediaId(mediaRef.toJson(), playbackExtras.bundle())
+    fun onMediaRef(mediaId: MediaId, playbackExtras: PlaybackExtras) {
+        mTransportControls.playFromMediaId(mediaId.json, playbackExtras.bundle())
 
         val intent = Intent(mContext, PlaybackActivity::class.java)
-                .setAction(ACTION_RESUME).putExtra(EXTRA_MEDIAID, mediaRef.toJson())
+                .setAction(ACTION_RESUME).putExtra(EXTRA_MEDIAID, mediaId.json)
         val pendingIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
         mPlaybackSession.session.setSessionActivity(pendingIntent)
     }
@@ -380,7 +380,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
     }
 
     private fun handleIntent(intent: Intent) {
-        val mediaRef = newMediaRef(intent.getStringExtra(EXTRA_MEDIAID))
+        val mediaRef = parseMediaId(intent.getStringExtra(EXTRA_MEDIAID))
         val playbackExtras = PlaybackExtras()
         playbackExtras.playWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
         playbackExtras.resume = intent.action == ACTION_RESUME

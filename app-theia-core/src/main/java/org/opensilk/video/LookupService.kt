@@ -18,6 +18,7 @@
 package org.opensilk.video
 
 import android.content.Context
+import android.os.Bundle
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Observable
@@ -26,7 +27,10 @@ import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import org.apache.commons.lang3.concurrent.TimedSemaphore
 import org.opensilk.common.dagger.ForApplication
+import org.opensilk.media.MediaId
 import org.opensilk.media.MediaMeta
+import org.opensilk.media.MediaRef
+import org.opensilk.media.UpnpVideoRef
 import org.opensilk.tmdb.api.ApiKeyInterceptor
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tvdb.api.LanguageInterceptor
@@ -97,8 +101,14 @@ object LookupConfigModule {
     }
 }
 
+data class LookupRequest(val mediaRef: MediaRef,
+                         var lookupName: String = "",
+                         var releaseYear: String = "",
+                         var episodeNumber: Int = -1,
+                         var seasonNumber: Int = -1)
+
 interface LookupHandler {
-    fun lookupObservable(meta: MediaMeta): Observable<MediaMeta>
+    fun lookupObservable(lookup: LookupRequest): Observable<out MediaRef>
 }
 
 class LookupException(msg: String = ""): Exception(msg)
@@ -131,32 +141,29 @@ class LookupService
         }
     }
 
-    override fun lookupObservable(meta: MediaMeta): Observable<MediaMeta> {
-        val title = meta.displayName
-        if (meta.lookupName !=  "") {
-            return if (meta.seasonNumber != 0) {
-                mTVDb.lookupObservable(meta)
-            } else {
-                mMovieDb.lookupObservable(meta)
-            }
-        } else if (matchesTvEpisode(title)) {
+    override fun lookupObservable(lookup: LookupRequest): Observable<out MediaRef> {
+        val title = when (lookup.mediaRef) {
+            is UpnpVideoRef -> lookup.mediaRef.meta.mediaTitle
+            else -> return Observable.error(LookupException("Invalid mediaRef ${lookup.mediaRef::class}"))
+        }
+        if (matchesTvEpisode(title)) {
             val name = extractSeriesName(title)
             val seasonNum = extractSeasonNumber(title)
             val episodeNum = extractEpisodeNumber(title)
             if (name.isNullOrBlank() || seasonNum < 0 || episodeNum < 0) {
                 return Observable.error(LookupException("Unable to parse $title"))
             }
-            meta.lookupName = name
-            meta.seasonNumber = seasonNum
-            meta.episodeNumber = episodeNum
-            return mTVDb.lookupObservable(meta)
+            lookup.lookupName = name
+            lookup.seasonNumber = seasonNum
+            lookup.episodeNumber = episodeNum
+            return mTVDb.lookupObservable(lookup)
         } else if (matchesMovie(title)) {
             val name = extractMovieName(title) ?:
                     return Observable.error(LookupException("Unable to parse $title"))
             val year = extractMovieYear(title) ?: ""
-            meta.lookupName = name
-            meta.releaseYear = year
-            return mMovieDb.lookupObservable(meta)
+            lookup.lookupName = name
+            lookup.releaseYear = year
+            return mMovieDb.lookupObservable(lookup)
         } else {
             return Observable.error(LookupException("$title does not match movie or episode pattern"))
         }

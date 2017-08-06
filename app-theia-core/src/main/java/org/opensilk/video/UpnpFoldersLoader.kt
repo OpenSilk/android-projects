@@ -22,10 +22,10 @@ class UpnpFoldersLoader
         private val mLookupService: LookupService
 ) {
 
-    fun observable(mediaRef: MediaRef): Observable<List<MediaBrowser.MediaItem>> {
-        val folderId = when (mediaRef.kind) {
-            UPNP_FOLDER -> mediaRef.mediaId as UpnpFolderId
-            UPNP_DEVICE -> UpnpFolderId((mediaRef.mediaId as UpnpDeviceId).deviceId, UPNP_ROOT_ID)
+    fun observable(mediaId: MediaId): Observable<List<MediaRef>> {
+        val folderId = when (mediaId) {
+            is UpnpFolderId -> mediaId
+            is UpnpDeviceId -> UpnpFolderId(mediaId.deviceId, UPNP_ROOT_ID)
             else -> TODO("Unsupported mediaid")
         }
         val lookups = CompositeDisposable()
@@ -44,7 +44,7 @@ class UpnpFoldersLoader
                     // we get new thread because of rather complex operation
                     if (change) {
                         doNetwork(folderId).andThen(doDisk(folderId))
-                                .doOnSuccess { lookups.add(sendToLookup(it)) }
+                                //.doOnSuccess { lookups.add(sendToLookup(it)) }
                                 .subscribeOn(AppSchedulers.newThread)
                     } else {
                         doDisk(folderId).subscribeOn(AppSchedulers.diskIo)
@@ -59,12 +59,10 @@ class UpnpFoldersLoader
                         mDatabaseClient.hideChildrenOf(folderId)
                         for (item in itemList) {
                             //insert/update remote item in database
-                            val ref = newMediaRef(item.mediaId)
-                            when (ref.kind) {
-                                UPNP_FOLDER -> mDatabaseClient.addUpnpFolder(item)
-                                UPNP_VIDEO -> mDatabaseClient.addUpnpVideo(item)
-                                else -> Timber.e("Invalid kind slipped through %s for %s",
-                                        ref.kind, item.displayName)
+                            when (item) {
+                                is UpnpFolderRef -> mDatabaseClient.addUpnpFolder(item)
+                                is UpnpVideoRef -> mDatabaseClient.addUpnpVideo(item)
+                                else -> Timber.e("Invalid kind slipped through ${item::class}")
                             }
                         }
                         s.onComplete()
@@ -72,16 +70,17 @@ class UpnpFoldersLoader
                 }
     }
 
-    private fun doDisk(folderId: UpnpFolderId): Single<List<MediaBrowser.MediaItem>> {
+    private fun doDisk(folderId: UpnpFolderId): Single<List<MediaRef>> {
         return Observable.concat(
-                mDatabaseClient.getUpnpFolders(folderId),
-                mDatabaseClient.getUpnpVideos(folderId)
-        ).map { it.toMediaItem() }.toList()
+                mDatabaseClient.getUpnpFoldersUnder(folderId),
+                mDatabaseClient.getUpnpVideosUnder(folderId)
+        ).toList()
     }
 
-    private fun sendToLookup(metaList: List<MediaBrowser.MediaItem>): Disposable {
-        return Observable.fromIterable(metaList).map { it._getMediaMeta() }
-                .filter { newMediaRef(it.mediaId).kind == UPNP_VIDEO && !it.isParsed }
+    /*
+    private fun sendToLookup(metaList: List<MediaRef>): Disposable {
+        return Observable.fromIterable(metaList)
+                .filter { it is UpnpVideoRef }
                 .flatMapCompletable { meta ->
                     mLookupService.lookupObservable(meta).firstOrError().flatMapCompletable({ lookup ->
                         associateMetaWithLookup(meta, lookup)
@@ -114,4 +113,5 @@ class UpnpFoldersLoader
             }
         }
     }
+    */
 }

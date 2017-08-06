@@ -132,10 +132,6 @@ constructor() {
         return add(newItem(desc))
     }
 
-    fun add(meta: MediaMeta): Boolean {
-        return add(newItem(meta.toMediaItem().description))
-    }
-
     fun remove(itemId: Long) : Boolean {
         val idx = mQueue.indexOfFirst { it.queueId == itemId }
         if (idx < 0) {

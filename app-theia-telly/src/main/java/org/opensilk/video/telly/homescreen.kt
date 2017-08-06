@@ -23,6 +23,7 @@ import io.reactivex.exceptions.Exceptions
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
+import org.opensilk.media.toMediaItem
 import org.opensilk.video.LiveDataObserver
 import org.opensilk.video.NewlyAddedLoader
 import org.opensilk.video.UpnpDevicesLoader
@@ -148,6 +149,7 @@ class HomeViewModel
 
     fun subscribeServers() {
         val s = mServersLoader.observable
+                .map { list -> list.map { it.toMediaItem() } }
                 .subscribe({
                     servers.postValue(it)
                 }, {
@@ -159,6 +161,7 @@ class HomeViewModel
 
     fun subscribeNewlyAdded() {
         val s = mNewlyAddedLoader.observable
+                .map { list -> list.map { it.toMediaItem() } }
                 .subscribe({
                     newlyAdded.postValue(it)
                 }, {

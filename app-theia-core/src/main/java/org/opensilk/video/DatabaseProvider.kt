@@ -51,10 +51,6 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.TV_SERIES -> {
                 table = "tv_series"
             }
-            DatabaseMatches.TV_SERIES_ONE_EPISODES -> {
-                table = "tv_episodes"
-                realSelection = "series_id=" + uri.pathSegments[uri.pathSegments.size - 1]
-            }
             DatabaseMatches.TV_SERIES_SEARCH -> {
                 table = "tv_series_search"
             }
@@ -72,32 +68,8 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.TV_BANNERS -> {
                 table = "tv_banners"
             }
-            DatabaseMatches.TV_ACTORS_ONE -> {
-                id = uri.lastPathSegment.toLong()
-                table = "tv_actors"
-            }
-            DatabaseMatches.TV_ACTORS -> {
-                table = "tv_actors"
-            }
-            DatabaseMatches.TV_LOOKUPS -> {
-                table = "tv_lookups"
-            }
             DatabaseMatches.TV_CONFIG -> {
                 table = "tv_config"
-            }
-            DatabaseMatches.TV_EPISODE_DESC_ONE -> {
-                id = uri.lastPathSegment.toLong()
-                table = "tv_episode_series_map"
-            }
-            DatabaseMatches.TV_EPISODE_DESC -> {
-                table = "tv_episode_series_map"
-            }
-            DatabaseMatches.MEDIA_ONE -> {
-                id = uri.lastPathSegment.toLong()
-                table = "media"
-            }
-            DatabaseMatches.MEDIA -> {
-                table = "media"
             }
             DatabaseMatches.MOVIES_ONE -> {
                 id = uri.lastPathSegment.toLong()
@@ -112,9 +84,6 @@ class DatabaseProvider: ContentProvider() {
             }
             DatabaseMatches.MOVIE_IMAGES -> {
                 table = "movie_images"
-            }
-            DatabaseMatches.MOVIE_LOOKUPS -> {
-                table = "movie_lookups"
             }
             DatabaseMatches.MOVIE_SEARCH -> {
                 table = "movies_search"
@@ -177,21 +146,9 @@ class DatabaseProvider: ContentProvider() {
                 val id = db.insertWithOnConflict("tv_banners", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.tvBanner(id)
             }
-            DatabaseMatches.TV_ACTORS -> {
-                val id = db.insertWithOnConflict("tv_actors", null, values, SQLiteDatabase.CONFLICT_REPLACE)
-                return mUris.tvActor(id)
-            }
-            DatabaseMatches.TV_LOOKUPS -> {
-                val id = db.insertWithOnConflict("tv_lookups", null, values, SQLiteDatabase.CONFLICT_REPLACE)
-                return mUris.tvLookups()
-            }
             DatabaseMatches.TV_CONFIG -> {
                 val id = db.insertWithOnConflict("tv_config", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.tvConfig()
-            }
-            DatabaseMatches.MEDIA -> {
-                val id = db.insertWithOnConflict("media", null, values, SQLiteDatabase.CONFLICT_FAIL)
-                return mUris.media(id)
             }
             DatabaseMatches.MOVIES -> {
                 val id = db.insertWithOnConflict("movies", null, values, SQLiteDatabase.CONFLICT_REPLACE)
@@ -200,10 +157,6 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.MOVIE_IMAGES -> {
                 val id = db.insertWithOnConflict("movie_images", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.movieImage(id)
-            }
-            DatabaseMatches.MOVIE_LOOKUPS -> {
-                val id = db.insertWithOnConflict("movie_lookups", null, values, SQLiteDatabase.CONFLICT_REPLACE)
-                return mUris.movieLookups()
             }
             DatabaseMatches.MOVIE_CONFIG -> {
                 val id = db.insertWithOnConflict("movie_config", null, values, SQLiteDatabase.CONFLICT_REPLACE)
@@ -267,15 +220,6 @@ class DatabaseProvider: ContentProvider() {
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
         val db = mDatabase.writableDatabase
         when (mUris.matcher.match(uri)) {
-            DatabaseMatches.MEDIA -> {
-                return db.delete("media", selection, selectionArgs)
-            }
-            DatabaseMatches.MEDIA_ONE -> {
-                if (selection != null) {
-                    Timber.w("Ignoring selection %s for delete of %s", selectionArgs, uri)
-                }
-                return db.delete("media", "_id=" + uri.lastPathSegment, null)
-            }
             DatabaseMatches.UPNP_FOLDERS_ONE -> {
                 return db.delete("upnp_folder", "_id=?", arrayOf(uri.lastPathSegment))
             }
@@ -289,19 +233,6 @@ class DatabaseProvider: ContentProvider() {
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<String>?): Int {
         val db = mDatabase.writableDatabase
         when (mUris.matcher.match(uri)) {
-            DatabaseMatches.MEDIA -> {
-                return db.updateWithOnConflict("media", values, selection, selectionArgs, SQLiteDatabase.CONFLICT_IGNORE)
-            }
-            DatabaseMatches.MEDIA_ONE -> {
-                val id = uri.lastPathSegment.toLong()
-                var realSel = selection
-                if (realSel.isNullOrEmpty()) {
-                    realSel = "_id=" + id
-                } else {
-                    realSel = selection + " AND _id=" + id
-                }
-                return db.updateWithOnConflict("media", values, realSel, selectionArgs, SQLiteDatabase.CONFLICT_IGNORE)
-            }
             DatabaseMatches.MOVIES -> {
                 return db.update("movies", values, selection, selectionArgs)
             }

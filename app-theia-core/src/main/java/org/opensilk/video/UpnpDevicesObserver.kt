@@ -76,7 +76,7 @@ class UpnpDevicesObserver
     override fun deviceAdded(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
         device.findService(CDSserviceType)?.let { service ->
             val metaDevice = service.device.toMediaMeta()
-            Timber.d("Found new CDS ${metaDevice.title}")
+            Timber.d("Found new CDS ${metaDevice.meta.title}")
             mDatabaseClient.addUpnpDevice(metaDevice)
             mDatabaseClient.postChange(UpnpDeviceChange())
             subscribeEvents(service)

@@ -7,7 +7,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import javax.inject.Inject
 
-const private val VERSION = 24
+const private val VERSION = 25
 
 /**
  * Created by drew on 7/18/17.
@@ -32,6 +32,8 @@ class Database
             db.execSQL("DROP TABLE IF EXISTS media;")
             db.execSQL("DROP TRIGGER IF EXISTS tv_series_cleanup;")
             db.execSQL("DROP TRIGGER IF EXISTS movies_cleanup;")
+            db.execSQL("DROP TABLE IF EXISTS movie_lookups;")
+            db.execSQL("DROP TABLE IF EXISTS tv_lookups;")
 
             db.execSQL("DROP TABLE IF EXISTS tv_config;")
             db.execSQL("CREATE TABLE tv_config (" +
@@ -44,7 +46,6 @@ class Database
                     "_display_name TEXT NOT NULL, " +
                     "overview TEXT," +
                     "first_aired TEXT, " +
-                    "banner TEXT, " +
                     "poster TEXT, " +
                     "backdrop TEXT " +
                     ");")
@@ -77,7 +78,6 @@ class Database
                     "resolution TEXT NOT NULL, " +
                     "rating FLOAT, " +
                     "rating_count INTEGER, " +
-                    "thumb_path TEXT, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS tv_actors;")
@@ -87,11 +87,6 @@ class Database
                     "role TEXT NOT NULL, " +
                     "sort_order INTEGER NOT NULL, " +
                     "image_path TEXT, " +
-                    "series_id INTEGER NOT NULL " +
-                    ");")
-            db.execSQL("DROP TABLE IF EXISTS tv_lookups;")
-            db.execSQL("CREATE TABLE tv_lookups (" +
-                    "q TEXT PRIMARY KEY, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS movie_config")
@@ -128,11 +123,6 @@ class Database
                     "vote_count INTEGER, " +
                     "movie_id INTEGER NOT NULL " +
                     ");")
-            db.execSQL("DROP TABLE IF EXISTS movie_lookups;")
-            db.execSQL("CREATE TABLE movie_lookups (" +
-                    "q TEXT PRIMARY KEY, " +
-                    "movie_id INTEGER NOT NULL " +
-                    ");")
             db.execSQL("DROP TABLE IF EXISTS media_position")
             db.execSQL("CREATE TABLE media_position (" +
                     "_display_name TEXT NOT NULL PRIMARY KEY, " +
@@ -144,7 +134,6 @@ class Database
             db.execSQL("CREATE TABLE upnp_device (" +
                     "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "device_id TEXT NOT NULL UNIQUE, " +
-                    "mime_type TEXT NOT NULL, " +
                     "title TEXT NOT NULL, " +
                     "subtitle TEXT, " +
                     "artwork_uri TEXT, " +
@@ -160,13 +149,14 @@ class Database
                     "parent_id TEXT NOT NULL, " +
                     "_display_name TEXT NOT NULL, " +
                     "artwork_uri TEXT, " +
-                    "mime_type TEXT NOT NULL, " +
-                    "update_id INTEGER DEFAULT 0, " +
 
                     "date_added INTEGER NOT NULL," +
                     "hidden INTEGER DEFAULT 0," +
                     "UNIQUE(device_id,folder_id) " + //milli
                     ");")
+            db.execSQL("DROP INDEX IF EXISTS upnp_folder_parent_idx")
+            db.execSQL("CREATE INDEX upnp_folder_parent_idx ON (" +
+                    "device_id, parent_id);")
             db.execSQL("DROP TABLE IF EXISTS upnp_video")
             db.execSQL("CREATE TABLE upnp_video (" +
                     "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -195,8 +185,11 @@ class Database
                     "spu_track INTEGER DEFAULT -1, " +
                     "spu_delay INTEGER DEFAULT -1," +
                     "spu_path TEXT, " +
-                    "UNIQUE(device_id,item_id,parent_id) " +
+                    "UNIQUE(device_id,item_id) " +
                     ");")
+            db.execSQL("DROP INDEX IF EXISTS upnp_video_parent_idx")
+            db.execSQL("CREATE INDEX upnp_video_parent_idx ON (" +
+                    "device_id, parent_id);")
             db.execSQL("DROP TABLE IF EXISTS upnp_video_search")
             db.execSQL("CREATE VIRTUAL TABLE upnp_video_search USING fts3 (" +
                     "title" +
