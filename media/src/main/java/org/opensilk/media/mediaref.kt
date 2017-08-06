@@ -73,7 +73,7 @@ fun parseMediaId(json: String): MediaId {
                 }
                 UPNP_VIDEO -> {
                     jr.beginObject()
-                    mediaId = UpnpFolderTransformer.read(jr)
+                    mediaId = UpnpVideoTransformer.read(jr)
                     jr.endObject()
                 }
                 else -> jr.skipValue()

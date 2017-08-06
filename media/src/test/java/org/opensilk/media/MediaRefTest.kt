@@ -11,29 +11,24 @@ import org.robolectric.annotation.Config
 class MediaRefTest {
 
     @Test
-    fun testUpnpDeviceSerialization() {
-        val ref = MediaRef(UPNP_DEVICE, UpnpDeviceId("this is an id"))
-        val newRef = newMediaRef(ref.toJson())
-        assertThat(newRef.kind).isEqualTo(UPNP_DEVICE)
-        assertThat((newRef.mediaId as UpnpDeviceId).deviceId).isEqualTo("this is an id")
+    fun testUpnpDeviceIdSerialization() {
+        val ref = UpnpDeviceId("this is an id")
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
     }
 
     @Test
-    fun testFolderIdJsonSerialization() {
-        val ref = MediaRef(UPNP_FOLDER, UpnpFolderId("foobag", "barnfoo"))
-        val newRef = newMediaRef(ref.toJson())
-        assertThat(newRef.kind).isEqualTo(UPNP_FOLDER)
-        assertThat((newRef.mediaId as UpnpFolderId).deviceId).isEqualTo("foobag")
-        assertThat((newRef.mediaId as UpnpFolderId).folderId).isEqualTo("barnfoo")
+    fun testUpnpFolderIdJsonSerialization() {
+        val ref = UpnpFolderId("foobag", "barnfoo")
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
     }
 
     @Test
     fun testUpnpItemIdJsonSerialization() {
-        val ref = MediaRef(UPNP_VIDEO, UpnpVideoId("foobag", "barnfoo"))
-        val newRef = newMediaRef(ref.toJson())
-        assertThat(newRef.kind).isEqualTo(UPNP_VIDEO)
-        assertThat((newRef.mediaId as UpnpVideoId).deviceId).isEqualTo("foobag")
-        assertThat((newRef.mediaId as UpnpVideoId).itemId).isEqualTo("barnfoo")
+        val ref = UpnpVideoId("foobag", "barnfoo")
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
     }
 
 }
