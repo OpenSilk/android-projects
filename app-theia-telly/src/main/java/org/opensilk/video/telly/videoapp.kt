@@ -3,6 +3,7 @@ package org.opensilk.video.telly
 import android.app.Application
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import com.bumptech.glide.GlideBuilder
@@ -58,6 +59,11 @@ object RootModule {
         return OkHttpClient.Builder()
                 .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
                 .build()
+    }
+
+    @Provides
+    fun provideContentResolver(@ForApplication context: Context): ContentResolver {
+        return context.contentResolver
     }
 
 }
