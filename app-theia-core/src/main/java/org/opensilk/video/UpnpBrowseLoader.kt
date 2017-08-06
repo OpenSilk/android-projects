@@ -1,7 +1,7 @@
 package org.opensilk.video
 
-import io.reactivex.Completable
-import io.reactivex.CompletableSource
+import dagger.Binds
+import dagger.Module
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.Function
@@ -24,17 +24,34 @@ import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
+const val UPNP_ROOT_ID = "0"
+
+/**
+ * Provides the UpnpBrowseLoader, allows mocking for tests
+ */
+@Module
+abstract class UpnpBrowseLoaderModule {
+    @Binds
+    abstract fun upnpBrowserLoader(impl: UpnpBrowseLoaderImpl): UpnpBrowseLoader
+}
+
+/**
+ * Loader used by the UpnpFoldersLoader
+ */
+interface UpnpBrowseLoader {
+    fun getDirectChildren(upnpFolderId: UpnpFolderId): Single<List<MediaMeta>>
+}
+
 /**
  * Created by drew on 7/29/17.
  */
-class UpnpBrowseLoader
+class UpnpBrowseLoaderImpl
 @Inject constructor(
-        private val mUpnpService: CDSUpnpService,
-        private val mDatabaseClient: DatabaseClient
-) {
+        private val mUpnpService: CDSUpnpService
+): UpnpBrowseLoader {
 
-    fun completable(upnpFolderId: UpnpFolderId, updateId: Long = 0): Completable {
-        return if (upnpFolderId.folderId == "0") {
+    override fun getDirectChildren(upnpFolderId: UpnpFolderId): Single<List<MediaMeta>> {
+        return if (upnpFolderId.folderId == UPNP_ROOT_ID) {
             //for root folder, look for feature list, falling back to normal browse
             cachedService(upnpFolderId).flatMap { service ->
                 featureList(service, upnpFolderId)
@@ -45,21 +62,7 @@ class UpnpBrowseLoader
             cachedService(upnpFolderId).flatMap { service ->
                 browse(service, upnpFolderId)
             }
-        }.toList().flatMapCompletable { itemList ->
-            CompletableSource { s ->
-                mDatabaseClient.hideChildrenOf(upnpFolderId)
-                for (item in itemList) {
-                    //insert/update remote item in database
-                    val ref = newMediaRef(item.mediaId)
-                    when (ref.kind) {
-                        UPNP_FOLDER -> mDatabaseClient.addUpnpFolder(item)
-                        UPNP_VIDEO -> mDatabaseClient.addUpnpVideo(item)
-                        else -> Timber.e("Invalid kind slipped through %s for %s", ref.kind, item.displayName)
-                    }
-                }
-                s.onComplete()
-            }
-        }
+        }.toList()
     }
 
     /**
