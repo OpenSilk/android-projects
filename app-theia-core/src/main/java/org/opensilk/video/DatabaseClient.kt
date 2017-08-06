@@ -876,8 +876,8 @@ class DatabaseClient
         return mResolver.insert(mUris.movies(), values) ?: Uri.EMPTY
     }
 
-    fun getMovie(movieId: Long): Single<MediaMeta> {
-        return Single.create { s ->
+    fun getMovie(movieId: Long): Maybe<MediaMeta> {
+        return Maybe.create { s ->
             mResolver.query(mUris.movie(movieId), arrayOf("_display_name", "overview",
                     "release_date", "poster_path", "backdrop_path", "_id"), null,
                     null, null, null )?.use { c ->
@@ -896,8 +896,10 @@ class DatabaseClient
                     }
                     meta.rowId = c.getLong(5)
                     s.onSuccess(meta)
+                } else {
+                    s.onComplete()
                 }
-            }
+            } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 

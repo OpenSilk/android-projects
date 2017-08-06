@@ -59,39 +59,54 @@ constructor(
         val seasonNumber = meta.seasonNumber
         val episodeNumber = meta.episodeNumber
 
-        val cacheObservable = mClient.getTvSeriesAssociation(name)
-                //pull all episodes for series
-                .flatMapObservable { mClient.getTvEpisodes(it) }
-                .switchIfEmpty(Observable.error(LookupException("Cache returned nothing")))
-
-
         //note this will likely emit multiple episodes, one for each matching
         //series, the first emission should be the best match
         val networkObservable = mTokenObservable.flatMap { token ->
             //get list of series matching name
             Observable.defer {
                 LookupService.waitTurn()
+                Timber.d("Searching name=$name")
                 mApi.searchSeries(token, name)
             }
         }.flatMap { data ->
-            //only take first couple series
-            Observable.fromIterable(data.data).take(3)
+            Observable.fromIterable(data.data).take(1).doOnNext {
+                Timber.d("Found series ${it.seriesName}")
+            }
         }.flatMap { ss ->
-            //fetch full series metadata
-            Observable.defer {
-                LookupService.waitTurn()
-                mTokenObservable.flatMap { token ->
-                    Observable.zip<SeriesData, SeriesEpisodeData, SeriesImageQueryData,
-                            SeriesImageQueryData, SeriesEpisodesImages>(
-                            mApi.series(token, ss.id),
-                            mApi.seriesEpisodes(token, ss.id),
-                            mApi.seriesImagesQuery(token, ss.id, "poster"),
-                            mApi.seriesImagesQuery(token, ss.id, "fanart"),
-                            Function4 { s, e, p, f -> SeriesEpisodesImages(s.data, e.data, p.data, f.data) }
-                    )
-                }
+            mClient.getTvEpisodes(ss.id).switchIfEmpty(fetchCompleteSeriesInfo(ss))
+        }
+
+        Timber.d("TV Lookup for ${meta.displayName} name=$name, s=$seasonNumber, e=$episodeNumber")
+
+        return networkObservable
+                //find our episode
+                .filter { it.seasonNumber == seasonNumber && it.episodeNumber == episodeNumber }
+                //no episodes is an error
+                .switchIfEmpty(Observable.error(LookupException("Empty episode data")))
+    }
+
+    class SeriesEpisodesImages(val series: Series, val episodes: List<SeriesEpisode>,
+                               val posters: List<SeriesImageQuery>, val fanart: List<SeriesImageQuery>)
+
+    private fun fetchCompleteSeriesInfo(ss: SeriesSearch): Observable<MediaMeta> {
+        //fetch full series metadata
+        return Observable.defer {
+            LookupService.waitTurn()
+            mTokenObservable.flatMap { token ->
+                Observable.zip<Series, List<SeriesEpisode>, List<SeriesImageQuery>,
+                        List<SeriesImageQuery>, SeriesEpisodesImages>(
+                        mApi.series(token, ss.id).map { it.data },
+                        fetchPaginatedEpisodes(token, ss.id, 1).toList().toObservable(),
+                        mApi.seriesImagesQuery(token, ss.id, "poster").map { it.data },
+                        mApi.seriesImagesQuery(token, ss.id, "fanart").map { it.data },
+                        Function4 { s, e, p, f -> SeriesEpisodesImages(s, e, p, f) }
+                )
             }
         }.map { swi ->
+            Timber.d("Fetched series ${swi.series.seriesName} ${swi.episodes.size} episodes")
+            for (e in swi.episodes) {
+                Timber.d("Episode ${e.episodeName} s${e.airedSeason}e${e.airedEpisodeNumber}")
+            }
             //insert into database
             val uri = mClient.addTvSeries(swi.series, swi.posters.firstOrNull(), swi.fanart.firstOrNull())
             mClient.addTvEpisodes(swi.series.id, swi.episodes)
@@ -102,17 +117,17 @@ constructor(
             //pull episodes back from database
             mClient.getTvEpisodes(uri.lastPathSegment.toLong())
         }
-
-        Timber.d("TV Lookup for ${meta.displayName} name=$name, s=$seasonNumber, e=$episodeNumber")
-
-        return cacheObservable.onErrorResumeNext(networkObservable)
-                //find our episode
-                .filter { it.seasonNumber == seasonNumber && it.episodeNumber == episodeNumber }
-                //no episodes is an error
-                .switchIfEmpty(Observable.error(LookupException("Empty episode data")))
     }
 
-    class SeriesEpisodesImages(val series: Series, val episodes: List<SeriesEpisode>,
-                               val posters: List<SeriesImageQuery>, val fanart: List<SeriesImageQuery>)
-
+    private fun fetchPaginatedEpisodes(token: Token, seriesId: Long, page: Int): Observable<SeriesEpisode> {
+        return mApi.seriesEpisodes(token, seriesId, page).flatMap { data ->
+            val next = data.links?.next
+            return@flatMap if (next == null) {
+                Observable.fromIterable(data.data)
+            } else {
+                Observable.fromIterable(data.data)
+                        .concatWith(fetchPaginatedEpisodes(token, seriesId, next))
+            }
+        }
+    }
 }

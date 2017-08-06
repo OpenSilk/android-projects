@@ -3,6 +3,8 @@ package org.opensilk.video
 import android.media.browse.MediaBrowser
 import io.reactivex.*
 import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import org.opensilk.common.misc.AlphanumComparator
 import org.opensilk.media.*
 import timber.log.Timber
@@ -26,23 +28,28 @@ class UpnpFoldersLoader
             UPNP_DEVICE -> UpnpFolderId((mediaRef.mediaId as UpnpDeviceId).deviceId, UPNP_ROOT_ID)
             else -> TODO("Unsupported mediaid")
         }
+        val lookups = CompositeDisposable()
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
                 //during lookup we can be flooded
-                .sample(5, TimeUnit.SECONDS)
                 .filter { it is UpnpUpdateIdChange || (it is UpnpFolderChange && it.folderId == folderId) }
-                .map { true }
+                .map { it is UpnpUpdateIdChange }
+                .sample(5, TimeUnit.SECONDS)
                 .startWith(true)
-                .switchMapSingle { _ ->
+                .switchMapSingle { change ->
                     Timber.d("SwitchMap $folderId")
                     //first fetch from network and stick in database
                     //and then retrieve from the database to associate
                     // any metadata stored in database with network items
                     // we get new thread because of rather complex operation
-                    doNetwork(folderId).andThen(doDisk(folderId))
-                            .doOnSuccess { sendToLookup(it) }
-                            .subscribeOn(AppSchedulers.newThread)
-                }
+                    if (change) {
+                        doNetwork(folderId).andThen(doDisk(folderId))
+                                .doOnSuccess { lookups.add(sendToLookup(it)) }
+                                .subscribeOn(AppSchedulers.newThread)
+                    } else {
+                        doDisk(folderId).subscribeOn(AppSchedulers.diskIo)
+                    }
+                }.doOnTerminate { lookups.clear() }
     }
 
     private fun doNetwork(folderId: UpnpFolderId): Completable {
@@ -72,8 +79,8 @@ class UpnpFoldersLoader
         ).map { it.toMediaItem() }.toList()
     }
 
-    private fun sendToLookup(metaList: List<MediaBrowser.MediaItem>) {
-        Observable.fromIterable(metaList).map { it._getMediaMeta() }
+    private fun sendToLookup(metaList: List<MediaBrowser.MediaItem>): Disposable {
+        return Observable.fromIterable(metaList).map { it._getMediaMeta() }
                 .filter { newMediaRef(it.mediaId).kind == UPNP_VIDEO && !it.isParsed }
                 .flatMapCompletable { meta ->
                     mLookupService.lookupObservable(meta).firstOrError().flatMapCompletable({ lookup ->

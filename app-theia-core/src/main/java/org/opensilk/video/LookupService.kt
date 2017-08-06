@@ -143,7 +143,7 @@ class LookupService
             val name = extractSeriesName(title)
             val seasonNum = extractSeasonNumber(title)
             val episodeNum = extractEpisodeNumber(title)
-            if (name.isNullOrBlank() || seasonNum <= 0 || episodeNum <= 0) {
+            if (name.isNullOrBlank() || seasonNum < 0 || episodeNum < 0) {
                 return Observable.error(LookupException("Unable to parse $title"))
             }
             meta.lookupName = name

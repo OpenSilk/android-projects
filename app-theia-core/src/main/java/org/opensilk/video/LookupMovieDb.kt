@@ -17,8 +17,11 @@
 
 package org.opensilk.video
 
+import io.reactivex.Maybe
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.functions.BiFunction
+import io.reactivex.rxkotlin.toMaybe
 import org.opensilk.media.MediaMeta
 import org.opensilk.media.UPNP_VIDEO
 import org.opensilk.media.newMediaRef
@@ -61,47 +64,47 @@ constructor(
         }
         val year = meta.releaseYear
 
-        val cacheObservable = mClient.getMovieAssociation(name, year)
-                .map { id -> mClient.uris.movie(id) }.toObservable()
-
         val networkObservable = Observable.defer {
             //do search
             LookupService.waitTurn()
+            Timber.d("Searching name=$name name=$year")
             return@defer if (year.isBlank())
                 mApi.searchMovieObservable(name, "en")
             else {
                 mApi.searchMovieObservable(name, year, "en")
             }
-        }.flatMap { list ->
+        }.flatMapMaybe { list ->
             //stream movie list
-            return@flatMap if (list.results == null) {
-                Observable.empty()
+            val result = list.results?.get(0)
+            return@flatMapMaybe if (result == null) {
+                Maybe.empty()
             } else {
-                Observable.fromIterable(list.results).take(3)
-            }
-        }.flatMap { movie ->
-            //fetch movie and images
-            return@flatMap Observable.defer {
-                LookupService.waitTurn()
-                return@defer Observable.zip<Movie, ImageList, MovieWithImages>(
-                        mApi.movieObservable(movie.id, "en"),
-                        mApi.movieImagesObservable(movie.id, "en"),
-                        BiFunction { m, i -> MovieWithImages(m, i) }
-                ).map {
-                    val uri = mClient.addMovie(it.movie)
-                    mClient.addMovieImages(it.images)
-                    return@map uri
-                }
+                mClient.getMovie(result.id)
+                        .switchIfEmpty(fetchCompleteMovieInfo(result))
             }
         }
 
-        return mConfigObservable.flatMap {
-            cacheObservable.onExceptionResumeNext(networkObservable)
-        //}.doOnNext { uri ->
-        //    mClient.moviedb.setMovieAssociation(name, year, uri.lastPathSegment.toLong())
-        }.flatMap { uri ->
-            mClient.getMovie(uri.lastPathSegment.toLong()).toObservable()
-        }.switchIfEmpty(Observable.error(LookupException("Empty movie data")))
+        return mConfigObservable.flatMap({ _ ->
+            return@flatMap networkObservable
+        }).switchIfEmpty(Observable.error(LookupException("Empty movie data")))
+    }
+
+    private fun fetchCompleteMovieInfo(movie: Movie): Maybe<MediaMeta> {
+        //fetch movie and images
+        return Maybe.defer {
+            LookupService.waitTurn()
+            return@defer Maybe.zip<Movie, ImageList, MovieWithImages>(
+                    mApi.movieObservable(movie.id, "en").firstElement(),
+                    mApi.movieImagesObservable(movie.id, "en").firstElement(),
+                    BiFunction { m, i -> MovieWithImages(m, i) }
+            ).map {
+                val uri = mClient.addMovie(it.movie)
+                mClient.addMovieImages(it.images)
+                return@map uri
+            }.flatMap { uri ->
+                mClient.getMovie(uri.lastPathSegment.toLong())
+            }
+        }
     }
 
 }
