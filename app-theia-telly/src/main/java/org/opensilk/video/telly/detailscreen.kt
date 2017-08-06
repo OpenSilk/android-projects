@@ -7,18 +7,27 @@ import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.support.v17.leanback.app.BackgroundManager
 import android.support.v17.leanback.app.DetailsSupportFragment
 import android.support.v17.leanback.widget.*
+import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.request.transition.Transition
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
@@ -141,6 +150,9 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        mBackgroundManager = BackgroundManager.getInstance(activity)
+
         mViewModel = fetchViewModel(DetailViewModel::class)
         mViewModel.onMediaId(arguments.getString(EXTRA_MEDIAID))
         mViewModel.videoDescription.observe(this, LiveDataObserver {
@@ -159,8 +171,33 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
                 setupDefaultActions()
             }
         })
-
-        mBackgroundManager = BackgroundManager.getInstance(activity)
+        mViewModel.posterUri.observe(this, LiveDataObserver {
+            val width = resources.getDimensionPixelSize(R.dimen.detail_thumb_width)
+            val height = resources.getDimensionPixelSize(R.dimen.detail_thumb_height)
+            Glide.with(this)
+                    .asDrawable()
+                    .apply(RequestOptions.centerCropTransform())
+                    .load(it)
+                    .into(object: SimpleTarget<Drawable>(width, height) {
+                        override fun onResourceReady(resource: Drawable?, transition: Transition<in Drawable>?) {
+                            mOverviewRow.imageDrawable = resource
+                        }
+                    })
+        })
+        mViewModel.backdropUri.observe(this, LiveDataObserver {
+            val metrics = DisplayMetrics()
+            activity.windowManager.defaultDisplay.getMetrics(metrics)
+            Glide.with(this)
+                    .asDrawable()
+                    .apply(RequestOptions().fitCenter()
+                            .placeholder(activity.getDrawable(R.drawable.default_background)))
+                    .load(it)
+                    .into(object: SimpleTarget<Drawable>(metrics.widthPixels, metrics.heightPixels) {
+                        override fun onResourceReady(resource: Drawable?, transition: Transition<in Drawable>?) {
+                            mBackgroundManager.drawable = resource
+                        }
+                    })
+        })
 
         mOverviewPresenter.onActionClickedListener = this
         mOverviewRow.actionsAdapter = mOverviewActionsAdapter
@@ -177,11 +214,6 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         adapter = rowsAdapter
 
         setupDefaultActions()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        loadBackdropImage()
     }
 
     override fun onStop() {
@@ -206,12 +238,6 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
     private fun makePlayIntent() : Intent {
         return Intent(activity, PlaybackActivity::class.java)
                 .putExtra(EXTRA_MEDIAID, arguments.getString(EXTRA_MEDIAID))
-    }
-
-    fun loadBackdropImage() {
-        val defaultBackground = context.getDrawable(R.drawable.default_background)
-        mBackgroundManager.drawable = defaultBackground
-        //TODO load image
     }
 
     fun setupDefaultActions() {
@@ -240,58 +266,87 @@ class DetailViewModel
     val videoDescription = MutableLiveData<VideoDescInfo>()
     val fileInfo = MutableLiveData<VideoFileInfo>()
     val resumeInfo = MutableLiveData<ResumeInfo>()
+    val posterUri = MutableLiveData<Uri>()
+    val backdropUri = MutableLiveData<Uri>()
 
     private val disponables = CompositeDisposable()
 
     fun onMediaId(mediaId: String) {
+        disponables.clear()
         val ref = newMediaRef(mediaId)
         subscribeVideoDescription(ref)
         subscribeFileInfo(ref)
         subscribeLastPosition(ref)
+        subscribePosterUri(ref)
+        subscribeBackdropUri(ref)
+    }
+
+    fun changes(mediaRef: MediaRef): Observable<Boolean> {
+        return mClient.changesObservable
+                .filter { it is UpnpVideoChange && it.videoId == mediaRef.mediaId }
+                .map { true }
+                .startWith(true)
+    }
+
+    fun cachedMeta(mediaRef: MediaRef): Observable<MediaMeta> {
+        return changes(mediaRef)
+                .flatMapSingle {
+                    mClient.getUpnpVideo(mediaRef.mediaId as UpnpVideoId)
+                            .subscribeOn(AppSchedulers.diskIo)
+                }
     }
 
     fun subscribeVideoDescription(mediaRef: MediaRef) {
-        val s = Single.zip<MediaMeta, String, VideoDescInfo>(
-                mClient.getMediaMeta(mediaRef),
-                mClient.getMediaOverview(mediaRef).toSingle(""),
-                BiFunction { meta, overview ->
-                    VideoDescInfo(meta.title.elseIfBlank(meta.displayName), meta.subtitle, overview)
-                })
-                .subscribeOn(AppSchedulers.diskIo)
-                .subscribeIgnoreError(Consumer {
-                    videoDescription.postValue(it)
-                })
+        val s = cachedMeta(mediaRef).flatMapMaybe { meta ->
+            mClient.getMediaOverview(mediaRef).defaultIfEmpty("").map { overview ->
+                VideoDescInfo(meta.title.elseIfBlank(meta.displayName), meta.subtitle, overview)
+            }
+        }.subscribeIgnoreError(Consumer {
+            videoDescription.postValue(it)
+        })
         disponables.add(s)
     }
 
     fun subscribeFileInfo(mediaRef: MediaRef) {
-        val s = mClient.getMediaMeta(mediaRef)
-                .subscribeOn(AppSchedulers.diskIo)
-                .subscribeIgnoreError(Consumer {
-                    fileInfo.postValue(VideoFileInfo(
-                            it.displayName,
-                            it.size,
-                            it.duration
-                    ))
-                })
+        val s = cachedMeta(mediaRef).map { meta ->
+            VideoFileInfo(meta.displayName, meta.size, meta.duration)
+        }.subscribeIgnoreError(Consumer {
+            fileInfo.postValue(it)
+        })
         disponables.add(s)
     }
 
     fun subscribeLastPosition(mediaRef: MediaRef) {
-        val s = mClient.changesObservable
-                .filter { it is UpnpVideoChange && it.videoId == mediaRef.mediaId }
-                .map { true }
-                .startWith(true)
-                .observeOn(AppSchedulers.diskIo)
+        val s = changes(mediaRef)
                 .flatMapSingle {
                     Single.zip<Long, Int, ResumeInfo>(
                             mClient.getLastPlaybackPosition(mediaRef),
                             mClient.getLastPlaybackCompletion(mediaRef),
                             BiFunction { pos, comp -> ResumeInfo(pos, comp) }
-                    ).onErrorReturn { ResumeInfo() }
+                    ).onErrorReturn { ResumeInfo() }.subscribeOn(AppSchedulers.diskIo)
                 }
                 .subscribeIgnoreError(Consumer {
                     resumeInfo.postValue(it)
+                })
+        disponables.add(s)
+    }
+
+    fun subscribePosterUri(mediaRef: MediaRef) {
+        val s = cachedMeta(mediaRef)
+                .map { it.artworkUri }
+                .filter { it != Uri.EMPTY }
+                .subscribeIgnoreError(Consumer {
+                    posterUri.postValue(it)
+                })
+        disponables.add(s)
+    }
+
+    fun subscribeBackdropUri(mediaRef: MediaRef) {
+        val s = cachedMeta(mediaRef)
+                .map { it.backdropUri }
+                .filter { it != Uri.EMPTY }
+                .subscribeIgnoreError(Consumer {
+                    backdropUri.postValue(it)
                 })
         disponables.add(s)
     }
