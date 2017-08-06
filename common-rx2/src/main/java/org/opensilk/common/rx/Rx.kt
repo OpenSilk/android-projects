@@ -1,6 +1,7 @@
 package org.opensilk.common.rx
 
 import android.os.CancellationSignal
+import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.Single
@@ -32,6 +33,10 @@ fun <T> Observable<T>.subscribeIgnoreError(action: Consumer<T>): Disposable {
 }
 
 fun <T> Single<T>.subscribeIgnoreError(action: Consumer<T>): Disposable {
+    return this.subscribe(action, NIL_THROWABLE_CONSUMER)
+}
+
+fun <T> Maybe<T>.subscribeIgnoreError(action: Consumer<T>): Disposable {
     return this.subscribe(action, NIL_THROWABLE_CONSUMER)
 }
 
