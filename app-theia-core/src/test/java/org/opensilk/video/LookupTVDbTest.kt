@@ -2,21 +2,21 @@ package org.opensilk.video
 
 import android.net.Uri
 import com.nhaarman.mockito_kotlin.*
+import io.reactivex.Maybe
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.opensilk.media.MediaMeta
-import org.opensilk.media.MediaRef
-import org.opensilk.media.UPNP_VIDEO
-import org.opensilk.media.UpnpVideoId
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import io.reactivex.Observable
 import io.reactivex.Single
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
+import org.opensilk.media.*
 
 /**
  * Created by drew on 7/26/17.
@@ -43,7 +43,7 @@ class LookupTVDbTest {
         whenever(mClient.getTvToken())
                 .thenReturn(Single.error(NoSuchItemException()))
         whenever(mApi.login(mAuth))
-                .thenReturn(Observable.just(mToken))
+                .thenReturn(Single.just(mToken))
 
         val tkn = mLookup.mTokenObservable.blockingFirst()
         assertThat(tkn).isSameAs(mToken)
@@ -61,7 +61,7 @@ class LookupTVDbTest {
         whenever(mClient.getTvToken())
                 .thenReturn(Single.just(mToken))
         whenever(mApi.refreshToken(mToken))
-                .thenReturn(Observable.just(mToken))
+                .thenReturn(Single.just(mToken))
 
         val tkn = mLookup.mTokenObservable.blockingFirst()
         assertThat(tkn).isSameAs(mToken)
@@ -82,7 +82,7 @@ class LookupTVDbTest {
         whenever(mClient.getTvToken())
                 .thenReturn(Single.just(mToken))
         whenever(mApi.refreshToken(mToken))
-                .thenReturn(Observable.just(mToken))
+                .thenReturn(Single.just(mToken))
 
         val tkn = mLookup.mTokenObservable.blockingFirst()
         assertThat(tkn).isSameAs(mToken)
@@ -105,11 +105,11 @@ class LookupTVDbTest {
         val seasonN = 1
         val episodeN = 1
 
-        val meta = MediaMeta()
-        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "1")).toJson()
+        val meta = LookupRequest(upnpVideo_folder_1_no_association())
         meta.lookupName = name
         meta.seasonNumber = seasonN
         meta.episodeNumber = episodeN
+        val mediaRef = meta.mediaRef as UpnpVideoRef
 
         val seriesSearch = SeriesSearch(id = 1, seriesName = name)
         val seriesSearchData = SeriesSearchData(listOf(seriesSearch))
@@ -120,30 +120,33 @@ class LookupTVDbTest {
         val episodeData = SeriesEpisodeData(listOf(episode))
         val imageData = SeriesImageQueryData(emptyList())
         val seriesUri = Uri.parse("foo.com/1")
-        val seriesMeta = MediaMeta()
-        seriesMeta.title = episodeName
-        seriesMeta.seasonNumber = seasonN
-        seriesMeta.episodeNumber = episodeN
+        val seriesMeta = series.toTvSeriesRef(null, null)
 
         whenever(mApi.refreshToken(mToken))
-                .thenReturn(Observable.just(mToken))
+                .thenReturn(Single.just(mToken))
         whenever(mApi.searchSeries(mToken, name))
-                .thenReturn(Observable.just(seriesSearchData))
+                .thenReturn(Single.just(seriesSearchData))
         whenever(mApi.series(mToken, 1))
-                .thenReturn(Observable.just(seriesData))
+                .thenReturn(Single.just(seriesData))
         whenever(mApi.seriesEpisodes(mToken, 1))
-                .thenReturn(Observable.just(episodeData))
+                .thenReturn(Single.just(episodeData))
         whenever(mApi.seriesImagesQuery(eq(mToken), eq(1),  Mockito.anyString()))
-                .thenReturn(Observable.just(imageData))
+                .thenReturn(Single.just(imageData))
 
         whenever(mClient.getTvToken())
                 .thenReturn(Single.just(mToken))
-        whenever(mClient.getTvSeriesAssociation(name))
-                .thenReturn(Single.error(LookupException()))
-        whenever(mClient.addTvSeries(series))
+        whenever(mClient.addTvSeries(any()))
                 .thenReturn(seriesUri)
-        whenever(mClient.getTvEpisodes(1))
-                .thenReturn(Observable.just(seriesMeta))
+        whenever(mClient.getTvEpisodesForTvSeries(seriesMeta.id)).thenAnswer(object : Answer<Maybe<UpnpVideoRef>> {
+            var times = 0
+            override fun answer(invocation: InvocationOnMock?): Maybe<UpnpVideoRef> {
+                if (times++ == 0) {
+                    return Maybe.empty()
+                } else {
+                    return Maybe.just(mediaRef)
+                }
+            }
+        })
 
         val list = mLookup.lookupObservable(meta).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
@@ -156,14 +159,13 @@ class LookupTVDbTest {
         verify(mApi, times(2)).seriesImagesQuery(eq(mToken), eq(1), Mockito.anyString())
 
         verify(mClient).getTvToken()
-        verify(mClient).getTvSeriesAssociation(name)
-        verify(mClient).addTvSeries(series)
-        verify(mClient).getTvEpisodes(1)
+        verify(mClient).addTvSeries(any())
+        verify(mClient, times(2)).getTvEpisodesForTvSeries(seriesMeta.id)
 
         //non mocked interactions
         verify(mClient).setTvToken(mToken)
-        verify(mClient, times(2)).addTvImages(1, emptyList())
-        verify(mClient).addTvEpisodes(1, listOf(episode))
+        verify(mClient, times(2)).addTvImages(emptyList())
+        verify(mClient).addTvEpisodes(any())
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
@@ -171,37 +173,27 @@ class LookupTVDbTest {
 
     @Test
     fun lookup_with_association_does_not_touch_network() {
-        val name = "Archer"
-        val episodeName = "Mole Hunt"
-        val seasonN = 1
-        val episodeN = 1
+        val series = tvSeries()
+        val episode = tvEpisode()
 
-        val meta = MediaMeta()
-        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "1")).toJson()
-        meta.lookupName = name
-        meta.seasonNumber = seasonN
-        meta.episodeNumber = episodeN
+        val meta = LookupRequest(upnpVideo_folder_1_no_association())
+        meta.lookupName = series.meta.title
+        meta.seasonNumber = episode.meta.seasonNumber
+        meta.episodeNumber = episode.meta.episodeNumber
 
-        val seriesUri = Uri.parse("foo.com/1")
-        val seriesMeta = MediaMeta()
-        seriesMeta.title = episodeName
-        seriesMeta.seasonNumber = seasonN
-        seriesMeta.episodeNumber = episodeN
+        val metaRef = meta.mediaRef as UpnpVideoRef
 
         whenever(mClient.getTvToken())
                 .thenReturn(Single.just(mToken))
-        whenever(mClient.getTvSeriesAssociation(name))
-                .thenReturn(Single.just(1))
-        whenever(mClient.getTvEpisodes(1))
-                .thenReturn(Observable.just(seriesMeta))
+        whenever(mClient.getTvEpisodesForTvSeries(series.id))
+                .thenReturn(Observable.just(episode))
 
         val list = mLookup.lookupObservable(meta).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
-        assertThat(list[0]).isSameAs(seriesMeta)
+        assertThat(list[0]).isSameAs(episode)
 
         verify(mClient).getTvToken()
-        verify(mClient).getTvSeriesAssociation(name)
-        verify(mClient).getTvEpisodes(1)
+        verify(mClient).getTvEpisodesForTvSeries(series.id)
 
         verifyZeroInteractions(mApi)
         verifyNoMoreInteractions(mClient)

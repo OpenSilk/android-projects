@@ -1,20 +1,14 @@
 package org.opensilk.video
 
 import android.net.Uri
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
-import com.nhaarman.mockito_kotlin.verifyNoMoreInteractions
-import com.nhaarman.mockito_kotlin.whenever
+import com.nhaarman.mockito_kotlin.*
+import io.reactivex.Maybe
 import okhttp3.mockwebserver.MockWebServer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensilk.media.MediaMeta
-import org.opensilk.media.MediaRef
-import org.opensilk.media.UPNP_VIDEO
-import org.opensilk.media.UpnpVideoId
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
@@ -24,6 +18,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import io.reactivex.Observable
 import io.reactivex.Single
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
+import org.opensilk.media.*
 
 /**
  * Created by drew on 7/26/17.
@@ -77,18 +74,16 @@ class LookupMovieDbTest {
     fun test_lookup_no_association() {
         val name = "hunger games"
         val year = ""
-        val meta = MediaMeta()
-        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "1")).toJson()
-        meta.lookupName = name
+        val lookup = LookupRequest(upnpVideo_folder_1_no_association())
+        lookup.lookupName = name
+        lookup.releaseYear = year
 
         val config = TMDbConfig(TMDbConfig.Images("/foo", null, null, null, null, null, null))
         val movie = Movie(1, name, name, null, null, null, null)
         val movieUri = Uri.parse("/foo/1")
         val imageList = ImageList(1, emptyList(), emptyList())
 
-        val movieMeta = MediaMeta()
-        movieMeta.rowId = 1
-        movieMeta.title = name
+        val movieRef = movie.toMovieRef()
 
         whenever(mApi.configurationObservable())
                 .thenReturn(Observable.just(config))
@@ -98,27 +93,32 @@ class LookupMovieDbTest {
                 .thenReturn(Observable.just(movie))
         whenever(mApi.movieImagesObservable(1, "en"))
                 .thenReturn(Observable.just(imageList))
-        whenever(mClient.getMovieAssociation(name, year))
-                .thenReturn(Single.error(NoSuchItemException()))
-        whenever(mClient.addMovie(movie))
+        whenever(mClient.addMovie(movieRef))
                 .thenReturn(movieUri)
-        whenever(mClient.getMovie(1))
-                .thenReturn(Single.just(movieMeta))
+        whenever(mClient.getMovie(movieRef.id)).thenAnswer(object : Answer<Maybe<MovieRef>> {
+            var times = 0
+            override fun answer(invocation: InvocationOnMock?): Maybe<MovieRef> {
+                if (times++ == 0) {
+                    return Maybe.empty()
+                } else {
+                    return Maybe.just(movieRef)
+                }
+            }
+        })
 
-        val list = mLookup.lookupObservable(meta).toList().blockingGet()
+        val list = mLookup.lookupObservable(lookup).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
-        assertThat(list[0]).isSameAs(movieMeta)
+        assertThat(list[0]).isSameAs(movieRef)
 
         verify(mApi).configurationObservable()
         verify(mApi).searchMovieObservable(name, "en")
         verify(mApi).movieObservable(1, "en")
         verify(mApi).movieImagesObservable(1, "en")
-        verify(mClient).getMovieAssociation(name, year)
-        verify(mClient).addMovie(movie)
-        verify(mClient).getMovie(1)
+        verify(mClient).addMovie(movieRef)
+        verify(mClient, times(2)).getMovie(movieRef.id)
         //additional interactions not mocked
         verify(mClient).setMovieImageBaseUrl(config.images.baseUrl)
-        verify(mClient).addMovieImages(imageList)
+        verify(mClient, times(2)).addMovieImages(emptyList())
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
@@ -128,32 +128,26 @@ class LookupMovieDbTest {
     fun test_lookup_cache_no_network() {
         val name = "hunger games"
         val year = ""
-        val meta = MediaMeta()
-        meta.mediaId = MediaRef(UPNP_VIDEO, UpnpVideoId("foo", "1")).toJson()
+        val meta = LookupRequest(upnpVideo_folder_1_no_association())
         meta.lookupName = name
+        meta.releaseYear = year
 
         val config = TMDbConfig(TMDbConfig.Images("/foo", null, null, null, null, null, null))
-
-        val movieMeta = MediaMeta()
-        movieMeta.rowId = 1
-        movieMeta.title = name
+        val movieRef = movie()
 
         whenever(mApi.configurationObservable())
                 .thenReturn(Observable.just(config))
-        whenever(mClient.getMovieAssociation(name, year))
-                .thenReturn(Single.just(1))
         whenever(mClient.uris)
                 .thenReturn(DatabaseUris("foo"))
-        whenever(mClient.getMovie(1))
-                .thenReturn(Single.just(movieMeta))
+        whenever(mClient.getMovie(movieRef.id))
+                .thenReturn(Maybe.just(movieRef))
 
         val list = mLookup.lookupObservable(meta).toList().blockingGet()
         assertThat(list.size).isEqualTo(1)
-        assertThat(list[0]).isSameAs(movieMeta)
+        assertThat(list[0]).isSameAs(movieRef)
 
         verify(mApi).configurationObservable()
-        verify(mClient).getMovieAssociation(name, year)
-        verify(mClient).getMovie(1)
+        verify(mClient).getMovie(movieRef.id)
         verify(mClient).uris
         //additional interactions not mocked
         verify(mClient).setMovieImageBaseUrl(config.images.baseUrl)
