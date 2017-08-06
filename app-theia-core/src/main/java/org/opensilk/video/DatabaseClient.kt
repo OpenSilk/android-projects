@@ -546,7 +546,7 @@ class DatabaseClient
         meta.size = c.getLong(8)
         if (!c.isNull(9)) {
             meta.title = c.getString(10)
-            meta.subtitle = makeTvSubtitle(c.getString(14), c.getInt(11), c.getInt(12))
+            meta.subtitle = makeTvSubtitle(c.getString(14), c.getInt(12), c.getInt(11))
             if (!c.isNull(15)) {
                 meta.artworkUri = makeTvBannerUri(c.getString(15))
             }
