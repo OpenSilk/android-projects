@@ -66,7 +66,7 @@ class TVDbTest {
     @Test
     fun updated() {
         enqueueResponse("updated.json")
-        val resp = mApi.updated(mToken, 1).blockingFirst()
+        val resp = mApi.updated(mToken, 1).blockingGet()
         assertThat(resp.errors).isNull()
         assertThat(resp.data[0].id).isEqualTo(329559)
     }
@@ -74,7 +74,7 @@ class TVDbTest {
     @Test
     fun series_image_poster_archer() {
         enqueueResponse("series-image-poster-archer.json")
-        val resp = mApi.seriesImagesQuery(mToken, 1, "poster").blockingFirst()
+        val resp = mApi.seriesImagesQuery(mToken, 1, "poster").blockingGet()
         assertThat(resp.errors).isNull()
         assertThat(resp.data[0].keyType).isEqualTo("poster")
     }
@@ -82,7 +82,7 @@ class TVDbTest {
     @Test
     fun series_episodes_archer() {
         enqueueResponse("series-episodes-archer.json")
-        val resp = mApi.seriesEpisodes(mToken, 1).blockingFirst()
+        val resp = mApi.seriesEpisodes(mToken, 1).blockingGet()
         assertThat(resp.errors).isNull()
         assertThat(resp.data[0].episodeName).isEqualTo("Mole Hunt")
         assertThat(resp.links).isEqualTo(Links(1,1))
@@ -91,7 +91,7 @@ class TVDbTest {
     @Test
     fun series_episodes_archer2() {
         enqueueResponse("series-episodes-archer2.json")
-        val resp = mApi.seriesEpisodes(mToken, 1).blockingFirst()
+        val resp = mApi.seriesEpisodes(mToken, 1).blockingGet()
         assertThat(resp.errors).isNull()
         assertThat(resp.data[0].episodeName).isEqualTo("No Clothes for the Party")
         assertThat(resp.links).isEqualTo(Links(1,1))
@@ -100,7 +100,7 @@ class TVDbTest {
     @Test
     fun series_archer() {
         enqueueResponse("series-archer.json")
-        val resp = mApi.series(mToken, 1).blockingFirst()
+        val resp = mApi.series(mToken, 1).blockingGet()
         val d = resp.data
         assertThat(d.seriesName).isEqualTo("Archer (2009)")
         assertThat(resp.errors).isNull()
@@ -109,7 +109,7 @@ class TVDbTest {
     @Test
     fun series_archer2() {
         enqueueResponse("series-archer2.json")
-        val resp = mApi.series(mToken, 1).blockingFirst()
+        val resp = mApi.series(mToken, 1).blockingGet()
         /*
         assertThat(resp.data).isEqualTo(Series(
                 id = 74651,
@@ -129,32 +129,30 @@ class TVDbTest {
     @Test
     fun search_series_archer() {
         enqueueResponse("search-series-archer.json")
-        val resp = mApi.searchSeries(mToken, "archer").blockingFirst()
+        val resp = mApi.searchSeries(mToken, "archer").blockingGet()
         assertThat(resp.data.size).isEqualTo(4)
     }
 
     @Test
     fun search_series_archer_2009() {
         enqueueResponse("search-series-archer-2009.json")
-        val resp = mApi.searchSeries(mToken, "archer").blockingFirst()
+        val resp = mApi.searchSeries(mToken, "archer").blockingGet()
         assertThat(resp.data.size).isEqualTo(1)
         val data = resp.data[0]
         assertThat(data).isEqualTo(SeriesSearch(
-                listOf("Archer 2009", "Archer Dreamland"),
-                "graphical/110381-g5.jpg",
-                "2009-09-17",
-                110381,
-                "FXX",
-                "Covert black ops and espionage take a back seat to zany personalities and relationships between secret agents and drones.",
-                "Archer (2009)",
-                "Continuing"
+                aliases =  listOf("Archer 2009", "Archer Dreamland"),
+                banner = "graphical/110381-g5.jpg",
+                firstAired = "2009-09-17",
+                id = 110381,
+                overview = "Covert black ops and espionage take a back seat to zany personalities and relationships between secret agents and drones.",
+                seriesName = "Archer (2009)"
         ))
     }
 
     @Test
     fun login_token_normal() {
         enqueueResponse("login-token.json")
-        val token = mApi.login(Auth("foo")).blockingFirst()
+        val token = mApi.login(Auth("foo")).blockingGet()
         assertThat(token.token).isEqualTo("foobar")
     }
 
