@@ -7,7 +7,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import javax.inject.Inject
 
-const private val VERSION = 25
+const private val VERSION = 26
 
 /**
  * Created by drew on 7/18/17.
@@ -67,7 +67,9 @@ class Database
                     "overview TEXT, " +
                     "episode_number INTEGER NOT NULL, " +
                     "season_number INTEGER NOT NULL, " +
-                    "series_id INTEGER NOT NULL " +
+                    "series_id INTEGER NOT NULL," +
+                    "poster TEXT," +
+                    "backdrop TEXT " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS tv_banners;")
             db.execSQL("CREATE TABLE tv_banners (" +
@@ -155,7 +157,7 @@ class Database
                     "UNIQUE(device_id,folder_id) " + //milli
                     ");")
             db.execSQL("DROP INDEX IF EXISTS upnp_folder_parent_idx")
-            db.execSQL("CREATE INDEX upnp_folder_parent_idx ON (" +
+            db.execSQL("CREATE INDEX upnp_folder_parent_idx ON upnp_folder (" +
                     "device_id, parent_id);")
             db.execSQL("DROP TABLE IF EXISTS upnp_video")
             db.execSQL("CREATE TABLE upnp_video (" +
@@ -188,7 +190,7 @@ class Database
                     "UNIQUE(device_id,item_id) " +
                     ");")
             db.execSQL("DROP INDEX IF EXISTS upnp_video_parent_idx")
-            db.execSQL("CREATE INDEX upnp_video_parent_idx ON (" +
+            db.execSQL("CREATE INDEX upnp_video_parent_idx ON upnp_video (" +
                     "device_id, parent_id);")
             db.execSQL("DROP TABLE IF EXISTS upnp_video_search")
             db.execSQL("CREATE VIRTUAL TABLE upnp_video_search USING fts3 (" +

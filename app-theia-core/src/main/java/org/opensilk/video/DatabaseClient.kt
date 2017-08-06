@@ -25,62 +25,14 @@ import javax.inject.Singleton
 
 @Module
 abstract class MediaProviderModule {
-    @Binds abstract fun providerClient(providerClient: DatabaseClient): MediaProviderClient
+    @Binds
+    abstract fun providerClient(providerClient: DatabaseClient): MediaProviderClient
 }
 
 /**
  *
  */
 class NoSuchItemException: Exception()
-
-/**
- * A bridge for testing
- */
-internal interface ContentResolverGlue {
-    fun insert(uri: Uri, values: ContentValues): Uri?
-    fun bulkInsert(uri: Uri, values: Array<ContentValues>): Int
-    fun update(uri: Uri, values: ContentValues, where: String?,
-               selectionArgs: Array<String>?): Int
-    fun query(uri: Uri, projection: Array<String>?, selection: String?,
-              selectionArgs: Array<String>?, sortOrder: String?,
-              cancellationSignal: CancellationSignal?): Cursor?
-    fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int
-    fun notifyChange(uri: Uri, co: ContentObserver?)
-}
-
-/**
- * The default implementation passes through to the system ContentResolver
- */
-private class DefaultContentResolverGlue(private val mResolver: ContentResolver): ContentResolverGlue {
-    override fun insert(uri: Uri, values: ContentValues): Uri? {
-        return mResolver.insert(uri, values)
-    }
-
-    override fun bulkInsert(uri: Uri, values: Array<ContentValues>): Int {
-        return mResolver.bulkInsert(uri, values)
-    }
-
-    override fun update(uri: Uri, values: ContentValues, where: String?,
-                        selectionArgs: Array<String>?): Int {
-        return mResolver.update(uri, values, where, selectionArgs)
-    }
-
-    override fun query(uri: Uri, projection: Array<String>?, selection: String?,
-                       selectionArgs: Array<String>?, sortOrder: String?,
-                       cancellationSignal: CancellationSignal?): Cursor? {
-        return mResolver.query(uri, projection, selection, selectionArgs,
-                sortOrder, cancellationSignal)
-    }
-
-    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
-        return mResolver.delete(uri, selection, selectionArgs)
-    }
-
-    override fun notifyChange(uri: Uri, co: ContentObserver?) {
-        mResolver.notifyChange(uri, co)
-    }
-}
-
 class VideoDatabaseMalfuction: Exception()
 
 sealed class DatabaseChange
@@ -95,12 +47,11 @@ class UpnpVideoChange(val videoId: UpnpVideoId): DatabaseChange()
 @Singleton
 class DatabaseClient
 @Inject constructor(
-    @ForApplication context: Context,
     private val mUris: DatabaseUris,
-    @Named("tvdb_banner_root") private val mTVDbBannerRoot: String
+    @Named("tvdb_banner_root") private val mTVDbBannerRoot: String,
+    private val mResolver: ContentResolver
 ) : MediaProviderClient {
 
-    internal var mResolver: ContentResolverGlue = DefaultContentResolverGlue(context.contentResolver)
     val uris = mUris
 
     private val mChangesSubject = BehaviorSubject.create<DatabaseChange>()
@@ -480,7 +431,10 @@ class DatabaseClient
             //movie columns
             "m._id as movie_id", "m._display_name as movie_title",  //18
             "m.poster_path as movie_poster", //19
-            "m.backdrop_path as movie_backdrop") //20
+            "m.backdrop_path as movie_backdrop", //20
+            //more episode columns
+            "e.poster as episode_poster", "e.backdrop as episode_backdrop" //22
+    )
 
     /**
      * helper to convert cursor to mediameta using above projection
@@ -490,7 +444,7 @@ class DatabaseClient
         var mediaId = UpnpVideoId(c.getString(1), c.getString(2))
         var parentId = UpnpFolderId(c.getString(1), c.getString(3))
         var displayName = c.getString(4)
-        var title = c.getString(4)
+        var title = ""
         var mimeType = c.getString(5)
         var mediaUri = Uri.parse(c.getString(6))
         var duration = c.getLong(7)
@@ -504,10 +458,15 @@ class DatabaseClient
             episodeId = TvEpisodeId(c.getLong(9), c.getLong(13))
             title = c.getString(10)
             subtitle = makeTvSubtitle(c.getString(14), c.getInt(12), c.getInt(11))
-            if (!c.isNull(15)) {
+            //prefer episode poster / backdrop over series
+            if (!c.isNull(21)) {
+                artworkUri = makeTvBannerUri(c.getString(21))
+            } else if (!c.isNull(15)) {
                 artworkUri = makeTvBannerUri(c.getString(15))
             }
-            if (!c.isNull(16)) {
+            if (!c.isNull(22)) {
+                backdropUri = makeTvBannerUri(c.getString(22))
+            } else if (!c.isNull(16)) {
                 backdropUri = makeTvBannerUri(c.getString(16))
             }
         } else if (!c.isNull(17)) {
@@ -553,32 +512,34 @@ class DatabaseClient
                     arrayOf(videoId.deviceId, videoId.itemId),
                     null, null)?.use { c ->
                 if (c.moveToFirst()) {
-                    if (!c.isNull(0)) {
-                        s.onSuccess(c.getString(0))
-                    } else if (!c.isNull(1)) {
-                        s.onSuccess(c.getString(1))
-                    } else {
+                    var overview = c.getString(0)
+                    if (overview.isNullOrBlank()) {
+                        overview = c.getString(1)
+                    }
+                    if (overview.isNullOrBlank()) {
                         s.onComplete()
+                    } else {
+                        s.onSuccess(overview)
                     }
                 } else {
-                    s.onError(NoSuchItemException())
+                    s.onComplete()
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
-    fun setUpnpVideoTvEpisodeId(videoId: UpnpVideoId, id: Long): Boolean {
+    fun setUpnpVideoTvEpisodeId(videoId: UpnpVideoId, episodeId: TvEpisodeId): Boolean {
         val cv = ContentValues()
-        cv.put("episode_id", id)
+        cv.put("episode_id", episodeId.episodeId)
         cv.put("movie_id", "")
         return mResolver.update(mUris.upnpVideos(), cv, "device_id=? AND item_id=?",
                 arrayOf(videoId.deviceId, videoId.itemId)) != 0
     }
 
-    fun setUpnpVideoMovieId(videoId: UpnpVideoId, id: Long): Boolean {
+    fun setUpnpVideoMovieId(videoId: UpnpVideoId, movieId: MovieId): Boolean {
         val cv = ContentValues()
         cv.put("episode_id", "")
-        cv.put("movie_id", id)
+        cv.put("movie_id", movieId.movieId)
         return mResolver.update(mUris.upnpVideos(), cv, "device_id=? AND item_id=?",
                 arrayOf(videoId.deviceId, videoId.itemId)) != 0
     }
@@ -652,10 +613,10 @@ class DatabaseClient
                             TvSeriesId(c.getLong(3)),
                             TvSeriesMeta(
                                     title = c.getString(0),
-                                    overview = if (!c.isNull(1)) c.getString(1) else "",
+                                    overview = c.getString(1) ?: "",
                                     releaseDate = c.getString(2),
-                                    posterPath = if (!c.isNull(4)) c.getString(4) else "",
-                                    backdropPath = if (!c.isNull(5)) c.getString(5) else ""
+                                    posterPath = c.getString(4) ?: "",
+                                    backdropPath = c.getString(5) ?: ""
                             )
                     )
                     s.onSuccess(meta)
@@ -687,6 +648,8 @@ class DatabaseClient
         values.put("first_aired", episode.meta.releaseDate)
         values.put("episode_number", episode.meta.episodeNumber)
         values.put("season_number", episode.meta.seasonNumber)
+        values.put("poster", episode.meta.posterPath)
+        values.put("backdrop", episode.meta.backdropPath)
     }
 
     fun getTvEpisodesForTvSeries(seriesId: TvSeriesId): Observable<TvEpisodeRef> {
@@ -718,17 +681,19 @@ class DatabaseClient
     val tvEpisodesProjection = arrayOf(
             "_id", "_display_name", "first_aired",
             "episode_number", "season_number",
-            "overview", "series_id")
+            "overview", "series_id", "poster", "backdrop")
 
     fun Cursor.toTvEpisodeMediaMeta(): TvEpisodeRef {
         return TvEpisodeRef(
                 TvEpisodeId(getLong(0), getLong(6)),
                 TvEpisodeMeta(
                         title = getString(1),
-                        releaseDate = getString(2),
+                        releaseDate = getString(2) ?: "",
                         episodeNumber = getInt(3),
                         seasonNumber = getInt(4),
-                        overview = if (!isNull(5)) getString(5) else ""
+                        overview = getString(5) ?: "",
+                        posterPath = getString(7) ?: "",
+                        backdropPath = getString(8) ?: ""
                 )
         )
     }
@@ -789,10 +754,10 @@ class DatabaseClient
                 TvImageMeta(
                         path =  getString(2),
                         type = getString(3),
-                        subType = if (!isNull(4)) getString(4) else "",
+                        subType = getString(4) ?: "",
                         rating = if (!isNull(5)) getFloat(5) else 0f,
                         ratingCount = if (!isNull(6)) getInt(6) else 0,
-                        resolution = if (!isNull(7)) getString(7) else ""
+                        resolution = getString(7) ?: ""
                 )
         )
     }
@@ -856,8 +821,8 @@ class DatabaseClient
         val title = getString(0)
         val overview = getString(1) ?: ""
         val releaseDate = getString(2) ?: ""
-        val arwork = if (!isNull(3)) getString(3) else ""
-        val backdrop = if (!isNull(4)) getString(4) else ""
+        val arwork = getString(3) ?: ""
+        val backdrop = getString(4) ?: ""
         val rowId = getLong(5)
         return MovieRef(
                 MovieId(rowId),
