@@ -6,5 +6,5 @@ package org.opensilk.tvdb.api.model
 data class SeriesEpisodeData(
         val data: List<SeriesEpisode>,
         val errors: JSONErrors? = null,
-        val links: Links = Links()
+        val links: Links? = null
 )

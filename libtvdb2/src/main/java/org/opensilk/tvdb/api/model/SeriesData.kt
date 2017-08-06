@@ -5,5 +5,5 @@ package org.opensilk.tvdb.api.model
  */
 data class SeriesData(
         val data: Series,
-        val errors: JSONErrors? = JSONErrors()
+        val errors: JSONErrors? = null
 )

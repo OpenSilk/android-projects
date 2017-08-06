@@ -13,7 +13,7 @@ import org.opensilk.tvdb.api.model.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.nio.charset.Charset
 
@@ -40,16 +40,17 @@ class TVDbTest {
                     System.out.println("$n: ${log.headers().get(n)}")
                 }
             }
-            if (log.body() != null) {
+            val body = log.body()
+            if (body != null) {
                 val buf = Buffer()
-                log.body().writeTo(buf)
+                body.writeTo(buf)
                 System.out.println(buf.readString(Charset.forName("UTF-8")))
             }
             chain.proceed(chain.request())
         }.build()
         mApi = Retrofit.Builder()
                 .baseUrl(mServer.url("/"))
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(MoshiConverterFactory.create())
                 .validateEagerly(true)
                 .client(clinent)
@@ -65,7 +66,7 @@ class TVDbTest {
     @Test
     fun updated() {
         enqueueResponse("updated.json")
-        val resp = mApi.updated(mToken, 1).toBlocking().first()
+        val resp = mApi.updated(mToken, 1).blockingFirst()
         assertThat(resp.errors).isNull()
         assertThat(resp.data[0].id).isEqualTo(329559)
     }
@@ -73,7 +74,7 @@ class TVDbTest {
     @Test
     fun series_image_poster_archer() {
         enqueueResponse("series-image-poster-archer.json")
-        val resp = mApi.seriesImagesQuery(mToken, 1, "poster").toBlocking().first()
+        val resp = mApi.seriesImagesQuery(mToken, 1, "poster").blockingFirst()
         assertThat(resp.errors).isNull()
         assertThat(resp.data[0].keyType).isEqualTo("poster")
     }
@@ -81,7 +82,7 @@ class TVDbTest {
     @Test
     fun series_episodes_archer() {
         enqueueResponse("series-episodes-archer.json")
-        val resp = mApi.seriesEpisodes(mToken, 1).toBlocking().first()
+        val resp = mApi.seriesEpisodes(mToken, 1).blockingFirst()
         assertThat(resp.errors).isNull()
         assertThat(resp.data[0].episodeName).isEqualTo("Mole Hunt")
         assertThat(resp.links).isEqualTo(Links(1,1))
@@ -90,7 +91,7 @@ class TVDbTest {
     @Test
     fun series_episodes_archer2() {
         enqueueResponse("series-episodes-archer2.json")
-        val resp = mApi.seriesEpisodes(mToken, 1).toBlocking().first()
+        val resp = mApi.seriesEpisodes(mToken, 1).blockingFirst()
         assertThat(resp.errors).isNull()
         assertThat(resp.data[0].episodeName).isEqualTo("No Clothes for the Party")
         assertThat(resp.links).isEqualTo(Links(1,1))
@@ -99,7 +100,7 @@ class TVDbTest {
     @Test
     fun series_archer() {
         enqueueResponse("series-archer.json")
-        val resp = mApi.series(mToken, 1).toBlocking().first()
+        val resp = mApi.series(mToken, 1).blockingFirst()
         val d = resp.data
         assertThat(d.seriesName).isEqualTo("Archer (2009)")
         assertThat(resp.errors).isNull()
@@ -108,7 +109,7 @@ class TVDbTest {
     @Test
     fun series_archer2() {
         enqueueResponse("series-archer2.json")
-        val resp = mApi.series(mToken, 1).toBlocking().first()
+        val resp = mApi.series(mToken, 1).blockingFirst()
         /*
         assertThat(resp.data).isEqualTo(Series(
                 id = 74651,
@@ -128,14 +129,14 @@ class TVDbTest {
     @Test
     fun search_series_archer() {
         enqueueResponse("search-series-archer.json")
-        val resp = mApi.searchSeries(mToken, "archer").toBlocking().first()
+        val resp = mApi.searchSeries(mToken, "archer").blockingFirst()
         assertThat(resp.data.size).isEqualTo(4)
     }
 
     @Test
     fun search_series_archer_2009() {
         enqueueResponse("search-series-archer-2009.json")
-        val resp = mApi.searchSeries(mToken, "archer").toBlocking().first()
+        val resp = mApi.searchSeries(mToken, "archer").blockingFirst()
         assertThat(resp.data.size).isEqualTo(1)
         val data = resp.data[0]
         assertThat(data).isEqualTo(SeriesSearch(
@@ -153,7 +154,7 @@ class TVDbTest {
     @Test
     fun login_token_normal() {
         enqueueResponse("login-token.json")
-        val token = mApi.login(Auth("foo")).toBlocking().first()
+        val token = mApi.login(Auth("foo")).blockingFirst()
         assertThat(token.token).isEqualTo("foobar")
     }
 

@@ -8,8 +8,6 @@ data class SeriesSearch(
         val banner: String = "",
         val firstAired: String = "",
         val id: Long,
-        val network: String = "",
         val overview: String = "",
-        val seriesName: String,
-        val status: String = ""
+        val seriesName: String
 )
