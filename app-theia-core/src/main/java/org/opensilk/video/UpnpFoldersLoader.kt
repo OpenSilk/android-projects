@@ -12,7 +12,8 @@ import javax.inject.Inject
 class UpnpFoldersLoader
 @Inject constructor(
         private val mDatabaseClient: DatabaseClient,
-        private val mBrowseLoader: UpnpBrowseLoader
+        private val mBrowseLoader: UpnpBrowseLoader,
+        private val mLookupService: LookupService
 ) {
     fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>> {
         val mediaRef = newMediaRef(mediaId)

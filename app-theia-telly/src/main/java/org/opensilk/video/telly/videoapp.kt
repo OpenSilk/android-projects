@@ -12,6 +12,8 @@ import com.bumptech.glide.module.AppGlideModule
 import dagger.Component
 import dagger.Module
 import dagger.Provides
+import okhttp3.Cache
+import okhttp3.OkHttpClient
 import org.opensilk.common.dagger.*
 import org.opensilk.video.*
 import timber.log.Timber
@@ -34,7 +36,7 @@ import javax.inject.Singleton
                 PlaybackModule::class,
                 MediaProviderModule::class,
                 DatabaseProviderModule::class,
-                LookupModule::class,
+                LookupConfigModule::class,
                 UpnpBrowseLoaderModule::class
         )
 )
@@ -45,8 +47,19 @@ interface RootComponent: AppContextComponent, Injector<VideoApp>
  */
 @Module
 object RootModule {
+
     @Provides @Named("DatabaseAuthority") @JvmStatic
-    fun databaseAuthority(@ForApplication context: Context) = context.getString(R.string.videos_authority)
+    fun databaseAuthority(@ForApplication context: Context): String {
+        return context.getString(R.string.videos_authority)
+    }
+
+    @Provides @Singleton @JvmStatic
+    fun provideOkHttpClient(@ForApplication context: Context): OkHttpClient {
+        return OkHttpClient.Builder()
+                .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
+                .build()
+    }
+
 }
 
 /**

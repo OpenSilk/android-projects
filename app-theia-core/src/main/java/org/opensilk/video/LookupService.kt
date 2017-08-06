@@ -50,13 +50,8 @@ private const val WAIT_TIME: Long = 1000
 private const val WAIT_USERS = 1
 
 @Module
-object LookupModule {
-    @Provides @Singleton @JvmStatic
-    fun provideOkHttpClient(@ForApplication context: Context): OkHttpClient {
-        return OkHttpClient.Builder()
-                .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
-                .build()
-    }
+object LookupConfigModule {
+
     @Provides @Singleton @JvmStatic
     fun provideTVDBAuth(): Auth {
         return Auth(BuildConfig.TVDB_API_KEY)
