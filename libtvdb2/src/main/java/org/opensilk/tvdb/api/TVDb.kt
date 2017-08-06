@@ -22,7 +22,8 @@ interface TVDb {
     fun series(@Header("Authorization") token: Token, @Path("id") id: Long): Observable<SeriesData>
 
     @GET("/series/{id}/episodes")
-    fun seriesEpisodes(@Header("Authorization") token: Token, @Path("id") id: Long): Observable<SeriesEpisodeData>
+    fun seriesEpisodes(@Header("Authorization") token: Token, @Path("id") id: Long,
+                       @Query("page") page: Int = 1): Observable<SeriesEpisodeData>
 
     @GET("/series/{id}/images/query")
     fun seriesImagesQuery(@Header("Authorization") token: Token, @Path("id") id: Long,
