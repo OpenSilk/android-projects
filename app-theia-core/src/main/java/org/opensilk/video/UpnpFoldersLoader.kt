@@ -2,8 +2,11 @@ package org.opensilk.video
 
 import android.media.browse.MediaBrowser
 import io.reactivex.*
+import io.reactivex.Observable
+import org.opensilk.common.misc.AlphanumComparator
 import org.opensilk.media.*
 import timber.log.Timber
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -26,7 +29,7 @@ class UpnpFoldersLoader
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
                 //during lookup we can be flooded
-                .throttleFirst(5, TimeUnit.SECONDS)
+                .sample(5, TimeUnit.SECONDS)
                 .filter { it is UpnpUpdateIdChange || (it is UpnpFolderChange && it.folderId == folderId) }
                 .map { true }
                 .startWith(true)
@@ -65,7 +68,8 @@ class UpnpFoldersLoader
     private fun doDisk(folderId: UpnpFolderId): Single<List<MediaBrowser.MediaItem>> {
         return Observable.concat(
                 mDatabaseClient.getUpnpFolders(folderId),
-                mDatabaseClient.getUpnpVideos(folderId)).map { it.toMediaItem() }.toList()
+                mDatabaseClient.getUpnpVideos(folderId)
+        ).map { it.toMediaItem() }.toList()
     }
 
     private fun sendToLookup(metaList: List<MediaBrowser.MediaItem>) {
