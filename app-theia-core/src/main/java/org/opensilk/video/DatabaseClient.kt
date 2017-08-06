@@ -545,8 +545,6 @@ class DatabaseClient
         meta.duration = c.getLong(7)
         meta.size = c.getLong(8)
         if (!c.isNull(9)) {
-            //meta.extras.putLong("episode", c.getLong(9))
-            //meta.extras.putLong("series", c.getLong(13))
             meta.title = c.getString(10)
             meta.subtitle = makeTvSubtitle(c.getString(14), c.getInt(11), c.getInt(12))
             if (!c.isNull(15)) {
@@ -555,8 +553,8 @@ class DatabaseClient
             if (!c.isNull(16)) {
                 meta.backdropUri = makeTvBannerUri(c.getString(16))
             }
+            meta.isParsed = true
         } else if (!c.isNull(17)) {
-            //meta.extras.putLong("movie", c.getLong(17))
             meta.title = c.getString(18)
             val movieBaseUrl = getMovieImageBaseUrl()
             if (!c.isNull(19) && movieBaseUrl != "") {
@@ -565,6 +563,7 @@ class DatabaseClient
             if (!c.isNull(20) && movieBaseUrl != "") {
                 meta.backdropUri = makeMovieBackdropUri(movieBaseUrl, c.getString(20))
             }
+            meta.isParsed = true
         }
         return meta
     }
@@ -741,7 +740,7 @@ class DatabaseClient
     val tvEpisodesProjection = arrayOf(
             "_id", "_display_name", "first_aired",
             "episode_number", "season_number",
-            "overview")
+            "overview", "series_id")
 
     fun Cursor.toTvEpisodeMediaMeta(): MediaMeta {
         val meta = MediaMeta()
@@ -754,6 +753,7 @@ class DatabaseClient
         if (!isNull(5)) {
             meta.overview = getString(5)
         }
+        meta.foreignRowId = getLong(6)
         return meta
     }
 

@@ -4,6 +4,7 @@ import android.media.browse.MediaBrowser
 import io.reactivex.*
 import org.opensilk.media.*
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
@@ -15,8 +16,8 @@ class UpnpFoldersLoader
         private val mBrowseLoader: UpnpBrowseLoader,
         private val mLookupService: LookupService
 ) {
-    fun observable(mediaId: String): Observable<List<MediaBrowser.MediaItem>> {
-        val mediaRef = newMediaRef(mediaId)
+
+    fun observable(mediaRef: MediaRef): Observable<List<MediaBrowser.MediaItem>> {
         val folderId = when (mediaRef.kind) {
             UPNP_FOLDER -> mediaRef.mediaId as UpnpFolderId
             UPNP_DEVICE -> UpnpFolderId((mediaRef.mediaId as UpnpDeviceId).deviceId, UPNP_ROOT_ID)
@@ -24,6 +25,8 @@ class UpnpFoldersLoader
         }
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
+                //during lookup we can be flooded
+                .throttleFirst(5, TimeUnit.SECONDS)
                 .filter { it is UpnpUpdateIdChange || (it is UpnpFolderChange && it.folderId == folderId) }
                 .map { true }
                 .startWith(true)
@@ -33,7 +36,9 @@ class UpnpFoldersLoader
                     //and then retrieve from the database to associate
                     // any metadata stored in database with network items
                     // we get new thread because of rather complex operation
-                    doNetwork(folderId).andThen(doDisk(folderId)).subscribeOn(AppSchedulers.newThread)
+                    doNetwork(folderId).andThen(doDisk(folderId))
+                            .doOnSuccess { sendToLookup(it) }
+                            .subscribeOn(AppSchedulers.newThread)
                 }
     }
 
@@ -63,4 +68,39 @@ class UpnpFoldersLoader
                 mDatabaseClient.getUpnpVideos(folderId)).map { it.toMediaItem() }.toList()
     }
 
+    private fun sendToLookup(metaList: List<MediaBrowser.MediaItem>) {
+        Observable.fromIterable(metaList).map { it._getMediaMeta() }
+                .filter { newMediaRef(it.mediaId).kind == UPNP_VIDEO && !it.isParsed }
+                .flatMapCompletable { meta ->
+                    mLookupService.lookupObservable(meta).firstOrError().flatMapCompletable({ lookup ->
+                        associateMetaWithLookup(meta, lookup)
+                    }).doOnError {
+                        Timber.w("Error during lookup for ${meta.displayName} err=${it.message}")
+                    }.onErrorComplete()
+                }.subscribeOn(AppSchedulers.networkIo).subscribe()
+    }
+
+    private fun associateMetaWithLookup(meta: MediaMeta, lookup: MediaMeta): Completable {
+        return Completable.fromAction {
+            val videoId = newMediaRef(meta.mediaId).mediaId as UpnpVideoId
+            val parentId = newMediaRef(meta.parentMediaId).mediaId as UpnpFolderId
+            if (lookup.mimeType == MIME_TYPE_MOVIE) {
+                Timber.d("Located movie association for ${meta.displayName}")
+                mDatabaseClient.setUpnpVideoMovieId(videoId, lookup.rowId)
+                if (meta.lookupName.isNotBlank()) {
+                    mDatabaseClient.setMovieAssociation(meta.lookupName, meta.releaseYear, lookup.rowId)
+                }
+                mDatabaseClient.postChange(UpnpFolderChange(parentId))
+                mDatabaseClient.postChange(UpnpVideoChange(videoId))
+            } else if (lookup.mimeType == MIME_TYPE_TV_EPISODE) {
+                Timber.d("Located episode association for ${meta.displayName}")
+                mDatabaseClient.setUpnpVideoTvEpisodeId(videoId, lookup.rowId)
+                if (meta.lookupName.isNotBlank()) {
+                    mDatabaseClient.setTvSeriesAssociation(meta.lookupName, lookup.foreignRowId)
+                }
+                mDatabaseClient.postChange(UpnpFolderChange(parentId))
+                mDatabaseClient.postChange(UpnpVideoChange(videoId))
+            }
+        }
+    }
 }

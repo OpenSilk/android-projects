@@ -134,12 +134,13 @@ class FolderViewModel
     private val disposables = CompositeDisposable()
 
     fun onMediaId(mediaId: String) {
-        subscribeBrowseItems(mediaId)
-        subscribeTitle(newMediaRef(mediaId))
+        val mediaRef = newMediaRef(mediaId)
+        subscribeBrowseItems(mediaRef)
+        subscribeTitle(mediaRef)
     }
 
-    fun subscribeBrowseItems(mediaId: String) {
-        val s = mBrowseLoader.observable(mediaId)
+    fun subscribeBrowseItems(mediaRef: MediaRef) {
+        val s = mBrowseLoader.observable(mediaRef)
                 .subscribe({
                     folderItems.postValue(it)
                 }, {

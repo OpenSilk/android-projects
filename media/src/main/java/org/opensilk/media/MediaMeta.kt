@@ -181,7 +181,7 @@ constructor(
     /**
      * Long: Year Album/track/etc was released
      */
-    var releaseYear: Int by IntVal
+    var releaseYear: String by StringVal
     /**
      * String: human friendly release date
      */
@@ -284,6 +284,10 @@ constructor(
      *
      */
     var lookupName: String by StringVal
+    /**
+     * Dirty hack
+     */
+    var foreignRowId: Long by LongVal
 
     /*
      * Scratch space until better solution are found

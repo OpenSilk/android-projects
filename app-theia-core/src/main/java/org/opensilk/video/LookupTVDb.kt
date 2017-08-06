@@ -25,6 +25,7 @@ import org.opensilk.media.UPNP_VIDEO
 import org.opensilk.media.newMediaRef
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -51,8 +52,7 @@ constructor(
     }
 
     override fun lookupObservable(meta: MediaMeta): Observable<MediaMeta> {
-        val ref = newMediaRef(meta.mediaId)
-        if (ref.kind != UPNP_VIDEO) {
+        if (!meta.isVideo) {
             return Observable.error(IllegalMediaKindException())
         }
         val name = meta.lookupName
@@ -62,6 +62,7 @@ constructor(
         val cacheObservable = mClient.getTvSeriesAssociation(name)
                 //pull all episodes for series
                 .flatMapObservable { mClient.getTvEpisodes(it) }
+                .switchIfEmpty(Observable.error(LookupException("Cache returned nothing")))
 
 
         //note this will likely emit multiple episodes, one for each matching
@@ -73,8 +74,8 @@ constructor(
                 mApi.searchSeries(token, name)
             }
         }.flatMap { data ->
-            //only take first five series
-            Observable.fromIterable(data.data).take(5)
+            //only take first couple series
+            Observable.fromIterable(data.data).take(3)
         }.flatMap { ss ->
             //fetch full series metadata
             Observable.defer {
@@ -102,11 +103,13 @@ constructor(
             mClient.getTvEpisodes(uri.lastPathSegment.toLong())
         }
 
+        Timber.d("TV Lookup for ${meta.displayName} name=$name, s=$seasonNumber, e=$episodeNumber")
+
         return cacheObservable.onErrorResumeNext(networkObservable)
                 //find our episode
                 .filter { it.seasonNumber == seasonNumber && it.episodeNumber == episodeNumber }
                 //no episodes is an error
-                .switchIfEmpty(Observable.error(LookupException()))
+                .switchIfEmpty(Observable.error(LookupException("Empty episode data")))
     }
 
     class SeriesEpisodesImages(val series: Series, val episodes: List<SeriesEpisode>,

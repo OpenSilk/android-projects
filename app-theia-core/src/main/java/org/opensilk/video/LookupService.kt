@@ -101,7 +101,7 @@ interface LookupHandler {
     fun lookupObservable(meta: MediaMeta): Observable<MediaMeta>
 }
 
-class LookupException: Exception()
+class LookupException(msg: String = ""): Exception(msg)
 class IllegalMediaKindException: Exception()
 
 /**
@@ -144,26 +144,21 @@ class LookupService
             val seasonNum = extractSeasonNumber(title)
             val episodeNum = extractEpisodeNumber(title)
             if (name.isNullOrBlank() || seasonNum <= 0 || episodeNum <= 0) {
-                return Observable.error(LookupException())
+                return Observable.error(LookupException("Unable to parse $title"))
             }
             meta.lookupName = name
             meta.seasonNumber = seasonNum
             meta.episodeNumber = episodeNum
             return mTVDb.lookupObservable(meta)
         } else if (matchesMovie(title)) {
-            val name = extractMovieName(title)
-            val year = extractMovieYear(title)
-            if (name.isNullOrBlank()) {
-                return Observable.error(LookupException())
-            } else {
-                meta.lookupName = name!!
-                if (!year.isNullOrBlank()) {
-                    meta.releaseYear = year!!.toInt()
-                }
-                return mMovieDb.lookupObservable(meta)
-            }
+            val name = extractMovieName(title) ?:
+                    return Observable.error(LookupException("Unable to parse $title"))
+            val year = extractMovieYear(title) ?: ""
+            meta.lookupName = name
+            meta.releaseYear = year
+            return mMovieDb.lookupObservable(meta)
         } else {
-            return Observable.error(LookupException())
+            return Observable.error(LookupException("$title does not match movie or episode pattern"))
         }
     }
 }

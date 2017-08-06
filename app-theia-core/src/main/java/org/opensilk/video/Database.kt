@@ -7,7 +7,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import javax.inject.Inject
 
-const private val VERSION = 20
+const private val VERSION = 22
 
 /**
  * Created by drew on 7/18/17.
@@ -77,6 +77,7 @@ class Database
                     "resolution TEXT NOT NULL, " +
                     "rating FLOAT, " +
                     "rating_count INTEGER, " +
+                    "thumb_path TEXT, " +
                     "series_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS tv_actors;")
@@ -124,7 +125,7 @@ class Database
                     "image_type TEXT NOT NULL, " + //poster|backdrop
                     "resolution TEXT NOT NULL, " +
                     "vote_average FLOAT, " +
-                    "vote_count INTEGER " +
+                    "vote_count INTEGER, " +
                     "movie_id INTEGER NOT NULL " +
                     ");")
             db.execSQL("DROP TABLE IF EXISTS movie_lookups;")

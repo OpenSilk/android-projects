@@ -52,15 +52,14 @@ constructor(
     }
 
     override fun lookupObservable(meta: MediaMeta): Observable<MediaMeta> {
-        val mediaRef = newMediaRef(meta.mediaId)
-        if (mediaRef.kind != UPNP_VIDEO) {
+        if (!meta.isVideo) {
             return Observable.error(IllegalMediaKindException())
         }
         val name = meta.lookupName
         if (name.isBlank()) {
             return Observable.error(IllegalArgumentException())
         }
-        val year = meta.releaseYear.toString()
+        val year = meta.releaseYear
 
         val cacheObservable = mClient.getMovieAssociation(name, year)
                 .map { id -> mClient.uris.movie(id) }.toObservable()
@@ -78,7 +77,7 @@ constructor(
             return@flatMap if (list.results == null) {
                 Observable.empty()
             } else {
-                Observable.fromIterable(list.results).take(5)
+                Observable.fromIterable(list.results).take(3)
             }
         }.flatMap { movie ->
             //fetch movie and images
@@ -102,7 +101,7 @@ constructor(
         //    mClient.moviedb.setMovieAssociation(name, year, uri.lastPathSegment.toLong())
         }.flatMap { uri ->
             mClient.getMovie(uri.lastPathSegment.toLong()).toObservable()
-        }
+        }.switchIfEmpty(Observable.error(LookupException("Empty movie data")))
     }
 
 }
