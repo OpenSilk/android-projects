@@ -5,6 +5,7 @@ import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.SingleSource
 import org.opensilk.media.*
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -23,21 +24,18 @@ class UpnpFoldersLoader
             else -> TODO("Unsupported mediaid")
         }
         //watch for system update id changes and re fetch list
-        return mDatabaseClient.changesObservable
-                .filter { it is UpnpUpdateIdChange }
-                .startWith { UpnpUpdateIdChange() }
-                .switchMapSingle {
+        return Observable.just(true)
+                .switchMapSingle { change ->
+                    Timber.d("SwitchMap $folderId")
                     //first fetch from network and stick in database
-                    mBrowseLoader.completable(folderId).andThen<List<MediaBrowser.MediaItem>>(SingleSource {
-                        //and then retrieve the items back from the database
-                        Observable.concat(
-                                mDatabaseClient.getUpnpFolders(folderId),
-                                mDatabaseClient.getUpnpVideos(folderId)
-                        ).map {
-                            it.toMediaItem()
-                        }.toList()
+                    //and then retrieve from the database to associate
+                    // any metadata stored in database with network items
+                    mBrowseLoader.completable(folderId).andThen(Observable.concat(
+                            mDatabaseClient.getUpnpFolders(folderId),
+                            mDatabaseClient.getUpnpVideos(folderId)
+                        ).map { it.toMediaItem() }.toList()
                         //we get new thread since we have a rather complicated task
-                    }).subscribeOn(AppSchedulers.newThread)
+                    ).subscribeOn(AppSchedulers.newThread)
                 }
     }
 }

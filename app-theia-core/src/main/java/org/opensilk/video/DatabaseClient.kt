@@ -91,7 +91,7 @@ private class DefaultContentResolverGlue(private val mResolver: ContentResolver)
 class VideoDatabaseMalfuction: Exception()
 
 sealed class DatabaseChange
-class UpnpUpdateIdChange: DatabaseChange()
+class UpnpUpdateIdChange(val updateId: Long): DatabaseChange()
 class UpnpDeviceChange: DatabaseChange()
 class UpnpFolderChange(val folderId: UpnpFolderId): DatabaseChange()
 class UpnpVideoChange(val videoId: UpnpVideoId): DatabaseChange()
@@ -283,6 +283,19 @@ class DatabaseClient
         val values = ContentValues()
         values.put("update_id", updateId)
         return mResolver.update(mUris.upnpDevices(), values, "device_id=?", arrayOf(deviceId.deviceId)) != 0
+    }
+
+    fun getUpnpDeviceSystemUpdateId(deviceId: UpnpDeviceId): Maybe<Long> {
+        return Maybe.create { s ->
+            mResolver.query(mUris.upnpDevices(), arrayOf("update_id"), "device_id=?",
+                    arrayOf(deviceId.deviceId), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.getLong(0))
+                } else {
+                    s.onComplete()
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
     }
 
     fun incrementUpnpDeviceScanning(deviceId: UpnpDeviceId): Boolean {

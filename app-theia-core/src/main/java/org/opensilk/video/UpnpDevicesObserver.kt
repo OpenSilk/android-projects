@@ -76,6 +76,7 @@ class UpnpDevicesObserver
     override fun deviceAdded(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
         device.findService(CDSserviceType)?.let { service ->
             val metaDevice = service.device.toMediaMeta()
+            Timber.d("Found new CDS ${metaDevice.title}")
             mDatabaseClient.addUpnpDevice(metaDevice)
             mDatabaseClient.postChange(UpnpDeviceChange())
             subscribeEvents(service)
@@ -178,11 +179,11 @@ class UpnpDevicesObserver
      */
     private fun handleSystemUpdateId(updateId: Long?, deviceId: UpnpDeviceId) {
         if (updateId == null) return
-        mDatabaseClient.getUpnpDevice(deviceId)
-                .subscribeIgnoreError(Consumer { meta ->
-                    if (meta.updateId != updateId) {
+        mDatabaseClient.getUpnpDeviceSystemUpdateId(deviceId)
+                .subscribeIgnoreError(Consumer { oldId ->
+                    if (oldId != updateId) {
                         mDatabaseClient.setUpnpDeviceSystemUpdateId(deviceId, updateId)
-                        mDatabaseClient.postChange(UpnpUpdateIdChange())
+                        mDatabaseClient.postChange(UpnpUpdateIdChange(updateId))
                     }
                 })
     }

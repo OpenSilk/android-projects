@@ -17,7 +17,7 @@ class UpnpDevicesLoader
                 .filter { it is UpnpDeviceChange }
                 .map { it as UpnpDeviceChange }
                 .startWith(UpnpDeviceChange())
-                .flatMapSingle {
+                .switchMapSingle {
                     mDatabaseClient.getUpnpDevices().map {
                         it.toMediaItem()
                     }.toList().subscribeOn(AppSchedulers.diskIo)
