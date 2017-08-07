@@ -2,10 +2,8 @@ package org.opensilk.video.telly
 
 import android.arch.lifecycle.LifecycleRegistry
 import android.arch.lifecycle.LifecycleRegistryOwner
-import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.Context
-import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
 import android.support.v17.leanback.app.BrowseSupportFragment
@@ -18,16 +16,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.exceptions.Exceptions
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.media.toMediaItem
-import org.opensilk.video.LiveDataObserver
-import org.opensilk.video.NewlyAddedLoader
-import org.opensilk.video.UpnpDevicesLoader
-import org.opensilk.video.ViewModelKey
+import org.opensilk.video.*
 import javax.inject.Inject
 
 
@@ -128,53 +120,6 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
     override fun getLifecycle(): LifecycleRegistry {
         return lifecycleRegistry
     }
-}
-
-/**
- *
- */
-class HomeViewModel
-@Inject constructor(
-        private val mServersLoader: UpnpDevicesLoader,
-        private val mNewlyAddedLoader: NewlyAddedLoader
-): ViewModel() {
-    val servers = MutableLiveData<List<MediaBrowser.MediaItem>>()
-    val newlyAdded = MutableLiveData<List<MediaBrowser.MediaItem>>()
-    private val disposables = CompositeDisposable()
-
-    fun fetchData() {
-        subscribeServers()
-        subscribeNewlyAdded()
-    }
-
-    fun subscribeServers() {
-        val s = mServersLoader.observable
-                .map { list -> list.map { it.toMediaItem() } }
-                .subscribe({
-                    servers.postValue(it)
-                }, {
-                    Exceptions.propagate(it) //TODO handle errors
-                }
-        )
-        disposables.add(s)
-    }
-
-    fun subscribeNewlyAdded() {
-        val s = mNewlyAddedLoader.observable
-                .map { list -> list.map { it.toMediaItem() } }
-                .subscribe({
-                    newlyAdded.postValue(it)
-                }, {
-                    Exceptions.propagate(it)
-                })
-        disposables.add(s)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposables.clear()
-    }
-
 }
 
 class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())

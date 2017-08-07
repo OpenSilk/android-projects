@@ -8,11 +8,6 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KClass
 
 /**
- * extra name
- */
-const val EXTRA_MEDIAID = "org.opensilk.extra.mediaid"
-
-/**
  *
  */
 @Suppress("UNCHECKED_CAST")
