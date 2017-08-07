@@ -17,7 +17,7 @@ class FolderViewModel
         private val mBrowseLoader: UpnpFoldersLoader
 ) : ViewModel() {
     val mediaTitle = MutableLiveData<String>()
-    val folderItems = MutableLiveData<List<MediaBrowser.MediaItem>>()
+    val folderItems = MutableLiveData<List<MediaRef>>()
     val loadError = MutableLiveData<String>()
     private val disposables = CompositeDisposable()
 
@@ -35,7 +35,6 @@ class FolderViewModel
 
     fun subscribeBrowseItems(mediaId: MediaId) {
         val s = mBrowseLoader.observable(mediaId)
-                .map { list -> list.map { it.toMediaItem() } }
                 .subscribe({
                     folderItems.postValue(it)
                 }, {

@@ -70,10 +70,7 @@ interface DetailComponent: Injector<DetailFragment> {
  *
  */
 @Module(subcomponents = arrayOf(DetailComponent::class))
-abstract class DetailModule {
-    @Binds @IntoMap @ViewModelKey(DetailViewModel::class)
-    abstract fun detailViewModel(vm: DetailViewModel): ViewModel
-}
+abstract class DetailModule
 
 /**
  * this is fuckin weird but works, kotlin has no static methods so we put them

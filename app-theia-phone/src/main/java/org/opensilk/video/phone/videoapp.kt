@@ -1,4 +1,4 @@
-package org.opensilk.video.telly
+package org.opensilk.video.phone
 
 import android.app.Application
 import android.arch.lifecycle.ViewModel
@@ -20,12 +20,8 @@ import org.opensilk.video.*
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Named
-import javax.inject.Provider
 import javax.inject.Singleton
 
-/**
- * Created by drew on 5/28/17.
- */
 @Singleton
 @Component(modules = arrayOf(
         RootModule::class,
@@ -36,16 +32,10 @@ import javax.inject.Singleton
         LookupConfigModule::class,
         UpnpBrowseLoaderModule::class,
         ViewModelModule::class,
-        HomeModule::class,
-        FolderModule::class,
-        DetailModule::class,
-        PlaybackModule::class
+        HomeScreenModule::class
 ))
 interface RootComponent: AppContextComponent, Injector<VideoApp>
 
-/**
- *
- */
 @Module
 object RootModule {
 
@@ -69,14 +59,9 @@ object RootModule {
 }
 
 /**
- * This class is overridden in the mock build variant, changes here will not be seen by espresso tests!
+ * Created by drew on 8/6/17.
  */
 open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory {
-
-    open internal val rootComponent: RootComponent by lazy {
-        DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
-    }
-    private val injectOnce = Once()
 
     override fun onCreate() {
         super.onCreate()
@@ -90,56 +75,37 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
         startService(Intent(this, UpnpHolderService::class.java))
     }
 
-    //For now we hold references to all our injectors here
-    //this will go away when we switch over to dagger-android and AndroidInjection
-    //but, for now, i cannot get the @IntoMap thing to fucking work on our Injector.Factory
-    //i think the problem is kotlin and how it handles generics, but not really sure
-    //if you are looking for something to waste time on, HomeActivityModule declares an
-    //enable @IntoMap method that is supposed to provide an Injector.Factory but doesn't
-    //@Inject lateinit var mInjectors: Map<Class<*>, Injector.Factory<*>>
-    @Inject lateinit var mHomeBuilder: HomeComponent.Builder
-    @Inject lateinit var mFolderBuilder: FolderComponent.Builder
-    @Inject lateinit var mDetailBuilder: DetailComponent.Builder
-    @Inject lateinit var mPlaybackBuilder: PlaybackComponent.Builder
+    val injectOnce = Once()
+    val rootComponent: RootComponent by lazy {
+        DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
+    }
+
+    @Inject lateinit var mHomeBuilder: HomeScreenComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
     @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
 
-    /**
-     * Anything that is injectable needs to be injected here.
-     * They should not inject themselves, that's not how dependency injection
-     * is supposed to work.
-     */
-    override fun injectFoo(foo: Any) {
-        injectOnce.Do {
-            rootComponent.inject(this)
-        }
-        if (foo is HomeFragment) {
-            (foo.activity as HomeActivity).daggerComponent(mHomeBuilder, foo).inject(foo)
-        } else if (foo is FolderFragment) {
-            (foo.activity as FolderActivity).daggerComponent(mFolderBuilder, foo).inject(foo)
-        } else if (foo is DetailFragment) {
-            (foo.activity as DetailActivity).daggerComponent(mDetailBuilder, foo).inject(foo)
-        } else if (foo is PlaybackActivity) {
-            foo.daggerComponent(mPlaybackBuilder, foo).inject(foo)
+    override fun injectFoo(foo: Any): Any {
+        injectOnce.Do { rootComponent.inject(this) }
+        return if (foo is HomeActivity) {
+            mHomeBuilder.create(foo).inject(foo)
         } else if (foo is UpnpHolderService) {
-            mUpnpHolderBuilder.build().inject(foo)
+            mUpnpHolderBuilder.create(foo).inject(foo)
         } else if (foo is DatabaseProvider) {
-            mDatabaseProviderBuilder.build().inject(foo)
+            mDatabaseProviderBuilder.create(foo).inject(foo)
         } else {
-            TODO("Don't have an injector for ${foo.javaClass}")
+            TODO("No builder for ${foo::class}")
         }
     }
 
     @Inject lateinit var mViewModelFactory: ViewModelFactoryFactory
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        injectOnce.Do { rootComponent.inject(this) }
         return mViewModelFactory.create(modelClass)
     }
+
 }
 
-/**
- *
- */
 @GlideModule
 class GlideConfig: AppGlideModule() {
     override fun applyOptions(context: Context, builder: GlideBuilder) {
@@ -152,9 +118,6 @@ class GlideConfig: AppGlideModule() {
     }
 }
 
-/**
- *
- */
 open class DebugTreeWithThreadName : Timber.DebugTree() {
 
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
@@ -169,5 +132,3 @@ open class DebugTreeWithThreadName : Timber.DebugTree() {
         return "$msg [$threadName]"
     }
 }
-
-

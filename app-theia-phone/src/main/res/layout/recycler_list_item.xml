@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="titleString"
+            type="String"/>
+    </data>
+    <FrameLayout
+        android:id="@+id/frame"
+        android:foreground="?android:selectableItemBackground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            style="@style/mtrl.SingleLineListItemLinear">
+
+            <ImageView
+                android:id="@+id/avatar"
+                style="@style/mtrl.SingleLineListItemLinearInner.Avatar"/>
+
+            <TextView
+                android:id="@+id/title"
+                android:text="@{titleString}"
+                style="@style/mtrl.SingleLineListItemLinearInner.Text"/>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</layout>

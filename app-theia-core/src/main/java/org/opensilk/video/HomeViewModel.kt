@@ -5,6 +5,9 @@ import android.arch.lifecycle.ViewModel
 import android.media.browse.MediaBrowser
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.exceptions.Exceptions
+import org.opensilk.media.MediaRef
+import org.opensilk.media.UpnpDeviceRef
+import org.opensilk.media.UpnpVideoRef
 import org.opensilk.media.toMediaItem
 import javax.inject.Inject
 
@@ -16,8 +19,8 @@ class HomeViewModel
         private val mServersLoader: UpnpDevicesLoader,
         private val mNewlyAddedLoader: NewlyAddedLoader
 ): ViewModel() {
-    val servers = MutableLiveData<List<MediaBrowser.MediaItem>>()
-    val newlyAdded = MutableLiveData<List<MediaBrowser.MediaItem>>()
+    val servers = MutableLiveData<List<UpnpDeviceRef>>()
+    val newlyAdded = MutableLiveData<List<UpnpVideoRef>>()
     private val disposables = CompositeDisposable()
 
     fun fetchData() {
@@ -27,7 +30,6 @@ class HomeViewModel
 
     fun subscribeServers() {
         val s = mServersLoader.observable
-                .map { list -> list.map { it.toMediaItem() } }
                 .subscribe({
                     servers.postValue(it)
                 }, {
@@ -39,7 +41,6 @@ class HomeViewModel
 
     fun subscribeNewlyAdded() {
         val s = mNewlyAddedLoader.observable
-                .map { list -> list.map { it.toMediaItem() } }
                 .subscribe({
                     newlyAdded.postValue(it)
                 }, {

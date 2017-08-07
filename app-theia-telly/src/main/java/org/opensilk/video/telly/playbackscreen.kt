@@ -38,10 +38,7 @@ interface PlaybackComponent: Injector<PlaybackActivity> {
  *
  */
 @Module(subcomponents = arrayOf(PlaybackComponent::class))
-abstract class PlaybackModule {
-    @Binds @IntoMap @ViewModelKey(PlaybackViewModel::class)
-    abstract fun bindPlaybackViewModel(viewModel: PlaybackViewModel): ViewModel
-}
+abstract class PlaybackModule
 
 /**
  *

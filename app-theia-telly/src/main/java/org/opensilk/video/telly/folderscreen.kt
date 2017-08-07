@@ -17,6 +17,7 @@ import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.*
 import org.opensilk.video.EXTRA_MEDIAID
 import org.opensilk.video.FolderViewModel
+import org.opensilk.video.LiveDataObserver
 import org.opensilk.video.ViewModelKey
 import javax.inject.Inject
 
@@ -34,10 +35,7 @@ interface FolderComponent: Injector<FolderFragment> {
  *
  */
 @Module(subcomponents = arrayOf(FolderComponent::class))
-abstract class FolderModule {
-    @Binds @IntoMap @ViewModelKey(FolderViewModel::class)
-    abstract fun folderViewModel(vm: FolderViewModel): ViewModel
-}
+abstract class FolderModule
 
 /**
  *
@@ -83,14 +81,14 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(FolderViewModel::class)
         mViewModel.onMediaId(arguments.getString(EXTRA_MEDIAID))
-        mViewModel.mediaTitle.observe(this, Observer {
+        mViewModel.mediaTitle.observe(this, LiveDataObserver {
             title = it
         })
-        mViewModel.folderItems.observe(this, Observer {
+        mViewModel.folderItems.observe(this, LiveDataObserver { items ->
             mFolderAdapter.clear()
-            mFolderAdapter.addAll(0, it)
+            mFolderAdapter.addAll(0, items.map { it.toMediaItem() })
         })
-        mViewModel.loadError.observe(this, Observer {
+        mViewModel.loadError.observe(this, LiveDataObserver {
             Toast.makeText(context, "An error occurred. msg=$it", Toast.LENGTH_LONG).show()
         })
 

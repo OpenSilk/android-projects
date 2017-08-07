@@ -8,14 +8,23 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".HomeActivity">
+        android:theme="@style/AppTheme"
+        android:name=".VideoApp">
+
+        <activity android:name=".HomeActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <service android:name="org.opensilk.video.UpnpHolderService"/>
+
+        <provider
+            android:name="org.opensilk.video.DatabaseProvider"
+            android:authorities="@string/videos_authority"
+            android:exported="false"/>
     </application>
 
 </manifest>

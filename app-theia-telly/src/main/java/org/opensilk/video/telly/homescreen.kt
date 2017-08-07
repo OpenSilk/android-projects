@@ -19,6 +19,7 @@ import dagger.multibindings.IntoMap
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
+import org.opensilk.media.toMediaItem
 import org.opensilk.video.*
 import javax.inject.Inject
 
@@ -37,12 +38,7 @@ interface HomeComponent: Injector<HomeFragment>{
  *
  */
 @Module(subcomponents = arrayOf(HomeComponent::class))
-abstract class HomeModule {
-    //@Binds @IntoMap @ClassKey(HomeActivity::class)
-    //abstract fun provideBuilderFactory(b: HomeComponent.Builder): Injector.Factory<*>
-    @Binds @IntoMap @ViewModelKey(HomeViewModel::class)
-    abstract fun homeViewModel(vm: HomeViewModel): ViewModel
-}
+abstract class HomeModule
 
 /**
  *
@@ -81,13 +77,13 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(HomeViewModel::class)
-        mViewModel.servers.observe(this, LiveDataObserver {
+        mViewModel.servers.observe(this, LiveDataObserver { items ->
             mServersAdapter.clear()
-            mServersAdapter.addAll(0, it)
+            mServersAdapter.addAll(0, items.map { it.toMediaItem() })
         })
-        mViewModel.newlyAdded.observe(this, LiveDataObserver {
+        mViewModel.newlyAdded.observe(this, LiveDataObserver { items ->
             mNewlyAddedAdapter.clear()
-            mNewlyAddedAdapter.addAll(0, it)
+            mNewlyAddedAdapter.addAll(0, items.map { it.toMediaItem() })
         })
         mViewModel.fetchData()
 
