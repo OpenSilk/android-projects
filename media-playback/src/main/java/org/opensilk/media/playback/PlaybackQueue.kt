@@ -5,7 +5,6 @@ import android.media.browse.MediaBrowser
 import android.media.session.MediaSession.*
 import io.reactivex.Maybe
 import io.reactivex.Single
-import org.opensilk.media.MediaMeta
 import org.opensilk.media.toMediaItem
 import timber.log.Timber
 import java.util.*

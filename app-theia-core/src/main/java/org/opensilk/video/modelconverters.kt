@@ -1,7 +1,6 @@
 package org.opensilk.video
 
 import android.net.Uri
-import android.provider.DocumentsContract
 import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.RemoteDeviceIdentity
 import org.fourthline.cling.support.model.container.Container

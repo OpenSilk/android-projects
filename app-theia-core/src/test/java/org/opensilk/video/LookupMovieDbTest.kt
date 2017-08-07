@@ -3,12 +3,16 @@ package org.opensilk.video
 import android.net.Uri
 import com.nhaarman.mockito_kotlin.*
 import io.reactivex.Maybe
+import io.reactivex.Observable
 import okhttp3.mockwebserver.MockWebServer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
+import org.opensilk.media.MovieRef
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
@@ -16,11 +20,6 @@ import org.opensilk.tmdb.api.model.MovieList
 import org.opensilk.tmdb.api.model.TMDbConfig
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import io.reactivex.Observable
-import io.reactivex.Single
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
-import org.opensilk.media.*
 
 /**
  * Created by drew on 7/26/17.

@@ -3,20 +3,20 @@ package org.opensilk.video
 import android.net.Uri
 import com.nhaarman.mockito_kotlin.*
 import io.reactivex.Maybe
+import io.reactivex.Observable
+import io.reactivex.Single
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
+import org.opensilk.media.UpnpVideoRef
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import io.reactivex.Observable
-import io.reactivex.Single
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
-import org.opensilk.media.*
 
 /**
  * Created by drew on 7/26/17.

@@ -18,7 +18,6 @@ import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.*
-import org.opensilk.video.NoBrowseResultsException
 import org.opensilk.video.UpnpFoldersLoader
 import org.opensilk.video.ViewModelKey
 import timber.log.Timber
@@ -130,16 +129,18 @@ class FolderViewModel
     private val disposables = CompositeDisposable()
 
     fun onMediaId(mediaId: String) {
+        Timber.d("onMediaId($mediaId)")
         val mediaRef = parseMediaId(mediaId)
         when (mediaRef) {
-            is UpnpFolderId -> {
+            is UpnpFolderId, is UpnpDeviceId -> {
                 subscribeBrowseItems(mediaRef)
                 subscribeTitle(mediaRef)
             }
+            else -> TODO("Unsupported mediaId $mediaRef")
         }
     }
 
-    fun subscribeBrowseItems(mediaId: UpnpFolderId) {
+    fun subscribeBrowseItems(mediaId: MediaId) {
         val s = mBrowseLoader.observable(mediaId)
                 .map { list -> list.map { it.toMediaItem() } }
                 .subscribe({
@@ -151,10 +152,10 @@ class FolderViewModel
         disposables.add(s)
     }
 
-    fun subscribeTitle(mediaId: UpnpFolderId) {
+    fun subscribeTitle(mediaId: MediaId) {
         val s = mDatabaseClient.getMediaMeta(mediaId)
                 .map({ it.toMediaItem() })
-                .subscribe(Consumer {
+                .subscribe({
                     mediaTitle.postValue(it.description.title?.toString())
                 })
         disposables.add(s)

@@ -1,11 +1,8 @@
 package org.opensilk.video
 
-import android.media.browse.MediaBrowser
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.opensilk.media.UpnpDeviceRef
-import org.opensilk.media.toMediaItem
-import timber.log.Timber
 import javax.inject.Inject
 
 /**

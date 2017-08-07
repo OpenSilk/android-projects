@@ -20,12 +20,13 @@
     xmlns:tools="http://schemas.android.com/tools">
     <data>
         <import type="android.view.View"/>
+        <import type="android.text.TextUtils"/>
         <variable
-            name="progressInfo"
-            type="org.opensilk.video.VideoProgressInfo"/>
+            name="completion"
+            type="int"/>
         <variable
-            name="desc"
-            type="org.opensilk.video.VideoDescInfo"/>
+            name="description"
+            type="android.media.MediaDescription"/>
     </data>
     <android.support.v17.leanback.widget.BaseCardView
         android:layout_width="match_parent"
@@ -59,9 +60,9 @@
                     android:maxHeight="2dp"
                     android:minHeight="2dp"
                     android:layoutDirection="ltr"
-                    android:visibility="@{(progressInfo.progress == 0) ? View.GONE : View.VISIBLE}"
-                    android:max="100"
-                    android:progress="@{progressInfo.progress}"
+                    android:visibility="@{(completion &lt;= 0) ? View.GONE : View.VISIBLE}"
+                    android:max="1000"
+                    android:progress="@{completion}"
                     android:progressDrawable="@drawable/lb_playback_progress_bar"
                     android:layout_gravity="bottom"/>
 
@@ -79,8 +80,8 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:textAppearanceLarge"
                     android:lines="1"
-                    android:ellipsize="middle"
-                    android:text="@{desc.title}"
+                    android:ellipsize="marquee"
+                    android:text="@{description.title}"
                     tools:text="Something"/>
 
                 <TextView
@@ -90,8 +91,8 @@
                     android:textAppearance="?android:textAppearanceMedium"
                     android:lines="1"
                     android:ellipsize="middle"
-                    android:text="@{desc.subtitle}"
-                    android:visibility='@{desc.subtitle != "" ? View.VISIBLE : View.GONE}'
+                    android:text="@{description.subtitle}"
+                    android:visibility='@{TextUtils.isEmpty(description.subtitle) ? View.GONE : View.VISIBLE}'
                     tools:text="subtitle"/>
 
             </LinearLayout>

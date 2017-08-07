@@ -19,10 +19,10 @@ package org.opensilk.video
 
 import io.reactivex.Maybe
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.functions.BiFunction
-import io.reactivex.rxkotlin.toMaybe
-import org.opensilk.media.*
+import org.opensilk.media.MediaRef
+import org.opensilk.media.MovieId
+import org.opensilk.media.MovieRef
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie

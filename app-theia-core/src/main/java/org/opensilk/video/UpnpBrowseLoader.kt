@@ -4,7 +4,6 @@ import dagger.Binds
 import dagger.Module
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.functions.Function
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
 import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.Service

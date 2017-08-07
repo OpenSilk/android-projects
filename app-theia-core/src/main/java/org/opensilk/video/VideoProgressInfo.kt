@@ -1,8 +1,5 @@
 package org.opensilk.video
 
-import android.media.MediaDescription
-import org.opensilk.media._getMediaMeta
-
 /**
  * Created by drew on 5/28/17.
  */

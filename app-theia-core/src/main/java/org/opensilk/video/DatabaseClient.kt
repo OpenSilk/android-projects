@@ -2,11 +2,8 @@ package org.opensilk.video
 
 import android.content.ContentResolver
 import android.content.ContentValues
-import android.content.Context
-import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
-import android.os.CancellationSignal
 import dagger.Binds
 import dagger.Module
 import io.reactivex.Maybe
@@ -14,7 +11,6 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.Consumer
 import io.reactivex.subjects.BehaviorSubject
-import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.cancellationSignal
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
@@ -58,6 +54,11 @@ class DatabaseClient
 
     val changesObservable: Observable<DatabaseChange>
         get() = mChangesSubject.hide()
+
+    fun upnpVideoChanges(videoId: UpnpVideoId): Observable<UpnpVideoChange> {
+        return changesObservable.filter { it is UpnpVideoChange && it.videoId == videoId }
+                .map { it as UpnpVideoChange }
+    }
 
     fun postChange(event: DatabaseChange) {
         mChangesSubject.onNext(event)

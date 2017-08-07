@@ -17,18 +17,11 @@
 
 package org.opensilk.video
 
-import android.content.Context
-import android.os.Bundle
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Observable
-import okhttp3.Cache
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
+import okhttp3.*
 import org.apache.commons.lang3.concurrent.TimedSemaphore
-import org.opensilk.common.dagger.ForApplication
-import org.opensilk.media.MediaId
-import org.opensilk.media.MediaMeta
 import org.opensilk.media.MediaRef
 import org.opensilk.media.UpnpVideoRef
 import org.opensilk.tmdb.api.ApiKeyInterceptor
@@ -75,7 +68,9 @@ object LookupConfigModule {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(MoshiConverterFactory.create())
                 .validateEagerly(true)
-                .client(okHttpClient.newBuilder().addInterceptor(LanguageInterceptor()).build())
+                .client(okHttpClient.newBuilder()
+                        .addInterceptor(LanguageInterceptor())
+                        .addInterceptor(CacheControlInterceptor).build())
                 .build()
                 .create(TVDb::class.java)
     }
@@ -95,9 +90,22 @@ object LookupConfigModule {
                 .baseUrl(HttpUrl.parse(apiRoot))
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(MoshiConverterFactory.create())
-                .client(okHttpClient.newBuilder().addInterceptor(ApiKeyInterceptor(apiKey)).build())
+                .client(okHttpClient.newBuilder()
+                        .addInterceptor(ApiKeyInterceptor(apiKey))
+                        .addInterceptor(CacheControlInterceptor).build())
                 .build()
                 .create(TMDb::class.java)
+    }
+}
+
+object CacheControlInterceptor: Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val bob = chain.request().newBuilder()
+                .cacheControl(CacheControl.Builder()
+                        .maxAge(10, TimeUnit.MINUTES)
+                        .minFresh(5, TimeUnit.MINUTES)
+                        .build())
+        return chain.proceed(bob.build())
     }
 }
 

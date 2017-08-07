@@ -19,10 +19,9 @@ package org.opensilk.video
 
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.functions.BiConsumer
-import io.reactivex.functions.Function
-import io.reactivex.functions.Function5
-import org.opensilk.media.*
+import org.opensilk.media.MediaRef
+import org.opensilk.media.TvEpisodeRef
+import org.opensilk.media.TvSeriesId
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
 import timber.log.Timber

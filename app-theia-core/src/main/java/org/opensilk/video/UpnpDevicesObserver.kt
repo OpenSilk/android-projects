@@ -20,7 +20,6 @@ import org.fourthline.cling.model.types.ServiceId
 import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
 import org.opensilk.common.rx.subscribeIgnoreError
-import org.opensilk.media.MediaMeta
 import org.opensilk.media.UpnpDeviceId
 import org.opensilk.upnp.cds.browser.CDSGetSystemUpdateIDAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService
@@ -29,7 +28,6 @@ import timber.log.Timber
 import java.lang.ref.WeakReference
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.Exception
 
 private val GRACE_PERIOD = 600_000L //10min
 
@@ -93,8 +91,6 @@ class UpnpDevicesObserver
             unsubscribeEvents(it)
         }
     }
-
-    private class UpnpDeviceUpdateIdScanning(val device: MediaMeta, val updateId: Long, val scanning: Long)
 
     /**
      * Fetches the SystemUpdateId from the CDS

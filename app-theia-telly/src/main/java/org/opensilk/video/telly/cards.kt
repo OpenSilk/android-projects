@@ -15,10 +15,13 @@ import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
+import io.reactivex.functions.Consumer
+import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
-import org.opensilk.video.findActivity
+import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
-import org.opensilk.video.videoDescInfo
 import javax.inject.Inject
 
 /**
@@ -58,7 +61,6 @@ class MediaItemPresenter
 
         val mediaItem = item as MediaBrowser.MediaItem
         val description = mediaItem.description
-        val metaExtras = mediaItem._getMediaMeta()
 
         val cardView = viewHolder.view as MediaItemImageCardView
         val context = cardView.context
@@ -70,15 +72,12 @@ class MediaItemPresenter
         val cardHeight = resources.getDimensionPixelSize(R.dimen.card_height)
         cardView.setMainImageDimensions(cardWidth, cardHeight)
 
-        val iconResource: Int
-        if (metaExtras.artworkResourceId >= 0) {
-            iconResource = metaExtras.artworkResourceId
-        } else if (mediaItem.isBrowsable) {
-            iconResource = R.drawable.folder_48dp
+        val iconResource = if (mediaItem.isBrowsable) {
+            R.drawable.folder_48dp
         } else if (mediaItem.isPlayable) {
-            iconResource = R.drawable.movie_48dp
+            R.drawable.movie_48dp
         } else {
-            iconResource = R.drawable.file_48dp
+            R.drawable.file_48dp
         }
 
         if (description.iconUri != null) {
@@ -111,7 +110,9 @@ class MediaItemPresenter
  *
  */
 class MediaItemListPresenter
-@Inject constructor() : Presenter() {
+@Inject constructor(
+        val mDatabaseClient: DatabaseClient
+) : Presenter() {
 
     override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -123,39 +124,41 @@ class MediaItemListPresenter
     override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
         val vh = viewHolder as ViewHolder
         val mediaItem = item as MediaBrowser.MediaItem
-        vh.setMediaItem(mediaItem)
+        vh.bind(mediaItem)
     }
 
     override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {
         val vh = viewHolder as ViewHolder
-        Glide.with(vh.view.context).clear(vh.binding.icon)
-        vh.binding.icon.setImageDrawable(null)
+        vh.unbind()
     }
 
-    class ViewHolder(val binding: MediaitemListCardBinding) : Presenter.ViewHolder(binding.root) {
+    inner class ViewHolder(val binding: MediaitemListCardBinding) : Presenter.ViewHolder(binding.root) {
+        private val disposables = CompositeDisposable()
 
-        internal fun setMediaItem(mediaItem: MediaBrowser.MediaItem) {
+        internal fun unbind() {
+            Glide.with(view.context).clear(binding.icon)
+            binding.icon.setImageDrawable(null)
+            disposables.clear()
+        }
+
+        internal fun bind(mediaItem: MediaBrowser.MediaItem) {
             val description = mediaItem.description
-            val metaExtras = mediaItem._getMediaMeta()
-            //set progress
-            //TODO binding.progressInfo = description.videoProgressInfo()
-            //set description
-            binding.desc = description.videoDescInfo()
-            //load icon
-            val iconResource: Int
-            if (metaExtras.artworkResourceId > 0) {
-                iconResource = metaExtras.artworkResourceId
-            } else if (mediaItem.isBrowsable) {
-                iconResource = R.drawable.folder_48dp
-            } else if (mediaItem.isPlayable) {
-                iconResource = R.drawable.movie_48dp
-            } else {
-                iconResource = R.drawable.file_48dp
-            }
+            val ref = parseMediaId(mediaItem.mediaId)
 
-            if (description.iconUri != Uri.EMPTY) {
+            //set description
+            binding.description = description
+
+            //load icon
+            val iconResource = if (mediaItem.isBrowsable) {
+                R.drawable.folder_48dp
+            } else if (mediaItem.isPlayable) {
+                R.drawable.movie_48dp
+            } else {
+                R.drawable.file_48dp
+            }
+            if (!description.iconUri.isEmpty()) {
                 val options = RequestOptions()
-                        .fitCenter()
+                        .centerCrop()
                         .fallback(iconResource)
                 Glide.with(view.context)
                         .asDrawable()
@@ -166,7 +169,28 @@ class MediaItemListPresenter
             } else {
                 binding.icon.setImageResource(iconResource)
             }
+
+            //set progress
+            when (ref) {
+                is UpnpVideoId -> {
+                    disposables.add(subscribeProgress(ref))
+                }
+            }
+
         }
+
+        private fun subscribeProgress(videoId: UpnpVideoId): Disposable {
+            return mDatabaseClient.upnpVideoChanges(videoId)
+                    .startWith(UpnpVideoChange(videoId))
+                    .flatMapMaybe {
+                        mDatabaseClient.getLastPlaybackCompletion(it.videoId)
+                                .subscribeOn(AppSchedulers.diskIo)
+                    }
+                    .subscribeIgnoreError(Consumer {
+                        binding.completion = it
+                    })
+        }
+
     }
 }
 
@@ -185,12 +209,12 @@ class MediaItemClickListener
         when (mediaId) {
             is UpnpDeviceId, is UpnpFolderId -> {
                 val intent = Intent(context, FolderActivity::class.java)
-                intent.putExtra(EXTRA_MEDIAID, mediaItem.mediaId)
+                intent.putExtra(EXTRA_MEDIAID, mediaId.json)
                 context.startActivity(intent)
             }
             is UpnpVideoId -> {
                 val intent = Intent(context, DetailActivity::class.java)
-                intent.putExtra(EXTRA_MEDIAID, mediaItem.mediaId)
+                intent.putExtra(EXTRA_MEDIAID, mediaId.json)
                 val bundle = if (itemViewHolder is MediaItemPresenter.ViewHolder) {
                     val view = itemViewHolder.view as MediaItemImageCardView
                     ActivityOptions.makeSceneTransitionAnimation(context,

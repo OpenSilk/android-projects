@@ -61,7 +61,7 @@ object RootModule {
                 .build()
     }
 
-    @Provides
+    @Provides @JvmStatic
     fun provideContentResolver(@ForApplication context: Context): ContentResolver {
         return context.contentResolver
     }

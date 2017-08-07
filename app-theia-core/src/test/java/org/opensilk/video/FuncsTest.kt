@@ -1,10 +1,10 @@
 package org.opensilk.video
 
+import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.assertj.core.api.Java6Assertions.assertThat
 
 /**
  * Created by drew on 6/3/17.

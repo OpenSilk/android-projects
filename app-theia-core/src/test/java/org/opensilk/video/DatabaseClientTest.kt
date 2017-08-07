@@ -1,32 +1,17 @@
 package org.opensilk.video
 
 import android.content.ContentResolver
-import android.content.ContentValues
 import android.content.pm.ProviderInfo
-import android.database.ContentObserver
-import android.database.Cursor
-import android.net.Uri
-import android.os.CancellationSignal
-import android.test.mock.MockContentResolver
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensilk.media.*
-import org.opensilk.tmdb.api.model.Movie
-import org.opensilk.tmdb.api.model.TMDbConfig
-import org.opensilk.tvdb.api.model.Series
-import org.opensilk.tvdb.api.model.SeriesEpisode
 import org.opensilk.tvdb.api.model.Token
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowContentResolver
 
 /**
  * Created by drew on 7/19/17.

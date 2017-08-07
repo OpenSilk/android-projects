@@ -1,14 +1,12 @@
 package org.opensilk.video
 
-import android.media.browse.MediaBrowser
-import io.reactivex.*
+import io.reactivex.Completable
+import io.reactivex.CompletableSource
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import org.opensilk.common.misc.AlphanumComparator
 import org.opensilk.media.*
 import timber.log.Timber
-import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -28,7 +26,6 @@ class UpnpFoldersLoader
             is UpnpDeviceId -> UpnpFolderId(mediaId.deviceId, UPNP_ROOT_ID)
             else -> TODO("Unsupported mediaid")
         }
-        val lookups = CompositeDisposable()
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
                 //during lookup we can be flooded
@@ -37,7 +34,6 @@ class UpnpFoldersLoader
                 .sample(5, TimeUnit.SECONDS)
                 .startWith(true)
                 .switchMapSingle { change ->
-                    Timber.d("SwitchMap $folderId")
                     //first fetch from network and stick in database
                     //and then retrieve from the database to associate
                     // any metadata stored in database with network items
@@ -49,7 +45,7 @@ class UpnpFoldersLoader
                     } else {
                         doDisk(folderId).subscribeOn(AppSchedulers.diskIo)
                     }
-                }.doOnTerminate { lookups.clear() }
+                }
     }
 
     private fun doNetwork(folderId: UpnpFolderId): Completable {

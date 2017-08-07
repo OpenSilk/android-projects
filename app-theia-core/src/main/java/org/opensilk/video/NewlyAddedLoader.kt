@@ -1,10 +1,8 @@
 package org.opensilk.video
 
-import android.media.browse.MediaBrowser
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.opensilk.media.UpnpVideoRef
-import org.opensilk.media.toMediaItem
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 

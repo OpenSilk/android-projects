@@ -27,7 +27,6 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
 import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.common.misc.AlphanumComparator
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
 import timber.log.Timber
