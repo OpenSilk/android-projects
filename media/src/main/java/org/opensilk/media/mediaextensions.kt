@@ -12,19 +12,8 @@ import timber.log.Timber
 
 /**
  * Created by drew on 6/26/16.
- */
-/*
  * Extensions for MediaItem and MediaDescription
  */
-
-@Deprecated("Use MediaMeta.toMediaItem()")
-fun MediaDescription.Builder._setMediaUri(metaExtras: MediaMeta, uri: Uri): MediaDescription.Builder {
-    metaExtras.mediaUri = uri
-    if (Build.VERSION.SDK_INT >= 23) {
-        this.setMediaUri(uri)
-    }
-    return this
-}
 
 fun MediaBrowser.MediaItem._getMediaUri(): Uri {
     return this.description._getMediaUri()
@@ -34,56 +23,12 @@ fun MediaDescription._getMediaUri(): Uri {
     return extras.getParcelable(KEY_MEDIA_URI)
 }
 
-fun MediaBrowser.MediaItem._getMediaTitle(): String {
-    return this.description._getMediaTitle()
-}
-
-fun MediaDescription._getMediaTitle(): String {
-    val metaExtras = MediaMeta.from(this)
-    return if (metaExtras.displayName != "") {
-        metaExtras.displayName
-    } else {
-        title.toString()
-    }
-}
-
-@Deprecated("Use MediaMeta.toMediaItem()")
-fun MediaDescription._newBuilder(): MediaDescription.Builder {
-    val bob = MediaDescription.Builder()
-            .setIconUri(this.iconUri)
-            .setMediaId(this.mediaId)
-            .setExtras(this.extras)
-            .setSubtitle(this.subtitle)
-            .setTitle(this.title)
-            .setDescription(this.description)
-    if (Build.VERSION.SDK_INT >= 23) {
-        bob.setMediaUri(this.mediaUri)
-    }
-    return bob
-}
-
-@Deprecated("Use MediaMeta.toMediaItem()")
-fun MediaBrowser.MediaItem._copy(bob: MediaDescription.Builder, meta: MediaMeta): MediaBrowser.MediaItem {
-    return MediaBrowser.MediaItem(bob._setMediaMeta(meta).build(), this.flags)
-}
-
-@Deprecated("Use MediaMeta.toMediaItem()")
-fun newMediaItem(bob: MediaDescription.Builder, meta: MediaMeta): MediaBrowser.MediaItem {
-    return MediaBrowser.MediaItem(bob.setExtras(meta.meta).build(), meta.mediaItemFlags)
-}
-
-/**
- * Tries and tries and tries to find a suitable display name
- */
 fun MediaMetadata._title(): String {
-    return this.getString(METADATA_KEY_DISPLAY_TITLE) ?:
-            this.getString(METADATA_KEY_TITLE) ?:
-            this.description.title?.toString() ?:
-            this.description._getMediaTitle()
+    return this.description.title?.toString() ?: ""
 }
 
 fun MediaMetadata._subtitle(): String {
-    return this.getString(METADATA_KEY_DISPLAY_SUBTITLE) ?: ""
+    return this.description.subtitle?.toString() ?: ""
 }
 
 fun MediaMetadata._artistName(): String {
@@ -123,4 +68,20 @@ fun MediaMetadata._icon(): Bitmap? {
 
 fun MediaBrowser.notConnected(): Boolean {
     return !isConnected
+}
+
+fun String?.elseIfBlank(alternate: String): String {
+    return if (this.isNullOrBlank()) {
+        alternate
+    } else {
+        this!!
+    }
+}
+
+fun isLikelyJson(str: String): Boolean {
+    return str.first() == '{' || str.first() == '['
+}
+
+fun Uri?.isEmpty(): Boolean {
+    return this == null || this == Uri.EMPTY
 }

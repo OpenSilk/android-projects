@@ -55,6 +55,10 @@ private fun <T> writeJson(transformer: MediaIdTransformer<T>, item: T): String {
     }
 }
 
+/**
+ * Recovers a MediaId from its json representation
+ * TODO not all MediaIds are represented here
+ */
 fun parseMediaId(json: String): MediaId {
     return JsonReader(StringReader(json)).use { jr ->
         var mediaId: MediaId? = null
@@ -99,11 +103,13 @@ fun MediaRef.toMediaDescription(): MediaDescription {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
+                    .setMediaId(id.json)
         }
         is UpnpDeviceRef -> {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
+                    .setMediaId(id.json)
         }
         else -> TODO("Unsupported mediaRef ${this::class}")
     }
@@ -326,14 +332,3 @@ data class MovieImageMeta(
         val ratingCount: Int = 0,
         val resolution: String = ""
 )
-
-/**
- *
- */
-fun isLikelyJson(str: String): Boolean {
-    return str.first() == '{' || str.first() == '['
-}
-
-fun Uri.isEmpty(): Boolean {
-    return this == Uri.EMPTY
-}
