@@ -40,6 +40,6 @@ android {
 
 dependencies {
     compile "com.github.bumptech.glide:glide:$glideVersion"
-    compile (group: 'com.android.support', name: 'palette-v7', version: rootProject.ext.supportLibVersion)
+    compile "com.android.support:palette-v7:$supportLibVersion"
     testCompile "junit:junit:$test_junitVersion"
 }

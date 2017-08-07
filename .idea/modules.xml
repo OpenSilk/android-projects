@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/app-autumn/app-autumn.iml" filepath="$PROJECT_DIR$/app-autumn/app-autumn.iml" />
       <module fileurl="file://$PROJECT_DIR$/app-orpheus/app-orpheus.iml" filepath="$PROJECT_DIR$/app-orpheus/app-orpheus.iml" />
       <module fileurl="file://$PROJECT_DIR$/app-theia-core/app-theia-core.iml" filepath="$PROJECT_DIR$/app-theia-core/app-theia-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app-theia-phone/app-theia-phone.iml" filepath="$PROJECT_DIR$/app-theia-phone/app-theia-phone.iml" />
       <module fileurl="file://$PROJECT_DIR$/app-theia-telly/app-theia-telly.iml" filepath="$PROJECT_DIR$/app-theia-telly/app-theia-telly.iml" />
       <module fileurl="file://$PROJECT_DIR$/app-theia-tv/app-theia-tv.iml" filepath="$PROJECT_DIR$/app-theia-tv/app-theia-tv.iml" />
       <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />

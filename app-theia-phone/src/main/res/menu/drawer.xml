@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_folders_root"
+            android:title="Home"/>
+    </group>
+
+    <item android:title="Actions">
+        <menu>
+            <item
+                android:id="@+id/nav_add_root"
+                android:title="Add Root"/>
+        </menu>
+    </item>
+
+</menu>
