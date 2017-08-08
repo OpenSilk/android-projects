@@ -2,27 +2,23 @@ package org.opensilk.video.phone
 
 import android.content.Context
 import android.databinding.DataBindingUtil
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 import dagger.Module
 import dagger.Subcomponent
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
-import org.opensilk.media.*
+import org.opensilk.media.MediaRef
+import org.opensilk.media.UpnpDeviceRef
+import org.opensilk.media.UpnpVideoRef
 import org.opensilk.video.HomeViewModel
 import org.opensilk.video.LiveDataObserver
 import org.opensilk.video.phone.databinding.ActivityDrawerBinding
-import org.opensilk.video.phone.databinding.RecyclerHeaderItemBinding
-import org.opensilk.video.phone.databinding.RecyclerListItemBinding
 import javax.inject.Inject
 
 @Subcomponent
@@ -50,6 +46,8 @@ class HomeActivity : BaseVideoActivity() {
         mBinding.recycler.layoutManager = LinearLayoutManager(this)
         mBinding.recycler.adapter = mAdapter
 
+        mBinding.toolbar.title = getString(R.string.title_my_library)
+
         mViewModel = fetchViewModel(HomeViewModel::class)
         mViewModel.servers.observe(this, LiveDataObserver {
             mAdapter.setServers(it)
@@ -67,12 +65,10 @@ class HomeActivity : BaseVideoActivity() {
 
 }
 
-data class HeaderItem(val title: String, val icon: Int)
-
 class HomeAdapter
 @Inject constructor(
         @ForApplication context: Context
-): RecyclerView.Adapter<HomeAdapter.ViewHolder>() {
+): RecyclerView.Adapter<BoundViewHolder>() {
 
     private val serversHeader = HeaderItem(context.getString(R.string.header_devices),
             R.drawable.ic_server_network_48dp)
@@ -93,7 +89,7 @@ class HomeAdapter
         notifyDataSetChanged()
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BoundViewHolder, position: Int) {
         if (isServersHeader(position)) {
             (holder as HeaderViewHolder).bind(serversHeader)
         } else if (isNewlyAddedHeader(position)) {
@@ -103,7 +99,7 @@ class HomeAdapter
         }
     }
 
-    override fun onViewRecycled(holder: ViewHolder?) {
+    override fun onViewRecycled(holder: BoundViewHolder?) {
         super.onViewRecycled(holder)
         holder?.unbind()
     }
@@ -136,7 +132,7 @@ class HomeAdapter
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BoundViewHolder {
         val inflator = LayoutInflater.from(parent.context)
         return when (viewType) {
             R.layout.recycler_header_item -> {
@@ -146,80 +142,6 @@ class HomeAdapter
                 ListItemViewHolder(DataBindingUtil.inflate(inflator, viewType, parent, false))
             }
             else -> TODO("Unhandled viewType")
-        }
-    }
-
-    abstract class ViewHolder(root: View): RecyclerView.ViewHolder(root) {
-        abstract fun unbind()
-    }
-
-    class HeaderViewHolder(val binding: RecyclerHeaderItemBinding) : ViewHolder(binding.root) {
-
-        fun bind(headerItem: HeaderItem) {
-            binding.titleString = headerItem.title
-        }
-
-        override fun unbind() {
-        }
-
-    }
-
-    class ListItemViewHolder(val binding: RecyclerListItemBinding): ViewHolder(binding.root),
-            View.OnClickListener, View.OnLongClickListener{
-
-        private lateinit var mediaRef: MediaRef
-
-        fun bind(mediaRef: MediaRef) {
-            this.mediaRef = mediaRef
-            binding.frame.setOnClickListener(this)
-            //binding.frame.setOnLongClickListener(this)
-            when (mediaRef) {
-                is UpnpDeviceRef -> {
-                    binding.titleString = mediaRef.meta.title
-                    if (mediaRef.meta.artworkUri.isEmpty()) {
-                        binding.avatar.setImageResource(R.drawable.ic_lan_48dp)
-                    } else {
-                        loadArtwork(mediaRef.meta.artworkUri)
-                    }
-                }
-                is UpnpVideoRef -> {
-                    binding.titleString = mediaRef.meta.title
-                    if (mediaRef.meta.artworkUri.isEmpty()) {
-                        binding.avatar.setImageResource(R.drawable.ic_movie_48dp)
-                    } else {
-                        loadArtwork(mediaRef.meta.artworkUri)
-                    }
-                }
-                else -> TODO("Unhandled mediaRef")
-            }
-        }
-
-        override fun unbind() {
-            Glide.with(binding.root.context).clear(binding.avatar)
-        }
-
-        private fun loadArtwork(uri: Uri) {
-            Glide.with(binding.root.context)
-                    .asDrawable()
-                    .apply(RequestOptions().centerCrop())
-                    .load(uri)
-                    .into(binding.avatar)
-        }
-
-        override fun onClick(v: android.view.View) {
-            when (this.mediaRef) {
-                is UpnpDeviceRef, is UpnpFolderRef -> {
-
-                }
-                is UpnpVideoRef -> {
-
-                }
-                else -> TODO()
-            }
-        }
-
-        override fun onLongClick(v: android.view.View?): kotlin.Boolean {
-            TODO("not implemented")
         }
     }
 

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Theia</string>
 
-    <string name="header_devices">Media Servers</string>
-    <string name="header_newly_added">Newly Added</string>
+    <string name="title_my_library">My videos</string>
+    <string name="header_devices">Media servers</string>
+    <string name="header_newly_added">Newly added</string>
 </resources>

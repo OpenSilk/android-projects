@@ -12,12 +12,17 @@
         android:name=".VideoApp">
 
         <activity android:name=".HomeActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <activity android:name=".FolderActivity"
+                  android:parentActivityName=".HomeActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
 
         <service android:name="org.opensilk.video.UpnpHolderService"/>
 
