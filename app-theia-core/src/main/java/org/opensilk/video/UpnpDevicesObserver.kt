@@ -49,6 +49,7 @@ class UpnpDevicesObserver
 
         //reset devices and post new search
         mDatabaseClient.hideAllUpnpDevices()
+        mDatabaseClient.postChange(UpnpDeviceChange())
         mUpnpService.registry.removeAllRemoteDevices()
         mUpnpService.registry.removeAllLocalDevices()
         mUpnpService.registry.addListener(this)
