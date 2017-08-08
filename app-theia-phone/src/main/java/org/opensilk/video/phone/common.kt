@@ -122,7 +122,9 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
                 v.context.startActivity(intent)
             }
             is UpnpVideoRef -> {
-
+                val intent = Intent(v.context, DetailActivity::class.java)
+                        .putExtra(EXTRA_MEDIAID, mediaRef.id.json)
+                v.context.startActivity(intent)
             }
             else -> TODO()
         }

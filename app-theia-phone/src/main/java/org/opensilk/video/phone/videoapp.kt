@@ -33,7 +33,8 @@ import javax.inject.Singleton
         UpnpBrowseLoaderModule::class,
         ViewModelModule::class,
         HomeScreenModule::class,
-        FolderScreenModule::class
+        FolderScreenModule::class,
+        DetailScreenModule::class
 ))
 interface RootComponent: AppContextComponent, Injector<VideoApp>
 
@@ -83,6 +84,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
 
     @Inject lateinit var mHomeBuilder: HomeScreenComponent.Builder
     @Inject lateinit var mFolderBuilder: FolderScreenComponent.Builder
+    @Inject lateinit var mDetailBuilder: DetailScreenComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
     @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
 
@@ -92,6 +94,8 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
             mHomeBuilder.create(foo).inject(foo)
         } else if (foo is FolderActivity) {
             mFolderBuilder.create(foo).inject(foo)
+        } else if (foo is DetailActivity) {
+            mDetailBuilder.create(foo).inject(foo)
         } else if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.create(foo).inject(foo)
         } else if (foo is DatabaseProvider) {

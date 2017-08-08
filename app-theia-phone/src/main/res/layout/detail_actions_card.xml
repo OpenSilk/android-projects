@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <import type="org.opensilk.video.phone.DetailActionHandler"/>
+        <import type="org.opensilk.video.phone.DetailAction"/>
+        <import type="java.util.Set"/>
+        <import type="android.view.View"/>
+        <variable
+            name="actions"
+            type="Set&lt;DetailAction&gt;"/>
+        <variable
+            name="actionHandler"
+            type="DetailActionHandler"/>
+        <variable
+            name="resumeTime"
+            type="String"/>
+    </data>
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <org.opensilk.video.phone.widget.PosterImageView
+                android:id="@+id/poster"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_movie_48dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/button_container"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="680:1000"
+                app:layout_constraintVertical_bias="0.0"
+                app:layout_constraintLeft_toLeftOf="parent"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"/>
+
+            <LinearLayout
+                android:id="@+id/button_container"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="bottom|end"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/poster"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:layout_editor_absoluteX="223dp">
+
+                <Button
+                    android:id="@+id/play"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:drawableStart="@drawable/ic_play_36dp"
+                    android:gravity="start|center_vertical"
+                    android:text="@string/action_play"
+                    android:onClick="@{() -> actionHandler.onAction(DetailAction.PLAY)}"
+                    android:visibility="@{actions.contains(DetailAction.PLAY) ? View.VISIBLE : View.GONE}"
+                    />
+
+                <Button
+                    android:id="@+id/resume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:drawableStart="@drawable/ic_play_36dp"
+                    android:gravity="start|center_vertical"
+                    android:text="@{@string/action_resume(resumeTime)}"
+                    android:onClick="@{() -> actionHandler.onAction(DetailAction.RESUME)}"
+                    android:visibility="@{actions.contains(DetailAction.RESUME) ? View.VISIBLE : View.GONE}"
+                    />
+
+                <Button
+                    android:id="@+id/restart"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:drawableStart="@drawable/ic_restart_36dp"
+                    android:gravity="start|center_vertical"
+                    android:text="@string/action_restart"
+                    android:onClick="@{() -> actionHandler.onAction(DetailAction.START_OVER)}"
+                    android:visibility="@{actions.contains(DetailAction.START_OVER) ? View.VISIBLE : View.GONE}"
+                    />
+
+
+            </LinearLayout>
+
+        </android.support.constraint.ConstraintLayout>
+
+    </android.support.v7.widget.CardView>
+
+</layout>

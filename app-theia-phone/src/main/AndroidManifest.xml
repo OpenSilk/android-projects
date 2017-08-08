@@ -24,6 +24,9 @@
                   android:parentActivityName=".HomeActivity"
             android:theme="@style/AppTheme.NoActionBar"/>
 
+        <activity android:name=".DetailActivity"
+                  android:theme="@style/AppTheme.NoActionBar"/>
+
         <service android:name="org.opensilk.video.UpnpHolderService"/>
 
         <provider

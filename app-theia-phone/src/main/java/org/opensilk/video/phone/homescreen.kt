@@ -89,21 +89,6 @@ class HomeAdapter
         notifyDataSetChanged()
     }
 
-    override fun onBindViewHolder(holder: BoundViewHolder, position: Int) {
-        if (isServersHeader(position)) {
-            (holder as HeaderViewHolder).bind(serversHeader)
-        } else if (isNewlyAddedHeader(position)) {
-            (holder as HeaderViewHolder).bind(newlyAddedHeader)
-        } else {
-            (holder as ListItemViewHolder).bind(getItemAt(position))
-        }
-    }
-
-    override fun onViewRecycled(holder: BoundViewHolder?) {
-        super.onViewRecycled(holder)
-        holder?.unbind()
-    }
-
     override fun getItemCount(): Int {
         return 2 + servers.size + newlyAdded.size
     }
@@ -127,8 +112,17 @@ class HomeAdapter
     private fun getItemAt(position: Int): MediaRef {
         if ((position - 1) < servers.size) {
             return servers[position - 1]
+        }
+        return newlyAdded[position - servers.size - 2]
+    }
+
+    override fun onBindViewHolder(holder: BoundViewHolder, position: Int) {
+        if (isServersHeader(position)) {
+            (holder as HeaderViewHolder).bind(serversHeader)
+        } else if (isNewlyAddedHeader(position)) {
+            (holder as HeaderViewHolder).bind(newlyAddedHeader)
         } else {
-            return newlyAdded[position - (servers.size - 1)]
+            (holder as ListItemViewHolder).bind(getItemAt(position))
         }
     }
 
@@ -143,6 +137,11 @@ class HomeAdapter
             }
             else -> TODO("Unhandled viewType")
         }
+    }
+
+    override fun onViewRecycled(holder: BoundViewHolder?) {
+        super.onViewRecycled(holder)
+        holder?.unbind()
     }
 
 }

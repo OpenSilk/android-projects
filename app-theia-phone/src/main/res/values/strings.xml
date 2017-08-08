@@ -4,4 +4,10 @@
     <string name="title_my_library">My videos</string>
     <string name="header_devices">Media servers</string>
     <string name="header_newly_added">Newly added</string>
+
+    <string name="action_play">Play</string>
+    <string name="action_restart">Restart</string>
+    <string name="action_resume">Resume (%1$s)</string>
+    <string name="action_get_desc">Get description</string>
+    <string name="action_remove_desc">Remove description</string>
 </resources>

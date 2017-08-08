@@ -29,6 +29,7 @@
                 android:id="@+id/artwork_thumb"
                 android:layout_width="42dp"
                 android:layout_height="42dp"
+                android:scaleType="centerInside"
                 style="@style/mtrl.TwoLineListItemInner.Avatar"/>
 
             <LinearLayout
