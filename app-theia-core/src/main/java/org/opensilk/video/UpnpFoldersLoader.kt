@@ -16,8 +16,7 @@ import javax.inject.Inject
 class UpnpFoldersLoader
 @Inject constructor(
         private val mDatabaseClient: DatabaseClient,
-        private val mBrowseLoader: UpnpBrowseLoader,
-        private val mLookupService: LookupService
+        private val mBrowseLoader: UpnpBrowseLoader
 ) {
 
     fun observable(mediaId: MediaId): Observable<List<MediaRef>> {
@@ -73,41 +72,4 @@ class UpnpFoldersLoader
         ).toList()
     }
 
-    /*
-    private fun sendToLookup(metaList: List<MediaRef>): Disposable {
-        return Observable.fromIterable(metaList)
-                .filter { it is UpnpVideoRef }
-                .flatMapCompletable { meta ->
-                    mLookupService.lookupObservable(meta).firstOrError().flatMapCompletable({ lookup ->
-                        associateMetaWithLookup(meta, lookup)
-                    }).doOnError {
-                        Timber.w("Error during lookup for ${meta.displayName} err=${it.message}")
-                    }.onErrorComplete()
-                }.subscribeOn(AppSchedulers.networkIo).subscribe()
-    }
-
-    private fun associateMetaWithLookup(meta: MediaMeta, lookup: MediaMeta): Completable {
-        return Completable.fromAction {
-            val videoId = newMediaRef(meta.mediaId).mediaId as UpnpVideoId
-            val parentId = newMediaRef(meta.parentMediaId).mediaId as UpnpFolderId
-            if (lookup.mimeType == MIME_TYPE_MOVIE) {
-                Timber.d("Located movie association for ${meta.displayName}")
-                mDatabaseClient.setUpnpVideoMovieId(videoId, lookup.rowId)
-                if (meta.lookupName.isNotBlank()) {
-                    mDatabaseClient.setMovieAssociation(meta.lookupName, meta.releaseYear, lookup.rowId)
-                }
-                mDatabaseClient.postChange(UpnpFolderChange(parentId))
-                mDatabaseClient.postChange(UpnpVideoChange(videoId))
-            } else if (lookup.mimeType == MIME_TYPE_TV_EPISODE) {
-                Timber.d("Located episode association for ${meta.displayName}")
-                mDatabaseClient.setUpnpVideoTvEpisodeId(videoId, lookup.rowId)
-                if (meta.lookupName.isNotBlank()) {
-                    mDatabaseClient.setTvSeriesAssociation(meta.lookupName, lookup.foreignRowId)
-                }
-                mDatabaseClient.postChange(UpnpFolderChange(parentId))
-                mDatabaseClient.postChange(UpnpVideoChange(videoId))
-            }
-        }
-    }
-    */
 }

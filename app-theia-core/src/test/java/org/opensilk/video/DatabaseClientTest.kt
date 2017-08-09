@@ -36,7 +36,8 @@ class DatabaseClientTest {
 
         mResolver = RuntimeEnvironment.application.contentResolver
 
-        mClient = DatabaseClient(DatabaseUris("foo.authority"), TVDB_BANNER_ROOT, mResolver)
+        mClient = DatabaseClient(RuntimeEnvironment.application,
+                DatabaseUris("foo.authority"), TVDB_BANNER_ROOT, mResolver)
     }
 
     @After
