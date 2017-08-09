@@ -42,6 +42,7 @@ class UpnpUpdateIdChange(val updateId: Long): DatabaseChange()
 class UpnpDeviceChange: DatabaseChange()
 class UpnpFolderChange(val folderId: UpnpFolderId): DatabaseChange()
 class UpnpVideoChange(val videoId: UpnpVideoId): DatabaseChange()
+class DocumentChange(val documentId: DocumentId): DatabaseChange()
 
 /**
  * Created by drew on 7/18/17.
@@ -76,6 +77,7 @@ class DatabaseClient
             is UpnpFolderId -> getUpnpFolder(mediaId)
             is UpnpVideoId -> getUpnpVideo(mediaId)
             is UpnpDeviceId -> getUpnpDevice(mediaId)
+            is DocumentId -> getDocument(mediaId)
             else -> TODO()
         }
     }
@@ -85,7 +87,12 @@ class DatabaseClient
         TODO("not implemented")
     }
 
-    override fun siblingsOf(mediaId: MediaId): Observable<UpnpVideoRef> {
+    /**
+     * This should really be named playableSiblingsOf
+     *
+     * Do not return folders here
+     */
+    override fun siblingsOf(mediaId: MediaId): Observable<out MediaRef> {
         return when (mediaId) {
             is UpnpFolderId -> {
                 getUpnpFolder(mediaId).flatMapObservable {
@@ -96,26 +103,41 @@ class DatabaseClient
                 getUpnpVideo(mediaId).flatMapObservable {
                     getUpnpVideosUnder(it.parentId)
                 }
-            } else -> TODO()
+            }
+            is DocumentId -> {
+                getDocumentsUnder(mediaId.copy(documentId = mediaId.parentId))
+                        .filter { it.isVideo }
+            }
+            else -> TODO()
         }
     }
 
     override fun getLastPlaybackPosition(mediaId: MediaId): Maybe<Long> {
-        when (mediaId) {
+        return when (mediaId) {
             is UpnpVideoId -> {
-                return getUpnpVideo(mediaId).flatMap { meta ->
-                    Maybe.create<Long> { s ->
-                        mResolver.query(mUris.playbackPosition(), arrayOf("last_position"),
-                                "_display_name=?", arrayOf(meta.meta.mediaTitle), null, null)?.use { c ->
-                            if (c.moveToFirst()) {
-                                s.onSuccess(c.getLong(0))
-                            } else {
-                                s.onComplete()
-                            }
-                        } ?: s.onError(VideoDatabaseMalfuction())
-                    }
+                getUpnpVideo(mediaId).flatMap { meta ->
+                    lastPlaybackPosition(meta.meta.mediaTitle)
                 }
-            } else -> TODO()
+            }
+            is DocumentId -> {
+                getDocument(mediaId).flatMap { meta ->
+                    lastPlaybackPosition(meta.meta.displayName)
+                }
+            }
+            else -> TODO()
+        }
+    }
+
+    private fun lastPlaybackPosition(mediaTitle: String): Maybe<Long> {
+        return Maybe.create<Long> { s ->
+            mResolver.query(mUris.playbackPosition(), arrayOf("last_position"),
+                    "_display_name=?", arrayOf(mediaTitle), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.getLong(0))
+                } else {
+                    s.onComplete()
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
@@ -123,18 +145,28 @@ class DatabaseClient
         when (mediaId) {
             is UpnpVideoId -> {
                 return getUpnpVideo(mediaId).flatMap { meta ->
-                    Maybe.create<Int> { s ->
-                        mResolver.query(mUris.playbackPosition(), arrayOf("last_completion"),
-                                "_display_name=?", arrayOf(meta.meta.mediaTitle), null, null)?.use { c ->
-                            if (c.moveToFirst()) {
-                                s.onSuccess(c.getInt(0))
-                            } else {
-                                s.onComplete()
-                            }
-                        } ?: s.onError(VideoDatabaseMalfuction())
-                    }
+                    lastPlaybackCompletion(meta.meta.mediaTitle)
                 }
-            } else -> TODO()
+            }
+            is DocumentId -> {
+                return getDocument(mediaId).flatMap { meta ->
+                    lastPlaybackCompletion(meta.meta.displayName)
+                }
+            }
+            else -> TODO()
+        }
+    }
+
+    private fun lastPlaybackCompletion(mediaTitle: String): Maybe<Int> {
+        return Maybe.create<Int> { s ->
+            mResolver.query(mUris.playbackPosition(), arrayOf("last_completion"),
+                    "_display_name=?", arrayOf(mediaTitle), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.getInt(0))
+                } else {
+                    s.onComplete()
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
 
@@ -144,22 +176,38 @@ class DatabaseClient
                 getUpnpVideo(mediaId)
                         .subscribeOn(AppSchedulers.diskIo)
                         .subscribeIgnoreError(Consumer { meta ->
-                            val values = ContentValues()
-                            values.put("_display_name", meta.meta.mediaTitle)
-                            values.put("last_played", System.currentTimeMillis())
-                            values.put("last_position", position)
-                            values.put("last_completion", calculateCompletion(position, duration))
-                            mResolver.insert(mUris.playbackPosition(), values)
+                            mResolver.insert(mUris.playbackPosition(),
+                                    positionContentVals(meta.meta.mediaTitle, position, duration))
                             postChange(UpnpVideoChange(mediaId))
                         })
-            } else -> TODO()
+            }
+            is DocumentId -> {
+                getDocument(mediaId)
+                        .subscribeOn(AppSchedulers.diskIo)
+                        .subscribeIgnoreError(Consumer { meta ->
+                            mResolver.insert(mUris.playbackPosition(),
+                                    positionContentVals(meta.meta.displayName, position, duration))
+                            postChange(DocumentChange(mediaId))
+                        })
+            }
+            else -> TODO()
         }
+    }
+
+    private fun positionContentVals(mediaTitle: String, position: Long, duration: Long): ContentValues {
+        val values = ContentValues()
+        values.put("_display_name", mediaTitle)
+        values.put("last_played", System.currentTimeMillis())
+        values.put("last_position", position)
+        values.put("last_completion", calculateCompletion(position, duration))
+        return values
     }
 
 
     fun getMediaOverview(mediaId: MediaId): Maybe<String> {
         return when (mediaId) {
             is UpnpVideoId -> getUpnpVideoOverview(mediaId)
+            is DocumentId -> getDocumentOverview(mediaId)
             else -> TODO()
         }
     }
@@ -587,6 +635,169 @@ class DatabaseClient
         cv.put("movie_id", movieId.movieId)
         return mResolver.update(mUris.upnpVideos(), cv, "device_id=? AND item_id=?",
                 arrayOf(videoId.deviceId, videoId.itemId)) != 0
+    }
+
+    fun addDocument(documentRef: DocumentRef): Uri {
+        val values = ContentValues()
+        values.put("authority", documentRef.id.treeUri.authority)
+        values.put("tree_uri", documentRef.id.treeUri.toString())
+        values.put("document_id", documentRef.id.documentId)
+        values.put("parent_id", documentRef.id.parentId)
+        values.put("_display_name", documentRef.meta.displayName)
+        values.put("mime_type", documentRef.meta.mimeType)
+        values.put("last_modified", documentRef.meta.lastMod)
+        values.put("flags", documentRef.meta.flags)
+        values.put("_size", documentRef.meta.size)
+        values.put("summary", documentRef.meta.summary)
+        values.put("date_added", System.currentTimeMillis())
+        values.put("hidden", 0)
+        return mResolver.insert(mUris.documents(), values) ?: Uri.EMPTY
+    }
+
+    fun getDocumentsUnder(documentId: DocumentId): Observable<DocumentRef> {
+        return Observable.create { s ->
+            mResolver.query(mUris.documents(), documentProjection,
+                    "tree_uri=? AND parent_id=? AND hidden=0",
+                    arrayOf(documentId.treeUri.toString(), documentId.documentId),
+                    "d._display_name", s.cancellationSignal())?.use { c ->
+                while (c.moveToNext()) {
+                    s.onNext(c.toDocumentRef())
+                }
+                s.onComplete()
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    fun getDocument(documentId: DocumentId): Maybe<DocumentRef> {
+        return Maybe.create { s ->
+            mResolver.query(mUris.documents(), documentProjection,
+                    "tree_uri=? AND document_id=? AND parent_id=?",
+                    arrayOf(documentId.treeUri.toString(), documentId.documentId,
+                            documentId.parentId), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.toDocumentRef())
+                } else {
+                    s.onComplete()
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    val documentProjection = arrayOf(
+            //document columns
+            "d._id", "tree_uri", "document_id", "parent_id", //3
+            "d._display_name", "d.mime_type", "d._size", "d.flags", "d.last_modified", //8
+            //episode columns
+            "e._id as episode_id", "e._display_name as episode_title", //10
+            "episode_number", "season_number", //12
+            //series columns
+            "s._id as series_id", "s._display_name as series_title", //14
+            "s.poster as series_poster", "s.backdrop as series_backdrop", //16
+            //movie columns
+            "m._id as movie_id", "m._display_name as movie_title",  //18
+            "m.poster_path as movie_poster", //19
+            "m.backdrop_path as movie_backdrop", //20
+            //more episode columns
+            "e.poster as episode_poster", "e.backdrop as episode_backdrop" //22
+    )
+
+    /**
+     * helper to convert cursor to mediameta using above projection
+     */
+    fun Cursor.toDocumentRef(): DocumentRef {
+        val treeUri = Uri.parse(getString(1))
+        val docId = getString(2)
+        val parentId = getString(3)
+        val displayName = getString(4)
+        var title = ""
+        val mimeType = getString(5)
+        val size = if (!isNull(6)) getLong(6) else 0L
+        val flags = if (!isNull(7)) getLong(7) else 0L
+        val lastMod = if (!isNull(8)) getLong(8) else 0L
+        var subtitle = ""
+        var artworkUri = Uri.EMPTY
+        var backdropUri = Uri.EMPTY
+        var episodeId: TvEpisodeId? = null
+        var movieId: MovieId? = null
+        if (!isNull(9)) {
+            episodeId = TvEpisodeId(getLong(9), getLong(13))
+            title = getString(10)
+            subtitle = makeTvSubtitle(getString(14), getInt(12), getInt(11))
+            //prefer episode poster / backdrop over series
+            if (!isNull(21)) {
+                artworkUri = makeTvBannerUri(getString(21))
+            } else if (!isNull(15)) {
+                artworkUri = makeTvBannerUri(getString(15))
+            }
+            if (!isNull(22)) {
+                backdropUri = makeTvBannerUri(getString(22))
+            } else if (!isNull(16)) {
+                backdropUri = makeTvBannerUri(getString(16))
+            }
+        } else if (!isNull(17)) {
+            movieId = MovieId(getLong(17))
+            title = getString(18)
+            val movieBaseUrl = getMovieImageBaseUrl()
+            if (!isNull(19) && movieBaseUrl != "") {
+                artworkUri = makeMoviePosterUri(movieBaseUrl, getString(19))
+            }
+            if (!isNull(20) && movieBaseUrl != "") {
+                backdropUri = makeMovieBackdropUri(movieBaseUrl, getString(20))
+            }
+        }
+        return DocumentRef(
+                id = DocumentId(
+                        treeUri = treeUri,
+                        documentId = docId,
+                        parentId = parentId
+                ),
+                tvEpisodeId =  episodeId,
+                movieId = movieId,
+                meta = DocumentMeta(
+                        title = title,
+                        subtitle = subtitle,
+                        artworkUri = artworkUri,
+                        backdropUri = backdropUri,
+                        displayName = displayName,
+                        mimeType = mimeType,
+                        size = size,
+                        flags = flags,
+                        lastMod = lastMod
+                        //summary,
+                )
+        )
+    }
+
+    fun hideDocumentsUnder(documentId: DocumentId): Boolean {
+        val values = ContentValues()
+        values.put("hidden", 1)
+        return mResolver.update(mUris.documents(), values, "tree_uri=? AND document_id=? AND parent_id=?",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId)) != 0
+    }
+
+    fun getDocumentOverview(documentId: DocumentId): Maybe<String> {
+        return Maybe.create { s ->
+            mResolver.query(mUris.documents(),
+                    arrayOf("e.overview as episode_overview",
+                            "m.overview as movie_overview"),
+                    "tree_uri=? AND document_id=? AND parent_id=?",
+                    arrayOf(documentId.treeUri.toString(), documentId.documentId,
+                            documentId.parentId), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    var overview = c.getString(0)
+                    if (overview.isNullOrBlank()) {
+                        overview = c.getString(1)
+                    }
+                    if (overview.isNullOrBlank()) {
+                        s.onComplete()
+                    } else {
+                        s.onSuccess(overview)
+                    }
+                } else {
+                    s.onComplete()
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
     }
 
     fun makeTvBannerUri(path: String): Uri {

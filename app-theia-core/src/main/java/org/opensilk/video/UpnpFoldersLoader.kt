@@ -16,15 +16,20 @@ import javax.inject.Inject
 class UpnpFoldersLoader
 @Inject constructor(
         private val mDatabaseClient: DatabaseClient,
-        private val mBrowseLoader: UpnpBrowseLoader
+        private val mBrowseLoader: UpnpBrowseLoader,
+        private val mDocumentLoader: DocumentLoader
 ) {
 
-    fun observable(mediaId: MediaId): Observable<List<MediaRef>> {
-        val folderId = when (mediaId) {
-            is UpnpFolderId -> mediaId
-            is UpnpDeviceId -> UpnpFolderId(mediaId.deviceId, UPNP_ROOT_ID)
+    fun observable(mediaId: MediaId): Observable<out List<MediaRef>> {
+        return when (mediaId) {
+            is UpnpFolderId -> upnpFolderIdObservable(mediaId)
+            is UpnpDeviceId -> upnpFolderIdObservable(UpnpFolderId(mediaId.deviceId, UPNP_ROOT_ID))
+            is DocumentId -> documentIdLoader(mediaId)
             else -> TODO("Unsupported mediaid")
         }
+    }
+
+    private fun upnpFolderIdObservable(folderId: UpnpFolderId): Observable<List<MediaRef>> {
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
                 //during lookup we can be flooded
@@ -39,7 +44,6 @@ class UpnpFoldersLoader
                     // we get new thread because of rather complex operation
                     if (change) {
                         doNetwork(folderId).andThen(doDisk(folderId))
-                                //.doOnSuccess { lookups.add(sendToLookup(it)) }
                                 .subscribeOn(AppSchedulers.newThread)
                     } else {
                         doDisk(folderId).subscribeOn(AppSchedulers.diskIo)
@@ -70,6 +74,36 @@ class UpnpFoldersLoader
                 mDatabaseClient.getUpnpFoldersUnder(folderId),
                 mDatabaseClient.getUpnpVideosUnder(folderId)
         ).toList()
+    }
+
+    private fun documentIdLoader(documentId: DocumentId): Observable<List<DocumentRef>> {
+        //watch for system update id changes and re fetch list
+        return mDatabaseClient.changesObservable
+                //during lookup we can be flooded
+                .filter { it is DocumentChange && it.documentId.treeUri == documentId.treeUri }
+                .map { true }
+                .sample(5, TimeUnit.SECONDS)
+                .startWith(true)
+                .switchMapSingle {
+                    getDocuments(documentId).andThen(getDocumentsLocal(documentId))
+                            .subscribeOn(AppSchedulers.newThread)
+                }
+    }
+
+    private fun getDocuments(documentId: DocumentId): Completable {
+        return mDocumentLoader.documents(documentId)
+                .flatMapCompletable { list ->
+                    Completable.fromAction {
+                        mDatabaseClient.hideDocumentsUnder(documentId)
+                        for (doc in list) {
+                            mDatabaseClient.addDocument(doc)
+                        }
+                    }
+                }
+    }
+
+    private fun getDocumentsLocal(documentId: DocumentId): Single<List<DocumentRef>> {
+        return mDatabaseClient.getDocumentsUnder(documentId).toList()
     }
 
 }

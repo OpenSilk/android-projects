@@ -7,7 +7,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
 import javax.inject.Inject
 
-const private val VERSION = 26
+const private val VERSION = 27
 
 /**
  * Created by drew on 7/18/17.
@@ -23,7 +23,7 @@ class Database
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < VERSION) {
+        if (oldVersion < 26) {
             db.execSQL("DROP VIEW IF EXISTS tv_episode_banner_map;")
             db.execSQL("DROP VIEW IF EXISTS media_episode_series_map")
             db.execSQL("DROP VIEW IF EXISTS media_description")
@@ -176,7 +176,7 @@ class Database
                     "date_added INTEGER NOT NULL, " + //milli
                     "hidden INTEGER DEFAULT 0," +
 
-                    "series_id INTEGER, " +
+                    "series_id INTEGER, " + //TODO remove
                     "episode_id INTEGER, " +
                     "movie_id INTEGER, " +
                     "custom_artwork_uri TEXT, " +
@@ -208,6 +208,32 @@ class Database
                     "BEGIN " +
                     "DELETE FROM upnp_video_search WHERE rowid=OLD._id; " +
                     "END")
+        }
+        if (oldVersion < VERSION) {
+            db.execSQL("DROP TABLE IF EXISTS document")
+            db.execSQL("CREATE TABLE document (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "authority TEXT NOT NULL," +
+                    "tree_uri TEXT NOT NULL," +
+                    "document_id TEXT NOT NULL," +
+                    "parent_id TEXT NOT NULL," +
+                    "_display_name TEXT NOT NULL," +
+                    "mime_type TEXT," +
+                    "last_modified INTEGER DEFAULT 0," +
+                    "flags INTEGER DEFAULT 0," +
+                    "_size INTEGER DEFAULT 0," +
+                    "summary TEXT," +
+
+                    "date_added INTEGER NOT NULL, " +
+                    "hidden INTEGER DEFAULT 0, " +
+
+                    "episode_id INTEGER, " +
+                    "movie_id INTEGER, " +
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+
+                    "UNIQUE(tree_uri, document_id, parent_id)" +
+                    ");")
         }
     }
 }

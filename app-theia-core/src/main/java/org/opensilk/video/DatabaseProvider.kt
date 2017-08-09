@@ -114,6 +114,12 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.PLAYBACK_POSITION -> {
                 table = "media_position"
             }
+            DatabaseMatches.DOCUMENTS -> {
+                table = "document d " +
+                        "LEFT JOIN tv_episodes e ON d.episode_id = e._id " +
+                        "LEFT JOIN tv_series s ON e.series_id = s._id " +
+                        "LEFT JOIN movies m ON d.movie_id = m._id "
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
         if (id != -1L) {
@@ -212,6 +218,33 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.PLAYBACK_POSITION -> {
                 db.insertWithOnConflict("media_position", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return Uri.EMPTY
+            }
+            DatabaseMatches.DOCUMENTS -> {
+                var id: Long = try {
+                    db.insertWithOnConflict("document", null, values, SQLiteDatabase.CONFLICT_FAIL)
+                } catch (ignored: SQLiteException) { -1L }
+                if (id > 0) {
+                    return mUris.document(id)
+                }
+                //already in db
+                val tree_uri = values.getAsString("tree_uri")
+                val doc_id = values.getAsString("document_id")
+                val parent_id = values.getAsString("parent_id")
+                values.remove("tree_uri")
+                values.remove("document_id")
+                values.remove("parent_id")
+                values.remove("date_added")
+                //get id
+                id = db.query("document", arrayOf("_id"), "tree_uri=? AND document_id=? AND parent_id=?",
+                        arrayOf(tree_uri, doc_id, parent_id), null, null, null)?.use { c ->
+                    return@use if (c.moveToFirst()) c.getLong(0) else -1
+                } ?: -1
+                //update existing
+                if (db.update("document", values, "_id=?", arrayOf(id.toString())) != 0) {
+                    return mUris.document(id)
+                } else {
+                    return null
+                }
             }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
