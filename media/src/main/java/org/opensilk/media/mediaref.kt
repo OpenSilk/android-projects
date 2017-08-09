@@ -348,7 +348,11 @@ data class MovieImageMeta(
         val resolution: String = ""
 )
 
-data class DocumentId(val treeUri: Uri, val documentId: String = DocumentsContract.getTreeDocumentId(treeUri)): MediaId {
+const val ROOTS_PARENT_ID = "\u2605G\u2605O\u2605D\u2605"
+
+data class DocumentId(val treeUri: Uri,
+                      val documentId: String = DocumentsContract.getTreeDocumentId(treeUri),
+                      val parentId: String = ROOTS_PARENT_ID): MediaId {
 
     val authority: String = treeUri.authority
 
@@ -370,7 +374,22 @@ data class DocumentId(val treeUri: Uri, val documentId: String = DocumentsContra
 
 }
 
-data class DocumentRef(override val id: DocumentId, val meta: DocumentMeta): MediaRef
+data class DocumentRef(override val id: DocumentId,
+                       val tvEpisodeId: TvEpisodeId? = null,
+                       val movieId: MovieId? = null,
+                       val meta: DocumentMeta): MediaRef {
+    val isDirectory: Boolean by lazy {
+        meta.mimeType == DocumentsContract.Document.MIME_TYPE_DIR
+    }
+    val isVideo: Boolean by lazy {
+        meta.mimeType.startsWith("video", true)
+    }
+    val isAudio: Boolean by lazy {
+        meta.mimeType.startsWith("audio", true)
+                || meta.mimeType.contains("flac", true)
+                || meta.mimeType.contains("ogg", true)
+    }
+}
 
 data class DocumentMeta(
         val displayName: String,
@@ -380,7 +399,9 @@ data class DocumentMeta(
         val lastMod: Long = 0,
         val flags: Long = 0,
         val title: String = "",
-        val subtitle: String = ""
+        val subtitle: String = "",
+        val artworkUri: Uri = Uri.EMPTY,
+        val backdropUri: Uri = Uri.EMPTY
 )
 
 private object DocumentIdTransformer: MediaIdTransformer<DocumentId> {
