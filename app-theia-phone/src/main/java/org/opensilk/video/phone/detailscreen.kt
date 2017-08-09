@@ -3,6 +3,7 @@ package org.opensilk.video.phone
 import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -63,9 +64,12 @@ class DetailActivity: BaseVideoActivity() {
         mViewModel.videoDescription.observe(this, LiveDataObserver {
             mAdapter.videoDesc = it
         })
+        mViewModel.lookupError.observe(this, LiveDataObserver {
+            Snackbar.make(mBinding.coordinator, it, Snackbar.LENGTH_LONG).show()
+        })
 
         mAdapter.mediaId = parseMediaId(intent.getStringExtra(EXTRA_MEDIAID))
-        mViewModel.onMediaId(intent.getStringExtra(EXTRA_MEDIAID))
+        mViewModel.setMediaId(parseMediaId(intent.getStringExtra(EXTRA_MEDIAID)))
     }
 }
 

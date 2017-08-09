@@ -33,22 +33,22 @@
                 android:id="@+id/poster"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_movie_48dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/button_container"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintDimensionRatio="680:1000"
-                app:layout_constraintVertical_bias="0.0"
-                app:layout_constraintLeft_toLeftOf="parent"
+                android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"/>
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_movie_48dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1000:680"
+                app:layout_constraintEnd_toStartOf="@+id/button_container"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0"/>
 
             <LinearLayout
                 android:id="@+id/button_container"
-                android:layout_width="100dp"
+                android:layout_width="128dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="bottom|end"
@@ -57,7 +57,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/poster"
                 app:layout_constraintBottom_toBottomOf="parent"
-                tools:layout_editor_absoluteX="223dp">
+                tools:layout_editor_absoluteX="222dp">
 
                 <Button
                     android:id="@+id/play"

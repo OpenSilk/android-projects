@@ -27,6 +27,7 @@ import javax.inject.Singleton
         RootModule::class,
         AppContextModule::class,
         UpnpHolderServiceModule::class,
+        AppJobServiceModule::class,
         MediaProviderModule::class,
         DatabaseProviderModule::class,
         LookupConfigModule::class,
@@ -87,6 +88,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
     @Inject lateinit var mDetailBuilder: DetailScreenComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
     @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
+    @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
 
     override fun injectFoo(foo: Any): Any {
         injectOnce.Do { rootComponent.inject(this) }
@@ -100,6 +102,8 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
             mUpnpHolderBuilder.create(foo).inject(foo)
         } else if (foo is DatabaseProvider) {
             mDatabaseProviderBuilder.create(foo).inject(foo)
+        } else if (foo is AppJobService) {
+            mAppJobServiceBuilder.create(foo).inject(foo)
         } else {
             TODO("No builder for ${foo::class}")
         }
