@@ -533,11 +533,11 @@ constructor(
     }
 
     private fun generateActions(state: Int): Long {
-        var actions = ACTION_PLAY_FROM_MEDIA_ID or when (state) {
+        return when (state) {
+            STATE_PLAYING,
+            STATE_BUFFERING -> ACTION_PAUSE or getSeekableAction() or getQueueActions()
 
-            STATE_PLAYING -> ACTION_PAUSE or ACTION_SEEK_TO
-
-            STATE_BUFFERING -> ACTION_PAUSE or ACTION_SEEK_TO
+            STATE_PAUSED -> ACTION_PLAY or getSeekableAction() or getQueueActions()
 
             STATE_SKIPPING_TO_NEXT,
             STATE_SKIPPING_TO_PREVIOUS,
@@ -546,19 +546,30 @@ constructor(
             STATE_FAST_FORWARDING,
             STATE_REWINDING -> ACTION_PLAY or ACTION_PAUSE
 
-            STATE_PAUSED -> ACTION_PLAY
-
             STATE_ERROR,
             STATE_STOPPED,
             STATE_NONE -> 0
+
             else -> 0
-        }
-        if (!mExoPlayer.isCurrentWindowSeekable) {
-            //disable seek if unsupported
-            actions = actions and ACTION_SEEK_TO.inv()
-        }
-        return actions
+        } or ACTION_PLAY_FROM_MEDIA_ID
     }
+
+    private fun getSeekableAction(): Long {
+        return if (mExoPlayer.isCurrentWindowSeekable) {
+            ACTION_SEEK_TO
+        } else 0L
+    }
+
+    private fun getQueueActions(): Long {
+        return if (mQueue.hasNext()) {
+            ACTION_SKIP_TO_NEXT
+        } else 0L or if (mQueue.hasPrevious()) {
+            ACTION_SKIP_TO_PREVIOUS
+        } else 0L or if (mQueue.notEmpty()) {
+            ACTION_SKIP_TO_QUEUE_ITEM
+        } else 0L
+    }
+
 }
 
 fun PlaybackState._newBuilder(): PlaybackState.Builder {

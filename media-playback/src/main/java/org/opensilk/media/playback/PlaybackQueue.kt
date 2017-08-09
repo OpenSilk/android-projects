@@ -64,6 +64,13 @@ constructor() {
         }
     }
 
+    fun hasNext(): Boolean {
+        if (mCurrent < 0) {
+            return false
+        }
+        return (mCurrent + 1) < mQueue.size || mWrap
+    }
+
     fun goToPrevious(): Maybe<QueueItem> {
         return Maybe.create { s ->
             Timber.d("goToPrevious()")
@@ -80,6 +87,13 @@ constructor() {
             mCurrent = nxt
             s.onSuccess(mQueue[nxt])
         }
+    }
+
+    fun hasPrevious(): Boolean {
+        if (mHistory.isEmpty()) {
+            return false
+        }
+        return mQueue.indexOfLast { mHistory.peekLast() == it.queueId } != -1
     }
 
     fun goToNext(): Maybe<QueueItem> {
@@ -155,5 +169,9 @@ constructor() {
 
     fun get(): List<QueueItem> {
         return ArrayList(mQueue)
+    }
+
+    fun notEmpty(): Boolean {
+        return !mQueue.isEmpty()
     }
 }
