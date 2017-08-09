@@ -3,6 +3,7 @@ package org.opensilk.media
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.util.JsonReader
 import android.util.JsonWriter
 import java.io.StringReader
@@ -11,6 +12,7 @@ import java.io.StringWriter
 const val UPNP_DEVICE = "upnp_device"
 const val UPNP_FOLDER = "upnp_folder"
 const val UPNP_VIDEO = "upnp_video"
+const val DOCUMENT = "document"
 
 const val KEY_MEDIA_URI = "media_uri"
 const val KEY_DURATION = "media_duration"
@@ -86,6 +88,11 @@ fun parseMediaId(json: String): MediaId {
                 UPNP_VIDEO -> {
                     jr.beginObject()
                     mediaId = UpnpVideoTransformer.read(jr)
+                    jr.endObject()
+                }
+                DOCUMENT -> {
+                    jr.beginObject()
+                    mediaId = DocumentIdTransformer.read(jr)
                     jr.endObject()
                 }
                 else -> jr.skipValue()
@@ -340,3 +347,66 @@ data class MovieImageMeta(
         val ratingCount: Int = 0,
         val resolution: String = ""
 )
+
+data class DocumentId(val treeUri: Uri, val documentId: String = DocumentsContract.getTreeDocumentId(treeUri)): MediaId {
+
+    val authority: String = treeUri.authority
+
+    val isRoot: Boolean by lazy {
+        DocumentsContract.getTreeDocumentId(treeUri) == documentId
+    }
+
+    val mediaUri: Uri by lazy {
+        DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId)
+    }
+
+    val childrenUri: Uri by lazy {
+        DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, documentId)
+    }
+
+    override val json: String by lazy {
+        writeJson(DocumentIdTransformer, this)
+    }
+
+}
+
+data class DocumentRef(override val id: DocumentId, val meta: DocumentMeta): MediaRef
+
+data class DocumentMeta(
+        val displayName: String,
+        val summary: String = "",
+        val mimeType: String,
+        val size: Long = 0,
+        val lastMod: Long = 0,
+        val flags: Long = 0,
+        val title: String = "",
+        val subtitle: String = ""
+)
+
+private object DocumentIdTransformer: MediaIdTransformer<DocumentId> {
+
+    override val kind: String
+        get() = DOCUMENT
+
+    override val version: Int
+        get() = 1
+
+    override fun write(jw: JsonWriter, item: DocumentId) {
+        jw.name("tree").value(item.treeUri.toString())
+        jw.name("doc").value(item.documentId)
+    }
+
+    override fun read(jr: JsonReader): DocumentId {
+        var treeStr = ""
+        var docStr = ""
+        while (jr.hasNext()) {
+            when (jr.nextName()) {
+                "tree" -> treeStr = jr.nextString()
+                "doc" -> docStr = jr.nextString()
+                else -> jr.skipValue()
+            }
+        }
+        return DocumentId(Uri.parse(treeStr), docStr)
+    }
+
+}
