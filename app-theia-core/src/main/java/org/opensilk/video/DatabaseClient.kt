@@ -1,9 +1,14 @@
 package org.opensilk.video
 
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import android.os.PersistableBundle
 import dagger.Binds
 import dagger.Module
 import io.reactivex.Maybe
@@ -11,6 +16,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.Consumer
 import io.reactivex.subjects.BehaviorSubject
+import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.cancellationSignal
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
@@ -43,9 +49,10 @@ class UpnpVideoChange(val videoId: UpnpVideoId): DatabaseChange()
 @Singleton
 class DatabaseClient
 @Inject constructor(
-    private val mUris: DatabaseUris,
-    @Named("tvdb_banner_root") private val mTVDbBannerRoot: String,
-    private val mResolver: ContentResolver
+        @ForApplication private val mContext: Context,
+        private val mUris: DatabaseUris,
+        @Named("tvdb_banner_root") private val mTVDbBannerRoot: String,
+        private val mResolver: ContentResolver
 ) : MediaProviderClient {
 
     val uris = mUris
@@ -419,6 +426,31 @@ class DatabaseClient
         }
     }
 
+    /**
+     * UpnpVideos with the same mediaTitle prefix
+     */
+    fun getRelatedUpnpVideos(mediaId: UpnpVideoId): Observable<UpnpVideoRef> {
+        return getUpnpVideo(mediaId).flatMapObservable { meta ->
+            val name = if (matchesTvEpisode(meta.meta.mediaTitle)) {
+                extractSeriesPart(meta.meta.mediaTitle)
+            } else ""
+            return@flatMapObservable if (name.isBlank()) {
+                Observable.error(Exception("Unable to extract series name from mediaTitle"))
+            } else {
+                Observable.create<UpnpVideoRef> { s ->
+                    mResolver.query(mUris.upnpVideos(), upnpVideoProjection,
+                            "v._display_name LIKE ?", arrayOf(name+"%"), "v._display_name",
+                            s.cancellationSignal())?.use { c ->
+                        while (c.moveToNext()) {
+                            s.onNext(c.toUpnpVideoMediaMeta())
+                        }
+                        s.onComplete()
+                    } ?: s.onError(VideoDatabaseMalfuction())
+                }
+            }
+        }
+    }
+
     val upnpVideoProjection = arrayOf(
             //upnp_video columns
             "v._id", "device_id", "item_id", "parent_id", //3
@@ -499,6 +531,18 @@ class DatabaseClient
                         //resolution =
                 )
         )
+    }
+
+    fun scheduleRelatedLookup(mediaId: UpnpVideoId) {
+        val sched = mContext.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        val comp = ComponentName(mContext, AppJobService::class.java)
+        val extras = PersistableBundle()
+        extras.putString(EXTRA_MEDIAID, mediaId.json)
+        val job = JobInfo.Builder(JOB_RELATED_LOOKUP, comp)
+                .setExtras(extras)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .build()
+        sched.schedule(job)
     }
 
     /**

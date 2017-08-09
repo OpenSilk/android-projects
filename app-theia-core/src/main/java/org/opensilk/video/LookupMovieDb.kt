@@ -45,14 +45,14 @@ constructor(
     class MovieWithImages(val movie: Movie, val images: ImageList)
 
     internal val mConfigObservable: Observable<TMDbConfig> by lazy {
-        return@lazy mApi.configurationObservable()
+        return@lazy mApi.configurationObservable().retry(2)
                 .doOnNext { config ->
                     Timber.d("Updating TMDB config")
                     mClient.setMovieImageBaseUrl(config.images.baseUrl)
                 }.replay(1).autoConnect()
     }
 
-    override fun lookupObservable(lookup: LookupRequest): Observable<out MediaRef> {
+    override fun lookupObservable(lookup: LookupRequest): Observable<MovieRef> {
         val name = lookup.lookupName
         if (name.isBlank()) {
             return Observable.error(IllegalArgumentException())
@@ -61,7 +61,6 @@ constructor(
 
         val networkObservable = Observable.defer {
             //do search
-            LookupService.waitTurn()
             Timber.d("Searching name=$name name=$year")
             return@defer if (year.isBlank())
                 mApi.searchMovieObservable(name, "en")

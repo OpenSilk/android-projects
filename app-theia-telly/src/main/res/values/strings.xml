@@ -28,8 +28,10 @@
     <string name="unknown_error">Unknown error</string>
 
     <string name="btn_play">Play</string>
-    <string name="btn_resume">Resume</string>
+    <string name="btn_resume">Resume (%1$s)</string>
     <string name="btn_restart">Start over</string>
+    <string name="btn_get_desc">Get description</string>
+    <string name="btn_rem_desc">Remove description</string>
 
     <string name="header_file_info">File info</string>
 

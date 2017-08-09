@@ -31,6 +31,7 @@ import javax.inject.Singleton
         RootModule::class,
         AppContextModule::class,
         UpnpHolderServiceModule::class,
+        AppJobServiceModule::class,
         MediaProviderModule::class,
         DatabaseProviderModule::class,
         LookupConfigModule::class,
@@ -103,6 +104,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
     @Inject lateinit var mPlaybackBuilder: PlaybackComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
     @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
+    @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
 
     /**
      * Anything that is injectable needs to be injected here.
@@ -125,6 +127,8 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
             mUpnpHolderBuilder.build().inject(foo)
         } else if (foo is DatabaseProvider) {
             mDatabaseProviderBuilder.build().inject(foo)
+        } else if (foo is AppJobService) {
+            mAppJobServiceBuilder.create(foo).inject(foo)
         } else {
             TODO("Don't have an injector for ${foo.javaClass}")
         }

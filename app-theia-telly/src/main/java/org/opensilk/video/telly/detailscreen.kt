@@ -42,6 +42,8 @@ import kotlin.properties.Delegates
 private const val POS_RESUME = 0
 private const val POS_PLAY = 2
 private const val POS_RESTART = POS_PLAY //restart replaces play
+private const val POS_GET_DESC = 3
+private const val POS_REM_DESC = POS_GET_DESC
 
 private const val ACTIONID_RESUME = 100L
 private const val ACTIONID_START_OVER = 101L
@@ -72,24 +74,16 @@ interface DetailComponent: Injector<DetailFragment> {
 @Module(subcomponents = arrayOf(DetailComponent::class))
 abstract class DetailModule
 
-/**
- * this is fuckin weird but works, kotlin has no static methods so we put them
- * in the companion object but the compiler complains if no @Module annotation on it so
- * we add that too. this will probably break in the future, if that happens it has to be added
- * to the builder.
- */
+
 @Module
-abstract class DetailPresenterModule {
-    @Module
-    companion object {
-        @Provides @JvmStatic
-        fun provideDescriptionPresenter(descPresenter: DetailOverviewPresenter): FullWidthDetailsOverviewRowPresenter {
-            return FullWidthDetailsOverviewRowPresenter(descPresenter)
-        }
-        @Provides @JvmStatic
-        fun provideDetailsRow(): DetailsOverviewRow {
-            return DetailsOverviewRow(VideoDescInfo())
-        }
+object DetailPresenterModule {
+    @Provides @JvmStatic
+    fun provideDescriptionPresenter(descPresenter: DetailOverviewPresenter): FullWidthDetailsOverviewRowPresenter {
+        return FullWidthDetailsOverviewRowPresenter(descPresenter)
+    }
+    @Provides @JvmStatic
+    fun provideDetailsRow(): DetailsOverviewRow {
+        return DetailsOverviewRow(VideoDescInfo())
     }
 }
 
@@ -130,6 +124,8 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
     lateinit var mBackgroundManager: BackgroundManager
     lateinit var mViewModel: DetailViewModel
 
+    var mHasOverview = false
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         injectMe()
@@ -142,7 +138,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         mBackgroundManager = BackgroundManager.getInstance(activity)
 
         mViewModel = fetchViewModel(DetailViewModel::class)
-        mViewModel.onMediaId(arguments.getString(EXTRA_MEDIAID))
+        mViewModel.setMediaId(parseMediaId(arguments.getString(EXTRA_MEDIAID)))
         mViewModel.videoDescription.observe(this, LiveDataObserver {
             mOverviewRow.item = it
         })
@@ -152,7 +148,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         mViewModel.resumeInfo.observe(this, LiveDataObserver { (lastPosition, lastCompletion) ->
             if (lastCompletion in 1..979) {
                 mOverviewActionsAdapter.set(POS_RESUME, Action(ACTIONID_RESUME,
-                        getString(R.string.btn_resume) + " (${humanReadableDuration(lastPosition)})"))
+                        getString(R.string.btn_resume, humanReadableDuration(lastPosition))))
                 mOverviewActionsAdapter.set(POS_RESTART, Action(ACTIONID_START_OVER,
                         getString(R.string.btn_restart)))
             } else {
@@ -186,6 +182,18 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
                         }
                     })
         })
+        mViewModel.hasDescription.observe(this, LiveDataObserver {
+            if (mHasOverview != it) {
+                mHasOverview = it
+                if (it) {
+                    mOverviewActionsAdapter.set(POS_GET_DESC, Action(ACTIONID_GET_DESCRIPTION,
+                            getString(R.string.btn_get_desc)))
+                } else {
+                    mOverviewActionsAdapter.set(POS_REM_DESC, Action(ACTIONID_REMOVE_DESCRIPTION,
+                            getString(R.string.btn_rem_desc)))
+                }
+            }
+        })
 
         mOverviewPresenter.onActionClickedListener = this
         mOverviewRow.actionsAdapter = mOverviewActionsAdapter
@@ -217,6 +225,9 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
             ACTIONID_RESUME -> {
                 activity.startActivity(makePlayIntent().setAction(ACTION_RESUME))
             }
+            ACTIONID_GET_DESCRIPTION -> {
+                mViewModel.doLookup()
+            }
             else -> {
                 Toast.makeText(activity, "UNIMPLEMENTED", Toast.LENGTH_LONG).show()
             }
@@ -231,6 +242,8 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
     fun setupDefaultActions() {
         mOverviewActionsAdapter.clear()
         mOverviewActionsAdapter.set(POS_PLAY, Action(ACTIONID_PLAY, getString(R.string.btn_play)))
+        mOverviewActionsAdapter.set(POS_GET_DESC, Action(ACTIONID_GET_DESCRIPTION,
+                getString(R.string.btn_get_desc)))
     }
 
     private val lifecycleRegistry: LifecycleRegistry by lazy {

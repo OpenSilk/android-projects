@@ -44,13 +44,13 @@ constructor(
                 // make sure it is still valid
                 .flatMap { token -> mApi.refreshToken(token) }
                 //if above fails do fresh login
-                .onErrorResumeNext({ mApi.login(mTVDbAuth) })
+                .onErrorResumeNext({ mApi.login(mTVDbAuth).retry(2) })
                 .doOnSuccess { token -> mClient.setTvToken(token) }
                 //only run this once
                 .toObservable().replay(1).autoConnect()
     }
 
-    override fun lookupObservable(lookup: LookupRequest): Observable<out MediaRef> {
+    override fun lookupObservable(lookup: LookupRequest): Observable<TvEpisodeRef> {
         val name = lookup.lookupName
         val seasonNumber = lookup.seasonNumber
         val episodeNumber = lookup.episodeNumber
@@ -58,9 +58,8 @@ constructor(
         val networkObservable = mTokenObservable.flatMapSingle { token ->
             //get list of series matching name
             Single.defer {
-                LookupService.waitTurn()
                 Timber.d("Searching name=$name")
-                mApi.searchSeries(token, name)
+                mApi.searchSeries(token, name).retry(1)
             }
         }.flatMap { data ->
             Observable.fromIterable(data.data).take(1).doOnNext {
@@ -80,8 +79,8 @@ constructor(
                 .switchIfEmpty(Observable.error(LookupException("Empty episode data")))
     }
 
-    private class SeriesEpisodesImages(val series: Series,
-                               val episodes: SeriesEpisodeData,
+    private class SeriesEpisodesImages(val series: SeriesData,
+                               val episodes: SeriesEpisodesList,
                                val posters: SeriesImageQueryData,
                                val fanart: SeriesImageQueryData,
                                val season: SeriesImageQueryData)
@@ -101,26 +100,26 @@ constructor(
                         mApi.seriesImagesQuery(token, ss.id, "fanart"),
                         mApi.seriesImagesQuery(token, ss.id, "season")),
                         { SeriesEpisodesImages(
-                                it[0] as Series,
-                                it[1] as SeriesEpisodeData,
+                                it[0] as SeriesData,
+                                it[1] as SeriesEpisodesList,
                                 it[2] as SeriesImageQueryData,
                                 it[3] as SeriesImageQueryData,
                                 it[4] as SeriesImageQueryData) }
                 )
             }
         }.map { swi ->
-            Timber.d("Fetched series ${swi.series.seriesName} ${swi.episodes.data.size} episodes")
+            Timber.d("Fetched series ${swi.series.data.seriesName} ${swi.episodes.episodes.size} episodes")
             //for (e in swi.episodes.data) {
             //    Timber.d("Episode ${e.episodeName} s${e.airedSeason}e${e.airedEpisodeNumber}")
             //}
             //insert into database
-            val ref = swi.series.toTvSeriesRef(swi.posters.data.firstOrNull(), swi.fanart.data.firstOrNull())
-            val episodes = swi.episodes.data.map { ep -> ep.toTvEpisodeRef(swi.series.id,
+            val ref = swi.series.data.toTvSeriesRef(swi.posters.data.firstOrNull(), swi.fanart.data.firstOrNull())
+            val episodes = swi.episodes.episodes.map { ep -> ep.toTvEpisodeRef(swi.series.data.id,
                     swi.season.data.firstOrNull { (it.subKey?.toIntOrNull() ?: -1) == ep.airedSeason },
                     swi.fanart.data.firstOrNull()) }
-            val posters = swi.posters.data.map { it.toTvImage(swi.series.id) }
-            val bakcdrops = swi.posters.data.map { it.toTvImage(swi.series.id) }
-            val seasons = swi.posters.data.map { it.toTvImage(swi.series.id) }
+            val posters = swi.posters.data.map { it.toTvImage(swi.series.data.id) }
+            val bakcdrops = swi.posters.data.map { it.toTvImage(swi.series.data.id) }
+            val seasons = swi.posters.data.map { it.toTvImage(swi.series.data.id) }
             mClient.addTvSeries(ref)
             mClient.addTvEpisodes(episodes)
             mClient.addTvImages(posters)

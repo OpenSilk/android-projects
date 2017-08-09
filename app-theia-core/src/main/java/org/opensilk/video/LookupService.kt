@@ -38,11 +38,6 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 
-const val LOOKUP_NAME = "lookup_name"
-const val LOOKUP_YEAR = "lookup_year"
-const val LOOKUP_SEASON_NUM = "lookup_season_num"
-const val LOOKUP_EPISODE_NUM = "lookup_episode_num"
-
 private const val WAIT_TIME: Long = 1000
 private const val WAIT_USERS = 1
 
@@ -70,7 +65,9 @@ object LookupConfigModule {
                 .validateEagerly(true)
                 .client(okHttpClient.newBuilder()
                         .addInterceptor(LanguageInterceptor())
-                        .addInterceptor(CacheControlInterceptor).build())
+                        .addInterceptor(CacheControlInterceptor)
+                        .readTimeout(60, TimeUnit.SECONDS)
+                        .build())
                 .build()
                 .create(TVDb::class.java)
     }
@@ -102,8 +99,7 @@ object CacheControlInterceptor: Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val bob = chain.request().newBuilder()
                 .cacheControl(CacheControl.Builder()
-                        .maxAge(10, TimeUnit.MINUTES)
-                        .minFresh(5, TimeUnit.MINUTES)
+                        .maxStale(30, TimeUnit.MINUTES)
                         .build())
         return chain.proceed(bob.build())
     }
@@ -120,60 +116,23 @@ interface LookupHandler {
 }
 
 class LookupException(msg: String = ""): Exception(msg)
-class IllegalMediaKindException: Exception()
 
 /**
  * Created by drew on 4/11/16.
  */
-@Singleton
-class LookupService
-@Inject constructor(
-        private val mMovieDb: LookupMovieDb,
-        private val mTVDb: LookupTVDb
-): LookupHandler {
+object LookupService {
+    private var sSemaphore = TimedSemaphore(WAIT_TIME, TimeUnit.MILLISECONDS, WAIT_USERS)
 
-    companion object {
-        private var sSemaphore = TimedSemaphore(WAIT_TIME, TimeUnit.MILLISECONDS, WAIT_USERS)
-
-        //TODO actually handle 429 or whatever the try later code is
-        //for now we just limit all our network calls to one per second
-        @Synchronized fun waitTurn() {
-            try {
-                if (sSemaphore.isShutdown) {
-                    sSemaphore = TimedSemaphore(WAIT_TIME, TimeUnit.MILLISECONDS, WAIT_USERS)
-                }
-                sSemaphore.acquire()
-            } catch (e: InterruptedException) {
-                Timber.w("Interrupted while waiting on semaphore")
+    //TODO actually handle 429 or whatever the try later code is
+    //for now we just limit all our network calls to one per second
+    @Synchronized fun waitTurn() {
+        try {
+            if (sSemaphore.isShutdown) {
+                sSemaphore = TimedSemaphore(WAIT_TIME, TimeUnit.MILLISECONDS, WAIT_USERS)
             }
-        }
-    }
-
-    override fun lookupObservable(lookup: LookupRequest): Observable<out MediaRef> {
-        val title = when (lookup.mediaRef) {
-            is UpnpVideoRef -> lookup.mediaRef.meta.mediaTitle
-            else -> return Observable.error(LookupException("Invalid mediaRef ${lookup.mediaRef::class}"))
-        }
-        if (matchesTvEpisode(title)) {
-            val name = extractSeriesName(title)
-            val seasonNum = extractSeasonNumber(title)
-            val episodeNum = extractEpisodeNumber(title)
-            if (name.isNullOrBlank() || seasonNum < 0 || episodeNum < 0) {
-                return Observable.error(LookupException("Unable to parse $title"))
-            }
-            lookup.lookupName = name
-            lookup.seasonNumber = seasonNum
-            lookup.episodeNumber = episodeNum
-            return mTVDb.lookupObservable(lookup)
-        } else if (matchesMovie(title)) {
-            val name = extractMovieName(title) ?:
-                    return Observable.error(LookupException("Unable to parse $title"))
-            val year = extractMovieYear(title) ?: ""
-            lookup.lookupName = name
-            lookup.releaseYear = year
-            return mMovieDb.lookupObservable(lookup)
-        } else {
-            return Observable.error(LookupException("$title does not match movie or episode pattern"))
+            sSemaphore.acquire()
+        } catch (e: InterruptedException) {
+            Timber.w("Interrupted while waiting on semaphore")
         }
     }
 }

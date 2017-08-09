@@ -58,16 +58,24 @@ fun matchesMovie(title: CharSequence?): Boolean {
     return title != null && MOVIE_REGEX.matcher(title).matches()
 }
 
-fun extractSeriesName(title: CharSequence): String {
+fun extractSeriesPart(title: CharSequence): String {
     if (title.isNullOrBlank()) return ""
     val m = TV_REGEX.matcher(title)
     if (m.matches()) {
         val series = m.group(1)
         if (series.isNotBlank()) {
-            return StringUtils.replace(series, ".", " ").trim { it <= ' ' }.toLowerCase()
+            return series
         }
     }
     return ""
+}
+
+fun normalizeName(title: String): String {
+    return StringUtils.replace(title, ".", " ").trim { it <= ' ' }.toLowerCase()
+}
+
+fun extractSeriesName(title: CharSequence): String {
+    return normalizeName(extractSeriesPart(title))
 }
 
 fun extractSeasonNumber(title: CharSequence): Int {
@@ -112,9 +120,9 @@ fun extractEpisodeNumber(title: CharSequence): Int {
     return num
 }
 
-fun extractMovieName(title: CharSequence?): String? {
+fun extractMovieName(title: CharSequence?): String {
     if (title == null) {
-        return null
+        return ""
     }
     val m = MOVIE_REGEX.matcher(title)
     if (m.matches()) {
@@ -123,12 +131,12 @@ fun extractMovieName(title: CharSequence?): String? {
             return StringUtils.replace(name, ".", " ").trim { it <= ' ' }.toLowerCase()
         }
     }
-    return null
+    return ""
 }
 
-fun extractMovieYear(title: CharSequence?): String? {
+fun extractMovieYear(title: CharSequence?): String {
     if (title == null) {
-        return null
+        return ""
     }
     val m = MOVIE_REGEX.matcher(title)
     if (m.matches()) {
@@ -137,7 +145,7 @@ fun extractMovieYear(title: CharSequence?): String? {
             return year.trim { it <= ' ' }
         }
     }
-    return null
+    return ""
 }
 
 fun parseUpnpDuration(dur: String): Long {
