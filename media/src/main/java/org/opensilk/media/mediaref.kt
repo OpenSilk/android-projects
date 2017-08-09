@@ -15,6 +15,14 @@ const val UPNP_VIDEO = "upnp_video"
 const val KEY_MEDIA_URI = "media_uri"
 const val KEY_DURATION = "media_duration"
 
+object NoMediaId: MediaId {
+    override val json: String = ""
+}
+
+object NoMediaRef: MediaRef {
+    override val id: MediaId = NoMediaId
+}
+
 /**
  * A generic media id interface for use with the media controller api
  *
