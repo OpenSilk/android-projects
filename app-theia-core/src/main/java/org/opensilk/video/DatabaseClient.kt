@@ -20,6 +20,7 @@ import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.rx.cancellationSignal
 import org.opensilk.common.rx.subscribeIgnoreError
 import org.opensilk.media.*
+import org.opensilk.tmdb.api.model.TvEpisode
 import org.opensilk.tvdb.api.model.Token
 import javax.inject.Inject
 import javax.inject.Named
@@ -798,6 +799,22 @@ class DatabaseClient
                 }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
+    }
+
+    fun setDocumentTvEpisodeId(documentId: DocumentId, tvEpisodeId: TvEpisodeId): Boolean {
+        val values = ContentValues()
+        values.put("episode_id", tvEpisodeId.episodeId)
+        values.put("movie_id", "")
+        return mResolver.update(mUris.documents(), values, "tree_uri=? AND document_id=? AND parent_id=?",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId)) != 0
+    }
+
+    fun setDocumentMovieId(documentId: DocumentId, movieId: MovieId): Boolean {
+        val values = ContentValues()
+        values.put("episode_id", "")
+        values.put("movie_id", movieId.movieId)
+        return mResolver.update(mUris.documents(), values, "tree_uri=? AND document_id=? AND parent_id=?",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId)) != 0
     }
 
     fun makeTvBannerUri(path: String): Uri {

@@ -36,11 +36,19 @@ class DetailViewModel
 
     private val disponables = CompositeDisposable()
 
+    override fun onCleared() {
+        super.onCleared()
+        disponables.clear()
+    }
+
     fun setMediaId(mediaId: MediaId) {
         disponables.clear()
         when (mediaId) {
             is UpnpVideoId -> {
                 subscribeUpnpVideoRef(mediaId)
+            }
+            is DocumentId -> {
+                subscribeDocumentRef(mediaId)
             }
             else -> TODO()
         }
@@ -99,6 +107,59 @@ class DetailViewModel
         disponables.add(o.connect())
     }
 
+    private fun subscribeDocumentRef(mediaId: DocumentId) {
+        //fetch mediaref
+        val o = mClient.changesObservable
+                .filter { it is DocumentChange && it.documentId == mediaId }
+                .map { true }
+                .startWith(true)
+                .flatMapMaybe {
+                    mClient.getDocument(mediaId).subscribeOn(AppSchedulers.diskIo)
+                }
+                .publish()
+        //mediaref
+        disponables.add(o.subscribeIgnoreError(Consumer {
+            mediaRef = it
+            hasDescription.postValue(it.tvEpisodeId != null || it.movieId != null)
+        }))
+        //overview
+        disponables.add(o.flatMapMaybe { meta ->
+            mClient.getMediaOverview(mediaId).defaultIfEmpty("").map { overview ->
+                VideoDescInfo(meta.meta.title.elseIfBlank(meta.meta.displayName), meta.meta.subtitle, overview)
+            }.subscribeOn(AppSchedulers.diskIo)
+        }.subscribeIgnoreError(Consumer {
+            videoDescription.postValue(it)
+        }))
+        //fileinfo
+        disponables.add(o.map { meta ->
+            VideoFileInfo(title = meta.meta.displayName, sizeBytes = meta.meta.size)
+        }.subscribeIgnoreError(Consumer {
+            fileInfo.postValue(it)
+        }))
+        //lastPosition
+        disponables.add(o.flatMapMaybe {
+            Maybe.zip<Long, Int, ResumeInfo>(
+                    mClient.getLastPlaybackPosition(mediaId),
+                    mClient.getLastPlaybackCompletion(mediaId),
+                    BiFunction { pos, comp -> ResumeInfo(pos, comp) }
+            ).defaultIfEmpty(ResumeInfo()).subscribeOn(AppSchedulers.diskIo)
+        }.subscribeIgnoreError(Consumer {
+            resumeInfo.postValue(it)
+        }))
+        //poster
+        disponables.add(o.map { it.meta.artworkUri }.filter { it != Uri.EMPTY }
+                .subscribeIgnoreError(Consumer {
+                    posterUri.postValue(it)
+                }))
+        //backdrop
+        disponables.add(o.map { it.meta.backdropUri }.filter { it != Uri.EMPTY }
+                .subscribeIgnoreError(Consumer {
+                    backdropUri.postValue(it)
+                }))
+        //connect after all listeners registered
+        disponables.add(o.connect())
+    }
+
     fun doLookup() {
         if (mediaRef == NoMediaRef) {
             return
@@ -106,14 +167,16 @@ class DetailViewModel
         val ref = mediaRef
         when (ref) {
             is UpnpVideoRef -> {
-                subscribeUpnpVideoLookup(ref)
+                subscribeLookup(ref, ref.meta.mediaTitle)
+            }
+            is DocumentRef -> {
+                subscribeLookup(ref, ref.meta.displayName)
             }
             else -> TODO()
         }
     }
 
-    private fun subscribeUpnpVideoLookup(mediaRef: UpnpVideoRef) {
-        val title = mediaRef.meta.mediaTitle
+    private fun subscribeLookup(mediaRef: MediaRef, title: String) {
         if (matchesTvEpisode(title)) {
             val name = extractSeriesName(title)
             val seasonNum = extractSeasonNumber(title)
@@ -152,6 +215,12 @@ class DetailViewModel
                             mClient.postChange(UpnpFolderChange(ref.parentId))
                             mClient.scheduleRelatedLookup(ref.id)
                         }
+                        is DocumentRef -> {
+                            Timber.d("Located tv episode ${epiMeta.meta.title} for ${ref.meta.displayName}")
+                            mClient.setDocumentTvEpisodeId(ref.id, epiMeta.id)
+                            mClient.postChange(DocumentChange(ref.id))
+                            //mClient.scheduleRelatedLookup(ref.id)
+                        }
                         else -> TODO()
                     }
                 }, { err ->
@@ -175,6 +244,11 @@ class DetailViewModel
                             mClient.postChange(UpnpVideoChange(ref.id))
                             mClient.postChange(UpnpFolderChange(ref.parentId))
                         }
+                        is DocumentRef -> {
+                            Timber.d("Located movie ${movieMeta.meta.title} for ${ref.meta.displayName}")
+                            mClient.setDocumentMovieId(ref.id, movieMeta.id)
+                            mClient.postChange(DocumentChange(ref.id))
+                        }
                         else -> TODO()
                     }
                 }, { err ->
@@ -185,8 +259,4 @@ class DetailViewModel
         disponables.add(s)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        disponables.clear()
-    }
 }

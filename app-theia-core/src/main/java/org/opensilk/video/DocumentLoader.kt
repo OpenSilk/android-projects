@@ -1,9 +1,12 @@
 package org.opensilk.video
 
 import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.media.browse.MediaBrowser
+import android.net.Uri
 import android.provider.DocumentsContract
+import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.opensilk.common.dagger.ForApplication
@@ -54,15 +57,47 @@ class DocumentLoader
         @ForApplication val mContext: Context
 ) {
 
-    fun documents(documentId: DocumentId): Single<List<DocumentRef>> {
-        return Single.create<List<DocumentRef>> { s ->
+    fun document(documentId: DocumentId): Maybe<DocumentRef> {
+        val uriPermission = mContext.contentResolver.persistedUriPermissions
+                .firstOrNull { it.uri == documentId.treeUri }
+                ?: return Maybe.error(Exception("Not permitted to access uri. Please reselect item or folder"))
+        //touch refresh time
+        mContext.contentResolver.takePersistableUriPermission(uriPermission.uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        return Maybe.create { s ->
+            mContext.contentResolver.query(documentId.mediaUri, DOCUMENT_COLS,
+                    null, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.toDocumentRef(documentId))
+                } else {
+                    s.onComplete()
+                }
+            } ?: s.onError(Exception("Unable to query document provider"))
+        }
+    }
+
+    fun documents(documentId: DocumentId): Maybe<List<DocumentRef>> {
+        if (!documentId.isFromTree) {
+            return Maybe.error(Exception("Document does not represent a tree"))
+        }
+        val uriPermission = mContext.contentResolver.persistedUriPermissions
+                .firstOrNull { it.uri == documentId.treeUri }
+                ?: return Maybe.error(Exception("Not permitted to access uri. Please reselect item or folder"))
+        //touch refresh time
+        mContext.contentResolver.takePersistableUriPermission(uriPermission.uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        return Maybe.create { s ->
             mContext.contentResolver.query(documentId.childrenUri, DOCUMENT_COLS,
                     null, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME)?.use { c ->
                 val list = ArrayList<DocumentRef>()
                 while (c.moveToNext()) {
                     list.add(c.toDocumentRef(documentId))
                 }
-                s.onSuccess(list)
+                if (list.isNotEmpty()) {
+                    s.onSuccess(list)
+                } else {
+                    s.onComplete()
+                }
             } ?: s.onError(Exception("Unable to query document provider"))
         }
     }
