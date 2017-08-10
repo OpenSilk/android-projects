@@ -7,7 +7,9 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import com.bumptech.glide.GlideBuilder
+import com.bumptech.glide.annotation.Excludes
 import com.bumptech.glide.annotation.GlideModule
+import com.bumptech.glide.integration.okhttp3.OkHttpLibraryGlideModule
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
 import com.bumptech.glide.module.AppGlideModule
 import dagger.Component
@@ -34,6 +36,7 @@ import javax.inject.Singleton
         UpnpBrowseLoaderModule::class,
         ViewModelModule::class,
         DrawerActivityViewModelModule::class,
+        VideoGlideLibraryModule::class,
         HomeScreenModule::class,
         FolderScreenModule::class,
         DetailScreenModule::class,
@@ -91,6 +94,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
     @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
     @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
+    @Inject lateinit var mCommonGlideBuilder: VideoGlideLibraryComponent.Builder
 
     override fun injectFoo(foo: Any): Any {
         injectOnce.Do { rootComponent.inject(this) }
@@ -106,6 +110,8 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
             mDatabaseProviderBuilder.create(foo).inject(foo)
         } else if (foo is AppJobService) {
             mAppJobServiceBuilder.create(foo).inject(foo)
+        } else if (foo is VideoGlideLibrary) {
+            mCommonGlideBuilder.create(foo).inject(foo)
         } else {
             TODO("No builder for ${foo::class}")
         }
@@ -121,6 +127,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
 }
 
 @GlideModule
+@Excludes(OkHttpLibraryGlideModule::class)
 class GlideConfig: AppGlideModule() {
     override fun applyOptions(context: Context, builder: GlideBuilder) {
         val cacheDir = context.suitableCacheDir("glide4")
