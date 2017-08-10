@@ -6,6 +6,7 @@ import android.arch.lifecycle.ViewModelProvider
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.os.StrictMode
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.Excludes
 import com.bumptech.glide.annotation.GlideModule
@@ -74,6 +75,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
     override fun onCreate() {
         super.onCreate()
         Timber.plant(DebugTreeWithThreadName())
+        enableStrictMode()
 
         startUpnpService()
     }
@@ -81,6 +83,14 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
     open fun startUpnpService() {
         //Start upnp service
         startService(Intent(this, UpnpHolderService::class.java))
+    }
+
+    protected fun enableStrictMode() {
+        val threadPolicyBuilder = StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().penaltyFlashScreen()
+        StrictMode.setThreadPolicy(threadPolicyBuilder.build())
+
+        val vmPolicyBuilder = StrictMode.VmPolicy.Builder().detectAll().penaltyLog()
+        StrictMode.setVmPolicy(vmPolicyBuilder.build())
     }
 
     val injectOnce = Once()
