@@ -17,7 +17,6 @@
             <option value="$PROJECT_DIR$/common-app" />
             <option value="$PROJECT_DIR$/common-dagger" />
             <option value="$PROJECT_DIR$/common-glide" />
-            <option value="$PROJECT_DIR$/common-rx" />
             <option value="$PROJECT_DIR$/dagger2" />
             <option value="$PROJECT_DIR$/libtmdb" />
             <option value="$PROJECT_DIR$/libtvdb2" />
