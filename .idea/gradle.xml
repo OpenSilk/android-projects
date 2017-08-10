@@ -13,7 +13,6 @@
             <option value="$PROJECT_DIR$/app-theia-core" />
             <option value="$PROJECT_DIR$/app-theia-phone" />
             <option value="$PROJECT_DIR$/app-theia-telly" />
-            <option value="$PROJECT_DIR$/common" />
             <option value="$PROJECT_DIR$/common-dagger" />
             <option value="$PROJECT_DIR$/common-glide" />
             <option value="$PROJECT_DIR$/dagger2" />
