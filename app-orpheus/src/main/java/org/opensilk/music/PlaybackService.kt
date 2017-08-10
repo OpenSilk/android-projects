@@ -8,7 +8,6 @@ import android.service.media.MediaBrowserService
 import android.support.v4.content.WakefulBroadcastReceiver
 import org.opensilk.common.dagger.getDaggerComponent
 import org.opensilk.media.playback.PlaybackSession
-import org.opensilk.music.playback.PlaybackSession
 import javax.inject.Inject
 
 /**

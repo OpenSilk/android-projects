@@ -13,7 +13,6 @@ import org.opensilk.common.glide.*
 import org.opensilk.common.widget.LetterTileDrawable
 import org.opensilk.music.BR
 import org.opensilk.music.databinding.*
-import rx.subscriptions.CompositeSubscription
 
 class GridArtworkVH(
         binding: RecyclerMediaGridArtworkBinding

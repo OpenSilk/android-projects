@@ -24,7 +24,7 @@
 
 package org.opensilk.common.misc
 
-import java.util.Comparator
+import java.util.*
 
 /**
  * This is an updated version with enhancements made by Daniel Migowski,

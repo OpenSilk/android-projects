@@ -1,20 +1,13 @@
 package org.opensilk.music
 
 import android.app.Application
-import android.content.ComponentName
 import android.content.Context
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import org.opensilk.common.app.BaseApp
 import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.AppContextModule
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.common.dagger.getDaggerComponent
-import org.opensilk.music.data.DataService
-import org.opensilk.music.data.MusicAuthorityModule
-import rx.Scheduler
-import rx.android.schedulers.AndroidSchedulers
 import timber.log.Timber
 import javax.inject.Named
 import javax.inject.Singleton

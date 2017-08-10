@@ -1,37 +1,18 @@
 package org.opensilk.music.ui.activities
 
 import android.content.Intent
-import android.databinding.DataBindingUtil
-import android.media.browse.MediaBrowser
-import android.net.Uri
 import android.os.Bundle
-import android.support.design.widget.BottomSheetBehavior
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.dagger2.getDaggerComponent
-import org.opensilk.common.lifecycle.Lifecycle
-import org.opensilk.common.lifecycle.LifecycleService
-import org.opensilk.common.lifecycle.bindToLifeCycle
-import org.opensilk.common.lifecycle.terminateOnDestroy
-import org.opensilk.common.recycler.ItemClickSupport
-import org.opensilk.common.loader.RxListLoader
-
 import org.opensilk.music.R
 import org.opensilk.music.RootComponent
 import org.opensilk.music.data.DataService
-import org.opensilk.media._getMediaMeta
-import org.opensilk.music.databinding.RecyclerMediaListArtworkBinding
-import org.opensilk.music.getRootComponent
-import org.opensilk.music.ui.recycler.*
-import rx.Observable
-import rx.Subscription
-import rx.functions.Action1
-import rx.lang.kotlin.subscribeWith
-import rx.lang.kotlin.subscriber
-import rx.observers.Subscribers
+import org.opensilk.music.ui.recycler.MediaItemAdapter
 import timber.log.Timber
 import javax.inject.Inject
 

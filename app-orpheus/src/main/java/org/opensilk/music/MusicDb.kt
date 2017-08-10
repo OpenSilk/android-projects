@@ -1,6 +1,6 @@
 package org.opensilk.music
 
-import android.content.*
+import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
@@ -8,15 +8,11 @@ import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.provider.DocumentsContract
-import org.opensilk.common.dagger2.getDaggerComponent
 import org.opensilk.common.dagger.AppContextComponent
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
-import org.opensilk.media.*
+import org.opensilk.media.DocumentRef
 import org.opensilk.music.data.MusicAuthorityModule
-import org.opensilk.music.data.ref.DocumentRef
-import org.opensilk.music.data.ref.MediaRef
-import rx.Observable
 import java.util.*
 import javax.inject.Inject
 

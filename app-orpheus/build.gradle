@@ -58,8 +58,9 @@ dependencies {
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    compile project(':common-glide')
+    //compile project(':common-glide')
     compile project(':dagger2')
+    compile project(':logging')
     compile project(':media')
     compile project(':media-playback')
     compile project(':reactivex2')

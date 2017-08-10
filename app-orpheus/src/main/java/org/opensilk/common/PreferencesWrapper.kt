@@ -18,7 +18,6 @@
 package org.opensilk.common.content
 
 import android.content.SharedPreferences
-import java.util.*
 
 /**
  * Created by drew on 4/30/15.

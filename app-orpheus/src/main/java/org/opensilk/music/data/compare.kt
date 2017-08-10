@@ -2,7 +2,6 @@ package org.opensilk.music.data
 
 import android.media.browse.MediaBrowser
 import org.opensilk.common.misc.AlphanumComparator
-import org.opensilk.media._getMediaMeta
 import java.util.*
 
 /**

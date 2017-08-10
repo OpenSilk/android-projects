@@ -10,21 +10,13 @@ import android.view.MenuItem
 import android.view.View
 import dagger.Provides
 import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.lifecycle.terminateOnDestroy
-import org.opensilk.common.recycler.ItemClickSupport
-import org.opensilk.common.loader.RxListLoader
-import org.opensilk.media._getMediaMeta
 import org.opensilk.media.bundle
 import org.opensilk.music.R
 import org.opensilk.music.RootComponent
-import org.opensilk.music.data.*
-import org.opensilk.music.data.ref.DocumentRef
-import org.opensilk.music.getRootComponent
+import org.opensilk.music.data.AscendingCompare
+import org.opensilk.music.data.DataService
+import org.opensilk.music.data.DecendingCompare
 import org.opensilk.music.ui.recycler.MediaItemAdapter
-import org.opensilk.music.ui.recycler.MediaTile
-import rx.Observable
-import rx.exceptions.Exceptions
-import timber.log.Timber
 import java.util.*
 import javax.inject.Inject
 

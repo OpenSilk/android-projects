@@ -3,15 +3,9 @@ package org.opensilk.music.data
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.media.browse.MediaBrowser
-import org.apache.commons.lang3.StringUtils
 import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ServiceScope
-import org.opensilk.media._getMediaMeta
 import org.opensilk.media._getMediaUri
-import org.opensilk.media._newBuilder
-import org.opensilk.media.newMediaItem
-import rx.Single
-import rx.lang.kotlin.single
 import timber.log.Timber
 import javax.inject.Inject
 

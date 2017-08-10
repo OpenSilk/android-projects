@@ -13,18 +13,14 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import org.opensilk.common.glide.PalettizedBitmapDrawable
-import org.opensilk.common.support.app.ScopedAppCompatActivity
 import org.opensilk.media.MediaBrowserCallback
 import org.opensilk.media._icon
 import org.opensilk.media._iconUri
 import org.opensilk.media._title
+import org.opensilk.music.PlaybackService
 import org.opensilk.music.R
 import org.opensilk.music.data.DataService
 import org.opensilk.music.databinding.SheetPlayingBinding
-import org.opensilk.music.playback.PlaybackActions
-import org.opensilk.music.PlaybackService
-import rx.Scheduler
-import rx.android.schedulers.AndroidSchedulers
 import javax.inject.Inject
 
 /**

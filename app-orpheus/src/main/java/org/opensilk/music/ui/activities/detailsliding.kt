@@ -8,14 +8,11 @@ import dagger.Module
 import dagger.Provides
 import org.opensilk.common.dagger.ActivityScope
 import org.opensilk.common.lazyBindLayout
-import org.opensilk.common.loader.RxListLoader
 import org.opensilk.common.recycler.ItemClickSupport
 import org.opensilk.music.R
 import org.opensilk.music.RootComponent
 import org.opensilk.music.databinding.ActivityDetailsBinding
 import org.opensilk.music.databinding.SheetPlayingBinding
-import org.opensilk.music.getRootComponent
-import rx.Observable
 import javax.inject.Inject
 
 /**

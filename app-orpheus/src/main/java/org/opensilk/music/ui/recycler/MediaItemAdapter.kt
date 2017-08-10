@@ -5,10 +5,7 @@ import android.databinding.ViewDataBinding
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
-
-import org.apache.commons.lang3.StringUtils
 import org.opensilk.music.R
-import org.opensilk.media.MediaMeta
 import org.opensilk.music.databinding.RecyclerMediaListArtworkBinding
 import org.opensilk.music.databinding.RecyclerMediaListArtworkOnelineBinding
 import org.opensilk.music.databinding.RecyclerMediaListArtworkOnelineInfoBinding
@@ -16,7 +13,6 @@ import org.opensilk.music.ui.ListArtworkOnelineInfoVH
 import org.opensilk.music.ui.ListArtworkOnelineVH
 import org.opensilk.music.ui.ListArtworkVH
 import org.opensilk.music.ui.MediaItemVH
-import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
