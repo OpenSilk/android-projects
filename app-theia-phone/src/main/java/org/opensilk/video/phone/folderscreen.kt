@@ -36,9 +36,8 @@ interface FolderScreenComponent: Injector<FolderActivity>{
 @Module(subcomponents = arrayOf(FolderScreenComponent::class))
 abstract class FolderScreenModule
 
-class FolderActivity: BaseVideoActivity() {
+class FolderActivity: DrawerActivity() {
 
-    lateinit var mBinding: ActivityDrawerBinding
     lateinit var mViewModel: FolderViewModel
 
     @Inject lateinit var mAdapter: FolderAdapter
@@ -47,7 +46,6 @@ class FolderActivity: BaseVideoActivity() {
         injectMe()
         super.onCreate(savedInstanceState)
 
-        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_drawer)
         mBinding.recycler.layoutManager = LinearLayoutManager(this)
         mBinding.recycler.adapter = mAdapter
 
@@ -64,11 +62,6 @@ class FolderActivity: BaseVideoActivity() {
 
         mViewModel.onMediaId(intent.getStringExtra(EXTRA_MEDIAID))
 
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mBinding.unbind()
     }
 
 }

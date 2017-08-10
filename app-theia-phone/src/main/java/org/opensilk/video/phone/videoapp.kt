@@ -33,6 +33,7 @@ import javax.inject.Singleton
         LookupConfigModule::class,
         UpnpBrowseLoaderModule::class,
         ViewModelModule::class,
+        DrawerActivityViewModelModule::class,
         HomeScreenModule::class,
         FolderScreenModule::class,
         DetailScreenModule::class

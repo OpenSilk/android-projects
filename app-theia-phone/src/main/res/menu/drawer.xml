@@ -3,15 +3,18 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_folders_root"
-            android:title="Home"/>
+            android:id="@+id/nav_home"
+            android:title="@string/nav_home"/>
     </group>
 
-    <item android:title="Actions">
+    <item android:title="@string/nav_actions">
         <menu>
             <item
-                android:id="@+id/nav_add_root"
-                android:title="Add Root"/>
+                android:id="@+id/nav_pick_file"
+                android:title="@string/nav_pick_file"/>
+            <item
+                android:id="@+id/nav_pick_dir"
+                android:title="@string/nav_pick_dir"/>
         </menu>
     </item>
 

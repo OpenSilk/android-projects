@@ -30,9 +30,8 @@ interface HomeScreenComponent: Injector<HomeActivity> {
 @Module(subcomponents = arrayOf(HomeScreenComponent::class))
 abstract class HomeScreenModule
 
-class HomeActivity : BaseVideoActivity() {
+class HomeActivity : DrawerActivity() {
 
-    private lateinit var mBinding: ActivityDrawerBinding
     private lateinit var mViewModel: HomeViewModel
 
     @Inject lateinit var mAdapter: HomeAdapter
@@ -40,8 +39,6 @@ class HomeActivity : BaseVideoActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         injectMe()
         super.onCreate(savedInstanceState)
-        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_drawer)
-        mBinding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
 
         mBinding.recycler.layoutManager = LinearLayoutManager(this)
         mBinding.recycler.adapter = mAdapter
@@ -56,11 +53,6 @@ class HomeActivity : BaseVideoActivity() {
             mAdapter.setNewlyAdded(it)
         })
         mViewModel.fetchData()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mBinding.unbind()
     }
 
 }
