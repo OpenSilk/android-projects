@@ -1,7 +1,7 @@
 package org.opensilk.media
 
 import android.media.MediaDescription
-import android.media.browse.MediaBrowser
+import android.media.browse.MediaBrowser.MediaItem
 import android.net.Uri
 import android.os.Build
 import android.provider.DocumentsContract
@@ -127,21 +127,31 @@ fun MediaRef.toMediaDescription(): MediaDescription {
                     .setIconUri(meta.artworkUri)
                     .setMediaId(id.json)
         }
+        is DocumentRef -> {
+            bob.setTitle(meta.title.elseIfBlank(meta.displayName))
+                    .setSubtitle(meta.subtitle)
+                    .setIconUri(meta.artworkUri)
+                    .setMediaId(id.json)
+        }
         else -> TODO("Unsupported mediaRef ${this::class}")
     }
     return bob.build()
 }
 
-fun MediaRef.toMediaItem(): MediaBrowser.MediaItem {
+fun MediaRef.toMediaItem(): MediaItem {
     return when (this) {
         is UpnpVideoRef -> {
-            MediaBrowser.MediaItem(toMediaDescription(), MediaBrowser.MediaItem.FLAG_PLAYABLE)
+            MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
         }
         is UpnpFolderRef -> {
-            MediaBrowser.MediaItem(toMediaDescription(), MediaBrowser.MediaItem.FLAG_BROWSABLE)
+            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
         }
         is UpnpDeviceRef -> {
-            MediaBrowser.MediaItem(toMediaDescription(), MediaBrowser.MediaItem.FLAG_BROWSABLE)
+            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+        }
+        is DocumentRef -> {
+            MediaItem(toMediaDescription(), if (isDirectory)
+                MediaItem.FLAG_BROWSABLE else MediaItem.FLAG_PLAYABLE)
         }
         else -> TODO("Unsupported mediaRef ${this::class}")
     }
