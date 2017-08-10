@@ -10,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import dagger.Module
 import dagger.Subcomponent
+import dagger.android.AndroidInjection
+import dagger.android.ContributesAndroidInjector
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.dagger2.ForApp
@@ -21,14 +23,11 @@ import org.opensilk.video.LiveDataObserver
 import org.opensilk.video.phone.databinding.ActivityDrawerBinding
 import javax.inject.Inject
 
-@Subcomponent
-interface HomeScreenComponent: Injector<HomeActivity> {
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<HomeActivity>()
+@Module
+abstract class HomeScreenModule {
+    @ContributesAndroidInjector
+    abstract fun injector(): HomeActivity
 }
-
-@Module(subcomponents = arrayOf(HomeScreenComponent::class))
-abstract class HomeScreenModule
 
 class HomeActivity : DrawerActivity() {
 
@@ -37,7 +36,7 @@ class HomeActivity : DrawerActivity() {
     @Inject lateinit var mAdapter: HomeAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        injectMe()
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
 
         mBinding.recycler.layoutManager = LinearLayoutManager(this)

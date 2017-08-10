@@ -14,6 +14,7 @@ import android.view.*
 import android.widget.Toast
 import dagger.Module
 import dagger.Subcomponent
+import dagger.android.ContributesAndroidInjector
 import org.opensilk.common.dagger.Injector
 import org.opensilk.media.parseMediaId
 import org.opensilk.media.playback.PlaybackExtras
@@ -21,21 +22,6 @@ import org.opensilk.video.*
 import org.opensilk.video.phone.databinding.ActivityPlaybackBinding
 import timber.log.Timber
 
-/**
- * Created by drew on 8/9/17.
- */
-@Subcomponent
-interface PlaybackScreenComponent: Injector<PlaybackActivity> {
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<PlaybackActivity>()
-}
-
-@Module(subcomponents = arrayOf(PlaybackScreenComponent::class))
-abstract class PlaybackScreenModule
-
-/**
- *
- */
 interface PlaybackActionsHandler {
     fun toggleCaptions()
     fun togglePlayPause()
@@ -45,7 +31,7 @@ interface PlaybackActionsHandler {
 }
 
 /**
- *
+ * Created by drew on 8/9/17.
  */
 class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {

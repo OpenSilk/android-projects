@@ -1,5 +1,6 @@
 package org.opensilk.video.phone
 
+import android.app.Activity
 import android.app.Application
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
@@ -17,6 +18,11 @@ import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
+import dagger.android.AndroidInjector
+import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasActivityInjector
+import dagger.android.support.AndroidSupportInjection
+import dagger.android.support.AndroidSupportInjectionModule
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.opensilk.common.dagger.*
@@ -43,9 +49,10 @@ import javax.inject.Singleton
         HomeScreenModule::class,
         FolderScreenModule::class,
         DetailScreenModule::class,
-        PlaybackScreenModule::class
+        AndroidSupportInjectionModule::class
 ))
-interface RootComponent: Injector<VideoApp> {
+interface RootComponent {
+    fun inject(app: VideoApp)
     @Component.Builder
     abstract class Builder {
         @BindsInstance
@@ -79,12 +86,18 @@ object RootModule {
 /**
  * Created by drew on 8/6/17.
  */
-open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory {
+open class VideoApp: Application(), InjectionManager,
+        ViewModelProvider.Factory, HasActivityInjector {
+
+    val injectOnce = Once()
+    val rootComponent: RootComponent by lazy {
+        DaggerRootComponent.builder().context(this).build()
+    }
 
     override fun onCreate() {
+        injectOnce.Do { rootComponent.inject(this) }
         super.onCreate()
         installLogging(true)
-
         startUpnpService()
     }
 
@@ -93,14 +106,6 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
         startService(Intent(this, UpnpHolderService::class.java))
     }
 
-    val injectOnce = Once()
-    val rootComponent: RootComponent by lazy {
-        DaggerRootComponent.builder().context(this).build()
-    }
-
-    @Inject lateinit var mHomeBuilder: HomeScreenComponent.Builder
-    @Inject lateinit var mFolderBuilder: FolderScreenComponent.Builder
-    @Inject lateinit var mDetailBuilder: DetailScreenComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
     @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
     @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
@@ -108,13 +113,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
 
     override fun injectFoo(foo: Any): Any {
         injectOnce.Do { rootComponent.inject(this) }
-        return if (foo is HomeActivity) {
-            mHomeBuilder.create(foo).inject(foo)
-        } else if (foo is FolderActivity) {
-            mFolderBuilder.create(foo).inject(foo)
-        } else if (foo is DetailActivity) {
-            mDetailBuilder.create(foo).inject(foo)
-        } else if (foo is UpnpHolderService) {
+        if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.create(foo).inject(foo)
         } else if (foo is DatabaseProvider) {
             mDatabaseProviderBuilder.create(foo).inject(foo)
@@ -125,13 +124,19 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
         } else {
             TODO("No builder for ${foo::class}")
         }
+        return Any()
     }
 
     @Inject lateinit var mViewModelFactory: ViewModelFactoryFactory
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        injectOnce.Do { rootComponent.inject(this) }
         return mViewModelFactory.create(modelClass)
+    }
+
+    @Inject lateinit var mActivityInjector: DispatchingAndroidInjector<Activity>
+
+    override fun activityInjector(): AndroidInjector<Activity> {
+        return mActivityInjector
     }
 
 }
@@ -146,20 +151,5 @@ class GlideConfig: AppGlideModule() {
 
     override fun isManifestParsingEnabled(): Boolean {
         return false
-    }
-}
-
-open class DebugTreeWithThreadName : Timber.DebugTree() {
-
-    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-        super.log(priority, tag, appendThreadName(message), t)
-    }
-
-    internal fun appendThreadName(msg: String): String {
-        val threadName = Thread.currentThread().name
-        if ("main" == threadName) {
-            return msg
-        }
-        return "$msg [$threadName]"
     }
 }

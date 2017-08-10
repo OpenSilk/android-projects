@@ -10,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import dagger.Module
 import dagger.Subcomponent
+import dagger.android.AndroidInjection
+import dagger.android.ContributesAndroidInjector
 import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 import io.reactivex.disposables.Disposables
@@ -27,14 +29,11 @@ import javax.inject.Inject
 /**
  * Created by drew on 8/7/17.
  */
-@Subcomponent
-interface FolderScreenComponent: Injector<FolderActivity>{
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<FolderActivity>()
+@Module
+abstract class FolderScreenModule {
+    @ContributesAndroidInjector
+    abstract fun injector(): FolderActivity
 }
-
-@Module(subcomponents = arrayOf(FolderScreenComponent::class))
-abstract class FolderScreenModule
 
 class FolderActivity: DrawerActivity() {
 
@@ -43,7 +42,7 @@ class FolderActivity: DrawerActivity() {
     @Inject lateinit var mAdapter: FolderAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        injectMe()
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
 
         mBinding.recycler.layoutManager = LinearLayoutManager(this)

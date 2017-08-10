@@ -14,6 +14,8 @@ import com.bumptech.glide.request.RequestOptions
 import dagger.Component
 import dagger.Module
 import dagger.Subcomponent
+import dagger.android.AndroidInjection
+import dagger.android.ContributesAndroidInjector
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.*
@@ -28,14 +30,11 @@ import kotlin.properties.Delegates
 /**
  * Created by drew on 8/7/17.
  */
-@Subcomponent
-interface DetailScreenComponent: Injector<DetailActivity> {
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<DetailActivity>()
+@Module
+abstract class DetailScreenModule {
+    @ContributesAndroidInjector
+    abstract fun injector(): DetailActivity
 }
-
-@Module(subcomponents = arrayOf(DetailScreenComponent::class))
-abstract class DetailScreenModule
 
 class DetailActivity: BaseVideoActivity() {
 
@@ -45,7 +44,7 @@ class DetailActivity: BaseVideoActivity() {
     @Inject lateinit var mAdapter: DetailAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        injectMe()
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_detail)
