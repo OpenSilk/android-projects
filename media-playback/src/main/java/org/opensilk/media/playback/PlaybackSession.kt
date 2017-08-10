@@ -19,6 +19,7 @@ import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.TrackGroupArray
+import com.google.android.exoplayer2.source.UnrecognizedInputFormatException
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -174,10 +175,17 @@ constructor(
 
     }
 
-    override fun onPlayerError(error: ExoPlaybackException?) {
+    override fun onPlayerError(error: ExoPlaybackException) {
         stop()
         changeState(PlaybackState.STATE_ERROR) {
-            it.setErrorMessage(error?.message ?: "ExoPlayer encountered an error.")
+            when (error.cause) {
+                is UnrecognizedInputFormatException -> {
+                    it.setErrorMessage("Unsupported media format")
+                }
+                else -> {
+                    it.setErrorMessage(error.cause?.message ?: "ExoPlayer encountered an error.")
+                }
+            }
         }
     }
 
