@@ -3,8 +3,8 @@ package org.opensilk.video
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.ProviderScope
+import org.opensilk.dagger2.ForApp
 import javax.inject.Inject
 
 const private val VERSION = 27
@@ -15,7 +15,7 @@ const private val VERSION = 27
 @ProviderScope
 class Database
 @Inject constructor(
-        @ForApplication context: Context
+        @ForApp context: Context
 ) : SQLiteOpenHelper(context, "videos.sqlite", null, VERSION) {
 
     override fun onCreate(db: SQLiteDatabase) {

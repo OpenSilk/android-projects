@@ -15,7 +15,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.text.Cue
 import com.google.android.exoplayer2.text.TextRenderer
 import io.reactivex.disposables.Disposables
-import org.opensilk.common.dagger.ForApplication
+import org.opensilk.dagger2.ForApp
 import org.opensilk.media.MediaControllerCallback
 import org.opensilk.media.MediaId
 import org.opensilk.media.bundle
@@ -27,7 +27,7 @@ import javax.inject.Inject
 
 class PlaybackViewModel
 @Inject constructor(
-        @ForApplication private val mContext: Context,
+        @ForApp private val mContext: Context,
         private val mPlaybackSession: PlaybackSession
 ) : ViewModel(), LifecycleObserver, MediaControllerCallback.Listener,
         SimpleExoPlayer.VideoListener, TextRenderer.Output {

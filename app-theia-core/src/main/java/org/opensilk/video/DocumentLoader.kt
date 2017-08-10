@@ -9,7 +9,7 @@ import android.provider.DocumentsContract
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
-import org.opensilk.common.dagger.ForApplication
+import org.opensilk.dagger2.ForApp
 import org.opensilk.media.DocumentId
 import org.opensilk.media.DocumentMeta
 import org.opensilk.media.DocumentRef
@@ -54,7 +54,7 @@ private fun Cursor.toDocumentRef(parentId: DocumentId): DocumentRef {
  */
 class DocumentLoader
 @Inject constructor(
-        @ForApplication val mContext: Context
+        @ForApp val mContext: Context
 ) {
 
     fun document(documentId: DocumentId): Maybe<DocumentRef> {

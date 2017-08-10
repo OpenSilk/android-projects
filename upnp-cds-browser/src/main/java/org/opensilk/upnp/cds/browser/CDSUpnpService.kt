@@ -36,18 +36,10 @@ import org.fourthline.cling.model.types.UDAServiceType
 import org.fourthline.cling.protocol.ProtocolFactory
 import org.fourthline.cling.registry.Registry
 import org.fourthline.cling.transport.Router
-import org.fourthline.cling.transport.impl.AsyncServletStreamServerConfigurationImpl
-import org.fourthline.cling.transport.impl.AsyncServletStreamServerImpl
 import org.fourthline.cling.transport.impl.RecoveringSOAPActionProcessorImpl
-import org.fourthline.cling.transport.impl.jetty.JettyServletContainer
-import org.fourthline.cling.transport.spi.NetworkAddressFactory
 import org.fourthline.cling.transport.spi.SOAPActionProcessor
 import org.fourthline.cling.transport.spi.StreamClient
-import org.fourthline.cling.transport.spi.StreamServer
-import org.opensilk.common.dagger.ForApplication
-import java.lang.ref.WeakReference
-import java.util.logging.Level
-import java.util.logging.Logger
+import org.opensilk.dagger2.ForApp
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -59,7 +51,7 @@ val CDSserviceType = UDAServiceType("ContentDirectory", 1)
 @Singleton
 class CDSUpnpService
 @Inject constructor(
-        @ForApplication private val mContext: Context,
+        @ForApp private val mContext: Context,
         okHttpClient: OkHttpClient
 ) : UpnpService {
 

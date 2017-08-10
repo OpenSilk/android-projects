@@ -24,10 +24,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.Subcomponent
 import dagger.multibindings.IntoMap
-import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.FragmentScope
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
+import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.DetailsFileInfoRowBinding
@@ -260,7 +260,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
  *
  */
 class FileInfoRow
-@Inject constructor(@ForApplication context: Context): Row(HeaderItem(context.getString(R.string.header_file_info))) {
+@Inject constructor(@ForApp context: Context): Row(HeaderItem(context.getString(R.string.header_file_info))) {
 
     interface Listener {
         fun onItemChanged(fileInfoRow: FileInfoRow)

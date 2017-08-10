@@ -26,7 +26,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
-import org.opensilk.common.dagger.ForApplication
+import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
 import org.opensilk.reactivex2.subscribeIgnoreError
 import timber.log.Timber
@@ -39,7 +39,7 @@ import kotlin.properties.Delegates
 class PlaybackSession
 @Inject
 constructor(
-        @ForApplication private val mContext: Context,
+        @ForApp private val mContext: Context,
         private val mDbClient: MediaProviderClient,
         private val mQueue: PlaybackQueue
 ) : MediaSession.Callback(), AudioManager.OnAudioFocusChangeListener, ExoPlayer.EventListener {

@@ -16,7 +16,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.Consumer
 import io.reactivex.subjects.BehaviorSubject
-import org.opensilk.common.dagger.ForApplication
+import org.opensilk.dagger2.ForApp
 import org.opensilk.reactivex2.cancellationSignal
 import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.*
@@ -50,7 +50,7 @@ class DocumentChange(val documentId: DocumentId): DatabaseChange()
 @Singleton
 class DatabaseClient
 @Inject constructor(
-        @ForApplication private val mContext: Context,
+        @ForApp private val mContext: Context,
         private val mUris: DatabaseUris,
         @Named("tvdb_banner_root") private val mTVDbBannerRoot: String,
         private val mResolver: ContentResolver

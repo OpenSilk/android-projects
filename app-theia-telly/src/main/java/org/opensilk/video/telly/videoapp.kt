@@ -13,12 +13,14 @@ import com.bumptech.glide.integration.okhttp3.OkHttpLibraryGlideModule
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
 import com.bumptech.glide.module.AppGlideModule
 import com.bumptech.glide.module.LibraryGlideModule
+import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.opensilk.common.dagger.*
+import org.opensilk.dagger2.ForApp
 import org.opensilk.logging.installLogging
 import org.opensilk.video.*
 import timber.log.Timber
@@ -33,7 +35,6 @@ import javax.inject.Singleton
 @Singleton
 @Component(modules = arrayOf(
         RootModule::class,
-        AppContextModule::class,
         UpnpHolderServiceModule::class,
         AppJobServiceModule::class,
         MediaProviderModule::class,
@@ -47,7 +48,14 @@ import javax.inject.Singleton
         DetailModule::class,
         PlaybackModule::class
 ))
-interface RootComponent: AppContextComponent, Injector<VideoApp>
+interface RootComponent: Injector<VideoApp> {
+    @Component.Builder
+    abstract class Builder {
+        @BindsInstance
+        abstract fun context(@ForApp context: Context): Builder
+        abstract fun build(): RootComponent
+    }
+}
 
 /**
  *
@@ -56,19 +64,19 @@ interface RootComponent: AppContextComponent, Injector<VideoApp>
 object RootModule {
 
     @Provides @Named("DatabaseAuthority") @JvmStatic
-    fun databaseAuthority(@ForApplication context: Context): String {
+    fun databaseAuthority(@ForApp context: Context): String {
         return context.getString(R.string.videos_authority)
     }
 
     @Provides @Singleton @JvmStatic
-    fun provideOkHttpClient(@ForApplication context: Context): OkHttpClient {
+    fun provideOkHttpClient(@ForApp context: Context): OkHttpClient {
         return OkHttpClient.Builder()
                 .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
                 .build()
     }
 
     @Provides @JvmStatic
-    fun provideContentResolver(@ForApplication context: Context): ContentResolver {
+    fun provideContentResolver(@ForApp context: Context): ContentResolver {
         return context.contentResolver
     }
 
@@ -80,7 +88,7 @@ object RootModule {
 open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory {
 
     open internal val rootComponent: RootComponent by lazy {
-        DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
+        DaggerRootComponent.builder().context(this).build()
     }
     private val injectOnce = Once()
 

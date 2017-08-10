@@ -10,9 +10,9 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import dagger.Module
 import dagger.Subcomponent
-import org.opensilk.common.dagger.ForApplication
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
+import org.opensilk.dagger2.ForApp
 import org.opensilk.media.MediaRef
 import org.opensilk.media.UpnpDeviceRef
 import org.opensilk.media.UpnpVideoRef
@@ -59,7 +59,7 @@ class HomeActivity : DrawerActivity() {
 
 class HomeAdapter
 @Inject constructor(
-        @ForApplication context: Context
+        @ForApp context: Context
 ): RecyclerView.Adapter<BoundViewHolder>() {
 
     private val serversHeader = HeaderItem(context.getString(R.string.header_devices),

@@ -5,7 +5,6 @@ import org.fourthline.cling.controlpoint.ControlPoint
 import org.fourthline.cling.model.action.ActionException
 import org.fourthline.cling.model.action.ActionInvocation
 import org.fourthline.cling.model.message.UpnpResponse
-import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.model.types.UnsignedIntegerFourBytes
 import java.util.concurrent.atomic.AtomicReference
