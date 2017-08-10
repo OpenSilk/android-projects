@@ -95,7 +95,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
             when (state.state) {
                 PlaybackState.STATE_PLAYING -> {
                     postOverlayHideRunner()
-                    mBinding.actionPlayPause.setImageResource(R.drawable.lb_ic_pause)
                 }
                 PlaybackState.STATE_PAUSED -> {
                     animateOverlayIn()
