@@ -3,6 +3,7 @@ package org.opensilk.media
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser
 import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
 import android.util.JsonReader
 import android.util.JsonWriter
@@ -351,27 +352,54 @@ data class MovieImageMeta(
 const val ROOTS_PARENT_ID = "\u2605G\u2605O\u2605D\u2605"
 
 data class DocumentId(val treeUri: Uri,
-                      val documentId: String = DocumentsContract.getTreeDocumentId(treeUri),
-                      val parentId: String = ROOTS_PARENT_ID): MediaId {
+                      val documentId: String = if (isTreeUri(treeUri))
+                          DocumentsContract.getTreeDocumentId(treeUri) else
+                          DocumentsContract.getDocumentId(treeUri),
+                      val parentId: String = documentId): MediaId {
 
     val authority: String = treeUri.authority
 
     val isRoot: Boolean by lazy {
-        DocumentsContract.getTreeDocumentId(treeUri) == documentId
+        if (isFromTree) {
+            DocumentsContract.getTreeDocumentId(treeUri) == documentId
+        } else {
+            true
+        }
     }
 
     val mediaUri: Uri by lazy {
-        DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId)
+        if (isFromTree) {
+            DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId)
+        } else {
+            DocumentsContract.buildDocumentUri(authority, documentId)
+        }
     }
 
     val childrenUri: Uri by lazy {
-        DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, documentId)
+        if (isFromTree) {
+            DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, documentId)
+        } else {
+            throw IllegalArgumentException("This documentId does not represent a tree")
+        }
+    }
+
+    val isFromTree: Boolean by lazy {
+        isTreeUri(treeUri)
     }
 
     override val json: String by lazy {
         writeJson(DocumentIdTransformer, this)
     }
 
+}
+
+private fun isTreeUri(treeUri: Uri): Boolean {
+    return if (Build.VERSION.SDK_INT >= 24) {
+        DocumentsContract.isTreeUri(treeUri)
+    } else {
+        val paths = treeUri.pathSegments
+        paths.size >= 2 && "tree" == paths[0]
+    }
 }
 
 data class DocumentRef(override val id: DocumentId,
