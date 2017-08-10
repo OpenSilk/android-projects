@@ -8,7 +8,6 @@
       <module fileurl="file://$PROJECT_DIR$/app-theia-core/app-theia-core.iml" filepath="$PROJECT_DIR$/app-theia-core/app-theia-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/app-theia-phone/app-theia-phone.iml" filepath="$PROJECT_DIR$/app-theia-phone/app-theia-phone.iml" />
       <module fileurl="file://$PROJECT_DIR$/app-theia-telly/app-theia-telly.iml" filepath="$PROJECT_DIR$/app-theia-telly/app-theia-telly.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app-theia-tv/app-theia-tv.iml" filepath="$PROJECT_DIR$/app-theia-tv/app-theia-tv.iml" />
       <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-app/common-app.iml" filepath="$PROJECT_DIR$/common-app/common-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/common-dagger/common-dagger.iml" filepath="$PROJECT_DIR$/common-dagger/common-dagger.iml" />
