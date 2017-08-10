@@ -17,7 +17,7 @@ import com.bumptech.glide.request.RequestOptions
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
-import org.opensilk.common.rx.subscribeIgnoreError
+import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.*
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding

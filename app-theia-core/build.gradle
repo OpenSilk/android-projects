@@ -61,7 +61,7 @@ dependencies {
     compile "com.github.bumptech.glide:okhttp3-integration:$glideVersion@jar"
 
     compile project(':common-dagger')
-    compile project(':common-rx2')
+    compile project(':reactivex2')
     compile project(':media')
     compile project(':media-playback')
     compile project(':libtvdb2')

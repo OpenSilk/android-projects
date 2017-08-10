@@ -58,7 +58,7 @@ dependencies {
     compile "com.jakewharton.timber:timber:$timberVersion"
 
     compile project(':common-dagger')
-    compile project(':common-rx2')
+    compile project(':reactivex2')
 
     testCompile "junit:junit:$test_junitVersion"
     testCompile "org.robolectric:robolectric:$test_robolectricVersion"

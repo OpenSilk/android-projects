@@ -19,7 +19,7 @@ import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.model.types.ServiceId
 import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
-import org.opensilk.common.rx.subscribeIgnoreError
+import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.UpnpDeviceId
 import org.opensilk.upnp.cds.browser.CDSGetSystemUpdateIDAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService

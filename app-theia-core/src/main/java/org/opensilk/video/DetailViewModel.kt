@@ -3,18 +3,14 @@ package org.opensilk.video
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.net.Uri
-import io.reactivex.Completable
 import io.reactivex.Maybe
-import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
-import org.opensilk.common.rx.subscribeIgnoreError
+import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.*
-import org.opensilk.tmdb.api.model.TvEpisode
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 /**
  *

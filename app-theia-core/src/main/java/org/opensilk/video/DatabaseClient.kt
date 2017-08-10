@@ -17,10 +17,9 @@ import io.reactivex.Single
 import io.reactivex.functions.Consumer
 import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.common.rx.cancellationSignal
-import org.opensilk.common.rx.subscribeIgnoreError
+import org.opensilk.reactivex2.cancellationSignal
+import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.*
-import org.opensilk.tmdb.api.model.TvEpisode
 import org.opensilk.tvdb.api.model.Token
 import javax.inject.Inject
 import javax.inject.Named

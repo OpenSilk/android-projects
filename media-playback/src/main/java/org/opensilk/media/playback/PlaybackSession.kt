@@ -26,13 +26,11 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
-import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.common.dagger.ForApplication
-import org.opensilk.common.rx.subscribeIgnoreError
+import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.*
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.coroutines.experimental.CoroutineContext
 import kotlin.properties.Delegates
 
 const val ACTION_SET_REPEAT = "org.opensilk.media.ACTION_SET_REPEAT"

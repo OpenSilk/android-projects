@@ -18,12 +18,12 @@
             <option value="$PROJECT_DIR$/common-dagger" />
             <option value="$PROJECT_DIR$/common-glide" />
             <option value="$PROJECT_DIR$/common-rx" />
-            <option value="$PROJECT_DIR$/common-rx2" />
             <option value="$PROJECT_DIR$/dagger2" />
             <option value="$PROJECT_DIR$/libtmdb" />
             <option value="$PROJECT_DIR$/libtvdb2" />
             <option value="$PROJECT_DIR$/media" />
             <option value="$PROJECT_DIR$/media-playback" />
+            <option value="$PROJECT_DIR$/reactivex2" />
             <option value="$PROJECT_DIR$/upnp-cds-browser" />
             <option value="$PROJECT_DIR$/upnp-cds-featurelist" />
           </set>

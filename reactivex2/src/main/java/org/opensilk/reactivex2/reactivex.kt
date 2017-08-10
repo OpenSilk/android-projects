@@ -1,4 +1,4 @@
-package org.opensilk.common.rx
+package org.opensilk.reactivex2
 
 import android.os.CancellationSignal
 import io.reactivex.Maybe
