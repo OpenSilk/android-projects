@@ -7,6 +7,7 @@ import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -21,7 +22,7 @@ import org.opensilk.music.R
 import org.opensilk.music.data.DataService
 import org.opensilk.music.databinding.SheetPlayingBinding
 import org.opensilk.music.playback.PlaybackActions
-import org.opensilk.music.playback.PlaybackService
+import org.opensilk.music.PlaybackService
 import rx.Scheduler
 import rx.android.schedulers.AndroidSchedulers
 import javax.inject.Inject
@@ -40,7 +41,7 @@ class BaseModule
 /**
  * Created by drew on 6/28/16.
  */
-abstract class BaseSlidingActivity: ScopedAppCompatActivity(),
+abstract class BaseSlidingActivity: AppCompatActivity(),
         View.OnClickListener, MediaBrowserCallback.Listener {
 
     protected abstract fun injectSelf()

@@ -13,9 +13,6 @@ import javax.inject.Named
 @Module
 class MusicAuthorityModule {
 
-    @Provides @Named("music_authority")
-    fun provideMusicAuthority(@ForApplication context: Context): String {
-        return context.getString(R.string.music_provider)
-    }
+
 
 }

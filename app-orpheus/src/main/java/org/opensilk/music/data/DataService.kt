@@ -10,6 +10,7 @@ import org.opensilk.media._getMediaMeta
 import org.opensilk.media._getMediaTitle
 import org.opensilk.media._newBuilder
 import org.opensilk.media.newMediaItem
+import org.opensilk.music.*
 import org.opensilk.music.data.ref.DocumentRef
 import org.opensilk.music.data.ref.MediaRef
 import rx.Observable
@@ -33,8 +34,8 @@ class DataService
 @Inject
 constructor(
         @ForApplication private val mContext: Context,
-        private val mDBClient: MusicProviderClient,
-        private val mUris: MusicProviderUris
+        private val mDBClient: MusicDbClient,
+        private val mUris: MusicDbUris
 
     ) {
 

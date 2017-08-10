@@ -4,11 +4,10 @@ import android.databinding.DataBindingUtil
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import org.opensilk.music.R
 import org.opensilk.music.databinding.RecyclerMediaErrorBinding
+import org.opensilk.music.ui.MediaErrorVH
 
 /**
  * Created by drew on 7/31/16.

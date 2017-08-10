@@ -1,5 +1,6 @@
 package org.opensilk.music
 
+import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import dagger.Component
@@ -14,6 +15,7 @@ import org.opensilk.music.data.DataService
 import org.opensilk.music.data.MusicAuthorityModule
 import rx.Scheduler
 import rx.android.schedulers.AndroidSchedulers
+import timber.log.Timber
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -21,50 +23,50 @@ import javax.inject.Singleton
  * Created by drew on 6/28/16.
  */
 @Singleton
-@Component(
-        modules = arrayOf(
-                AppContextModule::class,
-                MusicAuthorityModule::class,
-                RootModule::class
-        )
-)
-interface RootComponent: AppContextComponent {
-    fun getDataService(): DataService
-    @Named("MainThread") fun getMainThreadObserveOn(): Scheduler
-}
+@Component(modules = arrayOf(
+        AppContextModule::class,
+        RootModule::class
+))
+interface RootComponent: AppContextComponent
 
 /**
  *
  */
 @Module
 class RootModule {
-    @Provides @Named("MusicService")
-    fun getMusicServiceComponent(@ForApplication context: Context): ComponentName {
-        return ComponentName(context, "foo")
-    }
-    @Provides @Singleton @Named("MainThread")
-    fun getObserveOnScheduler(): rx.Scheduler {
-        return AndroidSchedulers.mainThread()
+    @Provides @Named("music_authority")
+    fun provideMusicAuthority(@ForApplication context: Context): String {
+        return context.getString(R.string.music_provider)
     }
 }
 
 /**
  *
  */
-fun Context.getRootComponent(): RootComponent {
-    return this.applicationContext.getDaggerComponent()
-}
+open class MusicApp: Application() {
 
-/**
- *
- */
-class MusicApp: BaseApp() {
-    override val rootComponent: Any by lazy {
+    val rootComponent: RootComponent by lazy {
         DaggerRootComponent.builder().appContextModule(AppContextModule(this)).build()
     }
 
     override fun onCreate() {
         super.onCreate()
-        setupTimber(true)
+        Timber.plant(DebugTreeWithThreadName())
+    }
+
+}
+
+open class DebugTreeWithThreadName : Timber.DebugTree() {
+
+    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+        super.log(priority, tag, appendThreadName(message), t)
+    }
+
+    internal fun appendThreadName(msg: String): String {
+        val threadName = Thread.currentThread().name
+        if ("main" == threadName) {
+            return msg
+        }
+        return "$msg [$threadName]"
     }
 }

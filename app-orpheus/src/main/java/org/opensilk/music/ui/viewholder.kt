@@ -1,4 +1,4 @@
-package org.opensilk.music.ui.recycler
+package org.opensilk.music.ui
 
 import android.databinding.ViewDataBinding
 import android.net.Uri

@@ -1,19 +1,12 @@
 package org.opensilk.music.data
 
-import android.content.ContentProvider
-import android.content.Context
-import android.content.pm.ProviderInfo
-import android.media.browse.MediaBrowser
-import android.net.Uri
 import android.provider.DocumentsContract
-import android.provider.DocumentsProvider
 
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowContentResolver
 import org.robolectric.shadows.ShadowLog
 
 import timber.log.Timber
@@ -21,6 +14,9 @@ import timber.log.Timber
 import org.assertj.core.api.Assertions.*
 import org.opensilk.media.MediaMeta
 import org.opensilk.music.BuildConfig
+import org.opensilk.music.MusicDbProvider
+import org.opensilk.music.MusicDbClient
+import org.opensilk.music.MusicDbUris
 import org.opensilk.music.data.ref.DocumentRef
 import org.opensilk.music.data.ref.MediaRef
 import org.robolectric.Robolectric
@@ -33,9 +29,9 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class,
         sdk = intArrayOf(21))
-class MusicProviderTest {
-    internal lateinit var mMusicProvider: MusicProvider
-    internal lateinit var mClient: MusicProviderClient
+class MusicDbProviderTest {
+    internal lateinit var mMusicDbProvider: MusicDbProvider
+    internal lateinit var mClient: MusicDbClient
 
     @Before
     @Throws(Exception::class)
@@ -43,7 +39,7 @@ class MusicProviderTest {
         Timber.uprootAll()
         Timber.plant(Timber.DebugTree())
         ShadowLog.stream = System.err
-        mMusicProvider = Robolectric.buildContentProvider(MusicProvider::class.java).create().get()
+        mMusicDbProvider = Robolectric.buildContentProvider(MusicDbProvider::class.java).create().get()
 
 //        val attachInfo = ContentProvider::class.java.getDeclaredMethod("attachInfo",
 //                Context::class.java, ProviderInfo::class.java, Boolean::class.java)
@@ -51,7 +47,7 @@ class MusicProviderTest {
 //        attachInfo.invoke(mMusicProvider, RuntimeEnvironment.application, null, true)
 
         val authority = MusicAuthorityModule().provideMusicAuthority(RuntimeEnvironment.application)
-        mClient = MusicProviderClient(RuntimeEnvironment.application, MusicProviderUris(authority))
+        mClient = MusicDbClient(RuntimeEnvironment.application, MusicDbUris(authority))
 
         TestDataProvider.setup()
     }

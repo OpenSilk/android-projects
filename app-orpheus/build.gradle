@@ -7,11 +7,12 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 23
-        targetSdkVersion 23
+        minSdkVersion 22
+        targetSdkVersion 25
         applicationId "org.opensilk.music"
         versionCode 1
         versionName "1.0"
+        multiDexEnabled = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -43,37 +44,30 @@ dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
+    kapt "com.github.bumptech.glide:compiler:$glideVersion"
+    kapt "android.arch.lifecycle:compiler:$androidarchVersion"
 
-    compile "com.google.dagger:dagger:$dagger2Version"
-    //not needed as compile but prevents having to add it as provided for all modules
-//    compile 'javax.annotation:jsr250-api:1.0'
-    compile "javax.annotation:javax.annotation-api:1.2"
-
-    compile "com.jakewharton.timber:timber:$timberVersion"
-    compile "com.squareup.mortar:mortar:$mortarVersion"
-
-    compile "com.android.support:support-v4:$supportLibVersion"
     compile "com.android.support:appcompat-v7:$supportLibVersion"
+    compile "com.android.support:cardview-v7:$supportLibVersion"
+    compile "com.android.support:recyclerview-v7:$supportLibVersion"
+    compile "com.android.support:preference-v7:$supportLibVersion"
     compile "com.android.support:design:$supportLibVersion"
+    compile "com.android.support.constraint:constraint-layout:1.0.2"
+    //compile 'io.github.luizgrp.sectionedrecyclerviewadapter:sectionedrecyclerviewadapter:1.1.3'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-
-    compile "org.apache.commons:commons-lang3:$commonsLangVersion"
-    compile "commons-io:commons-io:$commonsIOVersion"
 
     compile project(':common-glide')
-    compile project(':common-app')
     compile project(':common-dagger')
     compile project(':media')
     compile project(':media-playback')
-    compile project(':common-rx')
+    compile project(':common-rx2')
 
     androidTestCompile "com.android.support:support-annotations:$supportLibVersion"
     androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
     androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
     androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"
-    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.2.0'
+    androidTestCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
     androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
 
     testCompile "junit:junit:$test_junitVersion"

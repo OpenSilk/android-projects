@@ -30,11 +30,11 @@
 
         <provider
             android:authorities="${applicationId}.provider.index"
-            android:name=".data.MusicProvider"/>
+            android:name=".MusicDbProvider"/>
         <service android:name=".data.ScannerService"/>
 
-        <service android:name=".playback.PlaybackService"/>
-        <receiver android:name=".playback.PlaybackMediaButtonReceiver">
+        <service android:name=".PlaybackService"/>
+        <receiver android:name=".PlaybackMediaButtonReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
