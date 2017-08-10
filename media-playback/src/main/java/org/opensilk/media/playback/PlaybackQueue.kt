@@ -1,20 +1,15 @@
 package org.opensilk.media.playback
 
 import android.media.MediaDescription
-import android.media.browse.MediaBrowser
-import android.media.session.MediaSession.*
+import android.media.session.MediaSession.QueueItem
 import io.reactivex.Maybe
 import io.reactivex.Single
-import org.opensilk.media.toMediaItem
 import timber.log.Timber
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
-
-class NoCurrentItemException: Exception("Queue is not initialized")
 
 /**
  * Created by drew on 2/24/17.
