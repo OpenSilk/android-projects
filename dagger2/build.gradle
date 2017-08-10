@@ -1,0 +1,39 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    kapt "com.google.guava:guava:$kapt_guavaVersion"
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.google.dagger:dagger-android-processor:$dagger2Version"
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    compile "com.google.dagger:dagger:$dagger2Version"
+    compile "com.google.dagger:dagger-android-support:$dagger2Version"
+    compile "javax.annotation:javax.annotation-api:1.2"
+    compile "com.android.support:support-fragment:$supportLibVersion"
+
+    testCompile "junit:junit:$test_junitVersion"
+}

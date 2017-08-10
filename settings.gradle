@@ -1,4 +1,4 @@
-include ':common', ':media', ':common-app', ':common-dagger', ':common-glide', ':media-playback', ':common-rx', ':libtvdb2', ':common-rx2', ':app-autumn', ':app-theia-phone'
+include ':common', ':media', ':common-app', ':common-dagger', ':common-glide', ':media-playback', ':common-rx', ':libtvdb2', ':common-rx2', ':app-autumn', ':app-theia-phone', ':dagger2'
 include ':upnp-cds-featurelist', ':upnp-cds-browser'
 include ':libtmdb'
 include ':app-orpheus', ':app-theia-telly', ':app-theia-core'
