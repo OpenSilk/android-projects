@@ -39,7 +39,7 @@ class DatabaseProvider: ContentProvider() {
 
     override fun query(uri: Uri, projection: Array<String>?, selection: String?,
                        selectionArgs: Array<String>?, sortOrder: String?): Cursor? {
-        var table: String = ""
+        var table: String
         var id: Long = -1L
         var realSelection = selection ?: ""
         var realSelectionArgs = selectionArgs
@@ -153,7 +153,7 @@ class DatabaseProvider: ContentProvider() {
                 return mUris.tvBanner(id)
             }
             DatabaseMatches.TV_CONFIG -> {
-                val id = db.insertWithOnConflict("tv_config", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                db.insertWithOnConflict("tv_config", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.tvConfig()
             }
             DatabaseMatches.MOVIES -> {
@@ -165,7 +165,7 @@ class DatabaseProvider: ContentProvider() {
                 return mUris.movieImage(id)
             }
             DatabaseMatches.MOVIE_CONFIG -> {
-                val id = db.insertWithOnConflict("movie_config", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                db.insertWithOnConflict("movie_config", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return mUris.movieConfig()
             }
             DatabaseMatches.UPNP_DEVICES -> {

@@ -196,8 +196,8 @@ fun Int.zeroPad(len: Int): String {
     return this.toString().padStart(len, '0')
 }
 
-fun formatTime(seconds: Long, sb: StringBuilder) {
-    var seconds = seconds
+fun formatTime(timeSeconds: Long, sb: StringBuilder) {
+    var seconds = timeSeconds
     var minutes = seconds / 60
     val hours = minutes / 60
     seconds -= minutes * 60

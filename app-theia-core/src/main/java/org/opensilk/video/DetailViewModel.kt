@@ -220,7 +220,7 @@ class DetailViewModel
                         else -> TODO()
                     }
                 }, { err ->
-                    val mesg = if (err.message.isNullOrBlank()) err::class.simpleName else err.message
+                    val mesg = if (err.message.isNullOrBlank()) err::javaClass.name else err.message
                     Timber.w(err, "Error during lookup $mesg")
                     lookupError.postValue("Error during lookup $mesg")
                 })
@@ -248,7 +248,7 @@ class DetailViewModel
                         else -> TODO()
                     }
                 }, { err ->
-                    val mesg = if (err.message.isNullOrBlank()) err::class.simpleName else err.message
+                    val mesg = if (err.message.isNullOrBlank()) err::javaClass.name else err.message
                     Timber.w(err, "Error during lookup $mesg")
                     lookupError.postValue("Error during lookup $mesg")
                 })
