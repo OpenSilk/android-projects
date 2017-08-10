@@ -36,7 +36,8 @@ import javax.inject.Singleton
         DrawerActivityViewModelModule::class,
         HomeScreenModule::class,
         FolderScreenModule::class,
-        DetailScreenModule::class
+        DetailScreenModule::class,
+        PlaybackScreenModule::class
 ))
 interface RootComponent: AppContextComponent, Injector<VideoApp>
 

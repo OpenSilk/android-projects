@@ -1,5 +1,6 @@
 package org.opensilk.video.phone
 
+import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
@@ -107,7 +108,7 @@ class DetailAdapter
     override fun onBindViewHolder(holder: BoundViewHolder, position: Int) {
         when (holder) {
             is DetailPlayActionsViewHolder -> {
-                holder.bind(posterUri, resumeInfo)
+                holder.bind(posterUri, resumeInfo, mediaId)
             }
             is DetailOverviewViewHolder -> {
                 holder.bind(videoDesc)
@@ -146,7 +147,10 @@ class DetailAdapter
 class DetailPlayActionsViewHolder(val binding: DetailActionsCardBinding):
         BoundViewHolder(binding.root), DetailActionHandler {
 
-    fun bind(posterUri: Uri, resumeInfo: ResumeInfo) {
+    lateinit var mediaId: MediaId
+
+    fun bind(posterUri: Uri, resumeInfo: ResumeInfo, mediaId: MediaId) {
+        this.mediaId = mediaId
         binding.actionHandler = this
         binding.actions = HashSet<DetailAction>()
         if (resumeInfo.lastCompletion in 1..979) {
@@ -174,13 +178,17 @@ class DetailPlayActionsViewHolder(val binding: DetailActionsCardBinding):
     override fun onAction(action: DetailAction) {
         when (action) {
             DetailAction.RESUME -> {
-
+                val intent = Intent(binding.root.context, PlaybackActivity::class.java)
+                        .setAction(ACTION_RESUME)
+                        .putExtra(EXTRA_MEDIAID, mediaId.json)
+                binding.root.context.startActivity(intent)
             }
-            DetailAction.PLAY -> {
-
-            }
+            DetailAction.PLAY,
             DetailAction.START_OVER -> {
-
+                val intent = Intent(binding.root.context, PlaybackActivity::class.java)
+                        .setAction(ACTION_PLAY)
+                        .putExtra(EXTRA_MEDIAID, mediaId.json)
+                binding.root.context.startActivity(intent)
             }
             else -> TODO()
         }

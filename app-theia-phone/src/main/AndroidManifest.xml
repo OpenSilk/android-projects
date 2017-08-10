@@ -26,6 +26,13 @@
 
         <activity android:name=".DetailActivity"
                   android:theme="@style/AppTheme.NoActionBar"/>
+        <activity
+            android:name=".PlaybackActivity"
+            android:theme="@style/AppTheme.Playback"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"/>
 
         <service android:name="org.opensilk.video.UpnpHolderService"/>
         <service android:name="org.opensilk.video.AppJobService"

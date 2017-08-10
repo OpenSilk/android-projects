@@ -3,4 +3,10 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+
+    <color name="background_progress_color">#19FFFFFF</color>
+
+    <color name="progress_color_no_theme">#ff40c4ff</color>
+    <color name="secondary_progress_color">#33FFFFFF</color>
 </resources>

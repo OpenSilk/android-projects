@@ -18,5 +18,7 @@
     <string name="nav_pick_file">External file</string>
     <string name="nav_pick_dir">External folder</string>
 
-    <string name="err_unsupported_media">Error. Unsupported media</string>
+    <string name="err_playback">Playback error</string>
+    <string name="err_unknown">Unknown error</string>
+    <string name="err_pip_unsupported">Picture in picture not supported</string>
 </resources>

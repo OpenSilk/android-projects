@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2016 OpenSilk Productions LLC.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:context="org.opensilk.video.phone.PlaybackActivity"
+        tools:deviceIds="tv">
+    <data>
+        <import type="android.view.View"/>
+        <import type="android.text.TextUtils"/>
+        <variable
+            name="desc"
+            type="org.opensilk.video.VideoDescInfo"/>
+        <variable
+            name="actionHandler"
+            type="org.opensilk.video.phone.PlaybackActionsHandler"/>
+        <variable
+            name="progressVal"
+            type="int"/>
+        <variable
+            name="currentTimeString"
+            type="String"/>
+        <variable
+            name="totalTimeString"
+            type="String"/>
+        <variable
+            name="errorMsg"
+            type="String"/>
+        <variable
+            name="isPlaying"
+            type="boolean"/>
+    </data>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:keepScreenOn="true"
+        >
+
+        <com.google.android.exoplayer2.ui.AspectRatioFrameLayout
+            android:id="@+id/surface_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            >
+
+            <SurfaceView
+                android:id="@+id/video_surface"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+            <com.google.android.exoplayer2.ui.SubtitleView
+                android:id="@+id/subtitles"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
+
+        <!--This extra frame layout is because fitsSystemWindows doesnt
+            work properly without it-->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true">
+
+            <RelativeLayout
+                android:id="@+id/top_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="16dp"
+                android:layoutDirection="ltr"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/media_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@{desc.title}"
+                    tools:text="title"
+                    style="?android:textAppearanceLarge"/>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/bottom_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="#66000000"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="24dp"
+                android:layoutDirection="ltr"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ProgressBar
+                    android:id="@+id/progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:maxHeight="4dp"
+                    android:minHeight="4dp"
+                    android:layoutDirection="ltr"
+                    android:progressDrawable="@drawable/progress_bar"
+                    android:progress="@{progressVal}"
+                    android:max="1000"
+                    tools:progress="50"/>
+
+                <TextView
+                    android:id="@+id/current_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_below="@id/progress"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="4dp"
+                    android:text="@{currentTimeString}"
+                    android:textAppearance="?android:textAppearanceMedium"
+                    android:textColor="@color/white"
+                    tools:text="0:0"/>
+
+                <TextView
+                    android:id="@+id/total_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_below="@id/progress"
+                    android:layout_marginEnd="16dp"
+                    android:paddingTop="8dp"
+                    android:text="@{totalTimeString}"
+                    android:textAppearance="?android:textAppearanceMedium"
+                    android:textColor="@color/white"
+                    tools:text="123:33"/>
+
+                <LinearLayout
+                    android:id="@+id/control_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/progress"
+                    android:paddingTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <ImageButton
+                        android:id="@+id/action_captions"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:onClick="@{() -> actionHandler.toggleCaptions()}"
+                        android:src="@drawable/ic_cc_48dp"
+                        style="?android:borderlessButtonStyle"
+                        android:tint="@color/white"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:background="?android:selectableItemBackgroundBorderless"/>
+
+                    <ImageButton
+                        android:id="@+id/action_skip_previous"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:onClick="@{() -> actionHandler.skipPrevious()}"
+                        android:src="@drawable/ic_skip_previous_48dp"
+                        style="?android:borderlessButtonStyle"
+                        android:tint="@color/white"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:background="?android:selectableItemBackgroundBorderless"/>
+
+                    <ImageButton
+                        android:id="@+id/action_play_pause"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:onClick="@{() -> actionHandler.togglePlayPause()}"
+                        android:src="@{isPlaying ? @drawable/ic_pause_circle_48dp : @drawable/ic_play_circle_48dp}"
+                        style="?android:borderlessButtonStyle"
+                        android:tint="@color/white"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:background="?android:selectableItemBackgroundBorderless"
+                        tools:src="@drawable/ic_play_circle_48dp"/>
+
+                    <ImageButton
+                        android:id="@+id/action_skip_next"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:onClick="@{() -> actionHandler.skipNext()}"
+                        android:src="@drawable/ic_skip_next_48dp"
+                        style="?android:borderlessButtonStyle"
+                        android:tint="@color/white"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:background="?android:selectableItemBackgroundBorderless"/>
+
+                    <ImageButton
+                        android:id="@+id/action_pip"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:onClick="@{() -> actionHandler.enterPip()}"
+                        android:src="@drawable/ic_pip_48dp"
+                        style="?android:borderlessButtonStyle"
+                        android:tint="@color/white"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:background="?android:selectableItemBackgroundBorderless"/>
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+
+        </FrameLayout>
+
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:visibility="@{(TextUtils.isEmpty(errorMsg)) ? View.GONE : View.VISIBLE}">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/err_playback"
+                android:textAppearance="?android:textAppearanceMedium"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{errorMsg}"
+                tools:text="Unable to play video"
+                android:textAppearance="?android:textAppearanceMedium"
+                />
+
+        </LinearLayout>
+
+
+    </FrameLayout>
+</layout>
