@@ -48,7 +48,8 @@ import javax.inject.Singleton
         DetailModule::class,
         PlaybackModule::class
 ))
-interface RootComponent: Injector<VideoApp> {
+interface RootComponent {
+    fun inject(app: VideoApp)
     @Component.Builder
     abstract class Builder {
         @BindsInstance

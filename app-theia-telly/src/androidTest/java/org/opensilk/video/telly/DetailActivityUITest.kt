@@ -16,8 +16,8 @@ import org.hamcrest.Matchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensilk.media._getMediaTitle
 import org.opensilk.media.toMediaItem
+import org.opensilk.video.EXTRA_MEDIAID
 
 /**
  * Created by drew on 6/4/17.
@@ -41,7 +41,8 @@ class DetailActivityUITest {
         Espresso.onView(ViewMatchers.withId(R.id.container_list))
                 .perform(RecyclerViewActions.scrollToPosition<RecyclerView.ViewHolder>(1))
         //make sure it exists
-        Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.title), ViewMatchers.withText(mItem._getMediaTitle())))
+        Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.title),
+                ViewMatchers.withText(mItem.description.title.toString())))
                 .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
     }
 

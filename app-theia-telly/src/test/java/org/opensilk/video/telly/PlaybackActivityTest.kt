@@ -9,6 +9,8 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.assertj.core.api.Java6Assertions.assertThat
+import org.opensilk.video.ACTION_PLAY
+import org.opensilk.video.EXTRA_MEDIAID
 
 /**
  * Created by drew on 6/8/17.
@@ -20,7 +22,7 @@ class PlaybackActivityTest {
     @Test
     fun test_timeTickReceiverIsUnregisteredInOnStop() {
         val controller = Robolectric.buildActivity(PlaybackActivity::class.java,
-                Intent(ACTION_PLAY).putExtra(EXTRA_MEDIAID, testUpnpVideoMetas()[0].mediaId))
+                Intent(ACTION_PLAY).putExtra(EXTRA_MEDIAID, testUpnpVideoMetas()[0].id.json))
         controller.create().postCreate(null).start().resume().visible()
         assertThat(Shadows.shadowOf(RuntimeEnvironment.application)
                 .getReceiversForIntent(Intent(Intent.ACTION_TIME_TICK)).size).isEqualTo(1)

@@ -1,12 +1,15 @@
 package org.opensilk.video.telly
 
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
+import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import org.opensilk.common.dagger.AppContextModule
-import org.opensilk.common.dagger.ForApplication
+import okhttp3.Cache
+import okhttp3.OkHttpClient
+import org.opensilk.dagger2.ForApp
 import org.opensilk.video.*
 import javax.inject.Inject
 import javax.inject.Named
@@ -16,19 +19,28 @@ import javax.inject.Singleton
 @Component(
         modules = arrayOf(
                 MockRootModule::class,
-                AppContextModule::class,
                 UpnpHolderServiceModule::class,
+                AppJobServiceModule::class,
+                MediaProviderModule::class,
+                DatabaseProviderModule::class,
+                LookupConfigModule::class,
+                ViewModelModule::class,
+                VideoGlideLibraryModule::class,
                 HomeModule::class,
                 FolderModule::class,
                 DetailModule::class,
                 PlaybackModule::class,
-                MediaProviderModule::class,
-                DatabaseProviderModule::class,
-                LookupModule::class
+                MocksModule::class
         )
 )
 interface MockRootComponent: RootComponent {
     fun injectMockApp(app: MockVideoApp)
+    @Component.Builder
+    abstract class Builder {
+        @BindsInstance
+        abstract fun context(@ForApp context: Context): Builder
+        abstract fun build(): MockRootComponent
+    }
 }
 
 /**
@@ -37,7 +49,18 @@ interface MockRootComponent: RootComponent {
 @Module
 object MockRootModule {
     @Provides @Named("DatabaseAuthority") @JvmStatic
-    fun databaseAuthority(@ForApplication context: Context) = context.getString(R.string.videos_authority)
+    fun databaseAuthority(@ForApp context: Context): String = context.getString(R.string.videos_authority)
+
+    @Provides @Singleton @JvmStatic
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder().build()
+    }
+
+    @Provides @JvmStatic
+    fun provideContentResolver(@ForApp context: Context): ContentResolver {
+        return context.contentResolver
+    }
+
 }
 
 /**
@@ -45,7 +68,7 @@ object MockRootModule {
  */
 class MockVideoApp: VideoApp() {
     override val rootComponent: MockRootComponent by lazy {
-        DaggerMockRootComponent.builder().appContextModule(AppContextModule(this)).build()
+        DaggerMockRootComponent.builder().context(this).build()
     }
     private val injectOnce = Once()
 
@@ -59,31 +82,8 @@ class MockVideoApp: VideoApp() {
         insertTestData(mDatabaseClient)
     }
 
-    /*
-    @Inject lateinit var mMockHomeBuilder: MockHomeComponent.Builder
-    @Inject lateinit var mMockFolderBuilder: MockFolderComponent.Builder
-    @Inject lateinit var mMockDetailBuilder: MockDetailComponent.Builder
-    @Inject lateinit var mMockPlaybackBuilder: MockPlaybackComponent.Builder
-
-    override fun injectFoo(foo: Any) {
-        injectOnce.Do {
-            rootComponent.injectMockApp(this)
-        }
-        if (foo is HomeFragment) {
-            (foo.activity as HomeActivity).daggerComponent(mMockHomeBuilder, foo).inject(foo)
-        } else if (foo is FolderFragment) {
-            (foo.activity as FolderActivity).daggerComponent(mMockFolderBuilder, foo).inject(foo)
-        } else if (foo is DetailFragment) {
-            (foo.activity as DetailActivity).daggerComponent(mMockDetailBuilder, foo).inject(foo)
-        } else if (foo is PlaybackActivity) {
-            foo.daggerComponent(mMockPlaybackBuilder, foo).inject(foo)
-        } else {
-            super.injectFoo(foo)
-        }
-    }
-    */
-
     override fun startUpnpService() {
         //stub
     }
+
 }

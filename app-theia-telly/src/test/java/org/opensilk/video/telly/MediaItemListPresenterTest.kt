@@ -11,6 +11,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.assertj.core.api.Java6Assertions.assertThat
 import org.opensilk.media.toMediaItem
+import org.opensilk.video.DatabaseClient
+import org.opensilk.video.DatabaseUris
+import org.robolectric.RuntimeEnvironment
 
 /**
  * Created by drew on 6/4/17.
@@ -25,7 +28,10 @@ class MediaItemListPresenterTest {
     @Before
     fun setup() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        mPresenter = MediaItemListPresenter()
+        mPresenter = MediaItemListPresenter(DatabaseClient(
+                RuntimeEnvironment.application, DatabaseUris("foo"), "http://foo.com",
+                RuntimeEnvironment.application.contentResolver
+        ))
         mViewHolder = mPresenter.onCreateViewHolder(FrameLayout(activity)) as MediaItemListPresenter.ViewHolder
     }
 

@@ -23,7 +23,8 @@ import org.assertj.core.api.Java6Assertions.assertThat
 import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
-import org.opensilk.media.MediaMeta
+import org.opensilk.video.EXTRA_MEDIAID
+import org.opensilk.video.EXTRA_PLAY_WHEN_READY
 
 /**
  * Created by drew on 6/7/17.
@@ -35,7 +36,7 @@ class PlaybackActivityUITest {
     @Rule @JvmField
     val mActivity = object: ActivityTestRule<PlaybackActivity>(PlaybackActivity::class.java) {
         override fun getActivityIntent(): Intent {
-            return super.getActivityIntent().putExtra(EXTRA_MEDIAID, testUpnpVideoMetas()[0].mediaId)
+            return super.getActivityIntent().putExtra(EXTRA_MEDIAID, testUpnpVideoMetas()[0].id.json)
                     .putExtra(EXTRA_PLAY_WHEN_READY, false)
         }
     }
@@ -43,7 +44,7 @@ class PlaybackActivityUITest {
     @Test
     fun test_activityStarts() {
         val mediaId = mActivity.activity.intent.getStringExtra(EXTRA_MEDIAID)
-        assertThat(mediaId).isEqualTo(testUpnpVideoMetas()[0].mediaId)
+        assertThat(mediaId).isEqualTo(testUpnpVideoMetas()[0].id.json)
     }
 
     /*
