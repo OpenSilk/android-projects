@@ -19,6 +19,7 @@ import dagger.Provides
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.opensilk.common.dagger.*
+import org.opensilk.logging.installLogging
 import org.opensilk.video.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -74,8 +75,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
 
     override fun onCreate() {
         super.onCreate()
-        Timber.plant(DebugTreeWithThreadName())
-        enableStrictMode()
+        installLogging(true)
 
         startUpnpService()
     }
@@ -83,14 +83,6 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
     open fun startUpnpService() {
         //Start upnp service
         startService(Intent(this, UpnpHolderService::class.java))
-    }
-
-    protected fun enableStrictMode() {
-        val threadPolicyBuilder = StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().penaltyFlashScreen()
-        StrictMode.setThreadPolicy(threadPolicyBuilder.build())
-
-        val vmPolicyBuilder = StrictMode.VmPolicy.Builder().detectAll().penaltyLog()
-        StrictMode.setVmPolicy(vmPolicyBuilder.build())
     }
 
     val injectOnce = Once()

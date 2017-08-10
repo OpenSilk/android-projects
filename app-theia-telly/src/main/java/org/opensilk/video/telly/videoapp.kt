@@ -19,6 +19,7 @@ import dagger.Provides
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.opensilk.common.dagger.*
+import org.opensilk.logging.installLogging
 import org.opensilk.video.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -85,7 +86,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
 
     override fun onCreate() {
         super.onCreate()
-        Timber.plant(DebugTreeWithThreadName())
+        installLogging(true)
 
         startUpnpService()
     }
@@ -163,23 +164,3 @@ class GlideConfig: AppGlideModule() {
         return false
     }
 }
-
-/**
- *
- */
-open class DebugTreeWithThreadName : Timber.DebugTree() {
-
-    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-        super.log(priority, tag, appendThreadName(message), t)
-    }
-
-    internal fun appendThreadName(msg: String): String {
-        val threadName = Thread.currentThread().name
-        if ("main" == threadName) {
-            return msg
-        }
-        return "$msg [$threadName]"
-    }
-}
-
-

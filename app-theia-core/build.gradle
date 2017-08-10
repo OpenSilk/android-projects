@@ -66,6 +66,7 @@ dependencies {
     compile project(':media-playback')
     compile project(':libtvdb2')
     compile project(':libtmdb')
+    compile project(':logging')
     compile project(':upnp-cds-browser')
     compile project(':upnp-cds-featurelist')
 
