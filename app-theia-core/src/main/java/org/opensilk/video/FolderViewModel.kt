@@ -2,7 +2,6 @@ package org.opensilk.video
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import android.media.browse.MediaBrowser
 import io.reactivex.disposables.CompositeDisposable
 import org.opensilk.media.*
 import timber.log.Timber
@@ -14,8 +13,8 @@ import javax.inject.Inject
 class FolderViewModel
 @Inject constructor(
         private val mDatabaseClient: MediaProviderClient,
-        private val mBrowseLoader: UpnpFoldersLoader,
-) : ViewModel() {
+        private val mFolderLoader: FoldersLoader
+        ) : ViewModel() {
     val mediaTitle = MutableLiveData<String>()
     val folderItems = MutableLiveData<List<MediaRef>>()
     val loadError = MutableLiveData<String>()
@@ -25,7 +24,15 @@ class FolderViewModel
         Timber.d("onMediaId($mediaId)")
         val mediaRef = parseMediaId(mediaId)
         when (mediaRef) {
-            is UpnpFolderId, is UpnpDeviceId -> {
+            is UpnpFolderId,
+            is UpnpDeviceId -> {
+                subscribeBrowseItems(mediaRef)
+                subscribeTitle(mediaRef)
+            }
+            is DocumentId -> {
+                if (!mediaRef.isFromTree) {
+                    TODO("Document must be for tree $mediaRef")
+                }
                 subscribeBrowseItems(mediaRef)
                 subscribeTitle(mediaRef)
             }
@@ -34,7 +41,7 @@ class FolderViewModel
     }
 
     fun subscribeBrowseItems(mediaId: MediaId) {
-        val s = mBrowseLoader.observable(mediaId)
+        val s = mFolderLoader.observable(mediaId)
                 .subscribe({
                     folderItems.postValue(it)
                 }, {
@@ -46,9 +53,9 @@ class FolderViewModel
 
     fun subscribeTitle(mediaId: MediaId) {
         val s = mDatabaseClient.getMediaMeta(mediaId)
-                .map({ it.toMediaItem() })
+                .map({ it.toMediaDescription() })
                 .subscribe({
-                    mediaTitle.postValue(it.description.title?.toString())
+                    mediaTitle.postValue(it.title?.toString())
                 })
         disposables.add(s)
     }

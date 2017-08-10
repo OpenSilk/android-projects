@@ -299,6 +299,9 @@ class DatabaseProvider: ContentProvider() {
             DatabaseMatches.UPNP_VIDEOS -> {
                 return db.update("upnp_video", values, selection, selectionArgs)
             }
+            DatabaseMatches.DOCUMENTS -> {
+                return db.update("document", values, selection, selectionArgs)
+            }
             else -> throw IllegalArgumentException("Unmatched uri: $uri")
         }
     }

@@ -3,6 +3,7 @@ package org.opensilk.video.phone
 import android.app.Activity
 import android.app.TaskStackBuilder
 import android.arch.lifecycle.*
+import android.content.ComponentName
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.databinding.Observable
@@ -267,6 +268,20 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
                     loadArtwork(mediaRef.meta.artworkUri)
                 }
             }
+            is DocumentRef -> {
+                binding.titleString = mediaRef.meta.title.elseIfBlank(mediaRef.meta.displayName)
+                binding.subTitleString = mediaRef.meta.subtitle
+                if (mediaRef.meta.artworkUri.isEmpty()) {
+                    binding.artworkThumb.setImageResource(if (mediaRef.isDirectory)
+                        R.drawable.ic_folder_48dp else R.drawable.ic_movie_48dp)
+                } else {
+                    loadArtwork(mediaRef.meta.artworkUri)
+                }
+                if (!mediaRef.isDirectory && !mediaRef.isVideo) {
+                    binding.frame.setOnClickListener(null)
+                    //TODO grey out item
+                }
+            }
             else -> TODO("Unhandled mediaRef")
         }
     }
@@ -284,16 +299,30 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
     }
 
     override fun onClick(v: android.view.View) {
-        when (mediaRef) {
+        val ref = mediaRef
+        Timber.d("onClick($ref)")
+        when (ref) {
             is UpnpDeviceRef, is UpnpFolderRef -> {
                 val intent = Intent(v.context, FolderActivity::class.java)
-                        .putExtra(EXTRA_MEDIAID, mediaRef.id.json)
+                        .putExtra(EXTRA_MEDIAID, ref.id.json)
                 v.context.startActivity(intent)
             }
             is UpnpVideoRef -> {
                 val intent = Intent(v.context, DetailActivity::class.java)
-                        .putExtra(EXTRA_MEDIAID, mediaRef.id.json)
+                        .putExtra(EXTRA_MEDIAID, ref.id.json)
                 v.context.startActivity(intent)
+            }
+            is DocumentRef -> {
+                val intent = Intent().putExtra(EXTRA_MEDIAID, ref.id.json)
+                if (ref.isDirectory) {
+                    intent.component = ComponentName(v.context, FolderActivity::class.java)
+                    v.context.startActivity(intent)
+                } else if (ref.isVideo) {
+                    intent.component = ComponentName(v.context, DetailActivity::class.java)
+                    v.context.startActivity(intent)
+                } else {
+                    TODO("Should not be here")
+                }
             }
             else -> TODO()
         }

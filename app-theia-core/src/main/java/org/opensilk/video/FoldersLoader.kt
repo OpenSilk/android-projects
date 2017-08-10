@@ -13,7 +13,7 @@ import javax.inject.Inject
 /**
  * The loader for the folder activity
  */
-class UpnpFoldersLoader
+class FoldersLoader
 @Inject constructor(
         private val mDatabaseClient: DatabaseClient,
         private val mBrowseLoader: UpnpBrowseLoader,
