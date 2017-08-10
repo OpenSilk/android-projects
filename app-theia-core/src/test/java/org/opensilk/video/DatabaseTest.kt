@@ -3,6 +3,7 @@ package org.opensilk.video
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteQueryBuilder
+import android.provider.DocumentsContract
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -77,7 +78,7 @@ class DatabaseTest {
         f.put("device_id", "dev1")
         f.put("folder_id", "fol1")
         f.put("parent_id", "0")
-        f.put("mime_type", MIME_TYPE_DIR)
+        f.put("mime_type", DocumentsContract.Document.MIME_TYPE_DIR)
         f.put("_display_name", "Folder 1")
         f.put("date_added", System.currentTimeMillis())
         mDatabase.insert("upnp_folder", null, f)
