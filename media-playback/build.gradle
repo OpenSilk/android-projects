@@ -30,6 +30,9 @@ dependencies {
     compile "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
     compile "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
     compile "com.google.android.exoplayer:extension-ffmpeg-x86:r2.4.2-SNAPSHOT"
+    compile "com.google.android.exoplayer:extension-okhttp:$exoPlayerVersion"
+
+    compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
     compile project(':dagger2')
     compile project(':media')

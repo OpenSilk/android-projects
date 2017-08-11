@@ -15,6 +15,7 @@ import android.media.session.PlaybackState.*
 import android.net.Uri
 import android.os.*
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
@@ -26,6 +27,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
+import okhttp3.OkHttpClient
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
 import org.opensilk.reactivex2.subscribeIgnoreError
@@ -41,13 +43,14 @@ class PlaybackSession
 constructor(
         @ForApp private val mContext: Context,
         private val mDbClient: MediaProviderClient,
-        private val mQueue: PlaybackQueue
+        private val mQueue: PlaybackQueue,
+        okHttpClient: OkHttpClient
 ) : MediaSession.Callback(), AudioManager.OnAudioFocusChangeListener, ExoPlayer.EventListener {
 
     private val mMediaSession: MediaSession = MediaSession(mContext, BuildConfig.APPLICATION_ID)
     private var mMainHandler: Handler = Handler(Looper.getMainLooper())
     private val mDataSourceFactory = DefaultDataSourceFactory(mContext,
-            mContext.packageName + "/" + BuildConfig.VERSION_NAME)
+            null, OkHttpDataSourceFactory(okHttpClient, "${mContext.packageName}/ExoPlayer", null))
     private val mExtractorFactory = DefaultExtractorsFactory()
     private var mPlaybackState: PlaybackState by Delegates.observable(PlaybackState.Builder().build(), { _, _, nv ->
         mMediaSession.setPlaybackState(nv)
