@@ -1,12 +1,9 @@
 package org.opensilk.video.telly
 
-import android.support.test.espresso.Espresso
-import android.support.test.espresso.assertion.ViewAssertions
-import android.support.test.espresso.matcher.ViewMatchers
 import android.support.test.filters.LargeTest
 import android.support.test.rule.ActivityTestRule
 import android.support.test.runner.AndroidJUnit4
-import org.hamcrest.Matchers
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,10 +19,8 @@ class HomeActivityUITest {
     val mActivityRule = ActivityTestRule<HomeActivity>(HomeActivity::class.java)
 
     @Test
-    fun mockServiceIsShowing() {
-        val serveritem = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.title_text),
-                ViewMatchers.withText("Mock CDService")))
-        serveritem.check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+    fun activity_starts() {
+        assertThat(mActivityRule.activity).isInstanceOf(HomeActivity::class.java)
     }
 
 

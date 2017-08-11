@@ -2,12 +2,10 @@ package org.opensilk.video.telly
 
 import android.content.ContentResolver
 import android.content.Context
-import android.net.Uri
 import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.opensilk.dagger2.ForApp
 import org.opensilk.video.*
@@ -79,7 +77,6 @@ class MockVideoApp: VideoApp() {
         injectOnce.Do {
             rootComponent.injectMockApp(this)
         }
-        insertTestData(mDatabaseClient)
     }
 
     override fun startUpnpService() {

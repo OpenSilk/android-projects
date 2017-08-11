@@ -1,6 +1,5 @@
 package org.opensilk.video.telly
 
-import android.app.Activity
 import android.content.ComponentName
 import android.support.test.espresso.Espresso
 import android.support.test.espresso.action.ViewActions
@@ -15,6 +14,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opensilk.video.EXTRA_MEDIAID
+import org.opensilk.video.upnpDevices
 
 /**
  * Created by drew on 5/31/17.
@@ -29,7 +29,7 @@ class HomeActivityIntentsTest {
     @Test
     fun testClickOnServerItemOpensFolders() {
         val serveritem = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.title_text),
-                ViewMatchers.withText("Mock CDService")))
+                ViewMatchers.withText(upnpDevices()[0].meta.title)))
         serveritem.perform(ViewActions.click())
         Intents.intended(Matchers.allOf(
                 IntentMatchers.hasComponent(ComponentName(mActivityRule.activity, FolderActivity::class.java)),

@@ -55,6 +55,7 @@ android {
 dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.google.dagger:dagger-android-processor:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
     kapt "android.arch.lifecycle:compiler:$androidarchVersion"
@@ -66,6 +67,8 @@ dependencies {
 
     compile project(':app-theia-core')
 
+    mockCompile project(':media-testdata')
+
     androidTestCompile "com.android.support.test.espresso:espresso-core:$test_espressoVersion"
     androidTestCompile "com.android.support.test.espresso:espresso-intents:$test_espressoVersion"
     androidTestCompile("com.android.support.test.espresso:espresso-contrib:$test_espressoVersion") {
@@ -75,9 +78,11 @@ dependencies {
     androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
     androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
     androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"
+    androidTestCompile project(':media-testdata')
 
     testCompile "junit:junit:$test_junitVersion"
     testCompile "org.robolectric:robolectric:$test_robolectricVersion"
     testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
     testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testCompile project(':media-testdata')
 }
