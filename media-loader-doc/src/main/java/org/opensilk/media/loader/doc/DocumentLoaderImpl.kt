@@ -1,14 +1,10 @@
-package org.opensilk.video
+package org.opensilk.media.loader.doc
 
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
-import android.media.browse.MediaBrowser
-import android.net.Uri
 import android.provider.DocumentsContract
 import io.reactivex.Maybe
-import io.reactivex.Observable
-import io.reactivex.Single
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.DocumentId
 import org.opensilk.media.DocumentMeta
@@ -52,12 +48,9 @@ private fun Cursor.toDocumentRef(parentId: DocumentId): DocumentRef {
 /**
  * Created by drew on 8/9/17.
  */
-class DocumentLoader
-@Inject constructor(
-        @ForApp val mContext: Context
-) {
+class DocumentLoaderImpl @Inject constructor(@ForApp val mContext: Context): DocumentLoader {
 
-    fun document(documentId: DocumentId): Maybe<DocumentRef> {
+    override fun document(documentId: DocumentId): Maybe<DocumentRef> {
         val uriPermission = mContext.contentResolver.persistedUriPermissions
                 .firstOrNull { it.uri == documentId.treeUri }
                 ?: return Maybe.error(Exception("Not permitted to access uri. Please reselect item or folder"))
@@ -76,7 +69,7 @@ class DocumentLoader
         }
     }
 
-    fun documents(documentId: DocumentId): Maybe<List<DocumentRef>> {
+    override fun documents(documentId: DocumentId): Maybe<List<DocumentRef>> {
         if (!documentId.isFromTree) {
             return Maybe.error(Exception("Document does not represent a tree"))
         }

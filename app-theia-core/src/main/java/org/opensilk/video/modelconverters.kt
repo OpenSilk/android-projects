@@ -43,45 +43,6 @@ fun Device<*, *, *>.toMediaMeta(): UpnpDeviceRef {
     )
 }
 
-fun Container.toMediaMeta(deviceId: UpnpDeviceId): UpnpFolderRef {
-    val mediaId = UpnpFolderId(deviceId.deviceId, this.id)
-    val parentMediaId = UpnpFolderId(deviceId.deviceId, this.parentID)
-    val title = this.title
-    return UpnpFolderRef(
-            mediaId,
-            parentMediaId,
-            UpnpFolderMeta(
-                    title = title
-            )
-    )
-}
-
-fun VideoItem.toMediaMeta(deviceId: UpnpDeviceId): UpnpVideoRef {
-    val mediaId = UpnpVideoId(deviceId.deviceId, this.id)
-    val parentMediaId = UpnpFolderId(deviceId.deviceId, this.parentID)
-    val res = this.firstResource
-    val mediaUri = Uri.parse(res.value)
-    val mimeType = res.protocolInfo.contentFormat
-    val duration = if (res.duration != null) parseUpnpDuration(res.duration) else 0
-    val bitrate = res.bitrate ?: 0L
-    val size = res.size ?: 0L
-    val resolution = res.resolution ?: ""
-    val displayName = this.title
-    return UpnpVideoRef(
-            id = mediaId,
-            parentId = parentMediaId,
-            meta = UpnpVideoMeta(
-                    mediaTitle = displayName,
-                    mimeType = mimeType,
-                    duration = duration,
-                    bitrate = bitrate,
-                    size = size,
-                    resolution = resolution,
-                    mediaUri = mediaUri
-            )
-    )
-}
-
 fun Series.toTvSeriesRef(poster: SeriesImageQuery?, backdrop: SeriesImageQuery?): TvSeriesRef {
     return TvSeriesRef(
             TvSeriesId(id),

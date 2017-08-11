@@ -148,28 +148,6 @@ fun extractMovieYear(title: CharSequence?): String {
     return ""
 }
 
-fun parseUpnpDuration(dur: String): Long {
-    if (dur.isNullOrBlank()) {
-        return -1L
-    }
-    val strings = dur.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-    if (strings.size != 3) {
-        return -1L
-    }
-    try {
-        var sec = 0L
-        if (!strings[0].isNullOrEmpty()) {
-            sec += TimeUnit.SECONDS.convert(Integer.decode(strings[0]).toLong(), TimeUnit.HOURS).toInt()
-        }
-        sec += TimeUnit.SECONDS.convert(Integer.decode(strings[1]).toLong(), TimeUnit.MINUTES).toInt()
-        sec += TimeUnit.SECONDS.convert(Integer.decode(strings[2].substring(0, 2)).toLong(), TimeUnit.SECONDS).toInt()
-        return sec
-    } catch (e: NumberFormatException) {
-        return -1L
-    }
-
-}
-
 fun Context.suitableCacheDir(path: String): File {
     var dir = externalCacheDir
     if (dir == null || !dir.exists() || !dir.canWrite()) {

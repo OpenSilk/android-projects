@@ -20,6 +20,8 @@
             <option value="$PROJECT_DIR$/libtvdb2" />
             <option value="$PROJECT_DIR$/logging" />
             <option value="$PROJECT_DIR$/media" />
+            <option value="$PROJECT_DIR$/media-loader-cds" />
+            <option value="$PROJECT_DIR$/media-loader-doc" />
             <option value="$PROJECT_DIR$/media-playback" />
             <option value="$PROJECT_DIR$/media-testdata" />
             <option value="$PROJECT_DIR$/reactivex2" />

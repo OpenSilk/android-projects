@@ -1,12 +1,10 @@
 package org.opensilk.video.phone
 
-import android.app.Activity
 import android.app.TaskStackBuilder
 import android.arch.lifecycle.*
 import android.content.ComponentName
 import android.content.Intent
 import android.databinding.DataBindingUtil
-import android.databinding.Observable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -15,7 +13,6 @@ import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v4.view.GravityCompat
-import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
@@ -26,14 +23,13 @@ import com.bumptech.glide.request.RequestOptions
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
-import io.reactivex.Single
 import org.opensilk.media.*
+import org.opensilk.media.loader.doc.DocumentLoader
 import org.opensilk.video.*
 import org.opensilk.video.phone.databinding.ActivityDrawerBinding
 import org.opensilk.video.phone.databinding.RecyclerHeaderItemBinding
 import org.opensilk.video.phone.databinding.RecyclerListItemBinding
 import timber.log.Timber
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.reflect.KClass
 

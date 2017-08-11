@@ -43,6 +43,7 @@ android {
 dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.google.dagger:dagger-android-processor:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
     kapt "android.arch.lifecycle:compiler:$androidarchVersion"
@@ -63,6 +64,8 @@ dependencies {
     compile project(':common-dagger')
     compile project(':reactivex2')
     compile project(':media')
+    compile project(':media-loader-cds')
+    compile project(':media-loader-doc')
     compile project(':media-playback')
     compile project(':libtvdb2')
     compile project(':libtmdb')

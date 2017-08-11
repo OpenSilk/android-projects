@@ -7,7 +7,6 @@ import android.arch.lifecycle.ViewModelProvider
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
-import android.os.StrictMode
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.Excludes
 import com.bumptech.glide.annotation.GlideModule
@@ -21,15 +20,15 @@ import dagger.Provides
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasActivityInjector
-import dagger.android.support.AndroidSupportInjection
 import dagger.android.support.AndroidSupportInjectionModule
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.opensilk.common.dagger.*
 import org.opensilk.dagger2.ForApp
 import org.opensilk.logging.installLogging
+import org.opensilk.media.loader.cds.UpnpBrowseLoaderModule
+import org.opensilk.media.loader.doc.DocumentLoaderModule
 import org.opensilk.video.*
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -43,6 +42,7 @@ import javax.inject.Singleton
         DatabaseProviderModule::class,
         LookupConfigModule::class,
         UpnpBrowseLoaderModule::class,
+        DocumentLoaderModule::class,
         ViewModelModule::class,
         DrawerActivityViewModelModule::class,
         VideoGlideLibraryModule::class,

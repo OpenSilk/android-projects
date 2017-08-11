@@ -12,7 +12,6 @@ import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.integration.okhttp3.OkHttpLibraryGlideModule
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
 import com.bumptech.glide.module.AppGlideModule
-import com.bumptech.glide.module.LibraryGlideModule
 import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
@@ -22,11 +21,11 @@ import okhttp3.OkHttpClient
 import org.opensilk.common.dagger.*
 import org.opensilk.dagger2.ForApp
 import org.opensilk.logging.installLogging
+import org.opensilk.media.loader.cds.UpnpBrowseLoaderModule
+import org.opensilk.media.loader.doc.DocumentLoaderModule
 import org.opensilk.video.*
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Named
-import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
@@ -41,6 +40,7 @@ import javax.inject.Singleton
         DatabaseProviderModule::class,
         LookupConfigModule::class,
         UpnpBrowseLoaderModule::class,
+        DocumentLoaderModule::class,
         ViewModelModule::class,
         VideoGlideLibraryModule::class,
         HomeModule::class,

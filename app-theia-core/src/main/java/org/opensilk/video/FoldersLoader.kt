@@ -4,8 +4,10 @@ import io.reactivex.Completable
 import io.reactivex.CompletableSource
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.disposables.CompositeDisposable
 import org.opensilk.media.*
+import org.opensilk.media.loader.cds.UPNP_ROOT_ID
+import org.opensilk.media.loader.cds.UpnpBrowseLoader
+import org.opensilk.media.loader.doc.DocumentLoader
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -52,7 +54,7 @@ class FoldersLoader
     }
 
     private fun doNetwork(folderId: UpnpFolderId): Completable {
-        return mBrowseLoader.getDirectChildren(folderId)
+        return mBrowseLoader.directChildren(folderId, wantVideoItems = true)
                 .flatMapCompletable { itemList ->
                     CompletableSource { s ->
                         mDatabaseClient.hideChildrenOf(folderId)

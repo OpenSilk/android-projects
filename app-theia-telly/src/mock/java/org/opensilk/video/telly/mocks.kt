@@ -5,7 +5,7 @@ import dagger.Module
 import io.reactivex.Single
 import org.opensilk.media.MediaRef
 import org.opensilk.media.UpnpFolderId
-import org.opensilk.video.UpnpBrowseLoader
+import org.opensilk.media.loader.cds.UpnpBrowseLoader
 import org.opensilk.video.upnpFolders
 import org.opensilk.video.upnpVideo_folder_1_no_association
 import javax.inject.Inject

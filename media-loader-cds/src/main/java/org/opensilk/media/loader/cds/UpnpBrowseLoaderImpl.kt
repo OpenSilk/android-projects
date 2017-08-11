@@ -1,7 +1,6 @@
-package org.opensilk.video
+package org.opensilk.media.loader.cds
 
-import dagger.Binds
-import dagger.Module
+import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
@@ -12,7 +11,9 @@ import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
 import org.fourthline.cling.support.contentdirectory.DIDLParser
 import org.fourthline.cling.support.model.Protocol
-import org.fourthline.cling.support.model.container.StorageFolder
+import org.fourthline.cling.support.model.container.*
+import org.fourthline.cling.support.model.item.AudioItem
+import org.fourthline.cling.support.model.item.MusicTrack
 import org.fourthline.cling.support.model.item.VideoItem
 import org.opensilk.media.*
 import org.opensilk.upnp.cds.browser.CDSBrowseAction
@@ -23,50 +24,50 @@ import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
-const val UPNP_ROOT_ID = "0"
-
 /**
- * Provides the UpnpBrowseLoader, allows mocking for tests
- */
-@Module
-abstract class UpnpBrowseLoaderModule {
-    @Binds
-    abstract fun upnpBrowserLoader(impl: UpnpBrowseLoaderImpl): UpnpBrowseLoader
-}
-
-/**
- * Loader used by the UpnpFoldersLoader
- */
-interface UpnpBrowseLoader {
-    fun getDirectChildren(upnpFolderId: UpnpFolderId): Single<List<MediaRef>>
-}
-
-/**
+ * Default implementation of UpnpBrowseLoader
+ *
  * Created by drew on 7/29/17.
  */
-class UpnpBrowseLoaderImpl
-@Inject constructor(
-        private val mUpnpService: CDSUpnpService
-): UpnpBrowseLoader {
+class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnpService): UpnpBrowseLoader {
 
-    override fun getDirectChildren(upnpFolderId: UpnpFolderId): Single<List<MediaRef>> {
+    private data class Opts(val audio: Boolean, val video: Boolean)
+
+    override fun directChildren(upnpFolderId: UpnpFolderId, wantVideoItems: Boolean,
+                                wantAudioItems: Boolean): Maybe<out List<MediaRef>> {
+        val opts = Opts(wantAudioItems, wantVideoItems)
         return if (upnpFolderId.folderId == UPNP_ROOT_ID) {
             //for root folder, look for feature list, falling back to normal browse
             cachedService(upnpFolderId).flatMap { service ->
-                featureList(service, upnpFolderId).onErrorResumeNext(browse(service, upnpFolderId))
+                featureList(service, upnpFolderId, opts)
+                        .onErrorResumeNext(browse(service, upnpFolderId, opts))
+                        .toList()
+            }.flatMapMaybe { list ->
+                if (list.isEmpty()) {
+                    Maybe.empty()
+                } else {
+                    Maybe.just(list)
+                }
             }
         } else {
             //else just do browse
             cachedService(upnpFolderId).flatMap { service ->
-                browse(service, upnpFolderId)
+                browse(service, upnpFolderId, opts)
+                        .toList()
+            }.flatMapMaybe { list ->
+                if (list.isEmpty()) {
+                    Maybe.empty()
+                } else {
+                    Maybe.just(list)
+                }
             }
-        }.toList()
+        }
     }
 
     /**
      * performs the browse
      */
-    private fun browse(service: Service<*,*>, parentId: UpnpFolderId) : Observable<MediaRef> {
+    private fun browse(service: Service<*, *>, parentId: UpnpFolderId, opts: Opts) : Observable<MediaRef> {
         return Observable.create { subscriber ->
             val browse = CDSBrowseAction(mUpnpService.controlPoint, service, parentId.folderId)
             browse.run()
@@ -94,19 +95,35 @@ class UpnpBrowseLoaderImpl
                 for (c in didl.containers) {
                     if (StorageFolder.CLASS.equals(c)) {
                         subscriber.onNext(c.toMediaMeta(deviceId))
+                    } else if (MusicGenre.CLASS.equals(c) && opts.audio) {
+                        TODO()
+                    } else if (Album.CLASS.equals(c) && opts.audio) {
+                        if (MusicAlbum.CLASS.equals(c)) {
+
+                        } else {
+
+                        }
+                        TODO()
                     } else {
                         Timber.w("Skipping unsupported container ${c.title} type ${c.clazz.value}")
                     }
                 }
 
                 for (item in didl.items) {
-                    if (VideoItem.CLASS.equals(item)) {
+                    if (VideoItem.CLASS.equals(item) && opts.video) {
                         val res = item.firstResource ?: continue
                         if (res.protocolInfo.protocol != Protocol.HTTP_GET) {
                             //we can only support http-get
                             continue
                         }
                         subscriber.onNext((item as VideoItem).toMediaMeta(deviceId))
+                    } else if (AudioItem.CLASS.equals(item) && opts.audio) {
+                        if (MusicTrack.CLASS.equals(item)) {
+
+                        } else {
+
+                        }
+                        TODO()
                     } else {
                         Timber.w("Skipping unsupported item ${item.title}, type=${item.clazz.value}")
                     }
@@ -129,8 +146,8 @@ class UpnpBrowseLoaderImpl
     /**
      * Fetches the cached service
      */
-    private fun cachedService(parentId: UpnpFolderId): Observable<Service<*,*>> {
-        return Observable.create { subscriber ->
+    private fun cachedService(parentId: UpnpFolderId): Single<Service<*, *>> {
+        return Single.create { subscriber ->
             val udn = UDN.valueOf(parentId.deviceId)
             //check cache first
             val rd = mUpnpService.registry.getDevice(udn, false)
@@ -146,15 +163,14 @@ class UpnpBrowseLoaderImpl
             if (subscriber.isDisposed) {
                 return@create
             }
-            subscriber.onNext(rs)
-            subscriber.onComplete()
+            subscriber.onSuccess(rs)
         }
     }
 
     /**
      * Fetches the content directory service from the server
      */
-    private fun service(parentId: UpnpFolderId): Observable<Service<*,*>> {
+    private fun service(parentId: UpnpFolderId): Observable<Service<*, *>> {
         return Observable.create { subscriber ->
             val udn = UDN.valueOf(parentId.deviceId)
             //missed cache, we have to look it up
@@ -190,8 +206,13 @@ class UpnpBrowseLoaderImpl
      * it then remaps the children of that folder to the root container (id = "0")
      * so the loader sees the video folders when requesting root
      */
-    private fun featureList(service: Service<*,*>, parentId: UpnpFolderId): Observable<MediaRef> {
+    private fun featureList(service: Service<*, *>, parentId: UpnpFolderId, opts: Opts): Observable<MediaRef> {
         return Single.create<String> { s ->
+            if (opts.audio && opts.video) {
+                //oops they want both
+                s.onError(FeatureListException())
+                return@create
+            }
             val action = UpnpFeatureListAction(mUpnpService.controlPoint, service)
             action.run()
             if (s.isDisposed) {
@@ -201,18 +222,27 @@ class UpnpBrowseLoaderImpl
                 s.onError(action.error.get())
                 return@create
             }
-            action.features.get()?.features?.firstOrNull {
-                it is BasicView && !it.videoItemId.isNullOrBlank()
-            }?.let {
-                s.onSuccess((it as BasicView).videoItemId)
-            } ?: s.onError(NullPointerException())
+            val features = action.features.get()?.features?.firstOrNull { it is BasicView } as? BasicView
+            val videoId = features?.videoItemId ?: ""
+            val audioId = features?.audioItemId ?: ""
+            if (videoId.isNotBlank() && opts.video) {
+                s.onSuccess(videoId)
+            } else if (!audioId.isNotBlank() && opts.audio) {
+                s.onSuccess(audioId)
+            } else {
+                s.onError(FeatureListException())
+            }
         }.flatMapObservable { id ->
-            browse(service, parentId.copy(folderId = id))
-        }.map { meta ->
-            return@map when (meta) {
-                is UpnpFolderRef -> meta.copy(parentId = parentId)
-                is UpnpVideoRef -> meta.copy(parentId = parentId)
-                else -> meta
+            //do browse, remaping the parent id to the root id
+            browse(service, parentId.copy(folderId = id), opts).map { meta ->
+                return@map when (meta) {
+                    is UpnpFolderRef -> meta.copy(parentId = parentId)
+                    is UpnpVideoRef -> meta.copy(parentId = parentId)
+                    else -> TODO()
+                }
+            }.switchIfEmpty {
+                //just in case we were given bad ids by featurelist
+                Observable.error<MediaRef>(FeatureListException())
             }
         }
     }
