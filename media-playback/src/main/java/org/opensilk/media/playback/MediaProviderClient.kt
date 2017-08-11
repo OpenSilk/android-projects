@@ -1,10 +1,10 @@
-package org.opensilk.media
+package org.opensilk.media.playback
 
-import android.media.browse.MediaBrowser
 import android.net.Uri
 import io.reactivex.Maybe
 import io.reactivex.Observable
-import io.reactivex.Single
+import org.opensilk.media.MediaId
+import org.opensilk.media.MediaRef
 
 /**
  * Created by drew on 6/26/17.

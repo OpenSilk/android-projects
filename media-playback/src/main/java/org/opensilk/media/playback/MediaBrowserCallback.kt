@@ -1,7 +1,6 @@
-package org.opensilk.media
+package org.opensilk.media.playback
 
 import android.media.browse.MediaBrowser
-import android.service.media.MediaBrowserService
 
 /**
  * Created by drew on 3/18/17.

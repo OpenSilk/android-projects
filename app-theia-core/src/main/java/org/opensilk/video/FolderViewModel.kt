@@ -4,6 +4,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import io.reactivex.disposables.CompositeDisposable
 import org.opensilk.media.*
+import org.opensilk.media.playback.MediaProviderClient
 import timber.log.Timber
 import javax.inject.Inject
 

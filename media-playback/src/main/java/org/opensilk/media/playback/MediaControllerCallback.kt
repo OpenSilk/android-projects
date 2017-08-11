@@ -1,15 +1,16 @@
-package org.opensilk.media
+package org.opensilk.media.playback
 
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Bundle
+import org.opensilk.media.bundle
 
 /**
  * Created by drew on 7/2/17.
  */
-class MediaControllerCallback(private val listener: MediaControllerCallback.Listener): MediaController.Callback() {
+class MediaControllerCallback(private val listener: Listener): MediaController.Callback() {
 
     interface Listener {
         fun onExtrasChanged(extras: Bundle)

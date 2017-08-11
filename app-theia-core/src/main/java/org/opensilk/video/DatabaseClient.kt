@@ -20,6 +20,7 @@ import org.opensilk.dagger2.ForApp
 import org.opensilk.reactivex2.cancellationSignal
 import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.*
+import org.opensilk.media.playback.MediaProviderClient
 import org.opensilk.tvdb.api.model.Token
 import javax.inject.Inject
 import javax.inject.Named
