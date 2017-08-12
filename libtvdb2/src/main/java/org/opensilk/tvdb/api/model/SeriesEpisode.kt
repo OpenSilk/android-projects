@@ -3,11 +3,11 @@ package org.opensilk.tvdb.api.model
 /**
  * Created by drew on 7/25/17.
  */
-data class SeriesEpisode(
-        val airedEpisodeNumber: Int,
-        val airedSeason: Int,
-        val episodeName: String,
+data class SeriesEpisode @JvmOverloads constructor (
+        val airedEpisodeNumber: Int = 0,
+        val airedSeason: Int = 0,
+        val episodeName: String = "",
         val firstAired: String = "",
-        val id: Long,
-        val overview: String? = null
+        val id: Long = 0,
+        val overview: String = ""
 )

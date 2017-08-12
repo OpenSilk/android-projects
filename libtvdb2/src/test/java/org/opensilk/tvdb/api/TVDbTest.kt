@@ -110,18 +110,6 @@ class TVDbTest {
     fun series_archer2() {
         enqueueResponse("series-archer2.json")
         val resp = mApi.series(mToken, 1).blockingGet()
-        /*
-        assertThat(resp.data).isEqualTo(Series(
-                id = 74651,
-                seriesName = "Meet Corliss Archer",
-                seriesId = 27877,
-                status = "Ended",
-                firstAired = "1954-09-01",
-                network = "Syndicated",
-                lastUpdated = 1378870183,
-                runtime = "30"
-        ))
-        */
         assertThat(resp.data.seriesName).isEqualTo("Meet Corliss Archer")
         assertThat(resp.data.overview).isNull()
     }
