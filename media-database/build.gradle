@@ -1,0 +1,43 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 22
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+}
+
+dependencies {
+    kapt "com.google.guava:guava:$kapt_guavaVersion"
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.google.dagger:dagger-android-processor:$dagger2Version"
+
+    compile "com.jakewharton.timber:timber:$timberVersion"
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    compile project(':dagger2')
+    compile project(':media')
+    compile project(':reactivex2')
+
+    testCompile "junit:junit:$test_junitVersion"
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
+    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
+}
