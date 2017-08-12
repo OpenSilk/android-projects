@@ -1,35 +1,65 @@
 package org.opensilk.media
 
+import android.net.Uri
 import android.util.JsonReader
 import android.util.JsonWriter
 
+const val UPNP_ROOT_ID = "0"
+
 /**
  * Created by drew on 8/11/17.
+ *
+ * Meta all upnp objects have
  */
 interface UpnpMeta {
     val title: String
 }
 
+/**
+ * Meta representing upnp item with resource
+ */
+interface UpnpItemMeta: UpnpMeta {
+    val mediaUri: Uri
+    val mimeType: String
+    val duration: Long
+    val size: Long
+}
+
+/**
+ * id representing upnp container
+ */
 interface UpnpContainerId: MediaId {
     val deviceId: String
     val containerId: String
 }
 
+/**
+ * id representing upnp item
+ */
 interface UpnpItemId: MediaId {
     val deviceId: String
     val itemId: String
 }
 
+/**
+ * ref representing upnp container
+ */
 interface UpnpContainerRef: MediaRef {
     val parentId: UpnpContainerId
     val meta: UpnpMeta
 }
 
+/**
+ * ref representing upnp item
+ */
 interface UpnpItemRef: MediaRef {
     val parentId: UpnpContainerId
     val meta: UpnpMeta
 }
 
+/**
+ * Common transformer for upnp containers
+ */
 internal abstract class UpnpContainerTransformer: MediaIdTransformer<UpnpContainerId> {
     override val version: Int = 1
 
@@ -55,6 +85,9 @@ internal abstract class UpnpContainerTransformer: MediaIdTransformer<UpnpContain
     }
 }
 
+/**
+ * Common transformer for upnp items
+ */
 internal abstract class UpnpItemTransformer: MediaIdTransformer<UpnpItemId> {
     override val version: Int = 1
 
@@ -75,6 +108,7 @@ internal abstract class UpnpItemTransformer: MediaIdTransformer<UpnpItemId> {
         }
         return when (kind) {
             UPNP_VIDEO -> UpnpVideoId(dev, itm)
+            UPNP_MUSIC_TRACK -> UpnpMusicTrackId(dev, itm)
             else -> TODO()
         }
     }

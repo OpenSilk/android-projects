@@ -13,6 +13,11 @@ import java.io.StringWriter
 const val UPNP_DEVICE = "upnp_device"
 const val UPNP_FOLDER = "upnp_folder"
 const val UPNP_VIDEO = "upnp_video"
+const val UPNP_MUSIC_TRACK = "upnp_music_track"
+const val UPNP_MUSIC_ALBUM = "upnp_music_album"
+const val UPNP_MUSIC_GENRE = "upnp_music_genre"
+const val UPNP_MUSIC_ARTIST = "upnp_music_artist"
+const val UPNP_AUDIO = "upnp_audio"
 const val DOCUMENT = "document"
 
 const val KEY_MEDIA_URI = "media_uri"
@@ -91,6 +96,31 @@ fun parseMediaId(json: String): MediaId {
                     mediaId = UpnpVideoTransformer.read(jr)
                     jr.endObject()
                 }
+                UPNP_MUSIC_TRACK -> {
+                    jr.beginObject()
+                    mediaId = UpnpMusicTrackTransformer.read(jr)
+                    jr.endObject()
+                }
+                UPNP_MUSIC_ALBUM -> {
+                    jr.beginObject()
+                    mediaId = UpnpMusicAlbumTransformer.read(jr)
+                    jr.endObject()
+                }
+                UPNP_MUSIC_GENRE -> {
+                    jr.beginObject()
+                    mediaId = UpnpMusicGenreTransformer.read(jr)
+                    jr.endObject()
+                }
+                UPNP_MUSIC_ARTIST -> {
+                    jr.beginObject()
+                    mediaId = UpnpMusicArtistTransformer.read(jr)
+                    jr.endObject()
+                }
+                UPNP_AUDIO -> {
+                    jr.beginObject()
+                    mediaId = UpnpAudioTransformer.read(jr)
+                    jr.endObject()
+                }
                 DOCUMENT -> {
                     jr.beginObject()
                     mediaId = DocumentIdTransformer.read(jr)
@@ -108,7 +138,7 @@ fun MediaRef.toMediaDescription(): MediaDescription {
     val bob = MediaDescription.Builder()
     when (this) {
         is UpnpVideoRef -> {
-            bob.setTitle(meta.title.elseIfBlank(meta.mediaTitle))
+            bob.setTitle(meta.title.elseIfBlank(meta.originalTitle))
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
                     .setMediaId(id.json)
@@ -117,14 +147,38 @@ fun MediaRef.toMediaDescription(): MediaDescription {
         }
         is UpnpFolderRef -> {
             bob.setTitle(meta.title)
-                    .setSubtitle(meta.subtitle)
-                    .setIconUri(meta.artworkUri)
                     .setMediaId(id.json)
         }
         is UpnpDeviceRef -> {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
+                    .setMediaId(id.json)
+        }
+        is UpnpMusicTrackRef -> {
+            bob.setTitle(meta.title.elseIfBlank(meta.originalTitle))
+                    .setSubtitle(meta.artist.elseIfBlank(meta.creator))
+                    .setIconUri(meta.artworkUri.elseIfEmpty(meta.originalArtworkUri))
+                    .setMediaId(id.json)
+        }
+        is UpnpMusicAlbumRef -> {
+            bob.setTitle(meta.title)
+                    .setSubtitle(meta.artist.elseIfBlank(meta.creator))
+                    .setIconUri(meta.artworkUri.elseIfEmpty(meta.originalArtworkUri))
+                    .setMediaId(id.json)
+        }
+        is UpnpMusicGenreRef -> {
+            bob.setTitle(meta.title)
+                    .setMediaId(id.json)
+        }
+        is UpnpMusicArtistRef -> {
+            bob.setTitle(meta.title)
+                    .setSubtitle(meta.genre)
+                    .setMediaId(id.json)
+        }
+        is UpnpAudioRef -> {
+            bob.setTitle(meta.title)
+                    .setSubtitle(meta.creator)
                     .setMediaId(id.json)
         }
         is DocumentRef -> {
@@ -148,6 +202,18 @@ fun MediaRef.toMediaItem(): MediaItem {
         }
         is UpnpDeviceRef -> {
             MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+        }
+        is UpnpMusicTrackRef -> {
+            MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
+        }
+        is UpnpMusicAlbumRef -> {
+            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+        }
+        is UpnpMusicGenreRef -> {
+            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+        }
+        is UpnpAudioRef -> {
+            MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
         }
         is DocumentRef -> {
             MediaItem(toMediaDescription(), if (isDirectory)

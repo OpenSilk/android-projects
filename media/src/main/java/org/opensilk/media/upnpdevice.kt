@@ -1,6 +1,5 @@
 package org.opensilk.media
 
-import android.media.MediaDrmResetException
 import android.net.Uri
 import android.util.JsonReader
 import android.util.JsonWriter
@@ -8,12 +7,12 @@ import android.util.JsonWriter
 /**
  * Created by drew on 8/11/17.
  */
-data class UpnpDeviceId(
-        val deviceId: String): MediaId {
+data class UpnpDeviceId(override val deviceId: String): UpnpContainerId {
 
-    override val json: String by lazy {
-        writeJson(UpnpDeviceTransformer, this)
-    }
+    override val containerId: String = UPNP_ROOT_ID
+
+    override val json: String
+        get() = writeJson(UpnpDeviceTransformer, this)
 
 }
 

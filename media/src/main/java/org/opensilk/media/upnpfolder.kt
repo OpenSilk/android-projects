@@ -9,26 +9,27 @@ import android.util.JsonWriter
  */
 data class UpnpFolderId(
         override val deviceId: String,
-        override val containerId: String): UpnpContainerId {
+        override val containerId: String
+): UpnpContainerId {
 
     @Deprecated(replaceWith = ReplaceWith("containerId"), message = "Use containerId")
     val folderId: String = containerId
 
-    override val json: String by lazy {
-        writeJson(UpnpFolderTransformer, this)
-    }
+    override val json: String
+        get() = writeJson(UpnpFolderTransformer, this)
 
 }
 
 data class UpnpFolderRef(
         override val id: UpnpFolderId,
         override val parentId: UpnpContainerId,
-        override val meta: UpnpFolderMeta): UpnpContainerRef
+        override val meta: UpnpFolderMeta
+): UpnpContainerRef
 
 data class UpnpFolderMeta(
         override val title: String,
-        val subtitle: String = "",
-        val artworkUri: Uri = Uri.EMPTY): UpnpMeta
+        val artworkUri: Uri = Uri.EMPTY
+): UpnpMeta
 
 internal object UpnpFolderTransformer: UpnpContainerTransformer() {
     override val kind: String = UPNP_FOLDER

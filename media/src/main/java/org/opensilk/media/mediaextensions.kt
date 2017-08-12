@@ -85,3 +85,7 @@ fun isLikelyJson(str: String): Boolean {
 fun Uri?.isEmpty(): Boolean {
     return this == null || this == Uri.EMPTY
 }
+
+fun Uri?.elseIfEmpty(other: Uri): Uri {
+    return if (this == null || this == Uri.EMPTY) other else this
+}
