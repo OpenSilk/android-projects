@@ -1,6 +1,5 @@
 package org.opensilk.media.loader.cds
 
-import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.fourthline.cling.model.message.header.UDAServiceTypeHeader
@@ -33,33 +32,21 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
 
     private data class Opts(val audio: Boolean, val video: Boolean)
 
-    override fun directChildren(upnpFolderId: UpnpFolderId, wantVideoItems: Boolean,
-                                wantAudioItems: Boolean): Maybe<out List<MediaRef>> {
+    override fun directChildren(upnpFolderId: UpnpContainerId, wantVideoItems: Boolean,
+                                wantAudioItems: Boolean): Single<out List<MediaRef>> {
         val opts = Opts(wantAudioItems, wantVideoItems)
-        return if (upnpFolderId.folderId == UPNP_ROOT_ID) {
+        return if (upnpFolderId is UpnpDeviceId) {
             //for root folder, look for feature list, falling back to normal browse
             cachedService(upnpFolderId).flatMap { service ->
                 featureList(service, upnpFolderId, opts)
                         .onErrorResumeNext(browse(service, upnpFolderId, opts))
                         .toList()
-            }.flatMapMaybe { list ->
-                if (list.isEmpty()) {
-                    Maybe.empty()
-                } else {
-                    Maybe.just(list)
-                }
             }
         } else {
             //else just do browse
             cachedService(upnpFolderId).flatMap { service ->
                 browse(service, upnpFolderId, opts)
                         .toList()
-            }.flatMapMaybe { list ->
-                if (list.isEmpty()) {
-                    Maybe.empty()
-                } else {
-                    Maybe.just(list)
-                }
             }
         }
     }
@@ -67,9 +54,9 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
     /**
      * performs the browse
      */
-    private fun browse(service: Service<*, *>, parentId: UpnpFolderId, opts: Opts) : Observable<MediaRef> {
+    private fun browse(service: Service<*, *>, parentId: UpnpContainerId, opts: Opts) : Observable<MediaRef> {
         return Observable.create { subscriber ->
-            val browse = CDSBrowseAction(mUpnpService.controlPoint, service, parentId.folderId)
+            val browse = CDSBrowseAction(mUpnpService.controlPoint, service, parentId.containerId)
             browse.run()
             if (subscriber.isDisposed){
                 return@create
@@ -93,39 +80,50 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
                 val deviceId = UpnpDeviceId(parentId.deviceId)
 
                 for (c in didl.containers) {
-                    if (StorageFolder.CLASS.equals(c)) {
-                        subscriber.onNext(c.toMediaMeta(deviceId))
-                    } else if (MusicGenre.CLASS.equals(c) && opts.audio) {
-                        TODO()
-                    } else if (Album.CLASS.equals(c) && opts.audio) {
-                        if (MusicAlbum.CLASS.equals(c)) {
-
+                    try {
+                        if (StorageFolder.CLASS.equals(c)) {
+                            subscriber.onNext((c as StorageFolder).toUpnpFolder(parentId))
+                        } else if (MusicGenre.CLASS.equals(c) && opts.audio) {
+                            subscriber.onNext((c as MusicGenre).toUpnpMusicGenre(parentId))
+                        } else if (MusicAlbum.CLASS.equals(c) && opts.audio) {
+                            subscriber.onNext((c as MusicAlbum).toUpnpMusicAlbum(parentId))
+                        } else if (MusicArtist.CLASS.equals(c) && opts.audio) {
+                            subscriber.onNext((c as MusicArtist).toUpnpMusicArtist(parentId))
                         } else {
-
+                            Timber.w("Skipping unsupported container ${c.title} type ${c.clazz.value}")
                         }
-                        TODO()
-                    } else {
-                        Timber.w("Skipping unsupported container ${c.title} type ${c.clazz.value}")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Unable to parse ${c.title}")
                     }
                 }
 
                 for (item in didl.items) {
-                    if (VideoItem.CLASS.equals(item) && opts.video) {
-                        val res = item.firstResource ?: continue
-                        if (res.protocolInfo.protocol != Protocol.HTTP_GET) {
-                            //we can only support http-get
-                            continue
-                        }
-                        subscriber.onNext((item as VideoItem).toMediaMeta(deviceId))
-                    } else if (AudioItem.CLASS.equals(item) && opts.audio) {
-                        if (MusicTrack.CLASS.equals(item)) {
-
+                    try {
+                        if (item.clazz.value.startsWith("object.item.videoItem", true) && opts.video) {
+                            val res = item.firstResource ?: continue
+                            if (res.protocolInfo.protocol != Protocol.HTTP_GET) {
+                                //we can only support http-get
+                                Timber.w("Skipping item ${item.title} with unsupported resource protocol")
+                                continue
+                            }
+                            subscriber.onNext((item as VideoItem).toMediaMeta(deviceId))
+                        } else if (item.clazz.value.startsWith("object.item.audioItem", true) && opts.audio) {
+                            val res = item.firstResource ?: continue
+                            if (res.protocolInfo.protocol != Protocol.HTTP_GET) {
+                                //we can only support http-get
+                                Timber.w("Skipping item ${item.title} with unsupported resource protocol")
+                                continue
+                            }
+                            if (MusicTrack.CLASS.equals(item)) {
+                                subscriber.onNext((item as MusicTrack).toUpnpMusicTrack(parentId))
+                            } else {
+                                subscriber.onNext((item as AudioItem).toUpnpAudioTrack(parentId))
+                            }
                         } else {
-
+                            Timber.w("Skipping unsupported item ${item.title} class is ${item.clazz.value}")
                         }
-                        TODO()
-                    } else {
-                        Timber.w("Skipping unsupported item ${item.title}, type=${item.clazz.value}")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Unable to parse ${item.title}")
                     }
                 }
 
@@ -146,7 +144,7 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
     /**
      * Fetches the cached service
      */
-    private fun cachedService(parentId: UpnpFolderId): Single<Service<*, *>> {
+    private fun cachedService(parentId: UpnpContainerId): Single<Service<*, *>> {
         return Single.create { subscriber ->
             val udn = UDN.valueOf(parentId.deviceId)
             //check cache first
@@ -206,7 +204,7 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
      * it then remaps the children of that folder to the root container (id = "0")
      * so the loader sees the video folders when requesting root
      */
-    private fun featureList(service: Service<*, *>, parentId: UpnpFolderId, opts: Opts): Observable<MediaRef> {
+    private fun featureList(service: Service<*, *>, deviceId: UpnpDeviceId, opts: Opts): Observable<MediaRef> {
         return Single.create<String> { s ->
             if (opts.audio && opts.video) {
                 //oops they want both
@@ -234,11 +232,16 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
             }
         }.flatMapObservable { id ->
             //do browse, remaping the parent id to the root id
-            browse(service, parentId.copy(folderId = id), opts).map { meta ->
+            browse(service, UpnpFolderId(deviceId.deviceId, id), opts).map { meta ->
                 return@map when (meta) {
-                    is UpnpFolderRef -> meta.copy(parentId = parentId)
-                    is UpnpVideoRef -> meta.copy(parentId = parentId)
-                    else -> TODO()
+                    is UpnpAudioRef -> meta.copy(parentId = deviceId)
+                    is UpnpFolderRef -> meta.copy(parentId = deviceId)
+                    is UpnpMusicAlbumRef -> meta.copy(parentId = deviceId)
+                    is UpnpMusicArtistRef -> meta.copy(parentId = deviceId)
+                    is UpnpMusicGenreRef -> meta.copy(parentId = deviceId)
+                    is UpnpMusicTrackRef -> meta.copy(parentId = deviceId)
+                    is UpnpVideoRef -> meta.copy(parentId = deviceId)
+                    else -> TODO("need to add ${meta::javaClass.name} to the switch")
                 }
             }.switchIfEmpty {
                 //just in case we were given bad ids by featurelist
