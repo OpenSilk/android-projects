@@ -2,9 +2,6 @@ package org.opensilk.media
 
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser.MediaItem
-import android.net.Uri
-import android.os.Build
-import android.provider.DocumentsContract
 import android.util.JsonReader
 import android.util.JsonWriter
 import java.io.StringReader
@@ -14,9 +11,6 @@ const val UPNP_DEVICE = "upnp_device"
 const val UPNP_FOLDER = "upnp_folder"
 const val UPNP_VIDEO = "upnp_video"
 const val UPNP_MUSIC_TRACK = "upnp_music_track"
-const val UPNP_MUSIC_ALBUM = "upnp_music_album"
-const val UPNP_MUSIC_GENRE = "upnp_music_genre"
-const val UPNP_MUSIC_ARTIST = "upnp_music_artist"
 const val UPNP_AUDIO = "upnp_audio"
 const val DOCUMENT = "document"
 
@@ -108,15 +102,6 @@ fun parseMediaId(json: String): MediaId {
                 UPNP_MUSIC_TRACK -> {
                     mediaId = UpnpMusicTrackTransformer.read(jr, readVersion(jr))
                 }
-                UPNP_MUSIC_ALBUM -> {
-                    mediaId = UpnpMusicAlbumTransformer.read(jr, readVersion(jr))
-                }
-                UPNP_MUSIC_GENRE -> {
-                    mediaId = UpnpMusicGenreTransformer.read(jr, readVersion(jr))
-                }
-                UPNP_MUSIC_ARTIST -> {
-                    mediaId = UpnpMusicArtistTransformer.read(jr, readVersion(jr))
-                }
                 UPNP_AUDIO -> {
                     mediaId = UpnpAudioTransformer.read(jr, readVersion(jr))
                 }
@@ -158,21 +143,6 @@ fun MediaRef.toMediaDescription(): MediaDescription {
                     .setIconUri(meta.artworkUri.elseIfEmpty(meta.originalArtworkUri))
                     .setMediaId(id.json)
         }
-        is UpnpMusicAlbumRef -> {
-            bob.setTitle(meta.title)
-                    .setSubtitle(meta.artist.elseIfBlank(meta.creator))
-                    .setIconUri(meta.artworkUri.elseIfEmpty(meta.originalArtworkUri))
-                    .setMediaId(id.json)
-        }
-        is UpnpMusicGenreRef -> {
-            bob.setTitle(meta.title)
-                    .setMediaId(id.json)
-        }
-        is UpnpMusicArtistRef -> {
-            bob.setTitle(meta.title)
-                    .setSubtitle(meta.genre)
-                    .setMediaId(id.json)
-        }
         is UpnpAudioRef -> {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.creator)
@@ -203,18 +173,14 @@ fun MediaRef.toMediaItem(): MediaItem {
         is UpnpMusicTrackRef -> {
             MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
         }
-        is UpnpMusicAlbumRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
-        }
-        is UpnpMusicGenreRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
-        }
         is UpnpAudioRef -> {
             MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
         }
-        is DocumentRef -> {
-            MediaItem(toMediaDescription(), if (isDirectory)
-                MediaItem.FLAG_BROWSABLE else MediaItem.FLAG_PLAYABLE)
+        is DirectoryDocumentRef -> {
+            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+        }
+        is VideoDocumentRef -> {
+            MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
         }
         else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
     }

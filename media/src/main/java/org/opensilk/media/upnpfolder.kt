@@ -1,9 +1,5 @@
 package org.opensilk.media
 
-import android.net.Uri
-import android.util.JsonReader
-import android.util.JsonWriter
-
 /**
  * Created by drew on 8/11/17.
  */

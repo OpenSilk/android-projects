@@ -5,10 +5,7 @@ import android.media.MediaDescription
 import android.media.MediaMetadata
 import android.media.MediaMetadata.*
 import android.media.browse.MediaBrowser
-import android.media.session.MediaSession
 import android.net.Uri
-import android.os.Build
-import timber.log.Timber
 
 /**
  * Created by drew on 6/26/16.
