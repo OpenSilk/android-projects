@@ -22,6 +22,11 @@ class MediaProvider : ContentProvider() {
         return true
     }
 
+    override fun shutdown() {
+        super.shutdown()
+        mMediaDB.close()
+    }
+
     override fun query(uri: Uri, projection: Array<String>?, selection: String?,
                        selectionArgs: Array<String>?, sortOrder: String?): Cursor? {
         val table: String

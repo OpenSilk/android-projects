@@ -45,7 +45,7 @@ class MediaDBUris
         matcher.addURI(mAuthority, "tv/image", M.TV_IMAGE)
 
         matcher.addURI(mAuthority, "movie", M.MOVIE)
-        matcher.addURI(mAuthority, "movies/image", M.MOVIE_IMAGE)
+        matcher.addURI(mAuthority, "movie/image", M.MOVIE_IMAGE)
 
         matcher.addURI(mAuthority, "upnp/audio", M.UPNP_AUDIO)
         matcher.addURI(mAuthority, "upnp/device", M.UPNP_DEVICE)
@@ -77,11 +77,11 @@ class MediaDBUris
     }
 
     fun movie(): Uri {
-        return base().appendPath("movies").build()
+        return base().appendPath("movie").build()
     }
 
     fun movieImage(): Uri {
-        return base().appendPath("movies").appendPath("image").build()
+        return base().appendPath("movie").appendPath("image").build()
     }
 
     fun upnpAudio(): Uri {
