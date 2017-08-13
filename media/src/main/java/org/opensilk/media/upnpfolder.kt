@@ -9,6 +9,7 @@ import android.util.JsonWriter
  */
 data class UpnpFolderId(
         override val deviceId: String,
+        override val parentId: String,
         override val containerId: String
 ): UpnpContainerId {
 
@@ -22,13 +23,11 @@ data class UpnpFolderId(
 
 data class UpnpFolderRef(
         override val id: UpnpFolderId,
-        override val parentId: UpnpContainerId,
         override val meta: UpnpFolderMeta
 ): UpnpContainerRef
 
 data class UpnpFolderMeta(
-        override val title: String,
-        val artworkUri: Uri = Uri.EMPTY
+        override val title: String
 ): UpnpMeta
 
 internal object UpnpFolderTransformer: UpnpContainerTransformer() {

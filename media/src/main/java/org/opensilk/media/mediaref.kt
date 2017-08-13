@@ -54,7 +54,7 @@ internal interface MediaIdTransformer<T> {
     val kind: String
     val version: Int
     fun write(jw: JsonWriter, item: T)
-    fun read(jr: JsonReader): T
+    fun read(jr: JsonReader, version: Int): T
 }
 
 internal fun <T> writeJson(transformer: MediaIdTransformer<T>, item: T): String {
@@ -63,12 +63,27 @@ internal fun <T> writeJson(transformer: MediaIdTransformer<T>, item: T): String 
         jw.beginObject()
         jw.name(transformer.kind)
         jw.beginObject()
-        jw.name("ver").value(transformer.version)
+        when (transformer.version) {
+            1 -> jw.name("v1")
+            else -> jw.name("v0")
+        }
+        jw.beginObject()
         transformer.write(jw, item)
+        jw.endObject()
         jw.endObject()
         jw.endObject()
         return@use it.toString()
     }
+}
+
+private fun readVersion(jr: JsonReader): Int {
+    jr.beginObject()
+    val version = when (jr.nextName()) {
+        "v1" -> 1
+        else -> 0
+    }
+    jr.beginObject()
+    return version
 }
 
 /**
@@ -82,49 +97,31 @@ fun parseMediaId(json: String): MediaId {
         while (jr.hasNext()) {
             when (jr.nextName()) {
                 UPNP_DEVICE -> {
-                    jr.beginObject()
-                    mediaId = UpnpDeviceTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = UpnpDeviceTransformer.read(jr, readVersion(jr))
                 }
                 UPNP_FOLDER -> {
-                    jr.beginObject()
-                    mediaId = UpnpFolderTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = UpnpFolderTransformer.read(jr, readVersion(jr))
                 }
                 UPNP_VIDEO -> {
-                    jr.beginObject()
-                    mediaId = UpnpVideoTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = UpnpVideoTransformer.read(jr, readVersion(jr))
                 }
                 UPNP_MUSIC_TRACK -> {
-                    jr.beginObject()
-                    mediaId = UpnpMusicTrackTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = UpnpMusicTrackTransformer.read(jr, readVersion(jr))
                 }
                 UPNP_MUSIC_ALBUM -> {
-                    jr.beginObject()
-                    mediaId = UpnpMusicAlbumTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = UpnpMusicAlbumTransformer.read(jr, readVersion(jr))
                 }
                 UPNP_MUSIC_GENRE -> {
-                    jr.beginObject()
-                    mediaId = UpnpMusicGenreTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = UpnpMusicGenreTransformer.read(jr, readVersion(jr))
                 }
                 UPNP_MUSIC_ARTIST -> {
-                    jr.beginObject()
-                    mediaId = UpnpMusicArtistTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = UpnpMusicArtistTransformer.read(jr, readVersion(jr))
                 }
                 UPNP_AUDIO -> {
-                    jr.beginObject()
-                    mediaId = UpnpAudioTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = UpnpAudioTransformer.read(jr, readVersion(jr))
                 }
                 DOCUMENT -> {
-                    jr.beginObject()
-                    mediaId = DocumentIdTransformer.read(jr)
-                    jr.endObject()
+                    mediaId = DocumentIdTransformer.read(jr, readVersion(jr))
                 }
                 else -> jr.skipValue()
             }

@@ -20,13 +20,12 @@ internal object M {
     val UPNP_AUDIO = 201
     val UPNP_DEVICE = 202
     val UPNP_FOLDER = 203
-    val UPNP_MUSIC_ALBUM = 204
-    val UPNP_MUSIC_ARTIST = 205
-    val UPNP_MUSIC_GENRE = 206
-    val UPNP_MUSIC_TRACK = 207
-    val UPNP_VIDEO = 208
+    val UPNP_MUSIC_TRACK = 204
+    val UPNP_VIDEO = 205
 
-    val DOCUMENT = 301
+    val DOCUMENT_DIRECTORY = 301
+    val DOCUMENT_VIDEO = 302
+    val DOCUMENT_AUDIO = 303
 
     val PLAYBACK_POSITION = 401
 }
@@ -51,13 +50,12 @@ class MediaDBUris
         matcher.addURI(mAuthority, "upnp/audio", M.UPNP_AUDIO)
         matcher.addURI(mAuthority, "upnp/device", M.UPNP_DEVICE)
         matcher.addURI(mAuthority, "upnp/folder", M.UPNP_FOLDER)
-        matcher.addURI(mAuthority, "upnp/music/album", M.UPNP_MUSIC_ALBUM)
-        matcher.addURI(mAuthority, "upnp/music/artist", M.UPNP_MUSIC_ARTIST)
-        matcher.addURI(mAuthority, "upnp/music/genre", M.UPNP_MUSIC_GENRE)
         matcher.addURI(mAuthority, "upnp/music/track", M.UPNP_MUSIC_TRACK)
         matcher.addURI(mAuthority, "upnp/video", M.UPNP_VIDEO)
 
-        matcher.addURI(mAuthority, "document", M.DOCUMENT)
+        matcher.addURI(mAuthority, "document/directory", M.DOCUMENT_DIRECTORY)
+        matcher.addURI(mAuthority, "document/video", M.DOCUMENT_VIDEO)
+        matcher.addURI(mAuthority, "document/audio", M.DOCUMENT_AUDIO)
 
         matcher.addURI(mAuthority, "playback/position", M.PLAYBACK_POSITION)
     }
@@ -98,18 +96,6 @@ class MediaDBUris
         return base().appendPath("upnp").appendPath("folder").build()
     }
 
-    fun upnpMusicAlbum(): Uri {
-        return base().appendPath("upnp").appendPath("music").appendPath("album").build()
-    }
-
-    fun upnpMusicArtist(): Uri {
-        return base().appendPath("upnp").appendPath("music").appendPath("artist").build()
-    }
-
-    fun upnpMusicGenre(): Uri {
-        return base().appendPath("upnp").appendPath("music").appendPath("genre").build()
-    }
-
     fun upnpMusicTrack(): Uri {
         return base().appendPath("upnp").appendPath("music").appendPath("track").build()
     }
@@ -122,8 +108,16 @@ class MediaDBUris
         return base().appendPath("playback").appendPath("position").build()
     }
 
-    fun document(): Uri {
-        return base().appendPath("document").build()
+    fun documentDirectory(): Uri {
+        return base().appendPath("document").appendPath("directory").build()
+    }
+
+    fun documentVideo(): Uri {
+        return base().appendPath("document").appendPath("video").build()
+    }
+
+    fun documentAudio(): Uri {
+        return base().appendPath("document").appendPath("audio").build()
     }
 
 }

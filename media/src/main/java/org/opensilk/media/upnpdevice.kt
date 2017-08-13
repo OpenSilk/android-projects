@@ -9,6 +9,7 @@ import android.util.JsonWriter
  */
 data class UpnpDeviceId(override val deviceId: String): UpnpContainerId {
 
+    override val parentId: String = UPNP_ROOT_ID
     override val containerId: String = UPNP_ROOT_ID
 
     override val json: String
@@ -24,7 +25,7 @@ data class UpnpDeviceMeta(
 
 data class UpnpDeviceRef(
         override val id: UpnpDeviceId,
-        val meta: UpnpDeviceMeta): MediaRef
+        override val meta: UpnpDeviceMeta): UpnpContainerRef
 
 internal object UpnpDeviceTransformer: MediaIdTransformer<UpnpDeviceId> {
     override val kind: String = UPNP_DEVICE
@@ -34,7 +35,7 @@ internal object UpnpDeviceTransformer: MediaIdTransformer<UpnpDeviceId> {
         jw.name("dev").value(item.deviceId)
     }
 
-    override fun read(jr: JsonReader): UpnpDeviceId {
+    override fun read(jr: JsonReader, version: Int): UpnpDeviceId {
         var dev = ""
         while (jr.hasNext()) {
             when (jr.nextName()) {

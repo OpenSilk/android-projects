@@ -7,6 +7,7 @@ import android.net.Uri
  */
 data class UpnpMusicTrackId(
         override val deviceId: String,
+        override val parentId: String,
         override val itemId: String
 ): UpnpItemId {
     override val json: String
@@ -36,7 +37,6 @@ data class UpnpMusicTrackMeta(
 
 data class UpnpMusicTrackRef(
         override val id: UpnpMusicTrackId,
-        override val parentId: UpnpContainerId,
         override val meta: UpnpMusicTrackMeta
 ): UpnpItemRef
 

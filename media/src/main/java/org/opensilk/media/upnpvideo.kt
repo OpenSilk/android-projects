@@ -7,6 +7,7 @@ import android.net.Uri
  */
 data class UpnpVideoId(
         override val deviceId: String,
+        override val parentId: String,
         override val itemId: String
 ): UpnpItemId {
     override val json: String
@@ -31,7 +32,6 @@ data class UpnpVideoMeta(
 
 data class UpnpVideoRef(
         override val id: UpnpVideoId,
-        override val parentId: UpnpContainerId,
         val tvEpisodeId: TvEpisodeId? = null,
         val movieId: MovieId? = null,
         override val meta: UpnpVideoMeta

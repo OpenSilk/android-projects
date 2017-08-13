@@ -24,7 +24,7 @@ class MediaProvider : ContentProvider() {
 
     override fun query(uri: Uri, projection: Array<String>?, selection: String?,
                        selectionArgs: Array<String>?, sortOrder: String?): Cursor? {
-        var table: String = ""
+        val table: String
         when (mUris.matcher.match(uri)) {
             M.TV_SERIES -> {
                 table = "tv_series"
@@ -42,7 +42,7 @@ class MediaProvider : ContentProvider() {
                 table = "movie_images"
             }
             M.UPNP_AUDIO -> {
-
+                table = "upnp_audio"
             }
             M.UPNP_DEVICE -> {
                 table = "upnp_device"
@@ -50,17 +50,8 @@ class MediaProvider : ContentProvider() {
             M.UPNP_FOLDER -> {
                 table = "upnp_folder"
             }
-            M.UPNP_MUSIC_ALBUM -> {
-
-            }
-            M.UPNP_MUSIC_ARTIST -> {
-
-            }
-            M.UPNP_MUSIC_GENRE -> {
-
-            }
             M.UPNP_MUSIC_TRACK -> {
-
+                TODO()
             }
             M.UPNP_VIDEO -> {
                 table = "upnp_video v " +
@@ -71,15 +62,20 @@ class MediaProvider : ContentProvider() {
             M.PLAYBACK_POSITION -> {
                 table = "media_position"
             }
-            M.DOCUMENT -> {
-                table = "document d " +
+            M.DOCUMENT_DIRECTORY -> {
+                table = "document_directory"
+            }
+            M.DOCUMENT_AUDIO -> {
+                TODO()
+            }
+            M.DOCUMENT_VIDEO -> {
+                table = "document_video d " +
                         "LEFT JOIN tv_episodes e ON d.episode_id = e._id " +
                         "LEFT JOIN tv_series s ON e.series_id = s._id " +
                         "LEFT JOIN movies m ON d.movie_id = m._id "
             }
             else -> TODO("Unmatched uri: $uri")
         }
-        if (table.isNullOrEmpty()) TODO()
         return mMediaDB.readableDatabase.query(table, projection, selection,
                 selectionArgs, null, null, sortOrder)
     }
@@ -112,7 +108,25 @@ class MediaProvider : ContentProvider() {
                 return if (id > 0) URI_SUCCESS else URI_FAILURE
             }
             M.UPNP_AUDIO -> {
-
+                val id: Long = try {
+                    db.insertWithOnConflict("upnp_audio", null, values, SQLiteDatabase.CONFLICT_FAIL)
+                } catch (ignored: SQLiteException) { -1L }
+                if (id > 0) {
+                    return URI_SUCCESS
+                }
+                //already in database, we don't want to replace so update entry
+                val device_id = values.getAsString("device_id")
+                val parent_id = values.getAsString("parent_id")
+                val item_id = values.getAsString("item_id")
+                values.remove("device_id")
+                values.remove("parent_id")
+                values.remove("item_id")
+                values.remove("date_added")
+                //update the entry
+                return if (db.update("upnp_audio", values,
+                        "device_id=? AND parent_id=? AND item_id=?",
+                        arrayOf(device_id, parent_id, item_id)) != 0)
+                    URI_SUCCESS else URI_FAILURE
             }
             M.UPNP_DEVICE -> {
                 val id: Long = try {
@@ -130,17 +144,26 @@ class MediaProvider : ContentProvider() {
                 val id = db.insertWithOnConflict("upnp_folder", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return if (id > 0) URI_SUCCESS else URI_FAILURE
             }
-            M.UPNP_MUSIC_ALBUM -> {
-
-            }
-            M.UPNP_MUSIC_ARTIST -> {
-
-            }
-            M.UPNP_MUSIC_GENRE -> {
-
-            }
             M.UPNP_MUSIC_TRACK -> {
-
+                val id: Long = try {
+                    db.insertWithOnConflict("upnp_music_track", null, values, SQLiteDatabase.CONFLICT_FAIL)
+                } catch (ignored: SQLiteException) { -1L }
+                if (id > 0) {
+                    return URI_SUCCESS
+                }
+                //already in database, we don't want to replace so update entry
+                val device_id = values.getAsString("device_id")
+                val parent_id = values.getAsString("parent_id")
+                val item_id = values.getAsString("item_id")
+                values.remove("device_id")
+                values.remove("parent_id")
+                values.remove("item_id")
+                values.remove("date_added")
+                //update the entry
+                return if (db.update("upnp_music_track", values,
+                        "device_id=? AND parent_id=? AND item_id=?",
+                        arrayOf(device_id, parent_id, item_id)) != 0)
+                    URI_SUCCESS else URI_FAILURE
             }
             M.UPNP_VIDEO -> {
                 val id: Long = try {
@@ -158,7 +181,8 @@ class MediaProvider : ContentProvider() {
                 values.remove("item_id")
                 values.remove("date_added")
                 //update the entry
-                return if (db.update("upnp_video", values, "device_id=? AND parent_id=? AND item_id=?",
+                return if (db.update("upnp_video", values,
+                        "device_id=? AND parent_id=? AND item_id=?",
                         arrayOf(device_id, parent_id, item_id)) != 0)
                     URI_SUCCESS else URI_FAILURE
             }
@@ -166,9 +190,13 @@ class MediaProvider : ContentProvider() {
                 val id = db.insertWithOnConflict("media_position", null, values, SQLiteDatabase.CONFLICT_REPLACE)
                 return if (id > 0) URI_SUCCESS else URI_FAILURE
             }
-            M.DOCUMENT -> {
+            M.DOCUMENT_DIRECTORY -> {
+                val id = db.insertWithOnConflict("document_directory", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                return if (id > 0) URI_SUCCESS else URI_FAILURE
+            }
+            M.DOCUMENT_AUDIO -> {
                 val id: Long = try {
-                    db.insertWithOnConflict("document", null, values, SQLiteDatabase.CONFLICT_FAIL)
+                    db.insertWithOnConflict("document_audio", null, values, SQLiteDatabase.CONFLICT_FAIL)
                 } catch (ignored: SQLiteException) { -1L }
                 if (id > 0) {
                     return URI_SUCCESS
@@ -182,13 +210,34 @@ class MediaProvider : ContentProvider() {
                 values.remove("parent_id")
                 values.remove("date_added")
                 //update existing
-                return if (db.update("document", values, "tree_uri=? AND document_id=? AND parent_id=?",
+                return if (db.update("document_audio", values,
+                        "tree_uri=? AND document_id=? AND parent_id=?",
+                        arrayOf(tree_uri, doc_id, parent_id)) != 0)
+                    URI_SUCCESS else URI_FAILURE
+            }
+            M.DOCUMENT_VIDEO -> {
+                val id: Long = try {
+                    db.insertWithOnConflict("document_video", null, values, SQLiteDatabase.CONFLICT_FAIL)
+                } catch (ignored: SQLiteException) { -1L }
+                if (id > 0) {
+                    return URI_SUCCESS
+                }
+                //already in db
+                val tree_uri = values.getAsString("tree_uri")
+                val doc_id = values.getAsString("document_id")
+                val parent_id = values.getAsString("parent_id")
+                values.remove("tree_uri")
+                values.remove("document_id")
+                values.remove("parent_id")
+                values.remove("date_added")
+                //update existing
+                return if (db.update("document_video", values,
+                        "tree_uri=? AND document_id=? AND parent_id=?",
                         arrayOf(tree_uri, doc_id, parent_id)) != 0)
                     URI_SUCCESS else URI_FAILURE
             }
             else -> TODO("Unmatched uri: $uri")
         }
-        TODO()
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
@@ -208,31 +257,27 @@ class MediaProvider : ContentProvider() {
                 return db.update("upnp_device", values, selection, selectionArgs)
             }
             M.UPNP_AUDIO -> {
-
+                return db.update("upnp_audio", values, selection, selectionArgs)
             }
             M.UPNP_FOLDER -> {
                 return db.update("upnp_folder", values, selection, selectionArgs)
             }
-            M.UPNP_MUSIC_ALBUM -> {
-
-            }
-            M.UPNP_MUSIC_ARTIST -> {
-
-            }
-            M.UPNP_MUSIC_GENRE -> {
-
-            }
             M.UPNP_MUSIC_TRACK -> {
-
+                return db.update("upnp_music_track", values, selection, selectionArgs)
             }
             M.UPNP_VIDEO -> {
                 return db.update("upnp_video", values, selection, selectionArgs)
             }
-            M.DOCUMENT -> {
-                return db.update("document", values, selection, selectionArgs)
+            M.DOCUMENT_DIRECTORY -> {
+                return db.update("document_directory", values, selection, selectionArgs)
+            }
+            M.DOCUMENT_AUDIO -> {
+                return db.update("document_audio", values, selection, selectionArgs)
+            }
+            M.DOCUMENT_VIDEO -> {
+                return db.update("document_video", values, selection, selectionArgs)
             }
             else -> TODO("Unmatched uri: $uri")
         }
-        TODO()
     }
 }

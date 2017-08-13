@@ -2,10 +2,7 @@ package org.opensilk.media.loader.cds
 
 import android.net.Uri
 import org.fourthline.cling.support.model.DIDLObject
-import org.fourthline.cling.support.model.container.MusicAlbum
-import org.fourthline.cling.support.model.container.MusicArtist
-import org.fourthline.cling.support.model.container.MusicGenre
-import org.fourthline.cling.support.model.container.StorageFolder
+import org.fourthline.cling.support.model.container.*
 import org.fourthline.cling.support.model.item.AudioItem
 import org.fourthline.cling.support.model.item.MusicTrack
 import org.fourthline.cling.support.model.item.VideoItem
@@ -15,62 +12,13 @@ import java.util.concurrent.TimeUnit
 /**
  * Transforms Container into UpnpFolderRef
  */
-fun StorageFolder.toUpnpFolder(parentId: UpnpContainerId): UpnpFolderRef {
-    val mediaId = UpnpFolderId(parentId.deviceId, this.id)
+fun Container.toUpnpFolder(deviceId: UpnpDeviceId): UpnpFolderRef {
+    val mediaId = UpnpFolderId(deviceId = deviceId.deviceId, parentId = this.parentID, containerId = this.id)
     val title = this.title
     return UpnpFolderRef(
             id =  mediaId,
-            parentId = parentId,
             meta = UpnpFolderMeta(
                     title = title
-            )
-    )
-}
-
-fun MusicAlbum.toUpnpMusicAlbum(parentId: UpnpContainerId): UpnpMusicAlbumRef {
-    val mediaId = UpnpMusicAlbumId(parentId.deviceId, this.id)
-    val title = this.title
-    val creator = this.creator ?: ""
-    val artist = this.firstArtist?.name ?: ""
-    val genre = this.firstGenre ?: ""
-    val artwork = if (this.hasProperty(DIDLObject.Property.UPNP.ALBUM_ART_URI::class.java)) {
-        Uri.parse(this.getFirstProperty(DIDLObject.Property.UPNP.ALBUM_ART_URI::class.java).value.toString())
-    } else Uri.EMPTY
-    return UpnpMusicAlbumRef(
-            id = mediaId,
-            parentId = parentId,
-            meta = UpnpMusicAlbumMeta(
-                    title = title,
-                    creator = creator,
-                    artist = artist,
-                    genre = genre,
-                    originalArtworkUri = artwork
-            )
-    )
-}
-
-fun MusicGenre.toUpnpMusicGenre(parentId: UpnpContainerId): UpnpMusicGenreRef {
-    val mediaId = UpnpMusicGenreId(parentId.deviceId, this.id)
-    val title = this.title
-    return UpnpMusicGenreRef(
-            mediaId,
-            parentId,
-            UpnpMusicGenreMeta(
-                    title = title
-            )
-    )
-}
-
-fun MusicArtist.toUpnpMusicArtist(parentId: UpnpContainerId): UpnpMusicArtistRef {
-    val mediaId = UpnpMusicArtistId(parentId.deviceId, this.id)
-    val title = this.title
-    val genre = this.firstGenre ?: ""
-    return UpnpMusicArtistRef(
-            id = mediaId,
-            parentId = parentId,
-            meta = UpnpMusicArtistMeta(
-                    title = title,
-                    genre = genre
             )
     )
 }
@@ -79,8 +27,7 @@ fun MusicArtist.toUpnpMusicArtist(parentId: UpnpContainerId): UpnpMusicArtistRef
  * Transforms videoItem into UpnpVideoRef
  */
 fun VideoItem.toMediaMeta(deviceId: UpnpDeviceId): UpnpVideoRef {
-    val mediaId = UpnpVideoId(deviceId.deviceId, this.id)
-    val parentMediaId = UpnpFolderId(deviceId.deviceId, this.parentID)
+    val mediaId = UpnpVideoId(deviceId = deviceId.deviceId, parentId = this.parentID, itemId = this.id)
     val res = this.firstResource
     val mediaUri = Uri.parse(res.value)
     val mimeType = res.protocolInfo.contentFormat
@@ -93,7 +40,6 @@ fun VideoItem.toMediaMeta(deviceId: UpnpDeviceId): UpnpVideoRef {
     val sampleF = res.sampleFrequency ?: 0L
     return UpnpVideoRef(
             id = mediaId,
-            parentId = parentMediaId,
             meta = UpnpVideoMeta(
                     title = title,
                     mimeType = mimeType,
@@ -108,8 +54,8 @@ fun VideoItem.toMediaMeta(deviceId: UpnpDeviceId): UpnpVideoRef {
     )
 }
 
-fun AudioItem.toUpnpAudioTrack(parentId: UpnpContainerId): UpnpAudioRef {
-    val mediaId = UpnpAudioId(parentId.deviceId, this.id)
+fun AudioItem.toUpnpAudioTrack(deviceId: UpnpDeviceId): UpnpAudioRef {
+    val mediaId = UpnpAudioId(deviceId = deviceId.deviceId, parentId = this.parentID, itemId = this.id)
     val title = this.title
     val creator = this.creator ?: ""
     val genre = this.firstGenre ?: ""
@@ -123,7 +69,6 @@ fun AudioItem.toUpnpAudioTrack(parentId: UpnpContainerId): UpnpAudioRef {
     val sampleF = res.sampleFrequency ?: 0L
     return UpnpAudioRef(
             id = mediaId,
-            parentId = parentId,
             meta = UpnpAudioMeta(
                     title = title,
                     creator = creator,
@@ -139,8 +84,8 @@ fun AudioItem.toUpnpAudioTrack(parentId: UpnpContainerId): UpnpAudioRef {
     )
 }
 
-fun MusicTrack.toUpnpMusicTrack(parentId: UpnpContainerId): UpnpMusicTrackRef {
-    val mediaId = UpnpMusicTrackId(parentId.deviceId, this.id)
+fun MusicTrack.toUpnpMusicTrack(deviceId: UpnpDeviceId): UpnpMusicTrackRef {
+    val mediaId = UpnpMusicTrackId(deviceId = deviceId.deviceId, parentId = this.parentID, itemId = this.id)
     val title = this.title
     val creator = this.creator ?: ""
     val artist = this.firstArtist?.name ?: ""
@@ -161,7 +106,6 @@ fun MusicTrack.toUpnpMusicTrack(parentId: UpnpContainerId): UpnpMusicTrackRef {
     val album = album ?: ""
     return UpnpMusicTrackRef(
             id = mediaId,
-            parentId = parentId,
             meta = UpnpMusicTrackMeta(
                     title = title,
                     creator = creator,

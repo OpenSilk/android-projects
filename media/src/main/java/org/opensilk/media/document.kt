@@ -15,7 +15,8 @@ data class DocumentId(val treeUri: Uri,
                       val documentId: String = if (isTreeUri(treeUri))
                           DocumentsContract.getTreeDocumentId(treeUri) else
                           DocumentsContract.getDocumentId(treeUri),
-                      val parentId: String = documentId): MediaId {
+                      val parentId: String = documentId,
+                      val mimeType: String): MediaId {
 
     val authority: String = treeUri.authority
 
@@ -47,6 +48,20 @@ data class DocumentId(val treeUri: Uri,
         isTreeUri(treeUri)
     }
 
+    val isDirectory: Boolean by lazy {
+        mimeType == DocumentsContract.Document.MIME_TYPE_DIR
+    }
+
+    val isVideo: Boolean by lazy {
+        mimeType.startsWith("video", true)
+    }
+
+    val isAudio: Boolean by lazy {
+        mimeType.startsWith("audio", true)
+                || mimeType.contains("flac", true)
+                || mimeType.contains("ogg", true)
+    }
+
     override val json: String by lazy {
         writeJson(DocumentIdTransformer, this)
     }
@@ -76,26 +91,27 @@ data class DocumentMeta(
         val backdropUri: Uri = Uri.EMPTY
 )
 
-data class DocumentRef(override val id: DocumentId,
-                       val tvEpisodeId: TvEpisodeId? = null,
-                       val movieId: MovieId? = null,
-                       val meta: DocumentMeta): MediaRef {
-
-    val isDirectory: Boolean by lazy {
-        meta.mimeType == DocumentsContract.Document.MIME_TYPE_DIR
-    }
-
-    val isVideo: Boolean by lazy {
-        meta.mimeType.startsWith("video", true)
-    }
-
-    val isAudio: Boolean by lazy {
-        meta.mimeType.startsWith("audio", true)
-                || meta.mimeType.contains("flac", true)
-                || meta.mimeType.contains("ogg", true)
-    }
-
+interface DocumentRef: MediaRef {
+    override val id: DocumentId
+    val meta: DocumentMeta
 }
+
+data class DirectoryDocumentRef(
+        override val id: DocumentId,
+        override val meta: DocumentMeta
+): DocumentRef
+
+data class VideoDocumentRef(
+        override val id: DocumentId,
+        val tvEpisodeId: TvEpisodeId? = null,
+        val movieId: MovieId? = null,
+        override val meta: DocumentMeta
+): DocumentRef
+
+data class AudioDocumentRef(
+        override val id: DocumentId,
+        override val meta: DocumentMeta
+): DocumentRef
 
 internal object DocumentIdTransformer: MediaIdTransformer<DocumentId> {
 
@@ -105,19 +121,29 @@ internal object DocumentIdTransformer: MediaIdTransformer<DocumentId> {
     override fun write(jw: JsonWriter, item: DocumentId) {
         jw.name("tree").value(item.treeUri.toString())
         jw.name("doc").value(item.documentId)
+        jw.name("par").value(item.parentId)
+        jw.name("mime").value(item.mimeType)
     }
 
-    override fun read(jr: JsonReader): DocumentId {
+    override fun read(jr: JsonReader, version: Int): DocumentId {
         var treeStr = ""
         var docStr = ""
+        var parent = ""
+        var mime = ""
         while (jr.hasNext()) {
             when (jr.nextName()) {
                 "tree" -> treeStr = jr.nextString()
                 "doc" -> docStr = jr.nextString()
+                "par" -> parent = jr.nextString()
+                "mime" -> mime = jr.nextString()
                 else -> jr.skipValue()
             }
         }
-        return DocumentId(Uri.parse(treeStr), docStr)
+        return DocumentId(
+                treeUri = Uri.parse(treeStr),
+                documentId = docStr,
+                parentId = parent,
+                mimeType = mime)
     }
 
 }

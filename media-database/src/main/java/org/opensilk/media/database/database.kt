@@ -73,16 +73,9 @@ internal class MediaDB
                     "vote_count INTEGER, " +
                     "movie_id INTEGER NOT NULL " +
                     ");")
-            db.execSQL("DROP TABLE IF EXISTS media_position")
-            db.execSQL("CREATE TABLE media_position (" +
-                    "_display_name TEXT NOT NULL PRIMARY KEY, " +
-                    "last_played INTEGER NOT NULL, " + //milli
-                    "last_position INTEGER NOT NULL, " +
-                    "last_completion INTEGER NOT NULL " +
-                    ");")
+
             db.execSQL("DROP TABLE IF EXISTS upnp_device")
             db.execSQL("CREATE TABLE upnp_device (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "device_id TEXT NOT NULL UNIQUE, " +
                     "title TEXT NOT NULL, " +
                     "subtitle TEXT, " +
@@ -93,28 +86,82 @@ internal class MediaDB
                     ");")
             db.execSQL("DROP TABLE IF EXISTS upnp_folder")
             db.execSQL("CREATE TABLE upnp_folder (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "device_id TEXT NOT NULL, " +
                     "folder_id TEXT NOT NULL, " +
                     "parent_id TEXT NOT NULL, " +
                     "_display_name TEXT NOT NULL, " +
 
-                    "date_added INTEGER NOT NULL," +
                     "hidden INTEGER DEFAULT 0," +
                     "UNIQUE(device_id,folder_id,parent_id) " + //milli
                     ");")
+            db.execSQL("DROP TABLE IF EXISTS upnp_audio")
+            db.execSQL("CREATE TABLE upnp_audio (" +
+                    "device_id TEXT NOT NULL, " +
+                    "item_id TEXT NOT NULL, " +
+                    "parent_id TEXT NOT NULL, " +
+                    "_display_name TEXT NOT NULL, " +
+                    "creator TEXT, " +
+                    "genre TEXT, " +
+                    "mime_type TEXT NOT NULL, " +
+                    "media_uri TEXT NOT NULL, " +
+                    "duration INTEGER DEFAULT 0, " + //milli
+                    "bitrate INTEGER DEFAULT 0, " +
+                    "file_size INTEGER DEFAULT 0, " +
+                    "n_channels INTEGER DEFAULT 0, " +
+                    "s_freq INTEGER DEFAULT 0, " +
+
+                    "date_added INTEGER NOT NULL, " + //milli
+                    "hidden INTEGER DEFAULT 0," +
+
+                    "album_id INTEGER, " +
+                    "artist_id INTEGER, " +
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+
+                    "UNIQUE(device_id,item_id,parent_id) " +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS upnp_music_track")
+            db.execSQL("CREATE TABLE upnp_music_track (" +
+                    "device_id TEXT NOT NULL, " +
+                    "item_id TEXT NOT NULL, " +
+                    "parent_id TEXT NOT NULL, " +
+                    "_display_name TEXT NOT NULL, " +
+                    "creator TEXT, " +
+                    "genre TEXT, " +
+                    "artist TEXT, " +
+                    "album TEXT, " +
+                    "date TEXT, " +
+                    "track_num INTEGER DEFAULT 0, " +
+                    "mime_type TEXT NOT NULL, " +
+                    "media_uri TEXT NOT NULL, " +
+                    "duration INTEGER DEFAULT 0, " + //milli
+                    "bitrate INTEGER DEFAULT 0, " +
+                    "file_size INTEGER DEFAULT 0, " +
+                    "n_channels INTEGER DEFAULT 0, " +
+                    "s_freq INTEGER DEFAULT 0, " +
+                    "artwork_uri TEXT, " +
+
+                    "date_added INTEGER NOT NULL, " + //milli
+                    "hidden INTEGER DEFAULT 0," +
+
+                    "album_id INTEGER, " +
+                    "artist_id INTEGER, " +
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+
+                    "UNIQUE(device_id,item_id,parent_id) " +
+                    ");")
             db.execSQL("DROP TABLE IF EXISTS upnp_video")
             db.execSQL("CREATE TABLE upnp_video (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "device_id TEXT NOT NULL, " +
                     "item_id TEXT NOT NULL, " +
                     "parent_id TEXT NOT NULL, " +
                     "_display_name TEXT NOT NULL, " +
                     "mime_type TEXT NOT NULL, " +
                     "media_uri TEXT NOT NULL, " +
-                    "duration INTEGER DEFAULT -1, " + //milli
-                    "bitrate INTEGER DEFAULT -1, " +
-                    "file_size INTEGER DEFAULT -1, " +
+                    "duration INTEGER DEFAULT 0, " + //milli
+                    "bitrate INTEGER DEFAULT 0, " +
+                    "file_size INTEGER DEFAULT 0, " +
                     "resolution TEXT, " +
 
                     "date_added INTEGER NOT NULL, " + //milli
@@ -127,9 +174,21 @@ internal class MediaDB
 
                     "UNIQUE(device_id,item_id,parent_id) " +
                     ");")
-            db.execSQL("DROP TABLE IF EXISTS document")
-            db.execSQL("CREATE TABLE document (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            db.execSQL("DROP TABLE IF EXISTS document_directory")
+            db.execSQL("CREATE TABLE document_directory (" +
+                    "authority TEXT NOT NULL, " +
+                    "tree_uri TEXT NOT NULL, " +
+                    "document_id TEXT NOT NULL, " +
+                    "parent_id TEXT NOT NULL, " +
+                    "_display_name TEXT NOT NULL, " +
+                    "flags INTEGER DEFAULT 0, " +
+                    "last_modified INTEGER DEFAULT 0," +
+
+                    "hidden INTEGER DEFAULT 0," +
+                    "UNIQUE(tree_uri, document_id, parent_id)" +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS document_video")
+            db.execSQL("CREATE TABLE document_video (" +
                     "authority TEXT NOT NULL," +
                     "tree_uri TEXT NOT NULL," +
                     "document_id TEXT NOT NULL," +
@@ -150,6 +209,37 @@ internal class MediaDB
                     "custom_backdrop_uri TEXT, " +
 
                     "UNIQUE(tree_uri, document_id, parent_id)" +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS document_audio")
+            db.execSQL("CREATE TABLE document_audio (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "authority TEXT NOT NULL," +
+                    "tree_uri TEXT NOT NULL," +
+                    "document_id TEXT NOT NULL," +
+                    "parent_id TEXT NOT NULL," +
+                    "_display_name TEXT NOT NULL," +
+                    "mime_type TEXT," +
+                    "last_modified INTEGER DEFAULT 0," +
+                    "flags INTEGER DEFAULT 0," +
+                    "_size INTEGER DEFAULT 0," +
+                    "summary TEXT," +
+
+                    "date_added INTEGER NOT NULL, " +
+                    "hidden INTEGER DEFAULT 0, " +
+
+                    "album_id INTEGER, " +
+                    "artist_id INTEGER, " +
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+
+                    "UNIQUE(tree_uri, document_id, parent_id)" +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS media_position")
+            db.execSQL("CREATE TABLE media_position (" +
+                    "_display_name TEXT NOT NULL PRIMARY KEY, " +
+                    "last_played INTEGER NOT NULL, " + //milli
+                    "last_position INTEGER NOT NULL, " +
+                    "last_completion INTEGER NOT NULL " +
                     ");")
         }
     }

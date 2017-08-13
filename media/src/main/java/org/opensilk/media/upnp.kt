@@ -30,6 +30,7 @@ interface UpnpItemMeta: UpnpMeta {
  */
 interface UpnpContainerId: MediaId {
     val deviceId: String
+    val parentId: String
     val containerId: String
 }
 
@@ -38,6 +39,7 @@ interface UpnpContainerId: MediaId {
  */
 interface UpnpItemId: MediaId {
     val deviceId: String
+    val parentId: String
     val itemId: String
 }
 
@@ -45,7 +47,6 @@ interface UpnpItemId: MediaId {
  * ref representing upnp container
  */
 interface UpnpContainerRef: MediaRef {
-    val parentId: UpnpContainerId
     val meta: UpnpMeta
 }
 
@@ -53,7 +54,6 @@ interface UpnpContainerRef: MediaRef {
  * ref representing upnp item
  */
 interface UpnpItemRef: MediaRef {
-    val parentId: UpnpContainerId
     val meta: UpnpMeta
 }
 
@@ -65,21 +65,24 @@ internal abstract class UpnpContainerTransformer: MediaIdTransformer<UpnpContain
 
     override fun write(jw: JsonWriter, item: UpnpContainerId) {
         jw.name("dev").value(item.deviceId)
+        jw.name("par").value(item.parentId)
         jw.name("fol").value(item.containerId)
     }
 
-    override fun read(jr: JsonReader): UpnpContainerId {
+    override fun read(jr: JsonReader, version: Int): UpnpContainerId {
         var dev = ""
         var fol = ""
+        var par = ""
         while (jr.hasNext()) {
             when (jr.nextName()) {
                 "dev" -> dev = jr.nextString()
+                "par" -> par = jr.nextString()
                 "fol" -> fol = jr.nextString()
                 else -> jr.skipValue()
             }
         }
         return when (kind) {
-            UPNP_FOLDER -> UpnpFolderId(dev, fol)
+            UPNP_FOLDER -> UpnpFolderId(dev, par, fol)
             else -> TODO()
         }
     }
@@ -93,22 +96,26 @@ internal abstract class UpnpItemTransformer: MediaIdTransformer<UpnpItemId> {
 
     override fun write(jw: JsonWriter, item: UpnpItemId) {
         jw.name("dev").value(item.deviceId)
+        jw.name("par").value(item.parentId)
         jw.name("itm").value(item.itemId)
     }
 
-    override fun read(jr: JsonReader): UpnpItemId {
+    override fun read(jr: JsonReader, version: Int): UpnpItemId {
         var dev = ""
         var itm = ""
+        var par = ""
         while (jr.hasNext()) {
             when (jr.nextName()) {
                 "dev" -> dev = jr.nextString()
+                "par" -> par = jr.nextString()
                 "itm" -> itm = jr.nextString()
                 else -> jr.skipValue()
             }
         }
         return when (kind) {
-            UPNP_VIDEO -> UpnpVideoId(dev, itm)
-            UPNP_MUSIC_TRACK -> UpnpMusicTrackId(dev, itm)
+            UPNP_AUDIO -> UpnpAudioId(dev, par, itm)
+            UPNP_MUSIC_TRACK -> UpnpMusicTrackId(dev, par, itm)
+            UPNP_VIDEO -> UpnpVideoId(dev, par, itm)
             else -> TODO()
         }
     }

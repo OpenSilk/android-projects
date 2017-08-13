@@ -81,17 +81,7 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
 
                 for (c in didl.containers) {
                     try {
-                        if (StorageFolder.CLASS.equals(c)) {
-                            subscriber.onNext((c as StorageFolder).toUpnpFolder(parentId))
-                        } else if (MusicGenre.CLASS.equals(c) && opts.audio) {
-                            subscriber.onNext((c as MusicGenre).toUpnpMusicGenre(parentId))
-                        } else if (MusicAlbum.CLASS.equals(c) && opts.audio) {
-                            subscriber.onNext((c as MusicAlbum).toUpnpMusicAlbum(parentId))
-                        } else if (MusicArtist.CLASS.equals(c) && opts.audio) {
-                            subscriber.onNext((c as MusicArtist).toUpnpMusicArtist(parentId))
-                        } else {
-                            Timber.w("Skipping unsupported container ${c.title} type ${c.clazz.value}")
-                        }
+                        subscriber.onNext(c.toUpnpFolder(deviceId))
                     } catch (e: Exception) {
                         Timber.e(e, "Unable to parse ${c.title}")
                     }
@@ -115,9 +105,9 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
                                 continue
                             }
                             if (MusicTrack.CLASS.equals(item)) {
-                                subscriber.onNext((item as MusicTrack).toUpnpMusicTrack(parentId))
+                                subscriber.onNext((item as MusicTrack).toUpnpMusicTrack(deviceId))
                             } else {
-                                subscriber.onNext((item as AudioItem).toUpnpAudioTrack(parentId))
+                                subscriber.onNext((item as AudioItem).toUpnpAudioTrack(deviceId))
                             }
                         } else {
                             Timber.w("Skipping unsupported item ${item.title} class is ${item.clazz.value}")
@@ -231,16 +221,13 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
                 s.onError(FeatureListException())
             }
         }.flatMapObservable { id ->
-            //do browse, remaping the parent id to the root id
-            browse(service, UpnpFolderId(deviceId.deviceId, id), opts).map { meta ->
+            //do browse, remapping the parent id to the root id
+            browse(service, UpnpFolderId(deviceId.deviceId, deviceId.containerId, id), opts).map { meta ->
                 return@map when (meta) {
-                    is UpnpAudioRef -> meta.copy(parentId = deviceId)
-                    is UpnpFolderRef -> meta.copy(parentId = deviceId)
-                    is UpnpMusicAlbumRef -> meta.copy(parentId = deviceId)
-                    is UpnpMusicArtistRef -> meta.copy(parentId = deviceId)
-                    is UpnpMusicGenreRef -> meta.copy(parentId = deviceId)
-                    is UpnpMusicTrackRef -> meta.copy(parentId = deviceId)
-                    is UpnpVideoRef -> meta.copy(parentId = deviceId)
+                    is UpnpAudioRef -> meta.copy(id = meta.id.copy(parentId = id))
+                    is UpnpFolderRef -> meta.copy(id = meta.id.copy(parentId = id))
+                    is UpnpMusicTrackRef -> meta.copy(id = meta.id.copy(parentId = id))
+                    is UpnpVideoRef -> meta.copy(id = meta.id.copy(parentId = id))
                     else -> TODO("need to add ${meta::javaClass.name} to the switch")
                 }
             }.switchIfEmpty {

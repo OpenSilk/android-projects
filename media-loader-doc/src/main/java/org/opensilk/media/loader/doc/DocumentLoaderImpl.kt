@@ -5,10 +5,10 @@ import android.content.Intent
 import android.database.Cursor
 import android.provider.DocumentsContract
 import io.reactivex.Maybe
+import io.reactivex.Single
 import org.opensilk.dagger2.ForApp
-import org.opensilk.media.DocumentId
-import org.opensilk.media.DocumentMeta
-import org.opensilk.media.DocumentRef
+import org.opensilk.media.*
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
@@ -21,24 +21,44 @@ private val DOCUMENT_COLS = arrayOf(
         DocumentsContract.Document.COLUMN_FLAGS
 )
 
-private fun Cursor.toDocumentRef(parentId: DocumentId): DocumentRef {
-    val docId = getString(0)
+private fun Cursor.toDocumentId(parentId: DocumentId): DocumentId {
+    return DocumentId(
+            treeUri = parentId.treeUri,
+            parentId = parentId.documentId,
+            documentId = getString(0),
+            mimeType = getString(2)
+    )
+}
+
+private fun Cursor.toDirectoryDocumentRef(documentId: DocumentId): DirectoryDocumentRef {
+    val displayName = getString(1)
+    val mimeType = getString(2)
+    //val size = if (!isNull(3)) getLong(3) else 0L
+    val lastMod = if (!isNull(4)) getLong(4) else 0L
+    val flags = getLong(5)
+    return DirectoryDocumentRef(
+            id = documentId,
+            meta = DocumentMeta(
+                    displayName = displayName,
+                    mimeType = mimeType,
+                    lastMod = lastMod,
+                    flags = flags
+            )
+    )
+}
+
+private fun Cursor.toVideoDocumentRef(documentId: DocumentId): VideoDocumentRef {
     val displayName = getString(1)
     val mimeType = getString(2)
     val size = if (!isNull(3)) getLong(3) else 0L
     val lastMod = if (!isNull(4)) getLong(4) else 0L
     val flags = getLong(5)
-    return DocumentRef(
-            id = DocumentId(
-                    treeUri = parentId.treeUri,
-                    parentId = parentId.documentId,
-                    documentId = docId
-            ),
+    return VideoDocumentRef(
+            id = documentId,
             meta = DocumentMeta(
                     displayName = displayName,
-                    summary = "",
                     mimeType = mimeType,
-                    size =  size,
+                    size = size,
                     lastMod = lastMod,
                     flags = flags
             )
@@ -61,7 +81,14 @@ class DocumentLoaderImpl @Inject constructor(@ForApp val mContext: Context): Doc
             mContext.contentResolver.query(documentId.mediaUri, DOCUMENT_COLS,
                     null, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME)?.use { c ->
                 if (c.moveToFirst()) {
-                    s.onSuccess(c.toDocumentRef(documentId))
+                    val id = c.toDocumentId(documentId)
+                    if (id.isDirectory) {
+                        s.onSuccess(c.toDirectoryDocumentRef(id))
+                    } else if (id.isVideo) {
+                        s.onSuccess(c.toVideoDocumentRef(id))
+                    } else {
+                        TODO()
+                    }
                 } else {
                     s.onComplete()
                 }
@@ -69,28 +96,32 @@ class DocumentLoaderImpl @Inject constructor(@ForApp val mContext: Context): Doc
         }
     }
 
-    override fun documents(documentId: DocumentId): Maybe<List<DocumentRef>> {
+    override fun directChildren(documentId: DocumentId, wantVideoItems: Boolean,
+                                wantAudioItems: Boolean): Single<out List<DocumentRef>> {
         if (!documentId.isFromTree) {
-            return Maybe.error(Exception("Document does not represent a tree"))
+            return Single.error(Exception("Document does not represent a tree"))
         }
         val uriPermission = mContext.contentResolver.persistedUriPermissions
                 .firstOrNull { it.uri == documentId.treeUri }
-                ?: return Maybe.error(Exception("Not permitted to access uri. Please reselect item or folder"))
+                ?: return Single.error(Exception("Not permitted to access uri. Please reselect item or folder"))
         //touch refresh time
         mContext.contentResolver.takePersistableUriPermission(uriPermission.uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        return Maybe.create { s ->
+        return Single.create { s ->
             mContext.contentResolver.query(documentId.childrenUri, DOCUMENT_COLS,
                     null, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME)?.use { c ->
                 val list = ArrayList<DocumentRef>()
                 while (c.moveToNext()) {
-                    list.add(c.toDocumentRef(documentId))
+                    val id = c.toDocumentId(documentId)
+                    if (id.isDirectory) {
+                        list.add(c.toDirectoryDocumentRef(id))
+                    } else if (wantVideoItems && id.isVideo) {
+                        list.add(c.toVideoDocumentRef(id))
+                    } else if (wantAudioItems && id.isAudio) {
+                        TODO()
+                    } //else ignore
                 }
-                if (list.isNotEmpty()) {
-                    s.onSuccess(list)
-                } else {
-                    s.onComplete()
-                }
+                s.onSuccess(list)
             } ?: s.onError(Exception("Unable to query document provider"))
         }
     }
