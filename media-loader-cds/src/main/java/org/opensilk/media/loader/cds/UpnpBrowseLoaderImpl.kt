@@ -224,10 +224,10 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
             //do browse, remapping the parent id to the root id
             browse(service, UpnpFolderId(deviceId.deviceId, deviceId.containerId, id), opts).map { meta ->
                 return@map when (meta) {
-                    is UpnpAudioRef -> meta.copy(id = meta.id.copy(parentId = id))
-                    is UpnpFolderRef -> meta.copy(id = meta.id.copy(parentId = id))
-                    is UpnpMusicTrackRef -> meta.copy(id = meta.id.copy(parentId = id))
-                    is UpnpVideoRef -> meta.copy(id = meta.id.copy(parentId = id))
+                    is UpnpAudioRef -> meta.copy(id = meta.id.copy(parentId = deviceId.containerId))
+                    is UpnpFolderRef -> meta.copy(id = meta.id.copy(parentId = deviceId.containerId))
+                    is UpnpMusicTrackRef -> meta.copy(id = meta.id.copy(parentId = deviceId.containerId))
+                    is UpnpVideoRef -> meta.copy(id = meta.id.copy(parentId = deviceId.containerId))
                     else -> TODO("need to add ${meta::javaClass.name} to the switch")
                 }
             }.switchIfEmpty {
