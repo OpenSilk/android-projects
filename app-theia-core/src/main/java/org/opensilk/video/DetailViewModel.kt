@@ -2,13 +2,17 @@ package org.opensilk.video
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
+import android.content.Context
 import android.net.Uri
 import io.reactivex.Maybe
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
-import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.*
+import org.opensilk.media.database.MediaDAO
+import org.opensilk.media.database.UpnpVideoChange
+import org.opensilk.media.database.VideoDocumentChange
+import org.opensilk.reactivex2.subscribeIgnoreError
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -17,7 +21,7 @@ import javax.inject.Inject
  */
 class DetailViewModel
 @Inject constructor(
-        private val mClient: DatabaseClient,
+        private val mClient: MediaDAO,
         private val mTVLookup: LookupTVDb,
         private val mMovieLookup: LookupMovieDb
 ): ViewModel() {
@@ -68,14 +72,14 @@ class DetailViewModel
         //overview
         disponables.add(o.flatMapMaybe { meta ->
             mClient.getMediaOverview(mediaId).defaultIfEmpty("").map { overview ->
-                VideoDescInfo(meta.meta.title.elseIfBlank(meta.meta.mediaTitle), meta.meta.subtitle, overview)
+                VideoDescInfo(meta.meta.title.elseIfBlank(meta.meta.originalTitle), meta.meta.subtitle, overview)
             }.subscribeOn(AppSchedulers.diskIo)
         }.subscribeIgnoreError(Consumer {
             videoDescription.postValue(it)
         }))
         //fileinfo
         disponables.add(o.map { meta ->
-            VideoFileInfo(meta.meta.mediaTitle, meta.meta.size, meta.meta.duration)
+            VideoFileInfo(meta.meta.originalTitle.elseIfBlank(meta.meta.title), meta.meta.size, meta.meta.duration)
         }.subscribeIgnoreError(Consumer {
             fileInfo.postValue(it)
         }))
@@ -106,11 +110,11 @@ class DetailViewModel
     private fun subscribeDocumentRef(mediaId: DocumentId) {
         //fetch mediaref
         val o = mClient.changesObservable
-                .filter { it is DocumentChange && it.documentId == mediaId }
+                .filter { it is VideoDocumentChange && it.documentId == mediaId }
                 .map { true }
                 .startWith(true)
                 .flatMapMaybe {
-                    mClient.getDocument(mediaId).subscribeOn(AppSchedulers.diskIo)
+                    mClient.getVideoDocument(mediaId).subscribeOn(AppSchedulers.diskIo)
                 }
                 .publish()
         //mediaref
@@ -156,23 +160,23 @@ class DetailViewModel
         disponables.add(o.connect())
     }
 
-    fun doLookup() {
+    fun doLookup(context: Context) {
         if (mediaRef == NoMediaRef) {
             return
         }
         val ref = mediaRef
         when (ref) {
             is UpnpVideoRef -> {
-                subscribeLookup(ref, ref.meta.mediaTitle)
+                subscribeLookup(context, ref, ref.meta.originalTitle.elseIfBlank(ref.meta.title))
             }
             is DocumentRef -> {
-                subscribeLookup(ref, ref.meta.displayName)
+                subscribeLookup(context, ref, ref.meta.displayName)
             }
             else -> TODO()
         }
     }
 
-    private fun subscribeLookup(mediaRef: MediaRef, title: String) {
+    private fun subscribeLookup(context: Context, mediaRef: MediaRef, title: String) {
         if (matchesTvEpisode(title)) {
             val name = extractSeriesName(title)
             val seasonNum = extractSeasonNumber(title)
@@ -181,7 +185,7 @@ class DetailViewModel
                 lookupError.postValue("Unable to parse $title as TV episode")
                 return
             }
-            subscribeTvLookup(LookupRequest(mediaRef = mediaRef, lookupName = name,
+            subscribeTvLookup(context, LookupRequest(mediaRef = mediaRef, lookupName = name,
                     seasonNumber = seasonNum, episodeNumber = episodeNum))
         } else if (matchesMovie(title)) {
             val name = extractMovieName(title)
@@ -197,7 +201,7 @@ class DetailViewModel
 
     }
 
-    private fun subscribeTvLookup(lookupRequest: LookupRequest) {
+    private fun subscribeTvLookup(context: Context, lookupRequest: LookupRequest) {
         val s = mTVLookup.lookupObservable(lookupRequest)
                 .firstOrError()
                 .subscribeOn(AppSchedulers.networkIo)
@@ -205,17 +209,16 @@ class DetailViewModel
                     val ref = lookupRequest.mediaRef
                     when (ref) {
                         is UpnpVideoRef -> {
-                            Timber.d("Located tv episode ${epiMeta.meta.title} for ${ref.meta.mediaTitle}")
+                            Timber.d("Located tv episode ${epiMeta.meta.title} for ${ref.meta.title}")
                             mClient.setUpnpVideoTvEpisodeId(ref.id, epiMeta.id)
                             mClient.postChange(UpnpVideoChange(ref.id))
-                            mClient.postChange(UpnpFolderChange(ref.parentId))
-                            mClient.scheduleRelatedLookup(ref.id)
+                            context.scheduleRelatedLookup(ref.id) //TODO import a jobscheduler helper
                         }
                         is DocumentRef -> {
                             Timber.d("Located tv episode ${epiMeta.meta.title} for ${ref.meta.displayName}")
-                            mClient.setDocumentTvEpisodeId(ref.id, epiMeta.id)
-                            mClient.postChange(DocumentChange(ref.id))
-                            //mClient.scheduleRelatedLookup(ref.id)
+                            mClient.setVideoDocumentTvEpisodeId(ref.id, epiMeta.id)
+                            mClient.postChange(VideoDocumentChange(ref.id))
+                            context.scheduleRelatedLookup(ref.id)
                         }
                         else -> TODO()
                     }
@@ -235,15 +238,14 @@ class DetailViewModel
                     val ref = lookupRequest.mediaRef
                     when (ref) {
                         is UpnpVideoRef -> {
-                            Timber.d("Located movie ${movieMeta.meta.title} for ${ref.meta.mediaTitle}")
+                            Timber.d("Located movie ${movieMeta.meta.title} for ${ref.meta.title}")
                             mClient.setUpnpVideoMovieId(ref.id, movieMeta.id)
                             mClient.postChange(UpnpVideoChange(ref.id))
-                            mClient.postChange(UpnpFolderChange(ref.parentId))
                         }
                         is DocumentRef -> {
                             Timber.d("Located movie ${movieMeta.meta.title} for ${ref.meta.displayName}")
-                            mClient.setDocumentMovieId(ref.id, movieMeta.id)
-                            mClient.postChange(DocumentChange(ref.id))
+                            mClient.setVideoDocumentMovieId(ref.id, movieMeta.id)
+                            mClient.postChange(VideoDocumentChange(ref.id))
                         }
                         else -> TODO()
                     }

@@ -198,6 +198,7 @@ class FuncsTest {
                 .isEqualTo("2016")
     }
 
+    /*
     @Test
     fun testDurationParser() {
         var duration = "0:00:25.678"
@@ -213,5 +214,6 @@ class FuncsTest {
         duration = "2:05:53.645"
         assertThat(parseUpnpDuration(duration)).isEqualTo(7553)
     }
+    */
 
 }

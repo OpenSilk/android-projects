@@ -19,8 +19,11 @@ import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.model.types.ServiceId
 import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
-import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.UpnpDeviceId
+import org.opensilk.media.database.MediaDAO
+import org.opensilk.media.database.UpnpDeviceChange
+import org.opensilk.media.database.UpnpUpdateIdChange
+import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.upnp.cds.browser.CDSGetSystemUpdateIDAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService
 import org.opensilk.upnp.cds.browser.CDSserviceType
@@ -35,7 +38,7 @@ private val GRACE_PERIOD = 600_000L //10min
 class UpnpDevicesObserver
 @Inject constructor(
         private val mUpnpService: CDSUpnpService,
-        private val mDatabaseClient: DatabaseClient
+        private val mDatabaseClient: MediaDAO
 ) : DefaultRegistryListener(), LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)

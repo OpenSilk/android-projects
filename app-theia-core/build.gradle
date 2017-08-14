@@ -67,6 +67,7 @@ dependencies {
     compile project(':media-loader-cds')
     compile project(':media-loader-doc')
     compile project(':media-playback')
+    compile project(':media-database')
     compile project(':libtvdb2')
     compile project(':libtmdb')
     compile project(':logging')

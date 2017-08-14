@@ -39,8 +39,12 @@
                  android:permission="android.permission.BIND_JOB_SERVICE"/>
 
         <provider
-            android:name="org.opensilk.video.DatabaseProvider"
+            android:name="org.opensilk.video.VideoAppProvider"
             android:authorities="@string/videos_authority"
+            android:exported="false"/>
+        <provider
+            android:name="org.opensilk.media.database.MediaProvider"
+            android:authorities="@string/media_authority"
             android:exported="false"/>
     </application>
 

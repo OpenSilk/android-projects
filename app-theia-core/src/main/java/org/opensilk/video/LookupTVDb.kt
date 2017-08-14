@@ -19,9 +19,9 @@ package org.opensilk.video
 
 import io.reactivex.Observable
 import io.reactivex.Single
-import org.opensilk.media.MediaRef
 import org.opensilk.media.TvEpisodeRef
 import org.opensilk.media.TvSeriesId
+import org.opensilk.media.database.MediaDAO
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
 import timber.log.Timber
@@ -35,17 +35,18 @@ class LookupTVDb
 constructor(
         private val mTVDbAuth: Auth,
         private val mApi: TVDb,
-        private val mClient: DatabaseClient
+        private val mClient: MediaDAO,
+        private val mAppClient: VideoAppDAO
 ) : LookupHandler {
 
     internal val mTokenObservable: Observable<Token> by lazy {
         //pull cached token
-        mClient.getTvToken()
+        mAppClient.getTvToken()
                 // make sure it is still valid
                 .flatMap { token -> mApi.refreshToken(token) }
                 //if above fails do fresh login
                 .onErrorResumeNext({ mApi.login(mTVDbAuth).retry(2) })
-                .doOnSuccess { token -> mClient.setTvToken(token) }
+                .doOnSuccess { token -> mAppClient.setTvToken(token) }
                 //only run this once
                 .toObservable().replay(1).autoConnect()
     }

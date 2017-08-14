@@ -21,11 +21,13 @@ import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasActivityInjector
 import dagger.android.support.AndroidSupportInjectionModule
+import dagger.android.support.DaggerApplication
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.opensilk.common.dagger.*
 import org.opensilk.dagger2.ForApp
 import org.opensilk.logging.installLogging
+import org.opensilk.media.database.MediaProviderModule
 import org.opensilk.media.loader.cds.UpnpBrowseLoaderModule
 import org.opensilk.media.loader.doc.DocumentLoaderModule
 import org.opensilk.video.*
@@ -39,7 +41,7 @@ import javax.inject.Singleton
         UpnpHolderServiceModule::class,
         AppJobServiceModule::class,
         MediaProviderModule::class,
-        DatabaseProviderModule::class,
+        VideoAppProviderModule::class,
         LookupConfigModule::class,
         UpnpBrowseLoaderModule::class,
         DocumentLoaderModule::class,
@@ -51,8 +53,7 @@ import javax.inject.Singleton
         DetailScreenModule::class,
         AndroidSupportInjectionModule::class
 ))
-interface RootComponent {
-    fun inject(app: VideoApp)
+interface RootComponent: AndroidInjector<VideoApp> {
     @Component.Builder
     abstract class Builder {
         @BindsInstance
@@ -64,9 +65,14 @@ interface RootComponent {
 @Module
 object RootModule {
 
-    @Provides @Named("DatabaseAuthority") @JvmStatic
+    @Provides @Named("VideoDatabaseAuthority") @JvmStatic
     fun databaseAuthority(@ForApp context: Context): String {
         return context.getString(R.string.videos_authority)
+    }
+
+    @Provides @Named("MediaDatabaseAuthority") @JvmStatic
+    fun mediaDatabaseAuthority(@ForApp context: Context): String {
+        return context.getString(R.string.media_authority)
     }
 
     @Provides @Singleton @JvmStatic
@@ -86,16 +92,14 @@ object RootModule {
 /**
  * Created by drew on 8/6/17.
  */
-open class VideoApp: Application(), InjectionManager,
-        ViewModelProvider.Factory, HasActivityInjector {
+open class VideoApp: DaggerApplication(),
+        InjectionManager, ViewModelProvider.Factory {
 
-    val injectOnce = Once()
-    val rootComponent: RootComponent by lazy {
-        DaggerRootComponent.builder().context(this).build()
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
+        return DaggerRootComponent.builder().context(this).build()
     }
 
     override fun onCreate() {
-        injectOnce.Do { rootComponent.inject(this) }
         super.onCreate()
         installLogging(true)
         startUpnpService()
@@ -107,16 +111,12 @@ open class VideoApp: Application(), InjectionManager,
     }
 
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
-    @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
     @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
     @Inject lateinit var mCommonGlideBuilder: VideoGlideLibraryComponent.Builder
 
     override fun injectFoo(foo: Any): Any {
-        injectOnce.Do { rootComponent.inject(this) }
         if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.create(foo).inject(foo)
-        } else if (foo is DatabaseProvider) {
-            mDatabaseProviderBuilder.create(foo).inject(foo)
         } else if (foo is AppJobService) {
             mAppJobServiceBuilder.create(foo).inject(foo)
         } else if (foo is VideoGlideLibrary) {
@@ -131,12 +131,6 @@ open class VideoApp: Application(), InjectionManager,
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return mViewModelFactory.create(modelClass)
-    }
-
-    @Inject lateinit var mActivityInjector: DispatchingAndroidInjector<Activity>
-
-    override fun activityInjector(): AndroidInjector<Activity> {
-        return mActivityInjector
     }
 
 }

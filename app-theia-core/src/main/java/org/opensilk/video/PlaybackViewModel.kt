@@ -16,7 +16,6 @@ import com.google.android.exoplayer2.text.Cue
 import com.google.android.exoplayer2.text.TextRenderer
 import io.reactivex.disposables.Disposables
 import org.opensilk.dagger2.ForApp
-import org.opensilk.media.playback.MediaControllerCallback
 import org.opensilk.media.MediaId
 import org.opensilk.media.bundle
 import org.opensilk.media.playback.*

@@ -9,6 +9,9 @@ import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.testdata.upnpDevice_all_meta
+import org.opensilk.media.testdata.upnpFolders
+import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
 import org.opensilk.media.toMediaItem
 import org.opensilk.video.EXTRA_MEDIAID
 import org.robolectric.Robolectric
@@ -36,7 +39,7 @@ class MediaItemClickListenerTest {
 
     @Test
     fun test_OnItemClicked_DeviceItem() {
-        val item = testUpnpDeviceMeta().toMediaItem()
+        val item = upnpDevice_all_meta().toMediaItem()
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
@@ -45,7 +48,7 @@ class MediaItemClickListenerTest {
 
     @Test
     fun test_OnItemClicked_FolderItem() {
-        val item = testUpnpFolderMetas()[0].toMediaItem()
+        val item = upnpFolders()[0].toMediaItem()
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
@@ -54,7 +57,7 @@ class MediaItemClickListenerTest {
 
     @Test
     fun test_OnItemClicked_VideoItem() {
-        val item = testUpnpVideoMetas()[0].toMediaItem()
+        val item = upnpVideo_folder_1_no_association().toMediaItem()
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, DetailActivity::class.java))

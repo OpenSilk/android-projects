@@ -1,7 +1,6 @@
 package org.opensilk.video.telly
 
 import android.animation.Animator
-import android.arch.lifecycle.*
 import android.content.ComponentName
 import android.content.Intent
 import android.content.res.Configuration
@@ -12,33 +11,11 @@ import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
-import dagger.Binds
-import dagger.Module
-import dagger.Subcomponent
-import dagger.multibindings.IntoMap
-import org.opensilk.common.dagger.ActivityScope
-import org.opensilk.common.dagger.Injector
 import org.opensilk.media.parseMediaId
-import org.opensilk.media.playback.*
+import org.opensilk.media.playback.PlaybackExtras
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.ActivityPlaybackBinding
 import timber.log.Timber
-
-/**
- * Created by drew on 6/3/17.
- */
-@ActivityScope
-@Subcomponent
-interface PlaybackComponent: Injector<PlaybackActivity> {
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<PlaybackActivity>()
-}
-
-/**
- *
- */
-@Module(subcomponents = arrayOf(PlaybackComponent::class))
-abstract class PlaybackModule
 
 /**
  *

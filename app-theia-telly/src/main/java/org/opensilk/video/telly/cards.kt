@@ -17,9 +17,13 @@ import com.bumptech.glide.request.RequestOptions
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
-import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.media.*
-import org.opensilk.video.*
+import org.opensilk.media.database.MediaDAO
+import org.opensilk.media.database.UpnpVideoChange
+import org.opensilk.reactivex2.subscribeIgnoreError
+import org.opensilk.video.AppSchedulers
+import org.opensilk.video.EXTRA_MEDIAID
+import org.opensilk.video.findActivity
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
 import javax.inject.Inject
 
@@ -110,7 +114,7 @@ class MediaItemPresenter
  */
 class MediaItemListPresenter
 @Inject constructor(
-        val mDatabaseClient: DatabaseClient
+        val mDatabaseClient: MediaDAO
 ) : Presenter() {
 
     override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {

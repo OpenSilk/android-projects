@@ -1,8 +1,12 @@
 package org.opensilk.video
 
+import android.app.job.JobInfo
 import android.app.job.JobParameters
 import android.app.job.JobScheduler
 import android.app.job.JobService
+import android.content.ComponentName
+import android.content.Context
+import android.os.PersistableBundle
 import dagger.Module
 import dagger.Subcomponent
 import io.reactivex.Maybe
@@ -10,6 +14,9 @@ import io.reactivex.disposables.Disposables
 import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.*
+import org.opensilk.media.database.MediaDAO
+import org.opensilk.media.database.UpnpVideoChange
+import org.opensilk.media.database.VideoDocumentChange
 import timber.log.Timber
 import java.net.SocketTimeoutException
 import javax.inject.Inject
@@ -25,12 +32,25 @@ interface AppJobServiceComponent: Injector<AppJobService> {
 @Module(subcomponents = arrayOf(AppJobServiceComponent::class))
 abstract class AppJobServiceModule
 
+
+fun Context.scheduleRelatedLookup(mediaId: MediaId) {
+    val sched = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+    val comp = ComponentName(this, AppJobService::class.java)
+    val extras = PersistableBundle()
+    extras.putString(EXTRA_MEDIAID, mediaId.json)
+    val job = JobInfo.Builder(JOB_RELATED_LOOKUP, comp)
+            .setExtras(extras)
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .build()
+    sched.schedule(job)
+}
+
 /**
  * Created by drew on 7/25/17.
  */
 class AppJobService : JobService() {
 
-    @Inject lateinit var mDatabaseClient: DatabaseClient
+    @Inject lateinit var mDatabaseClient: MediaDAO
     @Inject lateinit var mTvLookup: LookupTVDb
 
     override fun onCreate() {
@@ -76,13 +96,17 @@ class AppJobService : JobService() {
         }
     }
 
-    private data class UpnpVideoRefWithEpisode(val mediaRef: UpnpVideoRef, val episodeRef: TvEpisodeRef)
+    private data class MediaRefWithEpisode(val mediaRef: MediaRef, val episodeRef: TvEpisodeRef)
 
     fun subscribeUpnpVideoLookupRelated(mediaId: UpnpVideoId, params: JobParameters) {
         relatedLookupSub.dispose()
-        relatedLookupSub = mDatabaseClient.getRelatedUpnpVideos(mediaId)
-                .flatMapMaybe<UpnpVideoRefWithEpisode> { ref ->
-                    val title = ref.meta.mediaTitle
+        relatedLookupSub = mDatabaseClient.playableSiblingsOf(mediaId)
+                .flatMapMaybe<MediaRefWithEpisode> { ref ->
+                    val title = when (ref) {
+                        is UpnpItemRef -> ref.meta.title
+                        is DocumentRef -> ref.meta.displayName
+                        else -> TODO("unhandled media ref ${ref::javaClass.name}")
+                    }
                     val name = extractSeriesName(title)
                     val seasonNum = extractSeasonNumber(title)
                     val episodeNum = extractEpisodeNumber(title)
@@ -92,12 +116,23 @@ class AppJobService : JobService() {
                     return@flatMapMaybe mTvLookup.lookupObservable(LookupRequest(mediaRef = ref,
                             lookupName = name, seasonNumber = seasonNum, episodeNumber = episodeNum))
                             .firstElement()
-                            .map { UpnpVideoRefWithEpisode(ref, it) }
+                            .map { MediaRefWithEpisode(ref, it) }
                 }
                 .subscribeOn(AppSchedulers.networkIo)
                 .subscribe({ vwe ->
-                    mDatabaseClient.setUpnpVideoTvEpisodeId(vwe.mediaRef.id, vwe.episodeRef.id)
-                    mDatabaseClient.postChange(UpnpFolderChange(vwe.mediaRef.parentId))
+                    val ref = vwe.mediaRef
+                    val epi = vwe.episodeRef
+                    when (ref) {
+                        is UpnpVideoRef -> {
+                            mDatabaseClient.setUpnpVideoTvEpisodeId(ref.id, epi.id)
+                            mDatabaseClient.postChange(UpnpVideoChange(ref.id))
+                        }
+                        is VideoDocumentRef -> {
+                            mDatabaseClient.setVideoDocumentTvEpisodeId(ref.id, epi.id)
+                            mDatabaseClient.postChange(VideoDocumentChange(ref.id))
+                        }
+                        else -> TODO("unhandled media ref ${ref::javaClass.name}")
+                    }
                 }, { err ->
                     Timber.d(err, "Unsuccessful lookup for videos related to $mediaId")
                     if (err is SocketTimeoutException) {

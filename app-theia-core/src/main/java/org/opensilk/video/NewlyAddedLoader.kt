@@ -3,6 +3,7 @@ package org.opensilk.video
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.opensilk.media.UpnpVideoRef
+import org.opensilk.media.database.MediaDAO
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -11,7 +12,7 @@ import javax.inject.Inject
  */
 class NewlyAddedLoader
 @Inject constructor(
-        private val mDatabaseClient: DatabaseClient
+        private val mDatabaseClient: MediaDAO
 ) {
     val observable: Observable<List<UpnpVideoRef>> by lazy {
         mDatabaseClient.changesObservable

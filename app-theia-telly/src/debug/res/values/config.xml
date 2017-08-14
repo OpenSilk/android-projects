@@ -17,5 +17,6 @@
   -->
 
 <resources>
-    <string name="videos_authority">org.opensilk.video.telly.debug.provider.videos</string>
+    <string name="videos_authority">org.opensilk.video.telly.debug.provider.default</string>
+    <string name="media_authority">org.opensilk.video.telly.debug.provider.media</string>
 </resources>

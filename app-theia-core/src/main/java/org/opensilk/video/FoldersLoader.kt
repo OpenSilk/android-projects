@@ -5,7 +5,10 @@ import io.reactivex.CompletableSource
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.opensilk.media.*
-import org.opensilk.media.loader.cds.UPNP_ROOT_ID
+import org.opensilk.media.database.MediaDAO
+import org.opensilk.media.database.UpnpFolderChange
+import org.opensilk.media.database.UpnpUpdateIdChange
+import org.opensilk.media.database.VideoDocumentChange
 import org.opensilk.media.loader.cds.UpnpBrowseLoader
 import org.opensilk.media.loader.doc.DocumentLoader
 import timber.log.Timber
@@ -17,7 +20,7 @@ import javax.inject.Inject
  */
 class FoldersLoader
 @Inject constructor(
-        private val mDatabaseClient: DatabaseClient,
+        private val mDatabaseClient: MediaDAO,
         private val mBrowseLoader: UpnpBrowseLoader,
         private val mDocumentLoader: DocumentLoader
 ) {
@@ -25,13 +28,13 @@ class FoldersLoader
     fun observable(mediaId: MediaId): Observable<out List<MediaRef>> {
         return when (mediaId) {
             is UpnpFolderId -> upnpFolderIdObservable(mediaId)
-            is UpnpDeviceId -> upnpFolderIdObservable(UpnpFolderId(mediaId.deviceId, UPNP_ROOT_ID))
+            is UpnpDeviceId -> upnpFolderIdObservable(mediaId)
             is DocumentId -> documentIdLoader(mediaId)
             else -> TODO("Unsupported mediaid")
         }
     }
 
-    private fun upnpFolderIdObservable(folderId: UpnpFolderId): Observable<List<MediaRef>> {
+    private fun upnpFolderIdObservable(folderId: UpnpContainerId): Observable<List<MediaRef>> {
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
                 //during lookup we can be flooded
@@ -53,12 +56,12 @@ class FoldersLoader
                 }
     }
 
-    private fun doNetwork(folderId: UpnpFolderId): Completable {
-        return mBrowseLoader.directChildren(folderId, wantVideoItems = true)
+    private fun doNetwork(folderId: UpnpContainerId): Completable {
+        return mBrowseLoader.directChildren(upnpFolderId = folderId, wantVideoItems = true)
                 .flatMapCompletable { itemList ->
                     CompletableSource { s ->
                         mDatabaseClient.hideChildrenOf(folderId)
-                        for (item in itemList) {
+                        itemList.forEach { item ->
                             //insert/update remote item in database
                             when (item) {
                                 is UpnpFolderRef -> mDatabaseClient.addUpnpFolder(item)
@@ -71,7 +74,7 @@ class FoldersLoader
                 }
     }
 
-    private fun doDisk(folderId: UpnpFolderId): Single<List<MediaRef>> {
+    private fun doDisk(folderId: UpnpContainerId): Single<List<MediaRef>> {
         return Observable.concat(
                 mDatabaseClient.getUpnpFoldersUnder(folderId),
                 mDatabaseClient.getUpnpVideosUnder(folderId)
@@ -82,7 +85,7 @@ class FoldersLoader
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
                 //during lookup we can be flooded
-                .filter { it is DocumentChange && it.documentId.treeUri == documentId.treeUri }
+                .filter { it is VideoDocumentChange && it.documentId.treeUri == documentId.treeUri }
                 .map { true }
                 .sample(5, TimeUnit.SECONDS)
                 .startWith(true)
@@ -93,19 +96,26 @@ class FoldersLoader
     }
 
     private fun getDocuments(documentId: DocumentId): Completable {
-        return mDocumentLoader.documents(documentId)
+        return mDocumentLoader.directChildren(documentId = documentId, wantVideoItems = true)
                 .flatMapCompletable { list ->
                     Completable.fromAction {
-                        mDatabaseClient.hideDocumentsUnder(documentId)
-                        for (doc in list) {
-                            mDatabaseClient.addDocument(doc)
+                        mDatabaseClient.hideChildrenOf(documentId)
+                        list.forEach { doc ->
+                            when (doc) {
+                                is DirectoryDocumentRef -> mDatabaseClient.addDirectoryDocument(doc)
+                                is VideoDocumentRef -> mDatabaseClient.addVideoDocument(doc)
+                                else -> Timber.e("Invalid kind slipped through ${doc::class}")
+                            }
                         }
                     }
                 }
     }
 
     private fun getDocumentsLocal(documentId: DocumentId): Single<List<DocumentRef>> {
-        return mDatabaseClient.getDocumentsUnder(documentId).toList()
+        return Observable.concat<DocumentRef>(
+                mDatabaseClient.getDirectoryDocumentsUnder(documentId),
+                mDatabaseClient.getVideoDocumentsUnder(documentId)
+        ).toList()
     }
 
 }

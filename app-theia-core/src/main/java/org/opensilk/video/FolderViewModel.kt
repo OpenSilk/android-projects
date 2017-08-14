@@ -4,7 +4,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import io.reactivex.disposables.CompositeDisposable
 import org.opensilk.media.*
-import org.opensilk.media.playback.MediaProviderClient
+import org.opensilk.media.database.MediaDAO
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -13,7 +13,7 @@ import javax.inject.Inject
  */
 class FolderViewModel
 @Inject constructor(
-        private val mDatabaseClient: MediaProviderClient,
+        private val mDatabaseClient: MediaDAO,
         private val mFolderLoader: FoldersLoader
         ) : ViewModel() {
     val mediaTitle = MutableLiveData<String>()
@@ -53,7 +53,7 @@ class FolderViewModel
     }
 
     fun subscribeTitle(mediaId: MediaId) {
-        val s = mDatabaseClient.getMediaMeta(mediaId)
+        val s = mDatabaseClient.getMediaRef(mediaId)
                 .map({ it.toMediaDescription() })
                 .subscribe({
                     mediaTitle.postValue(it.title?.toString())

@@ -8,9 +8,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
 import org.opensilk.media.toMediaItem
 import org.opensilk.video.EXTRA_MEDIAID
-import org.opensilk.video.upnpVideo_folder_1_no_association
 
 /**
  * Created by drew on 6/4/17.

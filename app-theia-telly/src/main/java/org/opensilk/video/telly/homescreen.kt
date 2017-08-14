@@ -2,7 +2,6 @@ package org.opensilk.video.telly
 
 import android.arch.lifecycle.LifecycleRegistry
 import android.arch.lifecycle.LifecycleRegistryOwner
-import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
@@ -12,33 +11,23 @@ import android.support.v17.leanback.widget.HeaderItem
 import android.support.v17.leanback.widget.ListRow
 import android.support.v17.leanback.widget.ListRowPresenter
 import android.view.View
-import dagger.Binds
 import dagger.Module
-import dagger.Subcomponent
-import dagger.multibindings.IntoMap
-import org.opensilk.common.dagger.FragmentScope
-import org.opensilk.common.dagger.Injector
-import org.opensilk.common.dagger.injectMe
+import dagger.android.ContributesAndroidInjector
+import dagger.android.support.AndroidSupportInjection
 import org.opensilk.media.toMediaItem
-import org.opensilk.video.*
+import org.opensilk.video.HomeViewModel
+import org.opensilk.video.LiveDataObserver
 import javax.inject.Inject
 
 
 /**
  *
  */
-@FragmentScope
-@Subcomponent
-interface HomeComponent: Injector<HomeFragment>{
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<HomeFragment>()
+@Module
+abstract class HomeScreenModule {
+    @ContributesAndroidInjector
+    abstract fun injector(): HomeFragment
 }
-
-/**
- *
- */
-@Module(subcomponents = arrayOf(HomeComponent::class))
-abstract class HomeModule
 
 /**
  *
@@ -70,8 +59,8 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
     lateinit var mViewModel: HomeViewModel
 
     override fun onAttach(context: Context?) {
+        AndroidSupportInjection.inject(this)
         super.onAttach(context)
-        injectMe()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

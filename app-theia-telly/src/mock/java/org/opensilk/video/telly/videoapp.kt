@@ -6,10 +6,13 @@ import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
+import dagger.android.AndroidInjector
+import dagger.android.support.AndroidSupportInjectionModule
+import dagger.android.support.DaggerApplication
 import okhttp3.OkHttpClient
 import org.opensilk.dagger2.ForApp
+import org.opensilk.media.database.MediaProviderModule
 import org.opensilk.video.*
-import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -20,19 +23,18 @@ import javax.inject.Singleton
                 UpnpHolderServiceModule::class,
                 AppJobServiceModule::class,
                 MediaProviderModule::class,
-                DatabaseProviderModule::class,
+                VideoAppProviderModule::class,
                 LookupConfigModule::class,
                 ViewModelModule::class,
                 VideoGlideLibraryModule::class,
-                HomeModule::class,
-                FolderModule::class,
-                DetailModule::class,
-                PlaybackModule::class,
+                HomeScreenModule::class,
+                FolderScreenModule::class,
+                DetailScreenModule::class,
+                AndroidSupportInjectionModule::class,
                 MocksModule::class
         )
 )
 interface MockRootComponent: RootComponent {
-    fun injectMockApp(app: MockVideoApp)
     @Component.Builder
     abstract class Builder {
         @BindsInstance
@@ -46,8 +48,14 @@ interface MockRootComponent: RootComponent {
  */
 @Module
 object MockRootModule {
-    @Provides @Named("DatabaseAuthority") @JvmStatic
+
+    @Provides @Named("VideoDatabaseAuthority") @JvmStatic
     fun databaseAuthority(@ForApp context: Context): String = context.getString(R.string.videos_authority)
+
+    @Provides @Named("MediaDatabaseAuthority") @JvmStatic
+    fun mediaDatabaseAuthority(@ForApp context: Context): String {
+        return context.getString(R.string.media_authority)
+    }
 
     @Provides @Singleton @JvmStatic
     fun provideOkHttpClient(): OkHttpClient {
@@ -65,18 +73,9 @@ object MockRootModule {
  *
  */
 class MockVideoApp: VideoApp() {
-    override val rootComponent: MockRootComponent by lazy {
-        DaggerMockRootComponent.builder().context(this).build()
-    }
-    private val injectOnce = Once()
 
-    @Inject lateinit var mDatabaseClient: DatabaseClient
-
-    override fun onCreate() {
-        super.onCreate()
-        injectOnce.Do {
-            rootComponent.injectMockApp(this)
-        }
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
+        return DaggerMockRootComponent.builder().context(this).build()
     }
 
     override fun startUpnpService() {

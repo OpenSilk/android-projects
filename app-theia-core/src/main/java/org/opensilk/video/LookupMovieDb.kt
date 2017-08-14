@@ -20,9 +20,9 @@ package org.opensilk.video
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
-import org.opensilk.media.MediaRef
 import org.opensilk.media.MovieId
 import org.opensilk.media.MovieRef
+import org.opensilk.media.database.MediaDAO
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
@@ -38,8 +38,9 @@ import javax.inject.Singleton
 class LookupMovieDb
 @Inject
 constructor(
-        internal val mClient: DatabaseClient,
-        internal val mApi: TMDb
+        private val mClient: MediaDAO,
+        private val mAppClient: VideoAppDAO,
+        private val mApi: TMDb
 ) : LookupHandler {
 
     class MovieWithImages(val movie: Movie, val images: ImageList)
@@ -48,7 +49,7 @@ constructor(
         return@lazy mApi.configurationObservable().retry(2)
                 .doOnNext { config ->
                     Timber.d("Updating TMDB config")
-                    mClient.setMovieImageBaseUrl(config.images.baseUrl)
+                    mAppClient.setMovieImageBaseUrl(config.images.baseUrl)
                 }.replay(1).autoConnect()
     }
 

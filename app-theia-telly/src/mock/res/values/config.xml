@@ -17,5 +17,6 @@
   -->
 
 <resources>
-    <string name="videos_authority">org.opensilk.video.telly.mock.provider.videos</string>
+    <string name="videos_authority">org.opensilk.video.telly.mock.provider.default</string>
+    <string name="media_authority">org.opensilk.video.telly.mock.provider.media</string>
 </resources>

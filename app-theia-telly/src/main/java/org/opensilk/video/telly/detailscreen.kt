@@ -2,7 +2,6 @@ package org.opensilk.video.telly
 
 import android.arch.lifecycle.LifecycleRegistry
 import android.arch.lifecycle.LifecycleRegistryOwner
-import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
@@ -19,16 +18,13 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
-import dagger.Subcomponent
-import dagger.multibindings.IntoMap
-import org.opensilk.common.dagger.FragmentScope
-import org.opensilk.common.dagger.Injector
-import org.opensilk.common.dagger.injectMe
+import dagger.android.ContributesAndroidInjector
+import dagger.android.support.AndroidSupportInjection
 import org.opensilk.dagger2.ForApp
-import org.opensilk.media.*
+import org.opensilk.media.bundle
+import org.opensilk.media.parseMediaId
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.DetailsFileInfoRowBinding
 import java.lang.ref.WeakReference
@@ -59,20 +55,13 @@ const val SHARED_ELEMENT_NAME = "hero"
 
 
 /**
- * Created by drew on 6/2/17.
- */
-@FragmentScope
-@Subcomponent(modules = arrayOf(DetailPresenterModule::class))
-interface DetailComponent: Injector<DetailFragment> {
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<DetailFragment>()
-}
-
-/**
  *
  */
-@Module(subcomponents = arrayOf(DetailComponent::class))
-abstract class DetailModule
+@Module(includes = arrayOf(DetailPresenterModule::class))
+abstract class DetailScreenModule {
+    @ContributesAndroidInjector
+    abstract fun injector(): DetailFragment
+}
 
 
 @Module
@@ -127,8 +116,8 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
     var mHasOverview = false
 
     override fun onAttach(context: Context) {
+        AndroidSupportInjection.inject(this)
         super.onAttach(context)
-        injectMe()
         mBackgroundManager = BackgroundManager.getInstance(activity)
     }
 
@@ -226,7 +215,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
                 activity.startActivity(makePlayIntent().setAction(ACTION_RESUME))
             }
             ACTIONID_GET_DESCRIPTION -> {
-                mViewModel.doLookup()
+                mViewModel.doLookup(activity)
             }
             else -> {
                 Toast.makeText(activity, "UNIMPLEMENTED", Toast.LENGTH_LONG).show()

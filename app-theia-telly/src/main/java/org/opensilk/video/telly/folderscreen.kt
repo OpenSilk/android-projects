@@ -1,41 +1,31 @@
 package org.opensilk.video.telly
 
-import android.arch.lifecycle.*
+import android.arch.lifecycle.LifecycleRegistry
+import android.arch.lifecycle.LifecycleRegistryOwner
 import android.content.Context
 import android.os.Bundle
 import android.support.v17.leanback.app.VerticalGridSupportFragment
 import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.VerticalGridPresenter
 import android.widget.Toast
-import dagger.Binds
 import dagger.Module
-import dagger.Subcomponent
-import dagger.multibindings.IntoMap
-import org.opensilk.common.dagger.FragmentScope
-import org.opensilk.common.dagger.Injector
-import org.opensilk.common.dagger.injectMe
-import org.opensilk.media.*
+import dagger.android.ContributesAndroidInjector
+import dagger.android.support.AndroidSupportInjection
+import org.opensilk.media.bundle
+import org.opensilk.media.toMediaItem
 import org.opensilk.video.EXTRA_MEDIAID
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
-import org.opensilk.video.ViewModelKey
 import javax.inject.Inject
-
-/**
- * Created by drew on 5/28/17.
- */
-@FragmentScope
-@Subcomponent
-interface FolderComponent: Injector<FolderFragment> {
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<FolderFragment>()
-}
 
 /**
  *
  */
-@Module(subcomponents = arrayOf(FolderComponent::class))
-abstract class FolderModule
+@Module
+abstract class FolderScreenModule {
+    @ContributesAndroidInjector
+    abstract fun injector(): FolderFragment
+}
 
 /**
  *
@@ -73,8 +63,8 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
     lateinit var mViewModel: FolderViewModel
 
     override fun onAttach(context: Context?) {
+        AndroidSupportInjection.inject(this)
         super.onAttach(context)
-        injectMe()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

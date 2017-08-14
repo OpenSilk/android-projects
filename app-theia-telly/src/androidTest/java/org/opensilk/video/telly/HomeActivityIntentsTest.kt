@@ -13,8 +13,8 @@ import org.hamcrest.Matchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.testdata.upnpDevice_all_meta
 import org.opensilk.video.EXTRA_MEDIAID
-import org.opensilk.video.upnpDevices
 
 /**
  * Created by drew on 5/31/17.
@@ -25,11 +25,12 @@ class HomeActivityIntentsTest {
 
     @Rule @JvmField
     val mActivityRule = IntentsTestRule<HomeActivity>(HomeActivity::class.java)
+    val mDevice = upnpDevice_all_meta()
 
     @Test
     fun testClickOnServerItemOpensFolders() {
         val serveritem = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.title_text),
-                ViewMatchers.withText(upnpDevices()[0].meta.title)))
+                ViewMatchers.withText(mDevice.meta.title)))
         serveritem.perform(ViewActions.click())
         Intents.intended(Matchers.allOf(
                 IntentMatchers.hasComponent(ComponentName(mActivityRule.activity, FolderActivity::class.java)),

@@ -12,9 +12,9 @@ import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
 import org.opensilk.video.EXTRA_MEDIAID
 import org.opensilk.video.EXTRA_PLAY_WHEN_READY
-import org.opensilk.video.upnpVideo_folder_1_no_association
 
 /**
  * Created by drew on 6/7/17.

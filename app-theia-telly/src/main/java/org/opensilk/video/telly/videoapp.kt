@@ -1,6 +1,5 @@
 package org.opensilk.video.telly
 
-import android.app.Application
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.content.ContentResolver
@@ -16,11 +15,15 @@ import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
+import dagger.android.AndroidInjector
+import dagger.android.support.AndroidSupportInjectionModule
+import dagger.android.support.DaggerApplication
 import okhttp3.Cache
 import okhttp3.OkHttpClient
-import org.opensilk.common.dagger.*
+import org.opensilk.common.dagger.InjectionManager
 import org.opensilk.dagger2.ForApp
 import org.opensilk.logging.installLogging
+import org.opensilk.media.database.MediaProviderModule
 import org.opensilk.media.loader.cds.UpnpBrowseLoaderModule
 import org.opensilk.media.loader.doc.DocumentLoaderModule
 import org.opensilk.video.*
@@ -37,19 +40,18 @@ import javax.inject.Singleton
         UpnpHolderServiceModule::class,
         AppJobServiceModule::class,
         MediaProviderModule::class,
-        DatabaseProviderModule::class,
+        VideoAppProviderModule::class,
         LookupConfigModule::class,
         UpnpBrowseLoaderModule::class,
         DocumentLoaderModule::class,
         ViewModelModule::class,
         VideoGlideLibraryModule::class,
-        HomeModule::class,
-        FolderModule::class,
-        DetailModule::class,
-        PlaybackModule::class
+        HomeScreenModule::class,
+        FolderScreenModule::class,
+        DetailScreenModule::class,
+        AndroidSupportInjectionModule::class
 ))
-interface RootComponent {
-    fun inject(app: VideoApp)
+interface RootComponent: AndroidInjector<VideoApp> {
     @Component.Builder
     abstract class Builder {
         @BindsInstance
@@ -64,9 +66,14 @@ interface RootComponent {
 @Module
 object RootModule {
 
-    @Provides @Named("DatabaseAuthority") @JvmStatic
+    @Provides @Named("VideoDatabaseAuthority") @JvmStatic
     fun databaseAuthority(@ForApp context: Context): String {
         return context.getString(R.string.videos_authority)
+    }
+
+    @Provides @Named("MediaDatabaseAuthority") @JvmStatic
+    fun mediaDatabaseAuthority(@ForApp context: Context): String {
+        return context.getString(R.string.media_authority)
     }
 
     @Provides @Singleton @JvmStatic
@@ -86,12 +93,11 @@ object RootModule {
 /**
  * This class is overridden in the mock build variant, changes here will not be seen by espresso tests!
  */
-open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory {
+open class VideoApp: DaggerApplication(), InjectionManager, ViewModelProvider.Factory {
 
-    open internal val rootComponent: RootComponent by lazy {
-        DaggerRootComponent.builder().context(this).build()
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
+        return DaggerRootComponent.builder().context(this).build()
     }
-    private val injectOnce = Once()
 
     override fun onCreate() {
         super.onCreate()
@@ -105,19 +111,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
         startService(Intent(this, UpnpHolderService::class.java))
     }
 
-    //For now we hold references to all our injectors here
-    //this will go away when we switch over to dagger-android and AndroidInjection
-    //but, for now, i cannot get the @IntoMap thing to fucking work on our Injector.Factory
-    //i think the problem is kotlin and how it handles generics, but not really sure
-    //if you are looking for something to waste time on, HomeActivityModule declares an
-    //enable @IntoMap method that is supposed to provide an Injector.Factory but doesn't
-    //@Inject lateinit var mInjectors: Map<Class<*>, Injector.Factory<*>>
-    @Inject lateinit var mHomeBuilder: HomeComponent.Builder
-    @Inject lateinit var mFolderBuilder: FolderComponent.Builder
-    @Inject lateinit var mDetailBuilder: DetailComponent.Builder
-    @Inject lateinit var mPlaybackBuilder: PlaybackComponent.Builder
     @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
-    @Inject lateinit var mDatabaseProviderBuilder: DatabaseProviderComponent.Builder
     @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
     @Inject lateinit var mCommonGlideBuilder: VideoGlideLibraryComponent.Builder
 
@@ -127,21 +121,8 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
      * is supposed to work.
      */
     override fun injectFoo(foo: Any) {
-        injectOnce.Do {
-            rootComponent.inject(this)
-        }
-        if (foo is HomeFragment) {
-            (foo.activity as HomeActivity).daggerComponent(mHomeBuilder, foo).inject(foo)
-        } else if (foo is FolderFragment) {
-            (foo.activity as FolderActivity).daggerComponent(mFolderBuilder, foo).inject(foo)
-        } else if (foo is DetailFragment) {
-            (foo.activity as DetailActivity).daggerComponent(mDetailBuilder, foo).inject(foo)
-        } else if (foo is PlaybackActivity) {
-            foo.daggerComponent(mPlaybackBuilder, foo).inject(foo)
-        } else if (foo is UpnpHolderService) {
+        if (foo is UpnpHolderService) {
             mUpnpHolderBuilder.build().inject(foo)
-        } else if (foo is DatabaseProvider) {
-            mDatabaseProviderBuilder.build().inject(foo)
         } else if (foo is AppJobService) {
             mAppJobServiceBuilder.create(foo).inject(foo)
         } else if (foo is VideoGlideLibrary) {
@@ -156,6 +137,7 @@ open class VideoApp: Application(), InjectionManager, ViewModelProvider.Factory 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return mViewModelFactory.create(modelClass)
     }
+
 }
 
 /**

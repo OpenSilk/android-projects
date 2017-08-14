@@ -2,13 +2,10 @@ package org.opensilk.video
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import android.media.browse.MediaBrowser
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.exceptions.Exceptions
-import org.opensilk.media.MediaRef
 import org.opensilk.media.UpnpDeviceRef
 import org.opensilk.media.UpnpVideoRef
-import org.opensilk.media.toMediaItem
 import javax.inject.Inject
 
 /**

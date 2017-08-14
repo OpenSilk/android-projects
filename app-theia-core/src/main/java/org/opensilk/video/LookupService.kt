@@ -23,7 +23,6 @@ import io.reactivex.Observable
 import okhttp3.*
 import org.apache.commons.lang3.concurrent.TimedSemaphore
 import org.opensilk.media.MediaRef
-import org.opensilk.media.UpnpVideoRef
 import org.opensilk.tmdb.api.ApiKeyInterceptor
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tvdb.api.LanguageInterceptor
@@ -34,7 +33,6 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 

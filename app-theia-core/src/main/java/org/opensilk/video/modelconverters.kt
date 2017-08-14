@@ -3,8 +3,6 @@ package org.opensilk.video
 import android.net.Uri
 import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.RemoteDeviceIdentity
-import org.fourthline.cling.support.model.container.Container
-import org.fourthline.cling.support.model.item.VideoItem
 import org.opensilk.media.*
 import org.opensilk.tmdb.api.model.Image
 import org.opensilk.tmdb.api.model.Movie
