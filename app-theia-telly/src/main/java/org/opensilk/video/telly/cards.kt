@@ -174,6 +174,7 @@ class MediaItemListPresenter
             }
 
             //set progress
+            binding.completion = 0
             when (ref) {
                 is UpnpVideoId -> {
                     disposables.add(subscribeProgress(ref))
