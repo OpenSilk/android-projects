@@ -5,10 +5,7 @@ import io.reactivex.CompletableSource
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.opensilk.media.*
-import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.UpnpFolderChange
-import org.opensilk.media.database.UpnpUpdateIdChange
-import org.opensilk.media.database.VideoDocumentChange
+import org.opensilk.media.database.*
 import org.opensilk.media.loader.cds.UpnpBrowseLoader
 import org.opensilk.media.loader.doc.DocumentLoader
 import timber.log.Timber
@@ -35,10 +32,11 @@ class FoldersLoader
     }
 
     private fun upnpFolderIdObservable(folderId: UpnpContainerId): Observable<List<MediaRef>> {
+        val videoIds = HashSet<UpnpVideoId>()
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
                 //during lookup we can be flooded
-                .filter { it is UpnpUpdateIdChange || (it is UpnpFolderChange && it.folderId == folderId) }
+                .filter { it is UpnpUpdateIdChange || (it is UpnpVideoChange && videoIds.contains(it.videoId)) }
                 .map { it is UpnpUpdateIdChange }
                 .sample(5, TimeUnit.SECONDS)
                 .startWith(true)
@@ -48,10 +46,11 @@ class FoldersLoader
                     // any metadata stored in database with network items
                     // we get new thread because of rather complex operation
                     if (change) {
-                        doNetwork(folderId).andThen(doDisk(folderId))
+                        videoIds.clear()
+                        doNetwork(folderId).andThen(doDisk(folderId, videoIds))
                                 .subscribeOn(AppSchedulers.newThread)
                     } else {
-                        doDisk(folderId).subscribeOn(AppSchedulers.diskIo)
+                        doDisk(folderId, videoIds).subscribeOn(AppSchedulers.diskIo)
                     }
                 }
     }
@@ -74,10 +73,10 @@ class FoldersLoader
                 }
     }
 
-    private fun doDisk(folderId: UpnpContainerId): Single<List<MediaRef>> {
+    private fun doDisk(folderId: UpnpContainerId, videoIds: MutableSet<UpnpVideoId>): Single<out List<MediaRef>> {
         return Observable.concat(
                 mDatabaseClient.getUpnpFoldersUnder(folderId),
-                mDatabaseClient.getUpnpVideosUnder(folderId)
+                mDatabaseClient.getUpnpVideosUnder(folderId).doOnNext { videoIds.add(it.id) }
         ).toList()
     }
 
