@@ -127,24 +127,27 @@ fun MusicTrack.toUpnpMusicTrack(deviceId: UpnpDeviceId): UpnpMusicTrackRef {
 }
 
 /**
- * Parses upnp duration
+ * Parses upnp duration to millis
  * returns 0 on error
  */
 fun parseUpnpDuration(dur: String): Long {
     if (dur.isNullOrBlank()) {
         return 0L
     }
-    val strings = dur.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+    val strings =  dur.split(":".toRegex()).toTypedArray()
     if (strings.size != 3) {
         return 0L
     }
     try {
         var sec = 0L
         if (!strings[0].isNullOrEmpty()) {
-            sec += TimeUnit.SECONDS.convert(Integer.decode(strings[0]).toLong(), TimeUnit.HOURS).toInt()
+            sec += TimeUnit.MILLISECONDS.convert(strings[0].toLong(), TimeUnit.HOURS)
         }
-        sec += TimeUnit.SECONDS.convert(Integer.decode(strings[1]).toLong(), TimeUnit.MINUTES).toInt()
-        sec += TimeUnit.SECONDS.convert(Integer.decode(strings[2].substring(0, 2)).toLong(), TimeUnit.SECONDS).toInt()
+        sec += TimeUnit.MILLISECONDS.convert(strings[1].toLong(), TimeUnit.MINUTES)
+        sec += TimeUnit.MILLISECONDS.convert(strings[2].substring(0, 2).toLong(), TimeUnit.SECONDS)
+        if (strings[2].length > 3 && !strings[2].contains("/")) {
+            sec += TimeUnit.MILLISECONDS.convert(strings[2].substring(3).toLong(), TimeUnit.MILLISECONDS)
+        }
         return sec
     } catch (e: NumberFormatException) {
         return 0L
