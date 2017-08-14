@@ -76,6 +76,13 @@ class MediaDAOUpnpTest {
         assertThat(mClient.getUpnpDevice(dev2.id).blockingGet()).isEqualTo(dev2)
     }
 
+    @Test
+    fun upnpfolder_add_returns_same() {
+        val fol = upnpFolders()[0]
+        assertThat(mClient.addUpnpFolder(fol)).isTrue()
+        assertThat(mClient.getUpnpFolder(fol.id).blockingGet()).isEqualTo(fol)
+    }
+
     fun add_upnp_video_shows_in_recent() {
         val video = upnpVideo_folder_1_no_association()
         mClient.addUpnpVideo(video)

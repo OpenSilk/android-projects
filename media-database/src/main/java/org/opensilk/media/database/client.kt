@@ -166,7 +166,7 @@ class MediaDAO
                             .subscribeIgnoreError(Consumer { meta ->
                                 mResolver.insert(mUris.playbackPosition(),
                                         positionContentVals(meta.meta.displayName, position, duration))
-                                postChange(DocumentChange(mediaId))
+                                postChange(VideoDocumentChange(mediaId))
                             })
                 } else TODO()
             }
@@ -264,7 +264,7 @@ class MediaDAO
     /**
      * retrieve direct decedents of parent folder that aren't hidden
      */
-    fun getUpnpFoldersUnder(parentId: UpnpFolderId): Observable<UpnpFolderRef> {
+    fun getUpnpFoldersUnder(parentId: UpnpContainerId): Observable<UpnpFolderRef> {
         return Observable.create { s ->
             mResolver.query(mUris.upnpFolder(), upnpFolderProjection,
                     "device_id=? AND parent_id=? AND hidden=0",
@@ -391,7 +391,7 @@ class MediaDAO
     /**
      * Marks hidden column on upnp folders and videos with specified parent
      */
-    fun hideChildrenOf(parentId: UpnpFolderId) {
+    fun hideChildrenOf(parentId: UpnpContainerId) {
         val cv = ContentValues()
         cv.put("hidden", "1")
         mResolver.update(mUris.upnpFolder(), cv, "device_id=? AND parent_id=?",
@@ -700,7 +700,6 @@ fun UpnpFolderRef.contentValues(): ContentValues {
     cv.put("folder_id", meta.id.containerId)
     cv.put("parent_id", meta.id.parentId)
     cv.put("_display_name", meta.meta.title)
-    cv.put("date_added", System.currentTimeMillis())
     cv.put("hidden", 0)
     return cv
 }
