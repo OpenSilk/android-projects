@@ -35,7 +35,7 @@ dependencies {
     compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
     compile project(':dagger2')
-    compile project(':media')
+    compile project(':media-database')
 
     testCompile "junit:junit:$test_junitVersion"
 

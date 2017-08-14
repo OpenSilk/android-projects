@@ -30,6 +30,7 @@ import io.reactivex.functions.Consumer
 import okhttp3.OkHttpClient
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
+import org.opensilk.media.database.MediaDAO
 import org.opensilk.reactivex2.subscribeIgnoreError
 import timber.log.Timber
 import javax.inject.Inject
@@ -42,7 +43,7 @@ class PlaybackSession
 @Inject
 constructor(
         @ForApp private val mContext: Context,
-        private val mDbClient: MediaProviderClient,
+        private val mDbClient: MediaDAO,
         private val mQueue: PlaybackQueue,
         okHttpClient: OkHttpClient
 ) : MediaSession.Callback(), AudioManager.OnAudioFocusChangeListener, ExoPlayer.EventListener {
@@ -311,7 +312,7 @@ constructor(
         when (mediaRef) {
             is UpnpVideoId -> {
                 Single.zip<List<MediaRef>, Long, MetaWithPos>(
-                        mDbClient.siblingsOf(mediaRef).toList(),
+                        mDbClient.playableSiblingsOf(mediaRef).toList(),
                         //get playback position for resume
                         mDbClient.getLastPlaybackPosition(mediaRef)
                                 .defaultIfEmpty(0).toSingle(),
