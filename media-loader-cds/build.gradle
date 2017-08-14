@@ -33,4 +33,11 @@ dependencies {
     compile project(':upnp-cds-browser')
     compile project(':upnp-cds-featurelist')
 
+    testCompile project(':media-testdata')
+    testCompile "junit:junit:$test_junitVersion"
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
+    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
+
 }
