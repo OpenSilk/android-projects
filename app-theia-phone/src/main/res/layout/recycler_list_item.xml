@@ -50,7 +50,7 @@
                     tools:text="Title"
                     android:text="@{titleString}"
                     android:lines="1"
-                    android:ellipsize="marquee"
+                    android:ellipsize="end"
                     style="@style/mtrl.TwoLineListItemInner.Text1"/>
 
                 <TextView
@@ -63,7 +63,7 @@
                     android:text="@{subTitleString}"
                     android:visibility="@{TextUtils.isEmpty(subTitleString) ? View.GONE : View.VISIBLE}"
                     android:lines="1"
-                    android:ellipsize="end"
+                    android:ellipsize="middle"
                     style="@style/mtrl.TwoLineListItemInner.Text2"/>
 
             </LinearLayout>
