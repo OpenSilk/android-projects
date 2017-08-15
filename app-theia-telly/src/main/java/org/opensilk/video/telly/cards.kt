@@ -177,19 +177,15 @@ class MediaItemListPresenter
             binding.completion = 0
             when (ref) {
                 is UpnpVideoId -> {
-                    disposables.add(subscribeProgress(ref))
+                    disposables.add(getCompletionProgress(ref))
                 }
             }
 
         }
 
-        private fun subscribeProgress(videoId: UpnpVideoId): Disposable {
-            return mDatabaseClient.upnpVideoChanges(videoId)
-                    .startWith(UpnpVideoChange(videoId))
-                    .flatMapMaybe {
-                        mDatabaseClient.getLastPlaybackCompletion(it.videoId)
-                                .subscribeOn(AppSchedulers.diskIo)
-                    }
+        private fun getCompletionProgress(videoId: UpnpVideoId): Disposable {
+            return mDatabaseClient.getLastPlaybackCompletion(videoId)
+                    .subscribeOn(AppSchedulers.diskIo)
                     .subscribeIgnoreError(Consumer {
                         binding.completion = it
                     })
