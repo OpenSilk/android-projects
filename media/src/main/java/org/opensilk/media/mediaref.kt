@@ -142,17 +142,24 @@ fun MediaRef.toMediaDescription(): MediaDescription {
                     .setSubtitle(meta.artist.elseIfBlank(meta.creator))
                     .setIconUri(meta.artworkUri.elseIfEmpty(meta.originalArtworkUri))
                     .setMediaId(id.json)
+                    .setExtras(bundle(KEY_MEDIA_URI, meta.mediaUri)
+                            ._putLong(KEY_DURATION, meta.duration))
         }
         is UpnpAudioRef -> {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.creator)
                     .setMediaId(id.json)
         }
-        is DocumentRef -> {
+        is DirectoryDocumentRef -> {
+            bob.setTitle(meta.title.elseIfBlank(meta.displayName))
+                    .setMediaId(id.json)
+        }
+        is VideoDocumentRef -> {
             bob.setTitle(meta.title.elseIfBlank(meta.displayName))
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
                     .setMediaId(id.json)
+                    .setExtras(bundle(KEY_MEDIA_URI, id.mediaUri))
         }
         else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
     }
