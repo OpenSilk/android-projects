@@ -46,64 +46,60 @@ class MediaDAO
         mChangesSubject.onNext(event)
     }
 
-    fun getMediaRef(mediaId: MediaId): Maybe<out MediaRef> {
-        return when (mediaId) {
-            is UpnpFolderId -> getUpnpFolder(mediaId)
-            is UpnpVideoId -> getUpnpVideo(mediaId)
-            is UpnpDeviceId -> getUpnpDevice(mediaId)
-            is DocumentId -> if (mediaId.isVideo) getVideoDocument(mediaId) else TODO()
+    fun getMediaRef(mediaId: MediaId): Maybe<out MediaRef> = when (mediaId) {
+        is UpnpFolderId -> getUpnpFolder(mediaId)
+        is UpnpVideoId -> getUpnpVideo(mediaId)
+        is UpnpDeviceId -> getUpnpDevice(mediaId)
+        is DocumentId -> when {
+            mediaId.isDirectory -> getDirectoryDocument(mediaId)
+            mediaId.isVideo -> getVideoDocument(mediaId)
             else -> TODO()
         }
+        else -> TODO()
     }
 
-    fun getMediaOverview(mediaId: MediaId): Maybe<String> {
-        return when (mediaId) {
-            is UpnpVideoId -> getUpnpVideoOverview(mediaId)
-            is DocumentId -> {
-                if (mediaId.isVideo) {
-                    getVideoDocumentOverview(mediaId)
-                } else TODO()
-            }
+    fun getMediaOverview(mediaId: MediaId): Maybe<String> = when (mediaId) {
+        is UpnpVideoId -> getUpnpVideoOverview(mediaId)
+        is DocumentId -> when {
+            mediaId.isVideo -> getVideoDocumentOverview(mediaId)
             else -> TODO()
         }
+        else -> TODO()
     }
 
     /**
      * Do not return folders here
      */
-    fun playableSiblingsOf(mediaId: MediaId): Observable<out MediaRef> {
-        return when (mediaId) {
-            is UpnpFolderId -> {
-                getUpnpVideosUnder(UpnpFolderId(mediaId.deviceId, "", mediaId.parentId))
-            }
-            is UpnpVideoId -> {
-                getUpnpVideosUnder(UpnpFolderId(mediaId.deviceId, "", mediaId.parentId))
-            }
-            is DocumentId -> {
-                if (mediaId.isVideo) {
-                    getVideoDocumentsUnder(mediaId.copy(documentId = mediaId.parentId))
-                } else TODO()
-            }
-            else -> TODO()
+    fun playableSiblingsOf(mediaId: MediaId): Observable<out MediaRef> = when (mediaId) {
+        is UpnpFolderId -> {
+            getUpnpVideosUnder(UpnpFolderId(mediaId.deviceId, "", mediaId.parentId))
         }
+        is UpnpVideoId -> {
+            getUpnpVideosUnder(UpnpFolderId(mediaId.deviceId, "", mediaId.parentId))
+        }
+        is DocumentId -> {
+            if (mediaId.isVideo) {
+                getVideoDocumentsUnder(mediaId.copy(documentId = mediaId.parentId))
+            } else TODO()
+        }
+        else -> TODO()
     }
 
-    fun getLastPlaybackPosition(mediaId: MediaId): Maybe<Long> {
-        return when (mediaId) {
-            is UpnpVideoId -> {
-                getUpnpVideo(mediaId).flatMap { meta ->
-                    lastPlaybackPosition(meta.meta.originalTitle)
-                }
+    fun getLastPlaybackPosition(mediaId: MediaId): Maybe<Long> = when (mediaId) {
+        is UpnpVideoId -> {
+            getUpnpVideo(mediaId).flatMap { meta ->
+                lastPlaybackPosition(meta.meta.originalTitle)
             }
-            is DocumentId -> {
-                if (mediaId.isVideo) {
-                    getVideoDocument(mediaId).flatMap { meta ->
-                        lastPlaybackPosition(meta.meta.displayName)
-                    }
-                } else TODO()
+        }
+        is DocumentId -> when {
+            mediaId.isVideo -> {
+                getVideoDocument(mediaId).flatMap { meta ->
+                    lastPlaybackPosition(meta.meta.displayName)
+                }
             }
             else -> TODO()
         }
+        else -> TODO()
     }
 
     fun lastPlaybackPosition(mediaTitle: String): Maybe<Long> {
@@ -119,22 +115,21 @@ class MediaDAO
         }
     }
 
-    fun getLastPlaybackCompletion(mediaId: MediaId): Maybe<Int> {
-        when (mediaId) {
-            is UpnpVideoId -> {
-                return getUpnpVideo(mediaId).flatMap { meta ->
-                    lastPlaybackCompletion(meta.meta.originalTitle)
-                }
+    fun getLastPlaybackCompletion(mediaId: MediaId): Maybe<Int> = when (mediaId) {
+        is UpnpVideoId -> {
+            getUpnpVideo(mediaId).flatMap { meta ->
+                lastPlaybackCompletion(meta.meta.originalTitle)
             }
-            is DocumentId -> {
-                if (mediaId.isVideo) {
-                    return getVideoDocument(mediaId).flatMap { meta ->
-                        lastPlaybackCompletion(meta.meta.displayName)
-                    }
-                } else TODO()
+        }
+        is DocumentId -> when {
+            mediaId.isVideo -> {
+                getVideoDocument(mediaId).flatMap { meta ->
+                    lastPlaybackCompletion(meta.meta.displayName)
+                }
             }
             else -> TODO()
         }
+        else -> TODO()
     }
 
     private fun lastPlaybackCompletion(mediaTitle: String): Maybe<Int> {
@@ -422,6 +417,21 @@ class MediaDAO
                     s.onNext(c.toDirectoryDocument())
                 }
                 s.onComplete()
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    fun getDirectoryDocument(documentId: DocumentId): Maybe<DirectoryDocumentRef> {
+        return Maybe.create { s ->
+            mResolver.query(mUris.documentDirectory(), directoryDocumentProjection,
+                    "tree_uri=? AND document_id=? AND parent_id=?",
+                    arrayOf(documentId.treeUri.toString(), documentId.documentId,
+                            documentId.parentId), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    s.onSuccess(c.toDirectoryDocument())
+                } else {
+                    s.onComplete()
+                }
             } ?: s.onError(VideoDatabaseMalfuction())
         }
     }
