@@ -178,15 +178,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
+        Timber.d("onConfigurationChanged()")
         super.onConfigurationChanged(newConfig)
-    }
-
-    override fun onBackPressed() {
-        if (isOverlayShowing()) {
-            animateOverlayOut()
-        } else {
-            super.onBackPressed()
-        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
