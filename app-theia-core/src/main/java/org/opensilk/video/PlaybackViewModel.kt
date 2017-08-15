@@ -45,6 +45,7 @@ class PlaybackViewModel
     init {
         mPlaybackSession.controller.registerCallback(mMediaControllerCallback)
         mPlaybackSession.session.setMediaButtonReceiver(null) //recommends by android
+        mPlaybackSession.setVideoMode()
         mExoPlayer.setVideoListener(this)
         mExoPlayer.setTextOutput(this)
         mTransportControls.sendCustomAction(ACTION_SET_REPEAT, bundle(KEY_REPEAT, VAL_REPEAT_OFF))

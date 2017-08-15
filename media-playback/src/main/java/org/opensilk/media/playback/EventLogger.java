@@ -24,6 +24,7 @@ import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.RendererCapabilities;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioRendererEventListener;
@@ -57,7 +58,7 @@ import java.util.Locale;
 /**
  * Logs player events using {@link Log}.
  */
-/* package */ final class EventLogger implements ExoPlayer.EventListener,
+/* package */ final class EventLogger implements Player.EventListener,
         AudioRendererEventListener, VideoRendererEventListener, AdaptiveMediaSourceEventListener,
     ExtractorMediaSource.EventListener, DefaultDrmSessionManager.EventListener,
     MetadataRenderer.Output {
@@ -200,6 +201,11 @@ import java.util.Locale;
       Log.d(TAG, "  ]");
     }
     Log.d(TAG, "]");
+  }
+
+  @Override
+  public void onRepeatModeChanged(int repeatMode) {
+    Log.d(TAG, "repeat=" + repeatMode);
   }
 
   // MetadataRenderer.Output

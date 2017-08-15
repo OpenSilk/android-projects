@@ -15,6 +15,7 @@ import android.media.session.PlaybackState.*
 import android.net.Uri
 import android.os.*
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
@@ -46,7 +47,7 @@ constructor(
         private val mDbClient: MediaDAO,
         private val mQueue: PlaybackQueue,
         okHttpClient: OkHttpClient
-) : MediaSession.Callback(), AudioManager.OnAudioFocusChangeListener, ExoPlayer.EventListener {
+) : MediaSession.Callback(), AudioManager.OnAudioFocusChangeListener, Player.EventListener {
 
     private val mMediaSession: MediaSession = MediaSession(mContext, BuildConfig.APPLICATION_ID)
     private var mMainHandler: Handler = Handler(Looper.getMainLooper())
@@ -88,6 +89,12 @@ constructor(
     val player: SimpleExoPlayer
         get() = mExoPlayer
 
+    fun setVideoMode() {
+        mExoPlayer.audioAttributes = AudioAttributes.Builder()
+                .setContentType(C.CONTENT_TYPE_MOVIE)
+                .setUsage(C.USAGE_MEDIA).build()
+    }
+
     init {
         mExoPlayer.addListener(this)
         val eventLogger = EventLogger(mTrackSelector)
@@ -95,7 +102,9 @@ constructor(
         mExoPlayer.setAudioDebugListener(eventLogger)
         mExoPlayer.setVideoDebugListener(eventLogger)
         mExoPlayer.setMetadataOutput(eventLogger)
-        mExoPlayer.audioStreamType = C.STREAM_TYPE_MUSIC
+        mExoPlayer.audioAttributes = AudioAttributes.Builder()
+                .setContentType(C.CONTENT_TYPE_MUSIC)
+                .setUsage(C.USAGE_MEDIA).build()
 
         mWakeLock.setReferenceCounted(false)
 
@@ -182,10 +191,10 @@ constructor(
 
     fun Int._stringifyExoPlayerState(): String {
         return when (this) {
-            ExoPlayer.STATE_BUFFERING -> "STATE_BUFFERING"
-            ExoPlayer.STATE_IDLE -> "STATE_IDLE"
-            ExoPlayer.STATE_ENDED -> "STATE_ENDED"
-            ExoPlayer.STATE_READY -> "STATE_READY"
+            Player.STATE_BUFFERING -> "STATE_BUFFERING"
+            Player.STATE_IDLE -> "STATE_IDLE"
+            Player.STATE_ENDED -> "STATE_ENDED"
+            Player.STATE_READY -> "STATE_READY"
             else -> "UNKNOWN"
         }
     }
@@ -194,13 +203,13 @@ constructor(
         Timber.d("onExoPlayerStateChanged(playWhenReady=%s, playbackState=%s",
                 playWhenReady, playbackState._stringifyExoPlayerState())
         when (playbackState) {
-            ExoPlayer.STATE_IDLE -> {
+            Player.STATE_IDLE -> {
                 //changeState(PlaybackState.STATE_NONE)
             }
-            ExoPlayer.STATE_BUFFERING -> {
+            Player.STATE_BUFFERING -> {
                 changeState(STATE_BUFFERING)
             }
-            ExoPlayer.STATE_ENDED -> {
+            Player.STATE_ENDED -> {
                 //update pos on last played
                 mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
                     val ref = parseMediaId(item.description.mediaId)
@@ -221,7 +230,7 @@ constructor(
                     changeState(STATE_STOPPED)
                 })
             }
-            ExoPlayer.STATE_READY -> {
+            Player.STATE_READY -> {
                 if (playWhenReady) {
                     changeState(PlaybackState.STATE_PLAYING)
                 } else {
@@ -250,6 +259,10 @@ constructor(
     override fun onTimelineChanged(timeline: Timeline, manifest: Any?) {
         if (timeline.isEmpty) return
         //TODO ?? what changes
+    }
+
+    override fun onRepeatModeChanged(repeatMode: Int) {
+
     }
 
     /*
