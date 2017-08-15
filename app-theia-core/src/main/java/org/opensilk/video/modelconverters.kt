@@ -59,7 +59,7 @@ fun SeriesEpisode.toTvEpisodeRef(seriesId: Long, poster: SeriesImageQuery?, back
             TvEpisodeId(id, seriesId),
             TvEpisodeMeta(
                     title = episodeName,
-                    overview = overview ?: "",
+                    overview = overview,
                     releaseDate = firstAired,
                     episodeNumber = airedEpisodeNumber,
                     seasonNumber = airedSeason,
@@ -75,10 +75,10 @@ fun SeriesImageQuery.toTvImage(seriesId: Long): TvImageRef {
             TvImageMeta(
                     path = fileName,
                     type = keyType,
-                    subType = subKey ?: "",
+                    subType = subKey,
                     rating = ratingsInfo.average,
                     ratingCount = ratingsInfo.count,
-                    resolution = resolution ?: ""
+                    resolution = resolution
             )
     )
 }

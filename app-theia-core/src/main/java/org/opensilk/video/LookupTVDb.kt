@@ -116,7 +116,7 @@ constructor(
             //insert into database
             val ref = swi.series.data.toTvSeriesRef(swi.posters.data.firstOrNull(), swi.fanart.data.firstOrNull())
             val episodes = swi.episodes.episodes.map { ep -> ep.toTvEpisodeRef(swi.series.data.id,
-                    swi.season.data.firstOrNull { (it.subKey?.toIntOrNull() ?: -1) == ep.airedSeason },
+                    swi.season.data.firstOrNull { (it.subKey.toIntOrNull() ?: -1) == ep.airedSeason },
                     swi.fanart.data.firstOrNull()) }
             val posters = swi.posters.data.map { it.toTvImage(swi.series.data.id) }
             val bakcdrops = swi.posters.data.map { it.toTvImage(swi.series.data.id) }
