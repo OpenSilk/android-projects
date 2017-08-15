@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.opensilk.dagger2.ForApp
 import javax.inject.Inject
 
-const private val VERSION = 1
+const private val VERSION = 2
 
 /**
  * Created by drew on 7/18/17.
@@ -21,7 +21,7 @@ internal class MediaDB
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < VERSION) {
+        if (oldVersion < 1) {
             db.execSQL("DROP TABLE IF EXISTS tv_series;")
             db.execSQL("CREATE TABLE tv_series (" +
                     "_id INTEGER PRIMARY KEY , " +
@@ -174,6 +174,15 @@ internal class MediaDB
 
                     "UNIQUE(device_id,item_id,parent_id) " +
                     ");")
+            db.execSQL("DROP TABLE IF EXISTS media_position")
+            db.execSQL("CREATE TABLE media_position (" +
+                    "_display_name TEXT NOT NULL PRIMARY KEY, " +
+                    "last_played INTEGER NOT NULL, " + //milli
+                    "last_position INTEGER NOT NULL, " +
+                    "last_completion INTEGER NOT NULL " +
+                    ");")
+        }
+        if (oldVersion < 2) {
             db.execSQL("DROP TABLE IF EXISTS document_directory")
             db.execSQL("CREATE TABLE document_directory (" +
                     "authority TEXT NOT NULL, " +
@@ -183,6 +192,7 @@ internal class MediaDB
                     "_display_name TEXT NOT NULL, " +
                     "flags INTEGER DEFAULT 0, " +
                     "last_modified INTEGER DEFAULT 0," +
+                    "mime_type TEXT NOT NULL, " +
 
                     "hidden INTEGER DEFAULT 0," +
                     "UNIQUE(tree_uri, document_id, parent_id)" +
@@ -233,13 +243,6 @@ internal class MediaDB
                     "custom_backdrop_uri TEXT, " +
 
                     "UNIQUE(tree_uri, document_id, parent_id)" +
-                    ");")
-            db.execSQL("DROP TABLE IF EXISTS media_position")
-            db.execSQL("CREATE TABLE media_position (" +
-                    "_display_name TEXT NOT NULL PRIMARY KEY, " +
-                    "last_played INTEGER NOT NULL, " + //milli
-                    "last_position INTEGER NOT NULL, " +
-                    "last_completion INTEGER NOT NULL " +
                     ");")
         }
     }
