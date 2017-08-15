@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
+import android.os.OperationCanceledException
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.functions.Consumer
@@ -44,6 +45,24 @@ class MediaDAO
 
     fun postChange(event: DatabaseChange) {
         mChangesSubject.onNext(event)
+    }
+
+    private fun <T> doQuery(uri: Uri, projection: Array<out String>?, selection: String?,
+                    selectionArgs: Array<out String>?, sortOrder: String?,
+                    converter: (c: Cursor) -> T): Observable<T> {
+        return Observable.create { s ->
+            try {
+                mResolver.query(uri, projection, selection, selectionArgs,
+                        sortOrder, s.cancellationSignal())?.use { c ->
+                    while (c.moveToNext()) {
+                        s.onNext(converter(c))
+                    }
+                    s.onComplete()
+                } ?: s.onError(VideoDatabaseMalfuction())
+            } catch (e: OperationCanceledException) {
+                //pass
+            }
+        }
     }
 
     fun getMediaRef(mediaId: MediaId): Maybe<out MediaRef> = when (mediaId) {
@@ -101,6 +120,8 @@ class MediaDAO
         }
         else -> TODO()
     }
+
+
 
     fun lastPlaybackPosition(mediaTitle: String): Maybe<Long> {
         return Maybe.create<Long> { s ->
@@ -201,19 +222,14 @@ class MediaDAO
         mResolver.update(mUris.upnpDevice(), cv, null, null)
     }
 
+
+
     /**
      * retrieves all the upnp devices marked as available
      */
     fun getUpnpDevices(): Observable<UpnpDeviceRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.upnpDevice(), upnpDeviceProjection,
-                    "available=1", null, "title", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toUpnpDeviceRef())
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.upnpDevice(), upnpDeviceProjection,
+                "available=1", null, "title", {c -> c.toUpnpDeviceRef()})
     }
 
     fun getUpnpDevice(deviceId: UpnpDeviceId): Maybe<UpnpDeviceRef> {
@@ -260,17 +276,10 @@ class MediaDAO
      * retrieve direct decedents of parent folder that aren't hidden
      */
     fun getUpnpFoldersUnder(parentId: UpnpContainerId): Observable<UpnpFolderRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.upnpFolder(), upnpFolderProjection,
-                    "device_id=? AND parent_id=? AND hidden=0",
-                    arrayOf(parentId.deviceId, parentId.containerId),
-                    "_display_name", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toUpnpFolderRef())
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.upnpFolder(), upnpFolderProjection,
+                "device_id=? AND parent_id=? AND hidden=0",
+                arrayOf(parentId.deviceId, parentId.containerId),
+                "_display_name", { c -> c.toUpnpFolderRef() })
     }
 
     fun getUpnpFolder(folderId: UpnpFolderId): Maybe<UpnpFolderRef> {
@@ -298,17 +307,10 @@ class MediaDAO
      * retrieve upnp videos, direct decedents of parent
      */
     fun getUpnpVideosUnder(parentId: UpnpContainerId): Observable<UpnpVideoRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.upnpVideo(), upnpVideoProjection,
-                    "device_id=? AND parent_id=? AND hidden=0",
-                    arrayOf(parentId.deviceId, parentId.containerId),
-                    "v._display_name", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toUpnpVideoMediaMeta(mApiHelper))
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.upnpVideo(), upnpVideoProjection,
+                "device_id=? AND parent_id=? AND hidden=0",
+                arrayOf(parentId.deviceId, parentId.containerId),
+                "v._display_name", { c ->c.toUpnpVideoMediaMeta(mApiHelper) })
     }
 
     /**
@@ -329,15 +331,8 @@ class MediaDAO
     }
 
     fun getRecentUpnpVideos(): Observable<UpnpVideoRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.upnpVideo(), upnpVideoProjection, null, null,
-                    " v.date_added DESC LIMIT 20 ", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toUpnpVideoMediaMeta(mApiHelper))
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.upnpVideo(), upnpVideoProjection, null, null,
+                " v.date_added DESC LIMIT 20 ", { c -> c.toUpnpVideoMediaMeta(mApiHelper) })
     }
 
     fun getUpnpVideoOverview(videoId: UpnpVideoId): Maybe<String> {
@@ -408,17 +403,10 @@ class MediaDAO
     }
 
     fun getDirectoryDocumentsUnder(documentId: DocumentId): Observable<DirectoryDocumentRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.documentDirectory(), directoryDocumentProjection,
-                    "tree_uri=? AND parent_id=? AND hidden=0",
-                    arrayOf(documentId.treeUri.toString(), documentId.documentId),
-                    "_display_name", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toDirectoryDocument())
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.documentDirectory(), directoryDocumentProjection,
+                "tree_uri=? AND parent_id=? AND hidden=0",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId),
+                "_display_name", { c ->c.toDirectoryDocument() })
     }
 
     fun getDirectoryDocument(documentId: DocumentId): Maybe<DirectoryDocumentRef> {
@@ -441,17 +429,10 @@ class MediaDAO
     }
 
     fun getVideoDocumentsUnder(documentId: DocumentId): Observable<VideoDocumentRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.documentVideo(), videoDocumentProjection,
-                    "tree_uri=? AND parent_id=? AND hidden=0",
-                    arrayOf(documentId.treeUri.toString(), documentId.documentId),
-                    "d._display_name", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toVideoDocumentRef(mApiHelper))
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.documentVideo(), videoDocumentProjection,
+                "tree_uri=? AND parent_id=? AND hidden=0",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId),
+                "d._display_name", { c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
     fun getVideoDocument(documentId: DocumentId): Maybe<VideoDocumentRef> {
@@ -470,15 +451,8 @@ class MediaDAO
     }
 
     fun getRecentVideoDocuments(): Observable<VideoDocumentRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.documentVideo(), videoDocumentProjection,
-                    null, null, "d.date_added DESC LIMIT 20", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toVideoDocumentRef(mApiHelper))
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.documentVideo(), videoDocumentProjection, null, null,
+                "d.date_added DESC LIMIT 20", { c -> c.toVideoDocumentRef(mApiHelper)) })
     }
 
     fun getVideoDocumentOverview(documentId: DocumentId): Maybe<String> {
@@ -571,16 +545,9 @@ class MediaDAO
     }
 
     fun getTvEpisodesForTvSeries(seriesId: TvSeriesId): Observable<TvEpisodeRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.tvEpisode(), tvEpisodesProjection,
-                    "series_id=?", arrayOf(seriesId.seriesId.toString()),
-                    null, s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toTvEpisodeMediaMeta())
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.tvEpisode(), tvEpisodesProjection,
+                "series_id=?", arrayOf(seriesId.seriesId.toString()),
+                null, { c ->c.toTvEpisodeMediaMeta() })
     }
 
     fun getTvEpisode(episodeId: TvEpisodeId): Maybe<TvEpisodeRef> {
@@ -604,29 +571,15 @@ class MediaDAO
     }
 
     fun getTvPosters(seriesId: TvSeriesId): Observable<TvImageRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.tvImage(), tvBannerProjection,
-                    "series_id=? and type=?", arrayOf(seriesId.seriesId.toString(), "poster"),
-                    "rating DESC", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toTvBannerMediaMeta())
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.tvImage(), tvBannerProjection,
+                "series_id=? and type=?", arrayOf(seriesId.seriesId.toString(), "poster"),
+                "rating DESC", { c ->c.toTvBannerMediaMeta() })
     }
 
     fun getTvBackdrops(seriesId: TvSeriesId): Observable<TvImageRef> {
-        return Observable.create { s ->
-            mResolver.query(mUris.tvImage(), tvBannerProjection,
-                    "series_id=? and type=?", arrayOf(seriesId.seriesId.toString(), "fanart"),
-                    "rating DESC", s.cancellationSignal())?.use { c ->
-                while (c.moveToNext()) {
-                    s.onNext(c.toTvBannerMediaMeta())
-                }
-                s.onComplete()
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doQuery(mUris.tvImage(), tvBannerProjection,
+                "series_id=? and type=?", arrayOf(seriesId.seriesId.toString(), "fanart"),
+                "rating DESC", { c ->c.toTvBannerMediaMeta() })
     }
 
     /*
