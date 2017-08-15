@@ -323,44 +323,45 @@ constructor(
         val mediaRef = parseMediaId(mediaId)
         val playbackExtras = extras._playbackExtras()
         when (mediaRef) {
-            is UpnpVideoId -> {
-                Single.zip<List<MediaRef>, Long, MetaWithPos>(
-                        mDbClient.playableSiblingsOf(mediaRef).toList(),
-                        //get playback position for resume
-                        mDbClient.getLastPlaybackPosition(mediaRef)
-                                .defaultIfEmpty(0).toSingle(),
-                        BiFunction { list, pos -> MetaWithPos(list, pos) }
-                ).subscribe({ mwp ->
-                    val lastPlaybackPosition = if (playbackExtras.resume) mwp.pos else 0
-                    //fixup the queue
-                    mwp.list.forEach {
-                        mQueue.add(it.toMediaDescription())
-                    }
-                    mMediaSession.setQueue(mQueue.get())
-                    val current = mQueue.get().first {
-                        parseMediaId(it.description.mediaId) == mediaRef
-                    }
-                    mQueue.setCurrent(current.queueId)
-                    //play it
-                    prepareMedia(current.description._getMediaUri(), lastPlaybackPosition)
-                    if (playbackExtras.playWhenReady) {
-                        play()
-                    }
-                    updateMetadata(current.description)
-                }, { t ->
-                    stop()
-                    changeState(STATE_ERROR) {
-                        it.setErrorMessage(t.message)
-                    }
-                })
+            is UpnpVideoId -> fetchAndPlaySiblingsOf(mediaRef, playbackExtras)
+            is DocumentId -> when {
+                mediaRef.isVideo -> fetchAndPlaySiblingsOf(mediaRef, playbackExtras)
+                else -> stopAndShowError("Unsupported media kind=${mediaRef.javaClass.name}")
             }
-            else -> {
-                stop()
-                changeState(STATE_ERROR) {
-                    it.setErrorMessage("Unsupported media kind=${mediaRef::class}")
-                }
-            }
+            else -> stopAndShowError("Unsupported media kind=${mediaRef.javaClass.name}")
         }
+    }
+
+    private fun fetchAndPlaySiblingsOf(mediaId: MediaId, playbackExtras: PlaybackExtras) {
+        Single.zip<List<MediaRef>, Long, MetaWithPos>(
+                mDbClient.playableSiblingsOf(mediaId).toList(),
+                //get playback position for resume
+                mDbClient.getLastPlaybackPosition(mediaId)
+                        .defaultIfEmpty(0).toSingle(),
+                BiFunction { list, pos -> MetaWithPos(list, pos) }
+        ).subscribe({ mwp ->
+            val lastPlaybackPosition = if (playbackExtras.resume) mwp.pos else 0
+            //fixup the queue
+            mwp.list.forEach {
+                mQueue.add(it.toMediaDescription())
+            }
+            mMediaSession.setQueue(mQueue.get())
+            val current = mQueue.get().first {
+                parseMediaId(it.description.mediaId) == mediaId
+            }
+            mQueue.setCurrent(current.queueId)
+            //play it
+            prepareMedia(current.description._getMediaUri(), lastPlaybackPosition)
+            if (playbackExtras.playWhenReady) {
+                play()
+            }
+            updateMetadata(current.description)
+        }, { t ->
+            stop()
+            changeState(STATE_ERROR) {
+                it.setErrorMessage(t.message)
+            }
+        })
     }
 
     private fun prepareMedia(mediaUri: Uri, lastPlaybackPosition: Long = 0) {
@@ -369,6 +370,13 @@ constructor(
         mExoPlayer.prepare(mediaSource)
         if (lastPlaybackPosition > 0) {
             mExoPlayer.seekTo(lastPlaybackPosition)
+        }
+    }
+
+    private fun stopAndShowError(msg: String) {
+        stop()
+        changeState(STATE_ERROR) {
+            it.setErrorMessage(msg)
         }
     }
 
