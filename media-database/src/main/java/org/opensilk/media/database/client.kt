@@ -65,6 +65,25 @@ class MediaDAO
         }
     }
 
+    private fun <T> doGet(uri: Uri, projection: Array<out String>?, selection: String?,
+                          selectionArgs: Array<out String>?,
+                          converter: (c: Cursor) -> T): Maybe<T> {
+        return Maybe.create { s ->
+            try {
+                mResolver.query(uri, projection, selection, selectionArgs,
+                        null, s.cancellationSignal())?.use { c ->
+                    if (c.moveToFirst()) {
+                        s.onSuccess(converter(c))
+                    } else {
+                        s.onComplete()
+                    }
+                } ?: s.onError(VideoDatabaseMalfuction())
+            } catch (e: OperationCanceledException) {
+                //pass
+            }
+        }
+    }
+
     fun getMediaRef(mediaId: MediaId): Maybe<out MediaRef> = when (mediaId) {
         is UpnpFolderId -> getUpnpFolder(mediaId)
         is UpnpVideoId -> getUpnpVideo(mediaId)
@@ -121,19 +140,9 @@ class MediaDAO
         else -> TODO()
     }
 
-
-
     fun lastPlaybackPosition(mediaTitle: String): Maybe<Long> {
-        return Maybe.create<Long> { s ->
-            mResolver.query(mUris.playbackPosition(), arrayOf("last_position"),
-                    "_display_name=?", arrayOf(mediaTitle), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.getLong(0))
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.playbackPosition(), arrayOf("last_position"),
+                    "_display_name=?", arrayOf(mediaTitle), {c -> c.getLong(0)})
     }
 
     fun getLastPlaybackCompletion(mediaId: MediaId): Maybe<Int> = when (mediaId) {
@@ -154,16 +163,8 @@ class MediaDAO
     }
 
     private fun lastPlaybackCompletion(mediaTitle: String): Maybe<Int> {
-        return Maybe.create<Int> { s ->
-            mResolver.query(mUris.playbackPosition(), arrayOf("last_completion"),
-                    "_display_name=?", arrayOf(mediaTitle), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.getInt(0))
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.playbackPosition(), arrayOf("last_completion"),
+                "_display_name=?", arrayOf(mediaTitle),{ c -> c.getInt(0) })
     }
 
     fun setLastPlaybackPosition(mediaId: MediaId, position: Long, duration: Long) {
@@ -233,16 +234,8 @@ class MediaDAO
     }
 
     fun getUpnpDevice(deviceId: UpnpDeviceId): Maybe<UpnpDeviceRef> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.upnpDevice(), upnpDeviceProjection,
-                    "device_id=?", arrayOf(deviceId.deviceId), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toUpnpDeviceRef())
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.upnpDevice(), upnpDeviceProjection,
+                "device_id=?", arrayOf(deviceId.deviceId), { c -> c.toUpnpDeviceRef()})
     }
 
     fun setUpnpDeviceSystemUpdateId(deviceId: UpnpDeviceId, updateId: Long): Boolean {
@@ -253,16 +246,8 @@ class MediaDAO
     }
 
     fun getUpnpDeviceSystemUpdateId(deviceId: UpnpDeviceId): Maybe<Long> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.upnpDevice(), arrayOf("update_id"), "device_id=?",
-                    arrayOf(deviceId.deviceId), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.getLong(0))
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.upnpDevice(), arrayOf("update_id"), "device_id=?",
+                arrayOf(deviceId.deviceId), { c ->c.getLong(0) })
     }
 
     /**
@@ -283,17 +268,10 @@ class MediaDAO
     }
 
     fun getUpnpFolder(folderId: UpnpFolderId): Maybe<UpnpFolderRef> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.upnpFolder(), upnpFolderProjection,
-                    "device_id=? AND parent_id=? AND folder_id=?",
-                    arrayOf(folderId.deviceId, folderId.parentId, folderId.containerId), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toUpnpFolderRef())
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.upnpFolder(), upnpFolderProjection,
+                "device_id=? AND parent_id=? AND folder_id=?",
+                arrayOf(folderId.deviceId, folderId.parentId, folderId.containerId),
+                {c -> c.toUpnpFolderRef() })
     }
 
     /**
@@ -317,17 +295,10 @@ class MediaDAO
      * retrieve specified upnp video
      */
     fun getUpnpVideo(videoId: UpnpVideoId): Maybe<UpnpVideoRef> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.upnpVideo(), upnpVideoProjection,
-                    "device_id=? AND parent_id=? AND item_id=?",
-                    arrayOf(videoId.deviceId, videoId.parentId, videoId.itemId), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toUpnpVideoMediaMeta(mApiHelper))
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.upnpVideo(), upnpVideoProjection,
+                "device_id=? AND parent_id=? AND item_id=?",
+                arrayOf(videoId.deviceId, videoId.parentId, videoId.itemId),
+                {c -> c.toUpnpVideoMediaMeta(mApiHelper) })
     }
 
     fun getRecentUpnpVideos(): Observable<UpnpVideoRef> {
@@ -410,18 +381,10 @@ class MediaDAO
     }
 
     fun getDirectoryDocument(documentId: DocumentId): Maybe<DirectoryDocumentRef> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.documentDirectory(), directoryDocumentProjection,
-                    "tree_uri=? AND document_id=? AND parent_id=?",
-                    arrayOf(documentId.treeUri.toString(), documentId.documentId,
-                            documentId.parentId), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toDirectoryDocument())
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.documentDirectory(), directoryDocumentProjection,
+                "tree_uri=? AND document_id=? AND parent_id=?",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId),
+                { c -> c.toDirectoryDocument() })
     }
 
     fun addVideoDocument(documentRef: VideoDocumentRef): Boolean {
@@ -436,23 +399,15 @@ class MediaDAO
     }
 
     fun getVideoDocument(documentId: DocumentId): Maybe<VideoDocumentRef> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.documentVideo(), videoDocumentProjection,
-                    "tree_uri=? AND document_id=? AND parent_id=?",
-                    arrayOf(documentId.treeUri.toString(), documentId.documentId,
-                            documentId.parentId), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toVideoDocumentRef(mApiHelper))
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.documentVideo(), videoDocumentProjection,
+                "tree_uri=? AND document_id=? AND parent_id=?",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId),
+                {c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
     fun getRecentVideoDocuments(): Observable<VideoDocumentRef> {
         return doQuery(mUris.documentVideo(), videoDocumentProjection, null, null,
-                "d.date_added DESC LIMIT 20", { c -> c.toVideoDocumentRef(mApiHelper)) })
+                "d.date_added DESC LIMIT 20", { c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
     fun getVideoDocumentOverview(documentId: DocumentId): Maybe<String> {
@@ -525,16 +480,9 @@ class MediaDAO
     }
 
     fun getTvSeries(seriesId: TvSeriesId): Maybe<TvSeriesRef> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.tvSeries(), tvSeriesProjection,
-                    "_id=?", arrayOf(seriesId.seriesId.toString()), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toTvSeries())
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.tvSeries(), tvSeriesProjection,
+                "_id=?", arrayOf(seriesId.seriesId.toString()),
+                { c -> c.toTvSeries() })
     }
 
     fun addTvEpisodes(episodes: List<TvEpisodeRef>): Int {
@@ -551,16 +499,9 @@ class MediaDAO
     }
 
     fun getTvEpisode(episodeId: TvEpisodeId): Maybe<TvEpisodeRef> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.tvEpisode(), tvEpisodesProjection,
-                    "_id=?", arrayOf(episodeId.episodeId.toString()), null, null)?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toTvEpisodeMediaMeta())
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.tvEpisode(), tvEpisodesProjection,
+                "_id=?", arrayOf(episodeId.episodeId.toString()),
+                { c -> c.toTvEpisodeMediaMeta() })
     }
 
     fun addTvImages(banners: List<TvImageRef>): Int {
@@ -595,16 +536,9 @@ class MediaDAO
     }
 
     fun getMovie(movieId: MovieId): Maybe<MovieRef> {
-        return Maybe.create { s ->
-            mResolver.query(mUris.movie(), movieProjection,
-                    "_id=?", arrayOf(movieId.movieId.toString()), null, null )?.use { c ->
-                if (c.moveToFirst()) {
-                    s.onSuccess(c.toMovieRef())
-                } else {
-                    s.onComplete()
-                }
-            } ?: s.onError(VideoDatabaseMalfuction())
-        }
+        return doGet(mUris.movie(), movieProjection,
+                "_id=?", arrayOf(movieId.movieId.toString()),
+                { c -> c.toMovieRef() })
     }
 
     fun addMovieImages(images: List<MovieImageRef>): Int {
@@ -1071,9 +1005,9 @@ fun Int.zeroPad(len: Int): String {
 }
 
 /**
- * myriad scale (0-1000)
+ * scale is 0-1000
+ * uses permyriad calculation (no floating point)
  */
 fun calculateCompletion(current: Long, duration: Long): Int {
-    //permyriad calculation (no floating point)
     return ((1000*current + duration/2)/duration).toInt()
 }

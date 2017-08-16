@@ -1,10 +1,7 @@
 package org.opensilk.reactivex2
 
 import android.os.CancellationSignal
-import io.reactivex.Maybe
-import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
-import io.reactivex.Single
+import io.reactivex.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
@@ -47,5 +44,11 @@ fun <T> Single<T>.observeOnMainThread(): Single<T> {
 fun <T> ObservableEmitter<T>.cancellationSignal(): CancellationSignal {
     val c = CancellationSignal()
     this.setCancellable({ c.cancel() })
+    return c
+}
+
+fun <T> MaybeEmitter<T>.cancellationSignal(): CancellationSignal {
+    val c = CancellationSignal()
+    this.setCancellable { c.cancel() }
     return c
 }
