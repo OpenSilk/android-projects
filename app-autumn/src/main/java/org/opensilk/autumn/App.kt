@@ -5,15 +5,13 @@ import android.arch.lifecycle.*
 import android.arch.persistence.room.Room
 import android.content.Context
 import android.content.SharedPreferences
+import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
-import org.opensilk.common.dagger.AppContextComponent
-import org.opensilk.common.dagger.AppContextModule
-import org.opensilk.common.dagger.ForApplication
-import org.opensilk.common.dagger.Injector
+import org.opensilk.dagger2.ForApp
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -27,43 +25,50 @@ import kotlin.reflect.KClass
 @Singleton
 @Component(modules = arrayOf(
         AppModule::class,
-        AppContextModule::class,
         DreamViewModelModule::class
 ))
-interface AppComponent: AppContextComponent, Injector<App>
+interface AppComponent {
+    fun inject(app: App)
+    @Component.Builder
+    abstract class Builder {
+        @BindsInstance
+        abstract fun context(@ForApp context: Context): Builder
+        abstract fun build(): AppComponent
+    }
+}
 
 @Module
 object AppModule {
     @Provides @Singleton @JvmStatic
-    fun provideDatabase(@ForApplication context: Context): PlaylistDatabase {
-        return Room.databaseBuilder(context, PlaylistDatabase::class.java, "autumn-database")
-                .allowMainThreadQueries().build() //allow main thread because bug in roomDatabase
-    }
+    fun provideDatabase(@ForApp context: Context): PlaylistDatabase =
+            Room.databaseBuilder(context, PlaylistDatabase::class.java, "autumn-database")
+                    .allowMainThreadQueries().build() //allow main thread because bug in roomDatabase
+
     @Provides @Singleton @JvmStatic
-    fun providePlaylistDao(database: PlaylistDatabase): PlaylistDao {
-        return database.playlistDoa()
-    }
+    fun providePlaylistDao(database: PlaylistDatabase): PlaylistDao =
+            database.playlistDoa()
+
     @Provides @Singleton @JvmStatic
-    fun provideOkhttp(): OkHttpClient {
-        return OkHttpClient.Builder().build()
-    }
+    fun provideOkhttp(): OkHttpClient =
+            OkHttpClient.Builder().build()
+
     @Provides @Named("api_root") @JvmStatic
-    fun proviedApiRoot(): String {
-        return "http://a1.phobos.apple.com/us/r1000/000/Features/atv/AutumnResources/videos/"
-    }
+    fun proviedApiRoot(): String =
+            "http://a1.phobos.apple.com/us/r1000/000/Features/atv/AutumnResources/videos/"
+
     @Provides @Singleton @JvmStatic
-    fun provideNetworkApi(okHttpClient: OkHttpClient, @Named("api_root") apiRoot: String): NetworkApi {
-        return Retrofit.Builder()
-                .baseUrl(HttpUrl.parse(apiRoot))
-                .client(okHttpClient)
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(MoshiConverterFactory.create())
-                .build().create(NetworkApi::class.java)
-    }
+    fun provideNetworkApi(okHttpClient: OkHttpClient, @Named("api_root") apiRoot: String): NetworkApi =
+            Retrofit.Builder()
+                    .baseUrl(HttpUrl.parse(apiRoot))
+                    .client(okHttpClient)
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                    .addConverterFactory(MoshiConverterFactory.create())
+                    .build().create(NetworkApi::class.java)
+
     @Provides @Singleton @JvmStatic
-    fun providePreferences(@ForApplication context: Context) : SharedPreferences {
-        return context.getSharedPreferences("autumn-prefs", Context.MODE_PRIVATE)
-    }
+    fun providePreferences(@ForApp context: Context) : SharedPreferences =
+            context.getSharedPreferences("autumn-prefs", Context.MODE_PRIVATE)
+
 }
 
 /**
@@ -79,18 +84,17 @@ class App: Application(), ViewModelProvider.Factory {
         component.inject(this)
     }
 
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return mViewModelFactory.create(modelClass)
-    }
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            mViewModelFactory.create(modelClass)
 
     private val component: AppComponent by lazy {
-        DaggerAppComponent.builder().appContextModule(AppContextModule(this)).build()
+        DaggerAppComponent.builder().context(this).build()
     }
 }
 
 fun <T: ViewModel> LifecycleActivity.fetchViewModel(clazz: KClass<T>): T {
     val vm = ViewModelProviders.of(this, (application as ViewModelProvider.Factory)).get(clazz.java)
-    if (this is LifecycleRegistryOwner && vm is LifecycleObserver) {
+    if (vm is LifecycleObserver) {
         this.lifecycle.addObserver(vm)
     }
     return vm

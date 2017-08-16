@@ -5,8 +5,10 @@ import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
+import android.util.Log
 import android.view.SurfaceView
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ExtractorMediaSource
@@ -19,8 +21,11 @@ import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
 import io.reactivex.disposables.CompositeDisposable
-import org.opensilk.common.dagger.ForApplication
+import okhttp3.OkHttpClient
+import org.opensilk.dagger2.ForApp
 import timber.log.Timber
+import java.text.NumberFormat
+import java.util.*
 import javax.inject.Inject
 
 @Module
@@ -34,24 +39,38 @@ abstract class DreamViewModelModule {
  */
 class DreamViewModel
 @Inject constructor(
-        @ForApplication private val mContext: Context,
+        @ForApp private val mContext: Context,
         private val mDataService: DataService,
-        private val mPrefs: SharedPreferences
-): ViewModel(), ExoPlayer.EventListener, SimpleExoPlayer.VideoListener {
+        private val mPrefs: SharedPreferences,
+        okHttpClient: OkHttpClient
+): ViewModel(), Player.EventListener, SimpleExoPlayer.VideoListener {
 
     private val mDataSourceFactory = DefaultDataSourceFactory(mContext,
-            mContext.packageName + "/" + BuildConfig.VERSION_NAME)
+            null, OkHttpDataSourceFactory(okHttpClient, "${mContext.packageName}/ExoPlayer", null))
     private val mExtractorFactory = DefaultExtractorsFactory()
     private val mTrackSelector: DefaultTrackSelector = DefaultTrackSelector()
-    private var mExoPlayer: SimpleExoPlayer = ExoPlayerFactory.newSimpleInstance(
-            DefaultRenderersFactory(mContext, null),
-            mTrackSelector)
+    private val mRenderersFactory = NoAudioRenderersFactory(mContext)
+    private var mExoPlayer: SimpleExoPlayer = ExoPlayerFactory.newSimpleInstance(mRenderersFactory, mTrackSelector)
+
     private val mDisposables = CompositeDisposable()
     private val mQueue = ArrayList<Playlist>()
     private var mCurrentIdx = -1
+    private var mCurrentWindow = -1
 
     val aspectRatio = MutableLiveData<Float>()
     val loading = MutableLiveData<Boolean>()
+    val label = MutableLiveData<String>()
+
+    init {
+        val logger = EventLogger(mTrackSelector)
+        mExoPlayer.addListener(logger)
+        mExoPlayer.setAudioDebugListener(logger)
+        mExoPlayer.setVideoDebugListener(logger)
+        mExoPlayer.setMetadataOutput(logger)
+
+        //for tunneled video
+        mTrackSelector.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(mContext))
+    }
 
     override public fun onCleared() {
         super.onCleared()
@@ -130,44 +149,52 @@ class DreamViewModel
         saveCurrent()
     }
 
-    override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
+    private fun maybeUpdateWindow() {
+        if (mCurrentWindow != mExoPlayer.currentWindowIndex) {
+            mCurrentWindow = mExoPlayer.currentWindowIndex
+            val list = mQueue[mCurrentIdx]
+            if (mCurrentWindow >= 0 && mCurrentWindow < list.assets.size) {
+                label.value = list.assets[mCurrentWindow].accessibilityLabel
+            }
+        }
+    }
 
+    override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
     }
 
     override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
-
+        maybeUpdateWindow()
     }
 
     override fun onPlayerError(error: ExoPlaybackException?) {
         TODO()
     }
 
-    fun Int._stringifyExoPlayerState(): String {
-        return when (this) {
-            ExoPlayer.STATE_BUFFERING -> "STATE_BUFFERING"
-            ExoPlayer.STATE_IDLE -> "STATE_IDLE"
-            ExoPlayer.STATE_ENDED -> "STATE_ENDED"
-            ExoPlayer.STATE_READY -> "STATE_READY"
-            else -> "UNKNOWN"
-        }
+    fun Int._stringifyExoPlayerState(): String = when (this) {
+        Player.STATE_BUFFERING -> "STATE_BUFFERING"
+        Player.STATE_IDLE -> "STATE_IDLE"
+        Player.STATE_ENDED -> "STATE_ENDED"
+        Player.STATE_READY -> "STATE_READY"
+        else -> "UNKNOWN"
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
         Timber.d("onExoPlayerStateChanged(playWhenReady=%s, playbackState=%s",
                 playWhenReady, playbackState._stringifyExoPlayerState())
         when (playbackState) {
-            ExoPlayer.STATE_IDLE -> {
+            Player.STATE_IDLE -> {
             }
-            ExoPlayer.STATE_BUFFERING -> {
+            Player.STATE_BUFFERING -> {
                 loading.postValue(true)
             }
-            ExoPlayer.STATE_ENDED -> {
+            Player.STATE_ENDED -> {
                 goToNext()
                 preparePlaylist()
                 play()
             }
-            ExoPlayer.STATE_READY -> {
+            Player.STATE_READY -> {
                 loading.postValue(false)
+                mExoPlayer.playWhenReady = true
             }
         }
     }
@@ -177,10 +204,10 @@ class DreamViewModel
     }
 
     override fun onPositionDiscontinuity() {
-
+        maybeUpdateWindow()
     }
 
-    override fun onTimelineChanged(timeline: Timeline?, manifest: Any?) {
+    override fun onTimelineChanged(timeline: Timeline, manifest: Any?) {
 
     }
 
@@ -190,5 +217,9 @@ class DreamViewModel
 
     override fun onRenderedFirstFrame() {
         loading.postValue(false)
+    }
+
+    override fun onRepeatModeChanged(repeatMode: Int) {
+
     }
 }

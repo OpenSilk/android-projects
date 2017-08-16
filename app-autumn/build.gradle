@@ -54,10 +54,11 @@ dependencies {
 
     compile "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
     compile "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
+    compile "com.google.android.exoplayer:extension-okhttp:$exoPlayerVersion"
 
     compile "com.jakewharton.timber:timber:$timberVersion"
 
-    compile project(':common-dagger')
+    compile project(':dagger2')
     compile project(':reactivex2')
 
     testCompile "junit:junit:$test_junitVersion"

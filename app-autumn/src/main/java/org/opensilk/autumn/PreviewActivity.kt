@@ -27,6 +27,9 @@ class PreviewActivity: LifecycleActivity() {
         mViewModel.loading.observe(this, LiveDataObserver {
             mBinding.isLoading = it
         })
+        mViewModel.label.observe(this, LiveDataObserver {
+            mBinding.labelText = it
+        })
 
     }
 

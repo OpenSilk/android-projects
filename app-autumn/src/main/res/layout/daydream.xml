@@ -7,6 +7,9 @@
         <variable
             name="isLoading"
             type="boolean"/>
+        <variable
+            name="labelText"
+            type="String"/>
     </data>
     <FrameLayout
         android:id="@+id/dream_root"
@@ -33,6 +36,16 @@
             android:layout_gravity="center"
             android:visibility="@{isLoading ? View.VISIBLE : View.GONE}"
             style="?android:progressBarStyleLarge"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_margin="64dp"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:textColor="#ffffff"
+            android:text="@{labelText}"
+            tools:text="Some title"/>
 
     </FrameLayout>
 </layout>
