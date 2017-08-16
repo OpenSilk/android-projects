@@ -29,6 +29,13 @@ class PreviewActivity: LifecycleActivity() {
         })
         mViewModel.label.observe(this, LiveDataObserver {
             mBinding.labelText = it
+            mBinding.label.alpha = 1.0f
+            mBinding.label.animate().cancel()
+            mBinding.label.animate()
+                    .alpha(0.0f)
+                    .setDuration(200)
+                    .setStartDelay(30000)
+                    .start()
         })
 
     }
