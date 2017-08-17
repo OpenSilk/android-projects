@@ -173,6 +173,13 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
             it.name.startsWith("KEYCODE") && it.getInt(null) == keyCode
         }.firstOrNull()?.name)
 
+        when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                mViewModel.togglePlayPause()
+                return true
+            }
+        }
+
         if (isOverlayShowing()) {
             postOverlayHideRunner()
             return super.onKeyDown(keyCode, event)
