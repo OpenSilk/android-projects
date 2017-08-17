@@ -64,172 +64,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
 
-<!--
-            <View android:id="@+id/shutter"
-                  android:layout_width="match_parent"
-                  android:layout_height="match_parent"
-                  android:background="@android:color/black"/>
--->
-
             <com.google.android.exoplayer2.ui.SubtitleView
                 android:id="@+id/subtitles"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
 
         </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
-
-        <RelativeLayout
-            android:id="@+id/top_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            android:layout_marginStart="64dp"
-            android:layout_marginEnd="64dp"
-            android:layout_marginTop="16dp"
-            android:layoutDirection="ltr"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <TextView
-                android:id="@+id/media_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@{desc.title}"
-                tools:text="title"
-                android:textSize="34sp"
-                style="?android:textAppearanceLarge"/>
-
-            <TextView
-                android:id="@+id/system_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
-                android:text="@{systemTimeString}"
-                style="?android:textAppearanceLarge"
-                tools:text="10:12"/>
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/bottom_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:background="#66000000"
-            android:layout_marginStart="132dp"
-            android:layout_marginEnd="132dp"
-            android:layout_marginBottom="20dp"
-            android:layoutDirection="ltr"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <ProgressBar
-                android:id="@+id/progress"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="4dp"
-                android:maxHeight="4dp"
-                android:minHeight="4dp"
-                android:layoutDirection="ltr"
-                android:progressDrawable="@drawable/lb_playback_progress_bar"
-                android:progress="@{progressVal}"
-                android:max="1000"
-                tools:progress="50"/>
-
-            <TextView
-                android:id="@+id/current_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_below="@id/progress"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="4dp"
-                android:text="@{currentTimeString}"
-                style="?attr/playbackControlsTimeStyle"
-                tools:text="0:0"/>
-
-            <TextView
-                android:id="@+id/total_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_below="@id/progress"
-                android:layout_marginEnd="16dp"
-                android:paddingTop="8dp"
-                android:text="@{totalTimeString}"
-                style="?attr/playbackControlsTimeStyle"
-                tools:text="123:33"/>
-
-            <LinearLayout
-                android:id="@+id/control_bar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/progress"
-                android:paddingTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-
-                <ImageButton
-                    android:id="@+id/action_captions"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:onClick="@{() -> actionHandler.toggleCaptions()}"
-                    android:src="@drawable/lb_ic_cc"
-                    style="?playbackControlsButtonStyle"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:background="?android:selectableItemBackgroundBorderless"/>
-
-                <ImageButton
-                    android:id="@+id/action_skip_previous"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:onClick="@{() -> actionHandler.skipPrevious()}"
-                    android:src="@drawable/lb_ic_skip_previous"
-                    style="?playbackControlsButtonStyle"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:background="?android:selectableItemBackgroundBorderless"/>
-
-                <ImageButton
-                    android:id="@+id/action_play_pause"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:onClick="@{() -> actionHandler.togglePlayPause()}"
-                    android:src="@{isPlaying ? @drawable/lb_ic_pause : @drawable/lb_ic_play}"
-                    style="?playbackControlsButtonStyle"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:background="?android:selectableItemBackgroundBorderless"
-                    tools:src="@drawable/lb_ic_play"/>
-
-                <ImageButton
-                    android:id="@+id/action_skip_next"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:onClick="@{() -> actionHandler.skipNext()}"
-                    android:src="@drawable/lb_ic_skip_next"
-                    style="?playbackControlsButtonStyle"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:background="?android:selectableItemBackgroundBorderless"/>
-
-                <ImageButton
-                    android:id="@+id/action_pip"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:onClick="@{() -> actionHandler.enterPip()}"
-                    android:src="@drawable/lb_ic_pip"
-                    style="?playbackControlsButtonStyle"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:background="?android:selectableItemBackgroundBorderless"/>
-
-            </LinearLayout>
-
-        </RelativeLayout>
-
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -256,6 +96,149 @@
 
         </LinearLayout>
 
+        <RelativeLayout
+            android:id="@+id/top_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginStart="64dp"
+            android:layout_marginEnd="64dp"
+            android:layout_marginTop="16dp"
+            android:layoutDirection="ltr"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/media_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:text="@{desc.title}"
+                tools:text="title"
+                android:textSize="32sp"
+                style="?android:textAppearanceLarge"/>
+
+            <TextView
+                android:id="@+id/media_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/media_title"
+                android:layout_alignParentStart="true"
+                android:text="@{desc.subtitle}"
+                tools:text="subtitle"
+                android:textSize="24sp"
+                style="?android:textAppearanceLarge"/>
+
+            <TextView
+                android:id="@+id/system_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:text="@{systemTimeString}"
+                style="?android:textAppearanceLarge"
+                tools:text="10:12"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/bottom_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="128dp"
+            android:layout_marginEnd="128dp"
+            android:layout_marginBottom="32dp"
+            android:layoutDirection="ltr"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:elevation="4dp">
+
+            <ProgressBar
+                android:id="@+id/progress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:maxHeight="4dp"
+                android:minHeight="4dp"
+                android:layoutDirection="ltr"
+                android:progressDrawable="@drawable/playback_progress"
+                android:progress="@{progressVal}"
+                android:max="1000"
+                tools:progress="300"/>
+
+            <LinearLayout
+                android:id="@+id/control_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/progress"
+                android:paddingTop="8dp"
+                android:orientation="horizontal"
+                android:background="@color/colorPrimary"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/current_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_gravity="top"
+                    android:text="@{currentTimeString}"
+                    style="@style/App.Widget.PlaybackTime"
+                    tools:text="00:00"/>
+
+                <ImageButton
+                    android:id="@+id/action_captions"
+                    android:onClick="@{() -> actionHandler.toggleCaptions()}"
+                    android:src="@drawable/lb_ic_cc"
+                    style="@style/App.Widget.PlaybackButton"
+                    />
+
+                <ImageButton
+                    android:id="@+id/action_skip_previous"
+                    android:onClick="@{() -> actionHandler.skipPrevious()}"
+                    android:src="@drawable/lb_ic_skip_previous"
+                    style="@style/App.Widget.PlaybackButton"
+                    />
+
+                <ImageButton
+                    android:id="@+id/action_play_pause"
+                    android:onClick="@{() -> actionHandler.togglePlayPause()}"
+                    android:src="@{isPlaying ? @drawable/lb_ic_pause : @drawable/lb_ic_play}"
+                    style="@style/App.Widget.PlaybackButton"
+                    tools:src="@drawable/lb_ic_play"
+                    />
+
+                <ImageButton
+                    android:id="@+id/action_skip_next"
+                    android:onClick="@{() -> actionHandler.skipNext()}"
+                    android:src="@drawable/lb_ic_skip_next"
+                    style="@style/App.Widget.PlaybackButton"
+                    />
+
+                <ImageButton
+                    android:id="@+id/action_pip"
+                    android:onClick="@{() -> actionHandler.enterPip()}"
+                    android:src="@drawable/lb_ic_pip"
+                    style="@style/App.Widget.PlaybackButton"
+                    />
+
+                <TextView
+                    android:id="@+id/total_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="54dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_gravity="top"
+                    android:text="@{totalTimeString}"
+                    style="@style/App.Widget.PlaybackTime"
+                    tools:text="123:33"/>
+
+            </LinearLayout>
+
+        </RelativeLayout>
 
     </FrameLayout>
 </layout>

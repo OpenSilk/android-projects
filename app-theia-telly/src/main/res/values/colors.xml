@@ -27,4 +27,13 @@
     <color name="background_gradient_end">#DDDDDD</color>
 
     <color name="playback_overlay_background">#66000000</color>
+
+    <color name="colorPrimary">#141414</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorAccent">#98c902</color>
+
+    <color name="background_progress_color">#19FFFFFF</color>
+
+    <color name="progress_color_no_theme">@color/colorAccent</color>
+    <color name="secondary_progress_color">#33FFFFFF</color>
 </resources>

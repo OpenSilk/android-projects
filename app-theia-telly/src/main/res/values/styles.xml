@@ -18,4 +18,16 @@
 
 <resources>
 
+    <style name="App.Widget.PlaybackButton" parent="Widget.Leanback.PlaybackControlsButtonStyle">
+        <item name="android:layout_height">54dp</item>
+        <item name="android:layout_width">54dp</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+        <item name="android:background">?android:selectableItemBackgroundBorderless</item>
+    </style>
+
+    <style name="App.Widget.PlaybackTime" parent="Widget.Leanback.PlaybackControlsTimeStyle">
+
+    </style>
+
 </resources>
