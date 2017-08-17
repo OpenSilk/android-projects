@@ -312,16 +312,20 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
     override fun onClick(v: android.view.View) {
         val ref = mediaRef
         Timber.d("onClick($ref)")
+        val activity = v.context.findActivity()
+        if (activity is MediaItemClickListener && activity.onClick(ref)) {
+            return
+        }
         when (ref) {
             is UpnpDeviceRef, is UpnpFolderRef, is DirectoryDocumentRef -> {
-                val intent = Intent(v.context, FolderActivity::class.java)
+                val intent = Intent(activity, FolderActivity::class.java)
                         .putExtra(EXTRA_MEDIAID, ref.id.json)
-                v.context.startActivity(intent)
+                activity.startActivity(intent)
             }
             is UpnpVideoRef, is VideoDocumentRef -> {
-                val intent = Intent(v.context, DetailActivity::class.java)
+                val intent = Intent(activity, DetailActivity::class.java)
                         .putExtra(EXTRA_MEDIAID, ref.id.json)
-                v.context.startActivity(intent)
+                activity.startActivity(intent)
             }
             else -> TODO()
         }
@@ -330,4 +334,9 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
     override fun onLongClick(v: android.view.View?): kotlin.Boolean {
         TODO("not implemented")
     }
+}
+
+interface MediaItemClickListener {
+    fun onClick(mediaRef: MediaRef): Boolean
+    fun onLongClick(mediaRef: MediaRef): Boolean
 }
