@@ -5,6 +5,6 @@ package org.opensilk.media.loader.cds
  */
 class NoContentDirectoryFoundException: Exception()
 class NoBrowseResultsException: Exception()
-class DeviceNotFoundException: Exception()
+class DeviceNotFoundException: Exception("Upnp device not found")
 class ServiceNotFoundException: Exception()
 class FeatureListException: Exception()
