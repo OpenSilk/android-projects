@@ -690,7 +690,7 @@ fun Cursor.toUpnpVideoMediaMeta(mApiHelper: ApiHelper): UpnpVideoRef {
             artworkUri = mApiHelper.movieImagePosterUri(c.getString(19))
         }
         if (!c.isNull(20)) {
-            backdropUri = mApiHelper.movieImagePosterUri(c.getString(20))
+            backdropUri = mApiHelper.movieImageBackdropUri(c.getString(20))
         }
     }
     return UpnpVideoRef(
