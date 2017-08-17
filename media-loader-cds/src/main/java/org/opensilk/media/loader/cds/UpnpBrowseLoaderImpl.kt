@@ -10,7 +10,6 @@ import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
 import org.fourthline.cling.support.contentdirectory.DIDLParser
 import org.fourthline.cling.support.model.Protocol
-import org.fourthline.cling.support.model.container.*
 import org.fourthline.cling.support.model.item.AudioItem
 import org.fourthline.cling.support.model.item.MusicTrack
 import org.fourthline.cling.support.model.item.VideoItem
@@ -140,6 +139,7 @@ class UpnpBrowseLoaderImpl @Inject constructor(private val mUpnpService: CDSUpnp
             //check cache first
             val rd = mUpnpService.registry.getDevice(udn, false)
             if (rd == null) {
+                mUpnpService.controlPoint.search(UDAServiceTypeHeader(CDSserviceType))
                 subscriber.onError(DeviceNotFoundException())
                 return@create
             }
