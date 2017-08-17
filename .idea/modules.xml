@@ -18,6 +18,7 @@
       <module fileurl="file://$PROJECT_DIR$/media-database/media-database.iml" filepath="$PROJECT_DIR$/media-database/media-database.iml" />
       <module fileurl="file://$PROJECT_DIR$/media-loader-cds/media-loader-cds.iml" filepath="$PROJECT_DIR$/media-loader-cds/media-loader-cds.iml" />
       <module fileurl="file://$PROJECT_DIR$/media-loader-doc/media-loader-doc.iml" filepath="$PROJECT_DIR$/media-loader-doc/media-loader-doc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/media-loader-storage/media-loader-storage.iml" filepath="$PROJECT_DIR$/media-loader-storage/media-loader-storage.iml" />
       <module fileurl="file://$PROJECT_DIR$/media-playback/media-playback.iml" filepath="$PROJECT_DIR$/media-playback/media-playback.iml" />
       <module fileurl="file://$PROJECT_DIR$/media-testdata/media-testdata.iml" filepath="$PROJECT_DIR$/media-testdata/media-testdata.iml" />
       <module fileurl="file://$PROJECT_DIR$/reactivex2/reactivex2.iml" filepath="$PROJECT_DIR$/reactivex2/reactivex2.iml" />

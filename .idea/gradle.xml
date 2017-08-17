@@ -23,6 +23,7 @@
             <option value="$PROJECT_DIR$/media-database" />
             <option value="$PROJECT_DIR$/media-loader-cds" />
             <option value="$PROJECT_DIR$/media-loader-doc" />
+            <option value="$PROJECT_DIR$/media-loader-storage" />
             <option value="$PROJECT_DIR$/media-playback" />
             <option value="$PROJECT_DIR$/media-testdata" />
             <option value="$PROJECT_DIR$/reactivex2" />

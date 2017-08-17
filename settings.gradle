@@ -1,4 +1,4 @@
-include ':media', ':common-dagger', ':common-glide', ':media-playback', ':libtvdb2', ':reactivex2', ':app-autumn', ':app-theia-phone', ':dagger2', ':logging', ':media-testdata', ':media-loader-doc', ':media-loader-cds', ':media-database'
+include ':media', ':common-dagger', ':common-glide', ':media-playback', ':libtvdb2', ':reactivex2', ':app-autumn', ':app-theia-phone', ':dagger2', ':logging', ':media-testdata', ':media-loader-doc', ':media-loader-cds', ':media-database', ':media-loader-storage'
 include ':upnp-cds-featurelist', ':upnp-cds-browser'
 include ':libtmdb'
 include ':app-orpheus', ':app-theia-telly', ':app-theia-core'
