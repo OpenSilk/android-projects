@@ -35,4 +35,6 @@
 
     <string name="header_file_info">File info</string>
 
+    <string name="err_pip_unsupported">PIP is not supported on this device</string>
+
 </resources>

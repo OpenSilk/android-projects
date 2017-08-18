@@ -10,6 +10,7 @@ import android.support.v17.leanback.widget.ArrayObjectAdapter
 import android.support.v17.leanback.widget.HeaderItem
 import android.support.v17.leanback.widget.ListRow
 import android.support.v17.leanback.widget.ListRowPresenter
+import android.support.v4.content.ContextCompat
 import android.view.View
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
@@ -93,18 +94,16 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
         headersState = BrowseFragment.HEADERS_DISABLED
         isHeadersTransitionOnBackEnabled = true
         // set fastLane (or headers) background color
-        brandColor = context.getColor(R.color.fastlane_background)
+        brandColor = ContextCompat.getColor(context, R.color.fastlane_background)
         // set search icon color
-        searchAffordanceColor = context.getColor(R.color.search_opaque)
+        searchAffordanceColor = ContextCompat.getColor(context, R.color.search_opaque)
     }
 
     private val lifecycleRegistry: LifecycleRegistry by lazy {
         LifecycleRegistry(this)
     }
 
-    override fun getLifecycle(): LifecycleRegistry {
-        return lifecycleRegistry
-    }
+    override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
 }
 
 class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())

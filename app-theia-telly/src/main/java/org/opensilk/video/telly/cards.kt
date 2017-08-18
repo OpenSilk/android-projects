@@ -7,6 +7,7 @@ import android.databinding.DataBindingUtil
 import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.widget.*
+import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -36,7 +37,8 @@ class MediaItemImageCardView(context: Context): ImageCardView(context) {
         super.setSelected(selected)
     }
     fun updateBackgroundColor(selected: Boolean) {
-        val color = context.getColor(if (selected) R.color.selected_background else R.color.default_background)
+        val color = ContextCompat.getColor(context,
+                if (selected) R.color.selected_background else R.color.default_background)
         // Both background colors should be set because the view's background is temporarily visible
         // during animations.
         setBackgroundColor(color)

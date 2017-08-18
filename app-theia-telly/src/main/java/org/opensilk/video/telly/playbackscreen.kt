@@ -6,11 +6,13 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.databinding.DataBindingUtil
 import android.media.session.PlaybackState
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
+import android.widget.Toast
 import org.opensilk.media.parseMediaId
 import org.opensilk.media.playback.PlaybackExtras
 import org.opensilk.video.*
@@ -142,7 +144,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
     override fun onPause() {
         super.onPause()
         Timber.d("onPause()")
-        if (!isInPictureInPictureMode) {
+        if (Build.VERSION.SDK_INT < 24 || !isInPictureInPictureMode) {
             if (mPlaybackState == PlaybackState.STATE_PLAYING) {
                 if (!requestVisibleBehind(true)) {
                     mViewModel.pausePlayback()
@@ -235,7 +237,11 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
     }
 
     override fun enterPip() {
-        enterPictureInPictureMode()
+        if (Build.VERSION.SDK_INT >= 24) {
+            enterPictureInPictureMode()
+        } else {
+            Toast.makeText(this, R.string.err_pip_unsupported, Toast.LENGTH_LONG).show()
+        }
     }
 
     /*
