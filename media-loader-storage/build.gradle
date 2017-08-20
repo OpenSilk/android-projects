@@ -10,6 +10,7 @@ android {
         targetSdkVersion rootProject.ext.compileSdkVersion
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -31,5 +32,16 @@ dependencies {
 
     compile project(':media')
     compile project(':dagger2')
+
+    androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
+    androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
+    androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"
+
+    testCompile project(':media-testdata')
+    testCompile "junit:junit:$test_junitVersion"
+    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
+    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
 
 }
