@@ -38,8 +38,8 @@ private fun Cursor.toDirectoryDocumentRef(documentId: DocumentId): DirectoryDocu
     val flags = getLong(5)
     return DirectoryDocumentRef(
             id = documentId,
-            meta = DocumentMeta(
-                    displayName = displayName,
+            meta = DirectoryDocumentMeta(
+                    title = displayName,
                     mimeType = mimeType,
                     lastMod = lastMod,
                     flags = flags
@@ -55,12 +55,13 @@ private fun Cursor.toVideoDocumentRef(documentId: DocumentId): VideoDocumentRef 
     val flags = getLong(5)
     return VideoDocumentRef(
             id = documentId,
-            meta = DocumentMeta(
-                    displayName = displayName,
+            meta = VideoDocumentMeta(
+                    title = displayName,
                     mimeType = mimeType,
                     size = size,
                     lastMod = lastMod,
-                    flags = flags
+                    flags = flags,
+                    mediaUri = documentId.mediaUri
             )
     )
 }
