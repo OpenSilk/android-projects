@@ -9,9 +9,6 @@ data class UpnpFolderId(
         override val containerId: String
 ): UpnpContainerId {
 
-    @Deprecated(replaceWith = ReplaceWith("containerId"), message = "Use containerId")
-    val folderId: String = containerId
-
     override val json: String
         get() = writeJson(UpnpFolderTransformer, this)
 
@@ -20,11 +17,11 @@ data class UpnpFolderId(
 data class UpnpFolderRef(
         override val id: UpnpFolderId,
         override val meta: UpnpFolderMeta
-): UpnpContainerRef
+): UpnpContainerRef, FolderRef
 
 data class UpnpFolderMeta(
         override val title: String
-): UpnpMeta
+): UpnpMeta, FolderMeta
 
 internal object UpnpFolderTransformer: UpnpContainerTransformer() {
     override val kind: String = UPNP_FOLDER

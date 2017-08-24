@@ -1,5 +1,29 @@
 package org.opensilk.media
 
+import android.content.Intent
+import android.net.Uri
+import android.util.JsonReader
+import android.util.JsonWriter
+
+val EMPTY_INTENT = Intent()
+
+const val STORAGE_PRIMARY_PFX = "STORAGE_PRIMARY"
+const val STORAGE_SECONDARY_PFX = "STORAGE_SECONDARY"
+const val STORAGE_EMULATED = "_EMULATED"
+const val STORAGE_REMOVABLE = "_REMOVABLE"
+
+fun suitableFakeUuid(primary: Boolean, emulated: Boolean, removable: Boolean): String = when {
+    primary -> STORAGE_PRIMARY_PFX + suitableFakeUuid2(emulated, removable)
+    else -> STORAGE_SECONDARY_PFX + suitableFakeUuid2(emulated, removable)
+}
+
+private fun suitableFakeUuid2(emulated: Boolean, removable: Boolean): String = when {
+    emulated && removable -> "$STORAGE_EMULATED$STORAGE_REMOVABLE"
+    emulated -> STORAGE_EMULATED
+    removable -> STORAGE_REMOVABLE
+    else -> "FOO"
+}
+
 /**
  * Created by drew on 8/17/17.
  */
@@ -13,52 +37,6 @@ interface StorageMeta {
     val title: String
 }
 
-data class StorageDeviceId(
-        val uuid: String
-): StorageId {
-    override val json: String
-        get() = TODO("not implemented")
-}
-
-data class StorageDeviceMeta(
-        override val title: String
-): StorageMeta
-
-data class StorageDeviceRef(
-        override val id: StorageDeviceId,
-        override val meta: StorageDeviceMeta
-): StorageRef
 
 
-data class StorageDirectoryId(
-        val path: String
-): StorageId {
-    override val json: String
-        get() = TODO("not implemented")
-}
 
-data class StorageDirectoryMeta(
-        override val title: String
-): StorageMeta
-
-data class StorageDirectoryRef(
-        override val id: StorageDirectoryId,
-        override val meta: StorageDirectoryMeta
-): StorageRef
-
-
-data class StorageVideoId(
-        val path: String
-): StorageId {
-    override val json: String
-        get() = TODO("not implemented")
-}
-
-data class StorageVideoMeta(
-        override val title: String
-): StorageMeta
-
-data class StorageVideoRef(
-        override val id: StorageVideoId,
-        override val meta: StorageVideoMeta
-): StorageRef

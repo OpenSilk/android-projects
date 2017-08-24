@@ -13,6 +13,9 @@ const val UPNP_VIDEO = "upnp_video"
 const val UPNP_MUSIC_TRACK = "upnp_music_track"
 const val UPNP_AUDIO = "upnp_audio"
 const val DOCUMENT = "document"
+const val STORAGE_DEVICE = "storage_device"
+const val STORAGE_FOLDER = "storage_folder"
+const val STORAGE_VIDEO = "storage_video"
 
 const val KEY_MEDIA_URI = "media_uri"
 const val KEY_DURATION = "media_duration"
@@ -108,6 +111,15 @@ fun parseMediaId(json: String): MediaId {
                 DOCUMENT -> {
                     mediaId = DocumentIdTransformer.read(jr, readVersion(jr))
                 }
+                STORAGE_DEVICE -> {
+                    mediaId = StorageDeviceIdTransformer.read(jr, readVersion(jr))
+                }
+                STORAGE_FOLDER -> {
+                    mediaId = StorageFolderIdTransformer.read(jr, readVersion(jr))
+                }
+                STORAGE_VIDEO -> {
+                    mediaId = StorageVideoIdTransformer.read(jr, readVersion(jr))
+                }
                 else -> jr.skipValue()
             }
         }
@@ -151,44 +163,49 @@ fun MediaRef.toMediaDescription(): MediaDescription {
                     .setMediaId(id.json)
         }
         is DirectoryDocumentRef -> {
-            bob.setTitle(meta.title.elseIfBlank(meta.displayName))
+            bob.setTitle(meta.title)
                     .setMediaId(id.json)
         }
         is VideoDocumentRef -> {
-            bob.setTitle(meta.title.elseIfBlank(meta.displayName))
+            bob.setTitle(meta.title)
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
                     .setMediaId(id.json)
                     .setExtras(bundle(KEY_MEDIA_URI, id.mediaUri))
+        }
+        is StorageDeviceRef -> {
+            bob.setTitle(meta.title)
+                    .setMediaId(id.json)
         }
         else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
     }
     return bob.build()
 }
 
-fun MediaRef.toMediaItem(): MediaItem {
-    return when (this) {
-        is UpnpVideoRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
-        }
-        is UpnpFolderRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
-        }
-        is UpnpDeviceRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
-        }
-        is UpnpMusicTrackRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
-        }
-        is UpnpAudioRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
-        }
-        is DirectoryDocumentRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
-        }
-        is VideoDocumentRef -> {
-            MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
-        }
-        else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
+fun MediaRef.toMediaItem(): MediaItem = when (this) {
+    is UpnpVideoRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
     }
+    is UpnpFolderRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+    }
+    is UpnpDeviceRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+    }
+    is UpnpMusicTrackRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
+    }
+    is UpnpAudioRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
+    }
+    is DirectoryDocumentRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+    }
+    is VideoDocumentRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
+    }
+    is StorageDeviceRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+    }
+    else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
 }

@@ -7,8 +7,6 @@ import android.util.JsonWriter
 const val UPNP_ROOT_ID = "0"
 
 /**
- * Created by drew on 8/11/17.
- *
  * Meta all upnp objects have
  */
 interface UpnpMeta {
@@ -47,6 +45,7 @@ interface UpnpItemId: MediaId {
  * ref representing upnp container
  */
 interface UpnpContainerRef: MediaRef {
+    override val id: UpnpContainerId
     val meta: UpnpMeta
 }
 
@@ -54,6 +53,7 @@ interface UpnpContainerRef: MediaRef {
  * ref representing upnp item
  */
 interface UpnpItemRef: MediaRef {
+    override val id: UpnpItemId
     val meta: UpnpMeta
 }
 

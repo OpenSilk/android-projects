@@ -8,6 +8,18 @@ import android.util.JsonWriter
 
 const val ROOTS_PARENT_ID = "\u2605G\u2605O\u2605D\u2605"
 
+interface DocumentMeta {
+    val title: String
+    val mimeType: String
+    val lastMod: Long
+    val flags: Long
+}
+
+interface DocumentRef: MediaRef {
+    override val id: DocumentId
+    val meta: DocumentMeta
+}
+
 /**
  * Created by drew on 8/11/17.
  */
@@ -77,41 +89,6 @@ private fun isTreeUri(treeUri: Uri): Boolean {
         paths.size >= 2 && "tree" == paths[0]
     }
 }
-
-data class DocumentMeta(
-        val displayName: String,
-        val summary: String = "",
-        val mimeType: String,
-        val size: Long = 0,
-        val lastMod: Long = 0,
-        val flags: Long = 0,
-        val title: String = "",
-        val subtitle: String = "",
-        val artworkUri: Uri = Uri.EMPTY,
-        val backdropUri: Uri = Uri.EMPTY
-)
-
-interface DocumentRef: MediaRef {
-    override val id: DocumentId
-    val meta: DocumentMeta
-}
-
-data class DirectoryDocumentRef(
-        override val id: DocumentId,
-        override val meta: DocumentMeta
-): DocumentRef
-
-data class VideoDocumentRef(
-        override val id: DocumentId,
-        val tvEpisodeId: TvEpisodeId? = null,
-        val movieId: MovieId? = null,
-        override val meta: DocumentMeta
-): DocumentRef
-
-data class AudioDocumentRef(
-        override val id: DocumentId,
-        override val meta: DocumentMeta
-): DocumentRef
 
 internal object DocumentIdTransformer: MediaIdTransformer<DocumentId> {
 

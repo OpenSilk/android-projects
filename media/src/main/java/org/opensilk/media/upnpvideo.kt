@@ -16,10 +16,10 @@ data class UpnpVideoId(
 
 data class UpnpVideoMeta(
         override val title: String = "",
-        val subtitle: String = "",
-        val artworkUri: Uri = Uri.EMPTY,
-        val backdropUri: Uri = Uri.EMPTY,
-        val originalTitle: String = "",
+        override val subtitle: String = "",
+        override val artworkUri: Uri = Uri.EMPTY,
+        override val backdropUri: Uri = Uri.EMPTY,
+        override val originalTitle: String = "",
         override val mediaUri: Uri,
         override val mimeType: String,
         override val duration: Long = 0,
@@ -28,14 +28,14 @@ data class UpnpVideoMeta(
         val resolution: String = "",
         val sampleFreq: Long = 0,
         val nrAudioChan: Int = 0
-): UpnpItemMeta
+): UpnpItemMeta, VideoMeta
 
 data class UpnpVideoRef(
         override val id: UpnpVideoId,
-        val tvEpisodeId: TvEpisodeId? = null,
-        val movieId: MovieId? = null,
+        override val tvEpisodeId: TvEpisodeId? = null,
+        override val movieId: MovieId? = null,
         override val meta: UpnpVideoMeta
-): UpnpItemRef
+): UpnpItemRef, VideoRef
 
 internal object UpnpVideoTransformer: UpnpItemTransformer() {
     override val kind: String = UPNP_VIDEO
