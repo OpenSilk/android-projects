@@ -1,9 +1,14 @@
 package org.opensilk.video
 
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
+import android.Manifest
+import android.arch.lifecycle.*
+import android.content.Context
+import android.content.pm.PackageManager
+import android.media.MediaDrmResetException
+import android.support.v4.content.ContextCompat
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.exceptions.Exceptions
+import org.opensilk.media.MediaRef
 import org.opensilk.media.UpnpDeviceRef
 import org.opensilk.media.UpnpVideoRef
 import javax.inject.Inject
@@ -13,12 +18,28 @@ import javax.inject.Inject
  */
 class HomeViewModel
 @Inject constructor(
+        private val mContext: Context,
         private val mServersLoader: UpnpDevicesLoader,
         private val mNewlyAddedLoader: NewlyAddedLoader
-): ViewModel() {
-    val servers = MutableLiveData<List<UpnpDeviceRef>>()
+): ViewModel(), LifecycleObserver {
+    val servers = MutableLiveData<List<MediaRef>>()
     val newlyAdded = MutableLiveData<List<UpnpVideoRef>>()
     private val disposables = CompositeDisposable()
+    val needPermissions = MutableLiveData<Array<String>>()
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun checkPermissions() {
+        val perms = ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (perms != PackageManager.PERMISSION_GRANTED) {
+            needPermissions.postValue(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+        }
+    }
+
+    fun onGrantedPermissions(perms: List<String>) {
+        if (perms.contains(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            subscribeServers()
+        }
+    }
 
     fun fetchData() {
         subscribeServers()
