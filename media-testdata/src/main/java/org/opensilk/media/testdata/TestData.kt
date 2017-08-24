@@ -12,8 +12,8 @@ const val MOVIEDB_BANNER_ROOT = "http://movie.foo"
 
 fun upnpDevice_all_meta(): UpnpDeviceRef {
     return UpnpDeviceRef(
-            UpnpDeviceId("foo0"),
-            UpnpDeviceMeta(
+            id = UpnpDeviceId(deviceId = "foo0"),
+            meta = UpnpDeviceMeta(
                     title = "Foo Server",
                     subtitle = "Mady by Foo",
                     artworkUri = Uri.parse("http://foo.com/icon.jpg"),
@@ -24,8 +24,8 @@ fun upnpDevice_all_meta(): UpnpDeviceRef {
 
 fun upnpDevice_minimal_meta(): UpnpDeviceRef {
     return UpnpDeviceRef(
-            UpnpDeviceId("foo1"),
-            UpnpDeviceMeta(
+            id = UpnpDeviceId(deviceId = "foo1"),
+            meta = UpnpDeviceMeta(
                     title = "Foo Server"
             )
     )
@@ -35,8 +35,8 @@ fun upnpFolders(): List<UpnpFolderRef> {
     val list = ArrayList<UpnpFolderRef>()
     (1..10).mapTo(list) {
         UpnpFolderRef(
-                UpnpFolderId("foo0", "0", "$it"),
-                UpnpFolderMeta(
+                id = UpnpFolderId(deviceId = "foo0", parentId = "0", containerId = "$it"),
+                meta = UpnpFolderMeta(
                         title = "Folder $it"
                 )
         )
@@ -46,10 +46,10 @@ fun upnpFolders(): List<UpnpFolderRef> {
 
 fun upnpVideo_folder_1_no_association(): UpnpVideoRef {
     return UpnpVideoRef(
-            UpnpVideoId("foo0", "1", "1.1"),
-            null,
-            null,
-            UpnpVideoMeta(
+            id = UpnpVideoId(deviceId = "foo0", parentId = "1", itemId = "1.1"),
+            tvEpisodeId = null,
+            movieId = null,
+            meta = UpnpVideoMeta(
                     title = "media.title.01",
                     mediaUri = Uri.parse("http://foo.com/media/1.01.mp4"),
                     mimeType = "video/mp4"
@@ -61,10 +61,10 @@ fun upnpVideo_folder_2_episode_id(): UpnpVideoRef {
     val ser = tvSeries()
     val ep = tvEpisode()
     return UpnpVideoRef(
-            UpnpVideoId("foo0", "2", "2.1"),
-            ep.id,
-            null,
-            UpnpVideoMeta(
+            id = UpnpVideoId(deviceId = "foo0", parentId = "2", itemId = "2.1"),
+            tvEpisodeId = ep.id,
+            movieId = null,
+            meta = UpnpVideoMeta(
                     title = ep.meta.title,
                     subtitle = "${ser.meta.title} - S0${ep.meta.seasonNumber}E0${ep.meta.episodeNumber}",
                     originalTitle = "media.title.01",
@@ -78,10 +78,10 @@ fun upnpVideo_folder_2_episode_id(): UpnpVideoRef {
 
 fun upnpVideo_folder_3_movie_id(): UpnpVideoRef {
     return UpnpVideoRef(
-            UpnpVideoId("foo0", "3", "3.1"),
-            null,
-            movie().id,
-            UpnpVideoMeta(
+            id = UpnpVideoId(deviceId = "foo0",parentId = "3",itemId =  "3.1"),
+            tvEpisodeId = null,
+            movieId =  movie().id,
+            meta = UpnpVideoMeta(
                     title = movie().meta.title,
                     originalTitle = "media.title.01",
                     mediaUri = Uri.parse("http://foo.com/media/3.01.mp4"),
@@ -94,8 +94,8 @@ fun upnpVideo_folder_3_movie_id(): UpnpVideoRef {
 
 fun tvSeries(): TvSeriesRef {
     return TvSeriesRef(
-            TvSeriesId(1),
-            TvSeriesMeta(
+            id = TvSeriesId(1),
+            meta = TvSeriesMeta(
                     title = "Series 1",
                     overview = "Series overview",
                     posterPath = "s_poster.jpg",
@@ -106,8 +106,8 @@ fun tvSeries(): TvSeriesRef {
 
 fun tvEpisode(): TvEpisodeRef {
     return TvEpisodeRef(
-            TvEpisodeId(1, 1),
-            TvEpisodeMeta(
+            id = TvEpisodeId(1, 1),
+            meta = TvEpisodeMeta(
                     title = "Episode 1",
                     overview = "Episode Overview",
                     episodeNumber = 1,
@@ -121,8 +121,8 @@ fun tvEpisode(): TvEpisodeRef {
 
 fun movie(): MovieRef {
     return MovieRef(
-            MovieId(1),
-            MovieMeta(
+            id = MovieId(1),
+            meta = MovieMeta(
                     title = "Movie 1",
                     overview = "Movie Overview",
                     posterPath = "m_poster.jpg",
