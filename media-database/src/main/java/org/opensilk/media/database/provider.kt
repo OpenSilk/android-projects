@@ -79,6 +79,19 @@ class MediaProvider : ContentProvider() {
                         "LEFT JOIN tv_series s ON e.series_id = s._id " +
                         "LEFT JOIN movies m ON d.movie_id = m._id "
             }
+            M.STORAGE_DEVICE -> {
+                table = "storage_device"
+            }
+            M.STORAGE_FOLDER -> {
+                table = "storage_directory"
+            }
+            M.STORAGE_VIDEO -> {
+                table = "storage_video v " +
+                        "LEFT JOIN tv_episodes e ON v.episode_id = e._id " +
+                        "LEFT JOIN tv_series s ON e.series_id = s._id " +
+                        "LEFT JOIN movies m ON v.movie_id = m._id " +
+                        "JOIN storage_device d ON v.device_uuid = d.uuid "
+            }
             else -> TODO("Unmatched uri: $uri")
         }
         return mMediaDB.readableDatabase.query(table, projection, selection,
@@ -241,6 +254,30 @@ class MediaProvider : ContentProvider() {
                         arrayOf(tree_uri, doc_id, parent_id)) != 0)
                     URI_SUCCESS else URI_FAILURE
             }
+            M.STORAGE_DEVICE -> {
+                val id = db.insertWithOnConflict("storage_device", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                return if (id > 0) URI_SUCCESS else URI_FAILURE
+            }
+            M.STORAGE_FOLDER -> {
+                val id = db.insertWithOnConflict("storage_directory", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                return if (id > 0) URI_SUCCESS else URI_FAILURE
+            }
+            M.STORAGE_VIDEO -> {
+                val id: Long = try {
+                    db.insertWithOnConflict("storage_video", null, values, SQLiteDatabase.CONFLICT_FAIL)
+                } catch (ignored: SQLiteException) { -1L }
+                if (id > 0) {
+                    return URI_SUCCESS
+                }
+                //already in db
+                val path = values.getAsString("path")
+                val uuid = values.getAsString("device_uuid")
+                values.remove("path")
+                values.remove("device_uuid")
+                //update existing
+                return if (db.update("storage_video", values, "path=? AND device_uuid=?",
+                        arrayOf(path, uuid)) != 0) URI_SUCCESS else URI_FAILURE
+            }
             else -> TODO("Unmatched uri: $uri")
         }
     }
@@ -281,6 +318,15 @@ class MediaProvider : ContentProvider() {
             }
             M.DOCUMENT_VIDEO -> {
                 return db.update("document_video", values, selection, selectionArgs)
+            }
+            M.STORAGE_DEVICE -> {
+                return db.update("storage_device", values, selection, selectionArgs)
+            }
+            M.STORAGE_FOLDER -> {
+                return db.update("storage_folder", values, selection, selectionArgs)
+            }
+            M.STORAGE_VIDEO -> {
+                return db.update("storage_video", values, selection, selectionArgs)
             }
             else -> TODO("Unmatched uri: $uri")
         }

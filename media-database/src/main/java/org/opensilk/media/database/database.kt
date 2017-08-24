@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.opensilk.dagger2.ForApp
 import javax.inject.Inject
 
-const private val VERSION = 2
+const private val VERSION = 3
 
 /**
  * Created by drew on 7/18/17.
@@ -243,6 +243,45 @@ internal class MediaDB
                     "custom_backdrop_uri TEXT, " +
 
                     "UNIQUE(tree_uri, document_id, parent_id)" +
+                    ");")
+        }
+        if (oldVersion < 3) {
+            db.execSQL("DROP TABLE IF EXISTS storage_device")
+            db.execSQL("CREATE TABLE storage_device (" +
+                    "uuid TEXT NOT NULL UNIQUE, " +
+                    "path TEXT NOT NULL, " +
+                    "is_primary INTEGER NOT NULL DEFAULT 0, " +
+                    "_display_name TEXT NOT NULL, " +
+
+                    "hidden INTEGER DEFAULT 0" +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS storage_directory")
+            db.execSQL("CREATE TABLE storage_directory (" +
+                    "path TEXT NOT NULL, " +
+                    "device_uuid TEXT NOT NULL, " +
+                    "_display_name TEXT NOT NULL, " +
+
+                    "hidden INTEGER DEFAULT 0," +
+                    "UNIQUE(path, device_uuid)" +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS storage_video")
+            db.execSQL("CREATE TABLE storage_video (" +
+                    "path TEXT NOT NULL," +
+                    "device_uuid TEXT NOT NULL," +
+                    "_display_name TEXT NOT NULL," +
+                    "mime_type TEXT," +
+                    "last_modified INTEGER DEFAULT 0," +
+                    "_size INTEGER DEFAULT 0," +
+
+                    "date_added INTEGER NOT NULL, " +
+                    "hidden INTEGER DEFAULT 0, " +
+
+                    "episode_id INTEGER, " +
+                    "movie_id INTEGER, " +
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+
+                    "UNIQUE(path, device_uuid)" +
                     ");")
         }
     }

@@ -28,6 +28,10 @@ internal object M {
     val DOCUMENT_AUDIO = 303
 
     val PLAYBACK_POSITION = 401
+
+    val STORAGE_DEVICE = 501
+    val STORAGE_FOLDER = 502
+    val STORAGE_VIDEO = 503
 }
 
 /**
@@ -58,66 +62,46 @@ class MediaDBUris
         matcher.addURI(mAuthority, "document/audio", M.DOCUMENT_AUDIO)
 
         matcher.addURI(mAuthority, "playback/position", M.PLAYBACK_POSITION)
+
+        matcher.addURI(mAuthority, "storage/device", M.STORAGE_DEVICE)
+        matcher.addURI(mAuthority, "storage/folder", M.STORAGE_FOLDER)
+        matcher.addURI(mAuthority, "storage/video", M.STORAGE_VIDEO)
     }
 
-    private fun base(): Uri.Builder {
-        return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(mAuthority)
-    }
+    private fun base() = Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(mAuthority)
 
-    fun tvSeries(): Uri {
-        return base().appendPath("tv").appendPath("series").build()
-    }
+    fun tvSeries() = base().appendPath("tv").appendPath("series").build()
 
-    fun tvEpisode(): Uri {
-        return base().appendPath("tv").appendPath("episode").build()
-    }
+    fun tvEpisode() = base().appendPath("tv").appendPath("episode").build()
 
-    fun tvImage(): Uri {
-        return base().appendPath("tv").appendPath("image").build()
-    }
+    fun tvImage() = base().appendPath("tv").appendPath("image").build()
 
-    fun movie(): Uri {
-        return base().appendPath("movie").build()
-    }
+    fun movie() = base().appendPath("movie").build()
 
-    fun movieImage(): Uri {
-        return base().appendPath("movie").appendPath("image").build()
-    }
+    fun movieImage() = base().appendPath("movie").appendPath("image").build()
 
-    fun upnpAudio(): Uri {
-        return base().appendPath("upnp").appendPath("audio").build()
-    }
+    fun upnpAudio() = base().appendPath("upnp").appendPath("audio").build()
 
-    fun upnpDevice(): Uri {
-        return base().appendPath("upnp").appendPath("device").build()
-    }
+    fun upnpDevice() = base().appendPath("upnp").appendPath("device").build()
 
-    fun upnpFolder(): Uri {
-        return base().appendPath("upnp").appendPath("folder").build()
-    }
+    fun upnpFolder() = base().appendPath("upnp").appendPath("folder").build()
 
-    fun upnpMusicTrack(): Uri {
-        return base().appendPath("upnp").appendPath("music").appendPath("track").build()
-    }
+    fun upnpMusicTrack() = base().appendPath("upnp").appendPath("music").appendPath("track").build()
 
-    fun upnpVideo(): Uri {
-        return base().appendPath("upnp").appendPath("video").build()
-    }
+    fun upnpVideo() = base().appendPath("upnp").appendPath("video").build()
 
-    fun playbackPosition(): Uri {
-        return base().appendPath("playback").appendPath("position").build()
-    }
+    fun playbackPosition() = base().appendPath("playback").appendPath("position").build()
 
-    fun documentDirectory(): Uri {
-        return base().appendPath("document").appendPath("directory").build()
-    }
+    fun documentDirectory() = base().appendPath("document").appendPath("directory").build()
 
-    fun documentVideo(): Uri {
-        return base().appendPath("document").appendPath("video").build()
-    }
+    fun documentVideo() = base().appendPath("document").appendPath("video").build()
 
-    fun documentAudio(): Uri {
-        return base().appendPath("document").appendPath("audio").build()
-    }
+    fun documentAudio() = base().appendPath("document").appendPath("audio").build()
+
+    fun storageDevice() = base().appendPath("storage").appendPath("device").build()
+
+    fun storageFolder() = base().appendPath("storage").appendPath("folder").build()
+
+    fun storageVideo() = base().appendPath("storage").appendPath("video").build()
 
 }
