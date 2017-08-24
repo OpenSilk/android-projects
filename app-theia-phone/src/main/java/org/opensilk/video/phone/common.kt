@@ -256,23 +256,8 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
         binding.frame.setOnClickListener(this)
         //binding.frame.setOnLongClickListener(this)
         when (mediaRef) {
-            is UpnpDeviceRef -> {
+            is VideoRef -> {
                 binding.titleString = mediaRef.meta.title
-                binding.subTitleString = mediaRef.meta.subtitle
-                if (mediaRef.meta.artworkUri.isEmpty()) {
-                    binding.artworkThumb.setImageResource(R.drawable.ic_lan_48dp)
-                } else {
-                    loadArtwork(mediaRef.meta.artworkUri)
-                }
-            }
-            is UpnpFolderRef -> {
-                binding.titleString = mediaRef.meta.title
-                binding.subTitleString = ""
-                binding.artworkThumb.setImageResource(R.drawable.ic_folder_48dp)
-
-            }
-            is UpnpVideoRef -> {
-                binding.titleString = mediaRef.meta.title.elseIfBlank(mediaRef.meta.originalTitle)
                 binding.subTitleString = mediaRef.meta.subtitle
                 if (mediaRef.meta.artworkUri.isEmpty()) {
                     binding.artworkThumb.setImageResource(R.drawable.ic_movie_48dp)
@@ -280,17 +265,18 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
                     loadArtwork(mediaRef.meta.artworkUri)
                 }
             }
-            is DocumentRef -> {
-                binding.titleString = mediaRef.meta.title.elseIfBlank(mediaRef.meta.displayName)
+            is FolderRef -> {
+                binding.titleString = mediaRef.meta.title
+                binding.subTitleString = ""
+                binding.artworkThumb.setImageResource(R.drawable.ic_folder_48dp)
+            }
+            is UpnpDeviceRef -> {
+                binding.titleString = mediaRef.meta.title
                 binding.subTitleString = mediaRef.meta.subtitle
                 if (mediaRef.meta.artworkUri.isEmpty()) {
-                    binding.artworkThumb.setImageResource(if (mediaRef is DirectoryDocumentRef)
-                        R.drawable.ic_folder_48dp else R.drawable.ic_movie_48dp)
+                    binding.artworkThumb.setImageResource(R.drawable.ic_lan_48dp)
                 } else {
                     loadArtwork(mediaRef.meta.artworkUri)
-                }
-                if (mediaRef !is DirectoryDocumentRef && mediaRef !is VideoDocumentRef) {
-                    binding.frame.setOnClickListener(null)
                 }
             }
             else -> TODO("Unhandled mediaRef")
