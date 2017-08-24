@@ -7,6 +7,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.testdata.TVDB_BANNER_ROOT
 import org.opensilk.tvdb.api.model.Token
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner

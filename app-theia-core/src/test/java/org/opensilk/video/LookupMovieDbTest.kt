@@ -14,6 +14,8 @@ import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.opensilk.media.MovieRef
 import org.opensilk.media.database.MediaDAO
+import org.opensilk.media.testdata.movie
+import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
@@ -129,30 +131,31 @@ class LookupMovieDbTest {
     }
 
     @Test
-    fun test_lookup_cache_no_network() {
+    fun test_lookup_in_db_does_not_refetch() {
         val name = "hunger games"
         val year = ""
         val meta = LookupRequest(upnpVideo_folder_1_no_association())
         meta.lookupName = name
         meta.releaseYear = year
 
-        val config = TMDbConfig(TMDbConfig.Images("/foo", null, null, null, null, null, null))
         val movieRef = movie()
+        val searchResult = MovieList(1, 1, 1, listOf(Movie(movieRef.id.movieId, null, null, null, null, null, null)))
+        val config = TMDbConfig(TMDbConfig.Images("/foo", null, null, null, null, null, null))
 
         whenever(mApi.configurationObservable())
                 .thenReturn(Observable.just(config))
-        //whenever(mClient)
-        //        .thenReturn(DatabaseUris("foo"))
+        whenever(mApi.searchMovieObservable(name, "en"))
+                .thenReturn(Observable.just(searchResult))
         whenever(mClient.getMovie(movieRef.id))
                 .thenReturn(Maybe.just(movieRef))
 
-        val list = mLookup.lookupObservable(meta).toList().blockingGet()
-        assertThat(list.size).isEqualTo(1)
-        assertThat(list[0]).isSameAs(movieRef)
+        val item = mLookup.lookupObservable(meta).blockingFirst()
+        assertThat(item).isNotNull()
+        assertThat(item).isSameAs(movieRef)
 
         verify(mApi).configurationObservable()
+        verify(mApi).searchMovieObservable(name, "en")
         verify(mClient).getMovie(movieRef.id)
-        //verify(mClient).uris
         //additional interactions not mocked
         verify(mVideoClient).setMovieImageBaseUrl(config.images.baseUrl)
 
