@@ -1,1 +1,8 @@
-<manifest package="org.opensilk.media.loader.storage"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.opensilk.media.loader.storage">
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+    <application/>
+
+</manifest>
