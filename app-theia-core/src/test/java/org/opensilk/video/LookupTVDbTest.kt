@@ -13,6 +13,7 @@ import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.opensilk.media.UpnpVideoRef
+import org.opensilk.media.database.MediaDAO
 import org.opensilk.tvdb.api.TVDb
 import org.opensilk.tvdb.api.model.*
 import org.robolectric.RobolectricTestRunner
@@ -28,20 +29,22 @@ class LookupTVDbTest {
     private val mAuth = Auth("foo")
     private val mToken = Token("baloney")
     private lateinit var mApi: TVDb
-    private lateinit var mClient: DatabaseClient
+    private lateinit var mClient: MediaDAO
+    private lateinit var mVideoClient: VideoAppDAO
     private lateinit var mLookup: LookupTVDb
 
     @Before
     fun setup() {
         mApi = mock()
         mClient = mock()
-        mLookup = LookupTVDb(mAuth, mApi, mClient)
+        mVideoClient = mock()
+        mLookup = LookupTVDb(mAuth, mApi, mClient, mVideoClient)
     }
 
     @Test
     fun token_no_cache_goes_to_network() {
-        whenever(mClient.getTvToken())
-                .thenReturn(Single.error(NoSuchItemException()))
+        whenever(mVideoClient.getTvToken())
+                .thenReturn(Single.error(Exception()))
         whenever(mApi.login(mAuth))
                 .thenReturn(Single.just(mToken))
 
@@ -49,16 +52,17 @@ class LookupTVDbTest {
         assertThat(tkn).isSameAs(mToken)
 
         verify(mApi).login(mAuth)
-        verify(mClient).getTvToken()
-        verify(mClient).setTvToken(mToken)
+        verify(mVideoClient).getTvToken()
+        verify(mVideoClient).setTvToken(mToken)
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
+        verifyNoMoreInteractions(mVideoClient)
     }
 
     @Test
     fun token_from_cache_does_refresh() {
-        whenever(mClient.getTvToken())
+        whenever(mVideoClient.getTvToken())
                 .thenReturn(Single.just(mToken))
         whenever(mApi.refreshToken(mToken))
                 .thenReturn(Single.just(mToken))
@@ -67,19 +71,20 @@ class LookupTVDbTest {
         assertThat(tkn).isSameAs(mToken)
 
         verify(mApi).refreshToken(mToken)
-        verify(mClient).getTvToken()
-        verify(mClient).setTvToken(mToken)
+        verify(mVideoClient).getTvToken()
+        verify(mVideoClient).setTvToken(mToken)
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
+        verifyNoMoreInteractions(mVideoClient)
     }
 
     @Test
     fun token_is_subscribed_only_once() {
-        whenever(mClient.getTvToken())
+        whenever(mVideoClient.getTvToken())
                 .thenReturn(Single.just(mToken))
 
-        whenever(mClient.getTvToken())
+        whenever(mVideoClient.getTvToken())
                 .thenReturn(Single.just(mToken))
         whenever(mApi.refreshToken(mToken))
                 .thenReturn(Single.just(mToken))
@@ -88,14 +93,15 @@ class LookupTVDbTest {
         assertThat(tkn).isSameAs(mToken)
 
         verify(mApi).refreshToken(mToken)
-        verify(mClient).getTvToken()
-        verify(mClient).setTvToken(mToken)
+        verify(mVideoClient).getTvToken()
+        verify(mVideoClient).setTvToken(mToken)
 
         val tkn2 = mLookup.mTokenObservable.blockingFirst()
         assertThat(tkn2).isSameAs(mToken)
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
+        verifyNoMoreInteractions(mVideoClient)
     }
 
     @Test
@@ -133,17 +139,17 @@ class LookupTVDbTest {
         whenever(mApi.seriesImagesQuery(eq(mToken), eq(1),  Mockito.anyString()))
                 .thenReturn(Single.just(imageData))
 
-        whenever(mClient.getTvToken())
+        whenever(mVideoClient.getTvToken())
                 .thenReturn(Single.just(mToken))
         whenever(mClient.addTvSeries(any()))
-                .thenReturn(seriesUri)
+                .thenReturn(true)
         whenever(mClient.getTvEpisodesForTvSeries(seriesMeta.id)).thenAnswer(object : Answer<Maybe<UpnpVideoRef>> {
             var times = 0
             override fun answer(invocation: InvocationOnMock?): Maybe<UpnpVideoRef> {
-                if (times++ == 0) {
-                    return Maybe.empty()
+                return if (times++ == 0) {
+                    Maybe.empty()
                 } else {
-                    return Maybe.just(mediaRef)
+                    Maybe.just(mediaRef)
                 }
             }
         })
@@ -158,17 +164,18 @@ class LookupTVDbTest {
         verify(mApi).seriesEpisodes(mToken, 1)
         verify(mApi, times(2)).seriesImagesQuery(eq(mToken), eq(1), Mockito.anyString())
 
-        verify(mClient).getTvToken()
+        verify(mVideoClient).getTvToken()
         verify(mClient).addTvSeries(any())
         verify(mClient, times(2)).getTvEpisodesForTvSeries(seriesMeta.id)
 
         //non mocked interactions
-        verify(mClient).setTvToken(mToken)
+        verify(mVideoClient).setTvToken(mToken)
         verify(mClient, times(2)).addTvImages(emptyList())
         verify(mClient).addTvEpisodes(any())
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
+        verifyNoMoreInteractions(mVideoClient)
     }
 
     @Test
@@ -183,7 +190,7 @@ class LookupTVDbTest {
 
         val metaRef = meta.mediaRef as UpnpVideoRef
 
-        whenever(mClient.getTvToken())
+        whenever(mVideoClient.getTvToken())
                 .thenReturn(Single.just(mToken))
         whenever(mClient.getTvEpisodesForTvSeries(series.id))
                 .thenReturn(Observable.just(episode))
@@ -192,10 +199,11 @@ class LookupTVDbTest {
         assertThat(list.size).isEqualTo(1)
         assertThat(list[0]).isSameAs(episode)
 
-        verify(mClient).getTvToken()
+        verify(mVideoClient).getTvToken()
         verify(mClient).getTvEpisodesForTvSeries(series.id)
 
         verifyZeroInteractions(mApi)
         verifyNoMoreInteractions(mClient)
+        verifyNoMoreInteractions(mVideoClient)
     }
 }

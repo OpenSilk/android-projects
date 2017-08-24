@@ -13,6 +13,7 @@ import org.junit.runner.RunWith
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.opensilk.media.MovieRef
+import org.opensilk.media.database.MediaDAO
 import org.opensilk.tmdb.api.TMDb
 import org.opensilk.tmdb.api.model.ImageList
 import org.opensilk.tmdb.api.model.Movie
@@ -30,7 +31,8 @@ class LookupMovieDbTest {
 
     private lateinit var mServer: MockWebServer
     private lateinit var mLookup: LookupMovieDb
-    private lateinit var mClient: DatabaseClient
+    private lateinit var mClient: MediaDAO
+    private lateinit var mVideoClient: VideoAppDAO
     private lateinit var mApi : TMDb
 
     @Before
@@ -39,10 +41,11 @@ class LookupMovieDbTest {
         mServer.start()
 
         mClient = mock()
+        mVideoClient = mock()
 
         mApi = mock()
 
-        mLookup = LookupMovieDb(mClient, mApi)
+        mLookup = LookupMovieDb(mClient, mVideoClient, mApi)
     }
 
     @After
@@ -60,13 +63,14 @@ class LookupMovieDbTest {
         assertThat(ret).isSameAs(config)
 
         verify(mApi).configurationObservable()
-        verify(mClient).setMovieImageBaseUrl(config.images.baseUrl)
+        verify(mVideoClient).setMovieImageBaseUrl(config.images.baseUrl)
 
         val ret2 = mLookup.mConfigObservable.blockingFirst()
         assertThat(ret2).isSameAs(config)
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
+        verifyNoMoreInteractions(mVideoClient)
     }
 
     @Test
@@ -93,7 +97,7 @@ class LookupMovieDbTest {
         whenever(mApi.movieImagesObservable(1, "en"))
                 .thenReturn(Observable.just(imageList))
         whenever(mClient.addMovie(movieRef))
-                .thenReturn(movieUri)
+                .thenReturn(true)
         whenever(mClient.getMovie(movieRef.id)).thenAnswer(object : Answer<Maybe<MovieRef>> {
             var times = 0
             override fun answer(invocation: InvocationOnMock?): Maybe<MovieRef> {
@@ -116,11 +120,12 @@ class LookupMovieDbTest {
         verify(mClient).addMovie(movieRef)
         verify(mClient, times(2)).getMovie(movieRef.id)
         //additional interactions not mocked
-        verify(mClient).setMovieImageBaseUrl(config.images.baseUrl)
+        verify(mVideoClient).setMovieImageBaseUrl(config.images.baseUrl)
         verify(mClient, times(2)).addMovieImages(emptyList())
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
+        verifyNoMoreInteractions(mVideoClient)
     }
 
     @Test
@@ -136,8 +141,8 @@ class LookupMovieDbTest {
 
         whenever(mApi.configurationObservable())
                 .thenReturn(Observable.just(config))
-        whenever(mClient.uris)
-                .thenReturn(DatabaseUris("foo"))
+        //whenever(mClient)
+        //        .thenReturn(DatabaseUris("foo"))
         whenever(mClient.getMovie(movieRef.id))
                 .thenReturn(Maybe.just(movieRef))
 
@@ -147,12 +152,13 @@ class LookupMovieDbTest {
 
         verify(mApi).configurationObservable()
         verify(mClient).getMovie(movieRef.id)
-        verify(mClient).uris
+        //verify(mClient).uris
         //additional interactions not mocked
-        verify(mClient).setMovieImageBaseUrl(config.images.baseUrl)
+        verify(mVideoClient).setMovieImageBaseUrl(config.images.baseUrl)
 
         verifyNoMoreInteractions(mApi)
         verifyNoMoreInteractions(mClient)
+        verifyNoMoreInteractions(mVideoClient)
     }
 
 }
