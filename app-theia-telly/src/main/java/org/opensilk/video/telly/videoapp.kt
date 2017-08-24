@@ -26,6 +26,7 @@ import org.opensilk.logging.installLogging
 import org.opensilk.media.database.MediaProviderModule
 import org.opensilk.media.loader.cds.UpnpBrowseLoaderModule
 import org.opensilk.media.loader.doc.DocumentLoaderModule
+import org.opensilk.media.loader.storage.StorageLoaderModule
 import org.opensilk.video.*
 import javax.inject.Inject
 import javax.inject.Named
@@ -44,6 +45,7 @@ import javax.inject.Singleton
         LookupConfigModule::class,
         UpnpBrowseLoaderModule::class,
         DocumentLoaderModule::class,
+        StorageLoaderModule::class,
         ViewModelModule::class,
         VideoGlideLibraryModule::class,
         HomeScreenModule::class,
