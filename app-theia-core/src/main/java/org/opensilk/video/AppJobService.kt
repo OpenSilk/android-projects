@@ -15,8 +15,6 @@ import org.opensilk.common.dagger.Injector
 import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.UpnpVideoChange
-import org.opensilk.media.database.VideoDocumentChange
 import timber.log.Timber
 import java.net.SocketTimeoutException
 import javax.inject.Inject
@@ -103,8 +101,7 @@ class AppJobService : JobService() {
         relatedLookupSub = mDatabaseClient.playableSiblingsOf(mediaId)
                 .flatMapMaybe<MediaRefWithEpisode> { ref ->
                     val title = when (ref) {
-                        is UpnpItemRef -> ref.meta.title
-                        is DocumentRef -> ref.meta.displayName
+                        is VideoRef -> ref.meta.originalTitle.elseIfBlank(ref.meta.title)
                         else -> TODO("unhandled media ref ${ref::javaClass.name}")
                     }
                     val name = extractSeriesName(title)
@@ -123,13 +120,8 @@ class AppJobService : JobService() {
                     val ref = vwe.mediaRef
                     val epi = vwe.episodeRef
                     when (ref) {
-                        is UpnpVideoRef -> {
-                            mDatabaseClient.setUpnpVideoTvEpisodeId(ref.id, epi.id)
-                            mDatabaseClient.postChange(UpnpVideoChange(ref.id))
-                        }
-                        is VideoDocumentRef -> {
-                            mDatabaseClient.setVideoDocumentTvEpisodeId(ref.id, epi.id)
-                            mDatabaseClient.postChange(VideoDocumentChange(ref.id))
+                        is VideoRef -> {
+                            mDatabaseClient.setVideoTvEpisodeId(ref.id, epi.id)
                         }
                         else -> TODO("unhandled media ref ${ref::javaClass.name}")
                     }
