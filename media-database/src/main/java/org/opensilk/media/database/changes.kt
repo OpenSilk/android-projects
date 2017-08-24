@@ -1,6 +1,7 @@
 package org.opensilk.media.database
 
 import org.opensilk.media.DocumentId
+import org.opensilk.media.MediaId
 import org.opensilk.media.UpnpFolderId
 import org.opensilk.media.UpnpVideoId
 

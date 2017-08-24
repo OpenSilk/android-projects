@@ -105,6 +105,34 @@ class MediaDAO
         else -> TODO()
     }
 
+    fun setVideoTvEpisodeId(mediaId: MediaId, episodeId: TvEpisodeId) {
+        when (mediaId) {
+            is UpnpVideoId -> {
+                setUpnpVideoTvEpisodeId(mediaId, episodeId)
+                postChange(UpnpVideoChange(mediaId))
+            }
+            is DocumentId -> {
+                setVideoDocumentTvEpisodeId(mediaId, episodeId)
+                postChange(VideoDocumentChange(mediaId))
+            }
+            else -> TODO()
+        }
+    }
+
+    fun setVideoMovieId(mediaId: MediaId, movieId: MovieId) {
+        when (mediaId) {
+            is UpnpVideoId -> {
+                setUpnpVideoMovieId(mediaId, movieId)
+                postChange(UpnpVideoChange(mediaId))
+            }
+            is DocumentId -> {
+                setVideoDocumentMovieId(mediaId, movieId)
+                postChange(VideoDocumentChange(mediaId))
+            }
+            else -> TODO()
+        }
+    }
+
     /**
      * Do not return folders here
      */
@@ -132,7 +160,7 @@ class MediaDAO
         is DocumentId -> when {
             mediaId.isVideo -> {
                 getVideoDocument(mediaId).flatMap { meta ->
-                    lastPlaybackPosition(meta.meta.displayName)
+                    lastPlaybackPosition(meta.meta.originalTitle)
                 }
             }
             else -> TODO()
@@ -154,7 +182,7 @@ class MediaDAO
         is DocumentId -> when {
             mediaId.isVideo -> {
                 getVideoDocument(mediaId).flatMap { meta ->
-                    lastPlaybackCompletion(meta.meta.displayName)
+                    lastPlaybackCompletion(meta.meta.originalTitle)
                 }
             }
             else -> TODO()
@@ -182,7 +210,7 @@ class MediaDAO
                     getVideoDocument(mediaId)
                             .subscribeIgnoreError(Consumer { meta ->
                                 mResolver.insert(mUris.playbackPosition(),
-                                        positionContentVals(meta.meta.displayName, position, duration))
+                                        positionContentVals(meta.meta.originalTitle, position, duration))
                                 postChange(VideoDocumentChange(mediaId))
                             })
                 } else TODO()
@@ -199,6 +227,10 @@ class MediaDAO
         values.put("last_completion", calculateCompletion(position, duration))
         return values
     }
+
+    /*
+     * START UPNP
+     */
 
     /**
      * Add a meta item describing a upnp device with a content directory service to the database
@@ -718,7 +750,7 @@ fun DirectoryDocumentRef.contentValues(): ContentValues {
     values.put("tree_uri", id.treeUri.toString())
     values.put("document_id", id.documentId)
     values.put("parent_id", id.parentId)
-    values.put("_display_name", meta.displayName)
+    values.put("_display_name", meta.title)
     values.put("mime_type", meta.mimeType)
     values.put("flags", meta.flags)
     values.put("last_modified", meta.lastMod)
@@ -740,8 +772,8 @@ fun Cursor.toDirectoryDocument(): DirectoryDocumentRef {
     val lastmod = if (!isNull(6)) getLong(6) else 0L
     return DirectoryDocumentRef(
             id = id,
-            meta = DocumentMeta(
-                    displayName = displayname,
+            meta = DirectoryDocumentMeta(
+                    title = displayname,
                     mimeType = mimetype,
                     flags = flags,
                     lastMod = lastmod
@@ -756,7 +788,7 @@ fun VideoDocumentRef.contentValues(): ContentValues {
     values.put("tree_uri", documentRef.id.treeUri.toString())
     values.put("document_id", documentRef.id.documentId)
     values.put("parent_id", documentRef.id.parentId)
-    values.put("_display_name", documentRef.meta.displayName)
+    values.put("_display_name", documentRef.meta.originalTitle.elseIfBlank(documentRef.meta.title))
     values.put("mime_type", documentRef.meta.mimeType)
     values.put("last_modified", documentRef.meta.lastMod)
     values.put("flags", documentRef.meta.flags)
@@ -828,25 +860,26 @@ fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): VideoDocumentRef {
             backdropUri = mApiHelper.movieImageBackdropUri(getString(20))
         }
     }
+    val docid = DocumentId(
+            treeUri = treeUri,
+            documentId = docId,
+            parentId = parentId,
+            mimeType = mimeType)
     return VideoDocumentRef(
-            id = DocumentId(
-                    treeUri = treeUri,
-                    documentId = docId,
-                    parentId = parentId,
-                    mimeType = mimeType
-            ),
+            id = docid,
             tvEpisodeId =  episodeId,
             movieId = movieId,
-            meta = DocumentMeta(
+            meta = VideoDocumentMeta(
                     title = title,
                     subtitle = subtitle,
                     artworkUri = artworkUri,
                     backdropUri = backdropUri,
-                    displayName = displayName,
+                    originalTitle = displayName,
                     mimeType = mimeType,
                     size = size,
                     flags = flags,
-                    lastMod = lastMod
+                    lastMod = lastMod,
+                    mediaUri = docid.mediaUri
                     //summary,
             )
     )
