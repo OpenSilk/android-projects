@@ -13,22 +13,13 @@ import java.util.concurrent.TimeUnit
  * Created by drew on 7/21/17.
  */
 object AppSchedulers {
-    val diskIo: Scheduler = Schedulers.io()
+    val diskIo: Scheduler by lazy {
+        ExecutorScheduler(Executors.newFixedThreadPool(2))
+    }
     val networkIo: Scheduler = Schedulers.io()
     val main: Scheduler = AndroidSchedulers.mainThread()
-    val callback: Scheduler by lazy {
-        ExecutorScheduler(Executors.newSingleThreadExecutor())
-    }
     val background: Scheduler by lazy {
         ExecutorScheduler(Executors.newSingleThreadExecutor())
     }
-    val scanner: Scheduler by lazy {
-        ExecutorScheduler(ThreadPoolExecutor(0, 2,
-                10L, TimeUnit.SECONDS,
-                LinkedBlockingQueue<Runnable>(),
-                Executors.defaultThreadFactory())
-        )
-    }
-    val newThread: Scheduler
-        get() = Schedulers.newThread()
+    val newThread: Scheduler = networkIo
 }
