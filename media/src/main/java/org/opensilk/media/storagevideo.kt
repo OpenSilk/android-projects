@@ -37,7 +37,7 @@ data class StorageVideoRef(
 ): StorageRef, VideoRef
 
 internal object StorageVideoIdTransformer: MediaIdTransformer<StorageVideoId> {
-    override val kind: String = STORAGE_FOLDER
+    override val kind: String = STORAGE_VIDEO
     override val version: Int = 1
 
     override fun write(jw: JsonWriter, item: StorageVideoId) {

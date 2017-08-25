@@ -47,8 +47,36 @@ class MediaRefTest {
     }
 
     @Test
-    fun documentId_toJson() {
-        val ref = DocumentId(Uri.parse("content://foo/tree/myid"), "myid", "ooo", "mime/type")
+    fun docDirectoryId_toJson() {
+        val ref = DocDirectoryId(Uri.parse("content://foo/tree/myid"), "myid", "ooo")
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
+    }
+
+    @Test
+    fun docVideoId_toJson() {
+        val ref = DocVideoId(Uri.parse("content://foo/tree/mvid"), "foo", "mmm")
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
+    }
+
+    @Test
+    fun storageDeviceId_toJson() {
+        val ref = StorageDeviceId("andountu", "bouneot", true)
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
+    }
+
+    @Test
+    fun storageFolderId_toJson() {
+        val ref = StorageFolderId("onut", "ontue", "ouou")
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
+    }
+
+    @Test
+    fun storageVideoId_toJson() {
+        val ref = StorageVideoId("ontu", "eontu", "ountou")
         val newRef = parseMediaId(ref.json)
         assertThat(newRef).isEqualTo(ref)
     }
