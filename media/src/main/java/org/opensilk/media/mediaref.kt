@@ -12,7 +12,8 @@ const val UPNP_FOLDER = "upnp_folder"
 const val UPNP_VIDEO = "upnp_video"
 const val UPNP_MUSIC_TRACK = "upnp_music_track"
 const val UPNP_AUDIO = "upnp_audio"
-const val DOCUMENT = "document"
+const val DOCUMENT_DIRECTORY = "document_directory"
+const val DOCUMENT_VIDEO = "document_video"
 const val STORAGE_DEVICE = "storage_device"
 const val STORAGE_FOLDER = "storage_folder"
 const val STORAGE_VIDEO = "storage_video"
@@ -36,6 +37,18 @@ object NoMediaRef: MediaRef {
 interface MediaId {
     val json: String
 }
+
+/**
+ * Device classification
+ */
+interface MediaDeviceId: MediaId
+
+/**
+ * Container classification
+ */
+interface MediaContainerId: MediaId
+
+
 
 /**
  * Contains the media id and metadata
@@ -108,8 +121,11 @@ fun parseMediaId(json: String): MediaId {
                 UPNP_AUDIO -> {
                     mediaId = UpnpAudioTransformer.read(jr, readVersion(jr))
                 }
-                DOCUMENT -> {
-                    mediaId = DocumentIdTransformer.read(jr, readVersion(jr))
+                DOCUMENT_DIRECTORY -> {
+                    mediaId = DirectoryDocumentIdTransformer.read(jr, readVersion(jr))
+                }
+                DOCUMENT_VIDEO -> {
+                    mediaId = VideoDocumentIdTransformer.read(jr, readVersion(jr))
                 }
                 STORAGE_DEVICE -> {
                     mediaId = StorageDeviceIdTransformer.read(jr, readVersion(jr))

@@ -9,7 +9,7 @@ data class UpnpVideoId(
         override val deviceId: String,
         override val parentId: String,
         override val itemId: String
-): UpnpItemId {
+): UpnpItemId, VideoId {
     override val json: String
         get() = writeJson(UpnpVideoTransformer, this)
 }

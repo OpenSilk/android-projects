@@ -3,7 +3,12 @@ package org.opensilk.media
 import android.net.Uri
 
 /**
- * Created by drew on 8/22/17.
+ * Video classification
+ */
+interface VideoId: MediaId
+
+/**
+ * Video metadata
  */
 interface VideoMeta {
     val title: String
@@ -17,7 +22,11 @@ interface VideoMeta {
     val originalTitle: String
 }
 
+/**
+ * Video ref, may have movie or episode id associated to it
+ */
 interface VideoRef: MediaRef {
+    override val id: VideoId
     val tvEpisodeId: TvEpisodeId?
     val movieId: MovieId?
     val meta: VideoMeta

@@ -11,7 +11,7 @@ data class StorageVideoId(
         override val path: String,
         override val uuid: String,
         val parent: String
-): StorageId {
+): StorageId, VideoId {
     override val json: String
         get() = writeJson(StorageVideoIdTransformer, this)
 }

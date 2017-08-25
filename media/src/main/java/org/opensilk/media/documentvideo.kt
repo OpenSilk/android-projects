@@ -1,10 +1,20 @@
 package org.opensilk.media
 
 import android.net.Uri
+import android.provider.DocumentsContract
 
-/**
- * Created by drew on 8/22/17.
- */
+data class DocVideoId(
+        override val treeUri: Uri,
+        override val documentId: String = if (isTreeUri(treeUri))
+            DocumentsContract.getTreeDocumentId(treeUri) else
+            DocumentsContract.getDocumentId(treeUri),
+        override val parentId: String = documentId
+): DocumentId, VideoId {
+    override val json: String by lazy {
+        writeJson(VideoDocumentIdTransformer, this)
+    }
+}
+
 data class VideoDocumentMeta(
         override val mimeType: String,
         override val lastMod: Long = 0,
@@ -23,8 +33,12 @@ data class VideoDocumentMeta(
 ): DocumentMeta, VideoMeta
 
 data class VideoDocumentRef(
-        override val id: DocumentId,
+        override val id: VideoDocumentId,
         override val tvEpisodeId: TvEpisodeId? = null,
         override val movieId: MovieId? = null,
         override val meta: VideoDocumentMeta
 ): DocumentRef, VideoRef
+
+internal object VideoDocumentIdTransformer: DocumentIdTransformer() {
+    override val kind: String = DOCUMENT_VIDEO
+}
