@@ -13,7 +13,7 @@ import javax.inject.Inject
 /**
  * The Loader for the Media Servers row in the Home Activity
  */
-class UpnpDevicesLoader
+class MediaDeviceLoader
 @Inject constructor(
         private val mDatabaseClient: MediaDAO,
         private val mStorageDeviceLoader: StorageDeviceLoader
@@ -29,7 +29,7 @@ class UpnpDevicesLoader
                             mStorageDeviceLoader.storageDevices.flatMapObservable {
                                 Observable.fromIterable<MediaRef>(it)
                             }
-                    ).toList()
+                    ).toList().subscribeOn(AppSchedulers.diskIo)
                 }
     }
 

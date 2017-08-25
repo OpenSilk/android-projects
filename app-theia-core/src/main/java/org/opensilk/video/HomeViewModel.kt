@@ -4,12 +4,11 @@ import android.Manifest
 import android.arch.lifecycle.*
 import android.content.Context
 import android.content.pm.PackageManager
-import android.media.MediaDrmResetException
 import android.support.v4.content.ContextCompat
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.exceptions.Exceptions
+import org.opensilk.dagger2.ForApp
 import org.opensilk.media.MediaRef
-import org.opensilk.media.UpnpDeviceRef
 import org.opensilk.media.UpnpVideoRef
 import javax.inject.Inject
 
@@ -18,8 +17,8 @@ import javax.inject.Inject
  */
 class HomeViewModel
 @Inject constructor(
-        private val mContext: Context,
-        private val mServersLoader: UpnpDevicesLoader,
+        @ForApp private val mContext: Context,
+        private val mServersLoader: MediaDeviceLoader,
         private val mNewlyAddedLoader: NewlyAddedLoader
 ): ViewModel(), LifecycleObserver {
     val servers = MutableLiveData<List<MediaRef>>()

@@ -25,8 +25,8 @@ class FolderViewModel
         Timber.d("onMediaId($mediaId)")
         val mediaRef = parseMediaId(mediaId)
         when (mediaRef) {
-            is UpnpFolderId,
-            is UpnpDeviceId -> {
+            is UpnpContainerId,
+            is StorageContainerId -> {
                 subscribeBrowseItems(mediaRef)
                 subscribeTitle(mediaRef)
             }
