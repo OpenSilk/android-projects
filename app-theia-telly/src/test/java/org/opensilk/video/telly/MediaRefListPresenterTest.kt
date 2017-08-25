@@ -15,7 +15,6 @@ import org.opensilk.media.database.ApiHelper
 import org.opensilk.media.database.MediaDAO
 import org.opensilk.media.database.MediaDBUris
 import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
-import org.opensilk.media.toMediaItem
 import org.robolectric.RuntimeEnvironment
 
 /**
@@ -23,15 +22,15 @@ import org.robolectric.RuntimeEnvironment
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class)
-class MediaItemListPresenterTest {
+class MediaRefListPresenterTest {
 
-    lateinit var mPresenter: MediaItemListPresenter
-    lateinit var mViewHolder: MediaItemListPresenter.ViewHolder
+    lateinit var mPresenter: MediaRefListPresenter
+    lateinit var mViewHolder: MediaRefListPresenter.ViewHolder
 
     @Before
     fun setup() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        mPresenter = MediaItemListPresenter(MediaDAO(
+        mPresenter = MediaRefListPresenter(MediaDAO(
                 RuntimeEnvironment.application.contentResolver,
                 MediaDBUris("foo"),
                 object : ApiHelper {
@@ -52,17 +51,17 @@ class MediaItemListPresenterTest {
                     }
                 }
         ))
-        mViewHolder = mPresenter.onCreateViewHolder(FrameLayout(activity)) as MediaItemListPresenter.ViewHolder
+        mViewHolder = mPresenter.onCreateViewHolder(FrameLayout(activity)) as MediaRefListPresenter.ViewHolder
     }
 
     @Test
     fun test_onBindViewHolder() {
-        val item = upnpVideo_folder_1_no_association().toMediaItem()
+        val item = upnpVideo_folder_1_no_association()
         mPresenter.onBindViewHolder(mViewHolder, item)
         val b = mViewHolder.binding
         b.executePendingBindings()
-        assertThat(b.title.text).isEqualTo(item.description.title)
-        assertThat(b.subtitle.text).isEqualTo(item.description.subtitle)
+        assertThat(b.title.text).isEqualTo(item.meta.title)
+        assertThat(b.subtitle.text).isEqualTo(item.meta.subtitle)
         //TODO how to test icon
         assertThat(b.progress.visibility).isEqualTo(View.GONE)
     }

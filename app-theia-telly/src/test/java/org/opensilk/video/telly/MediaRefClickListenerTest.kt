@@ -2,7 +2,6 @@ package org.opensilk.video.telly
 
 import android.app.Activity
 import android.content.ComponentName
-import android.media.browse.MediaBrowser
 import android.support.v17.leanback.widget.Presenter
 import android.widget.FrameLayout
 import org.assertj.core.api.Java6Assertions.assertThat
@@ -12,7 +11,6 @@ import org.junit.runner.RunWith
 import org.opensilk.media.testdata.upnpDevice_all_meta
 import org.opensilk.media.testdata.upnpFolders
 import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
-import org.opensilk.media.toMediaItem
 import org.opensilk.video.EXTRA_MEDIAID
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
@@ -24,44 +22,44 @@ import org.robolectric.annotation.Config
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class)
-class MediaItemClickListenerTest {
+class MediaRefClickListenerTest {
 
-    lateinit var mListener: MediaItemClickListener
+    lateinit var mListener: MediaRefClickListener
     lateinit var mActivity: Activity
     lateinit var mItemViewHolder: Presenter.ViewHolder
 
     @Before
     fun setup() {
-        mListener = MediaItemClickListener()
+        mListener = MediaRefClickListener()
         mActivity = Robolectric.setupActivity(Activity::class.java)
         mItemViewHolder = Presenter.ViewHolder(FrameLayout(mActivity))
     }
 
     @Test
     fun test_OnItemClicked_DeviceItem() {
-        val item = upnpDevice_all_meta().toMediaItem()
+        val item = upnpDevice_all_meta()
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
-        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.mediaId)
+        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.id.json)
     }
 
     @Test
     fun test_OnItemClicked_FolderItem() {
-        val item = upnpFolders()[0].toMediaItem()
+        val item = upnpFolders()[0]
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
-        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.mediaId)
+        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.id.json)
     }
 
     @Test
     fun test_OnItemClicked_VideoItem() {
-        val item = upnpVideo_folder_1_no_association().toMediaItem()
+        val item = upnpVideo_folder_1_no_association()
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, DetailActivity::class.java))
-        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.mediaId)
+        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.id.json)
     }
 
 }

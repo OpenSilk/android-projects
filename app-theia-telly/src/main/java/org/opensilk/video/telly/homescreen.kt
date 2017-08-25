@@ -1,16 +1,12 @@
 package org.opensilk.video.telly
 
-import android.app.Activity
 import android.arch.lifecycle.LifecycleRegistry
 import android.arch.lifecycle.LifecycleRegistryOwner
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
 import android.support.v17.leanback.app.BrowseSupportFragment
-import android.support.v17.leanback.app.PermissionHelper
 import android.support.v17.leanback.widget.*
 import android.support.v4.content.ContextCompat
 import android.view.View
@@ -20,7 +16,6 @@ import dagger.android.support.AndroidSupportInjection
 import org.opensilk.media.*
 import org.opensilk.video.HomeViewModel
 import org.opensilk.video.LiveDataObserver
-import timber.log.Timber
 import javax.inject.Inject
 
 const val REQUEST_CODE_PERMS = 10302
@@ -59,7 +54,7 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
     @Inject lateinit var mNewlyAddedAdapter: NewlyAddedAdapter
-    @Inject lateinit var mItemClickListener: MediaItemClickListener
+    @Inject lateinit var mRefClickListener: MediaRefClickListener
 
     lateinit var mViewModel: HomeViewModel
 
@@ -73,11 +68,11 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
         mViewModel = fetchViewModel(HomeViewModel::class)
         mViewModel.servers.observe(this, LiveDataObserver { items ->
             mServersAdapter.clear()
-            mServersAdapter.addAll(0, items.map { it.toMediaItem() })
+            mServersAdapter.addAll(0, items)
         })
         mViewModel.newlyAdded.observe(this, LiveDataObserver { items ->
             mNewlyAddedAdapter.clear()
-            mNewlyAddedAdapter.addAll(0, items.map { it.toMediaItem() })
+            mNewlyAddedAdapter.addAll(0, items)
         })
         mViewModel.needPermissions.observe(this, LiveDataObserver { perms ->
             //TODO handleRationale
@@ -91,7 +86,7 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
         mHomeAdapter.add(ListRow(newlyAddedHeader, mNewlyAddedAdapter))
 
         adapter = mHomeAdapter
-        onItemViewClickedListener = mItemClickListener
+        onItemViewClickedListener = mRefClickListener
 
     }
 
@@ -129,5 +124,5 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 }
 
 class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())
-class ServersAdapter @Inject constructor(presenter: MediaItemPresenter) : ArrayObjectAdapter(presenter)
-class NewlyAddedAdapter @Inject constructor(presenter: MediaItemPresenter): ArrayObjectAdapter(presenter)
+class ServersAdapter @Inject constructor(presenter: MediaRefPresenter) : ArrayObjectAdapter(presenter)
+class NewlyAddedAdapter @Inject constructor(presenter: MediaRefPresenter): ArrayObjectAdapter(presenter)

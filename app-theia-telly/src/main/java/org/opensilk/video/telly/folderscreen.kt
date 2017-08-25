@@ -12,7 +12,6 @@ import dagger.Module
 import dagger.android.ContributesAndroidInjector
 import dagger.android.support.AndroidSupportInjection
 import org.opensilk.media.bundle
-import org.opensilk.media.toMediaItem
 import org.opensilk.video.EXTRA_MEDIAID
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
@@ -58,7 +57,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mFolderAdapter: FolderAdapter
     @Inject lateinit var mFolderPresenter: FolderPresenter
-    @Inject lateinit var mItemClickListener: MediaItemClickListener
+    @Inject lateinit var mRefClickListener: MediaRefClickListener
 
     lateinit var mViewModel: FolderViewModel
 
@@ -76,7 +75,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
         })
         mViewModel.folderItems.observe(this, LiveDataObserver { items ->
             mFolderAdapter.clear()
-            mFolderAdapter.addAll(0, items.map { it.toMediaItem() })
+            mFolderAdapter.addAll(0, items)
         })
         mViewModel.loadError.observe(this, LiveDataObserver {
             Toast.makeText(context, "An error occurred. msg=$it", Toast.LENGTH_LONG).show()
@@ -86,24 +85,20 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
         gridPresenter.numberOfColumns = 1
 
         adapter = mFolderAdapter
-        onItemViewClickedListener = mItemClickListener
+        onItemViewClickedListener = mRefClickListener
 
     }
 
-    private val lifecycleRegistry: LifecycleRegistry by lazy {
-        LifecycleRegistry(this)
-    }
+    private val lifecycleRegistry: LifecycleRegistry by lazy { LifecycleRegistry(this) }
 
-    override fun getLifecycle(): LifecycleRegistry {
-        return lifecycleRegistry
-    }
+    override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
 
 }
 
 /**
  *
  */
-class FolderAdapter @Inject constructor(presenter: MediaItemListPresenter) : ArrayObjectAdapter(presenter)
+class FolderAdapter @Inject constructor(presenter: MediaRefListPresenter) : ArrayObjectAdapter(presenter)
 
 /**
  *

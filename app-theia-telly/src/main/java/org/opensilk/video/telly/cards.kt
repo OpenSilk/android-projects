@@ -4,7 +4,6 @@ import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
-import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.support.v17.leanback.widget.*
 import android.support.v4.content.ContextCompat
@@ -20,18 +19,18 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.UpnpVideoChange
 import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.video.AppSchedulers
 import org.opensilk.video.EXTRA_MEDIAID
 import org.opensilk.video.findActivity
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
  *
  */
-class MediaItemImageCardView(context: Context): ImageCardView(context) {
+class MediaDescImageCardView(context: Context): ImageCardView(context) {
     override fun setSelected(selected: Boolean) {
         updateBackgroundColor(selected)
         super.setSelected(selected)
@@ -49,11 +48,11 @@ class MediaItemImageCardView(context: Context): ImageCardView(context) {
 /**
  *
  */
-class MediaItemPresenter
+class MediaRefPresenter
 @Inject constructor() : Presenter() {
 
     override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
-        val cardView = MediaItemImageCardView(parent.context)
+        val cardView = MediaDescImageCardView(parent.context)
 
         cardView.isFocusable = true
         cardView.isFocusableInTouchMode = true
@@ -64,10 +63,10 @@ class MediaItemPresenter
 
     override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
 
-        val mediaItem = item as MediaBrowser.MediaItem
-        val description = mediaItem.description
+        val mediaRef = item as MediaRef
+        val description = mediaRef.toMediaDescription()
 
-        val cardView = viewHolder.view as MediaItemImageCardView
+        val cardView = viewHolder.view as MediaDescImageCardView
         val context = cardView.context
         cardView.titleText = description.title
         cardView.contentText = description.subtitle
@@ -77,9 +76,10 @@ class MediaItemPresenter
         val cardHeight = resources.getDimensionPixelSize(R.dimen.card_height)
         cardView.setMainImageDimensions(cardWidth, cardHeight)
 
-        val iconResource = when {
-            mediaItem.isBrowsable -> R.drawable.folder_48dp
-            mediaItem.isPlayable -> R.drawable.movie_48dp
+        val iconResource = when (mediaRef) {
+            is MediaDeviceRef,
+            is FolderRef -> R.drawable.folder_48dp
+            is VideoRef -> R.drawable.movie_48dp
             else -> R.drawable.file_48dp
         }
 
@@ -100,19 +100,19 @@ class MediaItemPresenter
     }
 
     override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {
-        val cardView = viewHolder.view as MediaItemImageCardView
+        val cardView = viewHolder.view as MediaDescImageCardView
         // Remove references to images so that the garbage collector can free up memory
         cardView.badgeImage = null
         cardView.mainImage = null
     }
 
-    class ViewHolder(view: MediaItemImageCardView): Presenter.ViewHolder(view)
+    class ViewHolder(view: MediaDescImageCardView): Presenter.ViewHolder(view)
 }
 
 /**
  *
  */
-class MediaItemListPresenter
+class MediaRefListPresenter
 @Inject constructor(
         val mDatabaseClient: MediaDAO
 ) : Presenter() {
@@ -126,8 +126,7 @@ class MediaItemListPresenter
 
     override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
         val vh = viewHolder as ViewHolder
-        val mediaItem = item as MediaBrowser.MediaItem
-        vh.bind(mediaItem)
+        vh.bind(item as MediaRef)
     }
 
     override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {
@@ -144,20 +143,18 @@ class MediaItemListPresenter
             disposables.clear()
         }
 
-        internal fun bind(mediaItem: MediaBrowser.MediaItem) {
-            val description = mediaItem.description
-            val ref = parseMediaId(mediaItem.mediaId)
+        internal fun bind(mediaRef: MediaRef) {
+            val description = mediaRef.toMediaDescription()
 
             //set description
             binding.description = description
 
             //load icon
-            val iconResource = if (mediaItem.isBrowsable) {
-                R.drawable.folder_48dp
-            } else if (mediaItem.isPlayable) {
-                R.drawable.movie_48dp
-            } else {
-                R.drawable.file_48dp
+            val iconResource = when (mediaRef) {
+                is MediaDeviceRef,
+                is FolderRef -> R.drawable.folder_48dp
+                is VideoRef -> R.drawable.movie_48dp
+                else -> R.drawable.file_48dp
             }
             if (!description.iconUri.isEmpty()) {
                 val options = RequestOptions()
@@ -175,15 +172,15 @@ class MediaItemListPresenter
 
             //set progress
             binding.completion = 0
-            when (ref) {
-                is UpnpVideoId -> {
-                    disposables.add(getCompletionProgress(ref))
+            when (mediaRef) {
+                is VideoRef -> {
+                    disposables.add(getCompletionProgress(mediaRef.id))
                 }
             }
 
         }
 
-        private fun getCompletionProgress(videoId: UpnpVideoId): Disposable {
+        private fun getCompletionProgress(videoId: VideoId): Disposable {
             return mDatabaseClient.getLastPlaybackCompletion(videoId)
                     .subscribeOn(AppSchedulers.diskIo)
                     .subscribeIgnoreError(Consumer {
@@ -197,31 +194,31 @@ class MediaItemListPresenter
 /**
  *
  */
-class MediaItemClickListener
+class MediaRefClickListener
 @Inject constructor(): OnItemViewClickedListener {
 
     //VerticalGridView sends null as last 2 params
     override fun onItemClicked(itemViewHolder: Presenter.ViewHolder, item: Any,
                                rowViewHolder: RowPresenter.ViewHolder?, row: Row?) {
         val context = itemViewHolder.view.findActivity()
-        val mediaItem = item as MediaBrowser.MediaItem
-        val mediaId = parseMediaId(mediaItem.mediaId)
-        when (mediaId) {
-            is MediaContainerId -> {
+        val mediaRef = item as MediaRef
+        when (mediaRef) {
+            is MediaDeviceRef,
+            is FolderRef -> {
                 val intent = Intent(context, FolderActivity::class.java)
-                intent.putExtra(EXTRA_MEDIAID, mediaId.json)
+                intent.putExtra(EXTRA_MEDIAID, mediaRef.id.json)
                 context.startActivity(intent)
             }
-            is VideoId -> {
+            is VideoRef -> {
                 val intent = Intent(context, DetailActivity::class.java)
-                intent.putExtra(EXTRA_MEDIAID, mediaId.json)
+                intent.putExtra(EXTRA_MEDIAID, mediaRef.id.json)
                 val bundle = when (itemViewHolder) {
-                    is MediaItemPresenter.ViewHolder -> {
-                        val view = itemViewHolder.view as MediaItemImageCardView
+                    is MediaRefPresenter.ViewHolder -> {
+                        val view = itemViewHolder.view as MediaDescImageCardView
                         ActivityOptions.makeSceneTransitionAnimation(context,
                                 view.mainImageView, SHARED_ELEMENT_NAME).toBundle()
                     }
-                    is MediaItemListPresenter.ViewHolder -> {
+                    is MediaRefListPresenter.ViewHolder -> {
                         val binding = itemViewHolder.binding
                         ActivityOptions.makeSceneTransitionAnimation(context, binding.icon,
                                 SHARED_ELEMENT_NAME).toBundle()
@@ -231,7 +228,8 @@ class MediaItemClickListener
                 context.startActivity(intent, bundle)
             }
             else -> {
-                Toast.makeText(context, "Unhandled ItemClick $mediaId", Toast.LENGTH_LONG).show()
+                Timber.e("Unhandled ItemClick $mediaRef")
+                Toast.makeText(context, "Unhandled ItemClick $mediaRef", Toast.LENGTH_LONG).show()
             }
         }
     }

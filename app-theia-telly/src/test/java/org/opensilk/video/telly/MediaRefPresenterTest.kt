@@ -9,7 +9,6 @@ import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
-import org.opensilk.media.toMediaItem
 import org.robolectric.Robolectric
 
 /**
@@ -17,25 +16,25 @@ import org.robolectric.Robolectric
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class)
-class MediaItemPresenterTest {
+class MediaRefPresenterTest {
 
-    lateinit var mPresenter: MediaItemPresenter
-    lateinit var mViewHolder: MediaItemPresenter.ViewHolder
+    lateinit var mPresenter: MediaRefPresenter
+    lateinit var mViewHolder: MediaRefPresenter.ViewHolder
 
     @Before
     fun setup() {
-        mPresenter = MediaItemPresenter()
+        mPresenter = MediaRefPresenter()
         val actvity = Robolectric.setupActivity(Activity::class.java)
-        mViewHolder = mPresenter.onCreateViewHolder(FrameLayout(actvity)) as MediaItemPresenter.ViewHolder
+        mViewHolder = mPresenter.onCreateViewHolder(FrameLayout(actvity)) as MediaRefPresenter.ViewHolder
     }
 
     @Test
     fun test_onBindViewHolder() {
-        val item = upnpVideo_folder_1_no_association().toMediaItem()
+        val item = upnpVideo_folder_1_no_association()
         mPresenter.onBindViewHolder(mViewHolder, item)
-        val view = mViewHolder.view as MediaItemImageCardView
-        assertThat(view.titleText).isEqualTo(item.description.title)
-        assertThat(view.contentText).isEqualTo(item.description.subtitle)
+        val view = mViewHolder.view as MediaDescImageCardView
+        assertThat(view.titleText).isEqualTo(item.meta.title)
+        assertThat(view.contentText).isEqualTo(item.meta.subtitle)
         //TODO how to test icon
     }
 }
