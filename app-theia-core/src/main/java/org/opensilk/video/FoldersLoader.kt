@@ -129,8 +129,8 @@ class FoldersLoader
                     is UpnpVideoRef -> mDatabaseClient.addUpnpVideo(item)
                     is StorageFolderRef -> mDatabaseClient.addStorageFolder(item)
                     is StorageVideoRef -> mDatabaseClient.addStorageVideo(item)
-                    is DirectoryDocumentRef -> mDatabaseClient.addDirectoryDocument(item)
-                    is VideoDocumentRef -> mDatabaseClient.addVideoDocument(item)
+                    is DocDirectoryRef -> mDatabaseClient.addDirectoryDocument(item)
+                    is DocVideoRef -> mDatabaseClient.addVideoDocument(item)
                     else -> TODO("${item::javaClass::name}")
                 }
             }

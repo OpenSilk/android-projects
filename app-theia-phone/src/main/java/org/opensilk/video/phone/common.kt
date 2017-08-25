@@ -2,7 +2,6 @@ package org.opensilk.video.phone
 
 import android.app.TaskStackBuilder
 import android.arch.lifecycle.*
-import android.content.ComponentName
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
@@ -208,11 +207,11 @@ class DrawerActivityViewModel
         mDocumentLoader.document(docId)
                 .doOnSuccess {
                     when (it) {
-                        is DirectoryDocumentRef -> {
+                        is DocDirectoryRef -> {
                             mDatabaseClient.addDirectoryDocument(it)
                             //mDatabaseClient.postChange()
                         }
-                        is VideoDocumentRef -> {
+                        is DocVideoRef -> {
                             mDatabaseClient.addVideoDocument(it)
                             mDatabaseClient.postChange(VideoDocumentChange(it.id))
                         }
@@ -303,12 +302,12 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
             return
         }
         when (ref) {
-            is UpnpDeviceRef, is UpnpFolderRef, is DirectoryDocumentRef -> {
+            is UpnpDeviceRef, is UpnpFolderRef, is DocDirectoryRef -> {
                 val intent = Intent(activity, FolderActivity::class.java)
                         .putExtra(EXTRA_MEDIAID, ref.id.json)
                 activity.startActivity(intent)
             }
-            is UpnpVideoRef, is VideoDocumentRef -> {
+            is UpnpVideoRef, is DocVideoRef -> {
                 val intent = Intent(activity, DetailActivity::class.java)
                         .putExtra(EXTRA_MEDIAID, ref.id.json)
                 activity.startActivity(intent)

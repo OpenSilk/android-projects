@@ -11,11 +11,11 @@ data class DocVideoId(
         override val parentId: String = documentId
 ): DocumentId, VideoId {
     override val json: String by lazy {
-        writeJson(VideoDocumentIdTransformer, this)
+        writeJson(DocVideoIdTransformer, this)
     }
 }
 
-data class VideoDocumentMeta(
+data class DocVideoMeta(
         override val mimeType: String,
         override val lastMod: Long = 0,
         override val flags: Long,
@@ -32,13 +32,13 @@ data class VideoDocumentMeta(
         val summary: String = ""
 ): DocumentMeta, VideoMeta
 
-data class VideoDocumentRef(
-        override val id: VideoDocumentId,
+data class DocVideoRef(
+        override val id: DocVideoId,
         override val tvEpisodeId: TvEpisodeId? = null,
         override val movieId: MovieId? = null,
-        override val meta: VideoDocumentMeta
+        override val meta: DocVideoMeta
 ): DocumentRef, VideoRef
 
-internal object VideoDocumentIdTransformer: DocumentIdTransformer() {
+internal object DocVideoIdTransformer : DocumentIdTransformer() {
     override val kind: String = DOCUMENT_VIDEO
 }

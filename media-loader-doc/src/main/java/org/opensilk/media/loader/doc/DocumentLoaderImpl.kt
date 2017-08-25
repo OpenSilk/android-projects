@@ -8,7 +8,6 @@ import io.reactivex.Maybe
 import io.reactivex.Single
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
-import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
@@ -30,15 +29,15 @@ private fun Cursor.toDocumentId(parentId: DocumentId): DocumentId {
     )
 }
 
-private fun Cursor.toDirectoryDocumentRef(documentId: DocumentId): DirectoryDocumentRef {
+private fun Cursor.toDirectoryDocumentRef(documentId: DocumentId): DocDirectoryRef {
     val displayName = getString(1)
     val mimeType = getString(2)
     //val size = if (!isNull(3)) getLong(3) else 0L
     val lastMod = if (!isNull(4)) getLong(4) else 0L
     val flags = getLong(5)
-    return DirectoryDocumentRef(
+    return DocDirectoryRef(
             id = documentId,
-            meta = DirectoryDocumentMeta(
+            meta = DocDirectoryMeta(
                     title = displayName,
                     mimeType = mimeType,
                     lastMod = lastMod,
@@ -47,15 +46,15 @@ private fun Cursor.toDirectoryDocumentRef(documentId: DocumentId): DirectoryDocu
     )
 }
 
-private fun Cursor.toVideoDocumentRef(documentId: DocumentId): VideoDocumentRef {
+private fun Cursor.toVideoDocumentRef(documentId: DocumentId): DocVideoRef {
     val displayName = getString(1)
     val mimeType = getString(2)
     val size = if (!isNull(3)) getLong(3) else 0L
     val lastMod = if (!isNull(4)) getLong(4) else 0L
     val flags = getLong(5)
-    return VideoDocumentRef(
+    return DocVideoRef(
             id = documentId,
-            meta = VideoDocumentMeta(
+            meta = DocVideoMeta(
                     title = displayName,
                     mimeType = mimeType,
                     size = size,

@@ -12,7 +12,6 @@ import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.media.*
 import org.opensilk.reactivex2.cancellationSignal
 import org.opensilk.reactivex2.subscribeIgnoreError
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -89,6 +88,7 @@ class MediaDAO
             mediaId.isVideo -> getVideoDocument(mediaId)
             else -> TODO()
         }
+        is StorageDeviceId -> getStorageDevice(mediaId)
         is StorageFolderId -> getStorageFolder(mediaId)
         is StorageVideoId -> getStorageVideo(mediaId)
         else -> TODO()
@@ -442,34 +442,34 @@ class MediaDAO
      * START DOCUMENT
      */
 
-    fun addDirectoryDocument(documentRef: DirectoryDocumentRef) =
+    fun addDirectoryDocument(documentRef: DocDirectoryRef) =
             mResolver.insert(mUris.documentDirectory(), documentRef.contentValues()) == URI_SUCCESS
 
-    fun getDirectoryDocumentsUnder(documentId: DocumentId): Observable<DirectoryDocumentRef> {
+    fun getDirectoryDocumentsUnder(documentId: DocumentId): Observable<DocDirectoryRef> {
         return doQuery(mUris.documentDirectory(), directoryDocumentProjection,
                 "tree_uri=? AND parent_id=? AND hidden=0",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId),
                 "_display_name", { c ->c.toDirectoryDocument() })
     }
 
-    fun getDirectoryDocument(documentId: DocumentId): Maybe<DirectoryDocumentRef> {
+    fun getDirectoryDocument(documentId: DocumentId): Maybe<DocDirectoryRef> {
         return doGet(mUris.documentDirectory(), directoryDocumentProjection,
                 "tree_uri=? AND document_id=? AND parent_id=?",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId),
                 { c -> c.toDirectoryDocument() })
     }
 
-    fun addVideoDocument(documentRef: VideoDocumentRef) =
+    fun addVideoDocument(documentRef: DocVideoRef) =
             mResolver.insert(mUris.documentVideo(), documentRef.contentValues()) == URI_SUCCESS
 
-    fun getVideoDocumentsUnder(documentId: DocumentId): Observable<VideoDocumentRef> {
+    fun getVideoDocumentsUnder(documentId: DocumentId): Observable<DocVideoRef> {
         return doQuery(mUris.documentVideo(), videoDocumentProjection,
                 "tree_uri=? AND parent_id=? AND hidden=0",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId),
                 "d._display_name", { c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
-    fun getVideoDocument(documentId: DocumentId): Maybe<VideoDocumentRef> {
+    fun getVideoDocument(documentId: DocumentId): Maybe<DocVideoRef> {
         return doGet(mUris.documentVideo(), videoDocumentProjection,
                 "tree_uri=? AND document_id=? AND parent_id=?",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId),
@@ -540,6 +540,9 @@ class MediaDAO
     /*
      * START STORAGE
      */
+
+    fun addStorageDevice(deviceRef: StorageDeviceRef) =
+            mResolver.insert(mUris.storageDevice(), deviceRef.contentValues()) == URI_SUCCESS
 
     fun addStorageFolder(folderRef: StorageFolderRef) =
             mResolver.insert(mUris.storageFolder(), folderRef.contentValues()) == URI_SUCCESS
@@ -871,7 +874,7 @@ fun Cursor.toUpnpVideoMediaMeta(mApiHelper: ApiHelper): UpnpVideoRef {
     )
 }
 
-fun DirectoryDocumentRef.contentValues(): ContentValues {
+fun DocDirectoryRef.contentValues(): ContentValues {
     val values = ContentValues()
     values.put("authority", id.treeUri.authority)
     values.put("tree_uri", id.treeUri.toString())
@@ -891,15 +894,15 @@ val directoryDocumentProjection = arrayOf(
         "mime_type", "_display_name", "flags", "last_modified" //6
 )
 
-fun Cursor.toDirectoryDocument(): DirectoryDocumentRef {
+fun Cursor.toDirectoryDocument(): DocDirectoryRef {
     val id = DocumentId(Uri.parse(getString(0)), getString(1), getString(2), getString(3))
     val mimetype = getString(3)
     val displayname = getString(4)
     val flags = if (!isNull(5)) getLong(5) else 0L
     val lastmod = if (!isNull(6)) getLong(6) else 0L
-    return DirectoryDocumentRef(
+    return DocDirectoryRef(
             id = id,
-            meta = DirectoryDocumentMeta(
+            meta = DocDirectoryMeta(
                     title = displayname,
                     mimeType = mimetype,
                     flags = flags,
@@ -908,7 +911,7 @@ fun Cursor.toDirectoryDocument(): DirectoryDocumentRef {
     )
 }
 
-fun VideoDocumentRef.contentValues(): ContentValues {
+fun DocVideoRef.contentValues(): ContentValues {
     val values = ContentValues()
     val documentRef = this
     values.put("authority", documentRef.id.treeUri.authority)
@@ -947,7 +950,7 @@ val videoDocumentProjection = arrayOf(
 /**
  * helper to convert cursor to mediameta using above projection
  */
-fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): VideoDocumentRef {
+fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): DocVideoRef {
     val treeUri = Uri.parse(getString(1))
     val docId = getString(2)
     val parentId = getString(3)
@@ -992,11 +995,11 @@ fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): VideoDocumentRef {
             documentId = docId,
             parentId = parentId,
             mimeType = mimeType)
-    return VideoDocumentRef(
+    return DocVideoRef(
             id = docid,
             tvEpisodeId =  episodeId,
             movieId = movieId,
-            meta = VideoDocumentMeta(
+            meta = DocVideoMeta(
                     title = title,
                     subtitle = subtitle,
                     artworkUri = artworkUri,

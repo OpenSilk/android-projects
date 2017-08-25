@@ -122,10 +122,10 @@ fun parseMediaId(json: String): MediaId {
                     mediaId = UpnpAudioTransformer.read(jr, readVersion(jr))
                 }
                 DOCUMENT_DIRECTORY -> {
-                    mediaId = DirectoryDocumentIdTransformer.read(jr, readVersion(jr))
+                    mediaId = DocDirectoryIdTransformer.read(jr, readVersion(jr))
                 }
                 DOCUMENT_VIDEO -> {
-                    mediaId = VideoDocumentIdTransformer.read(jr, readVersion(jr))
+                    mediaId = DocVideoIdTransformer.read(jr, readVersion(jr))
                 }
                 STORAGE_DEVICE -> {
                     mediaId = StorageDeviceIdTransformer.read(jr, readVersion(jr))
@@ -178,11 +178,11 @@ fun MediaRef.toMediaDescription(): MediaDescription {
                     .setSubtitle(meta.creator)
                     .setMediaId(id.json)
         }
-        is DirectoryDocumentRef -> {
+        is DocDirectoryRef -> {
             bob.setTitle(meta.title)
                     .setMediaId(id.json)
         }
-        is VideoDocumentRef -> {
+        is DocVideoRef -> {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
@@ -214,10 +214,10 @@ fun MediaRef.toMediaItem(): MediaItem = when (this) {
     is UpnpAudioRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
     }
-    is DirectoryDocumentRef -> {
+    is DocDirectoryRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
     }
-    is VideoDocumentRef -> {
+    is DocVideoRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
     }
     is StorageDeviceRef -> {
