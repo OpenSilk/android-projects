@@ -7,7 +7,7 @@ data class UpnpFolderId(
         override val deviceId: String,
         override val parentId: String,
         override val containerId: String
-): UpnpContainerId {
+): UpnpContainerId, FolderId {
 
     override val json: String
         get() = writeJson(UpnpFolderTransformer, this)

@@ -38,7 +38,7 @@ interface StorageId: MediaId {
 /**
  * Identifies storage containers
  */
-interface StorageContainerId: StorageId, MediaContainerId
+interface StorageContainerId: StorageId
 
 /**
  * Top level ref for storage model

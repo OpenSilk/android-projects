@@ -10,7 +10,7 @@ data class StorageFolderId(
         override val path: String,
         override val uuid: String,
         val parent: String
-): StorageContainerId {
+): StorageContainerId, FolderId {
     override val json: String
         get() = writeJson(StorageFolderIdTransformer, this)
 }

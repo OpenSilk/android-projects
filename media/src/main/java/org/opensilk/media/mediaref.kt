@@ -30,7 +30,8 @@ object NoMediaRef: MediaRef {
 }
 
 /**
- * A generic media id interface for use with the media controller api
+ * A generic media identity interface
+ *
  *
  * Created by drew on 5/29/17.
  */
@@ -39,31 +40,10 @@ interface MediaId {
 }
 
 /**
- * Device classification
- */
-interface MediaDeviceId: MediaId
-
-/**
- * Container classification
- */
-interface MediaContainerId: MediaId
-
-interface MediaMeta
-
-interface MediaDeviceMeta {
-    val title: String
-}
-
-/**
  * Contains the media id and metadata
  */
 interface MediaRef {
     val id: MediaId
-}
-
-interface MediaDeviceRef: MediaRef {
-    override val id: MediaDeviceId
-    val meta: MediaDeviceMeta
 }
 
 /**
@@ -106,9 +86,14 @@ private fun readVersion(jr: JsonReader): Int {
 }
 
 /**
- * Recovers a MediaId from its json representation
- * TODO not all MediaIds are represented here
+ * Parse this json string to a [MediaId]
  */
+fun String.toMediaId(): MediaId = parseMediaId(this)
+
+/**
+ * Recovers a MediaId from its json representation
+ */
+@Deprecated(replaceWith = ReplaceWith("json.toMediaId()"), message = "Betterer way")
 fun parseMediaId(json: String): MediaId {
     return JsonReader(StringReader(json)).use { jr ->
         var mediaId: MediaId? = null
