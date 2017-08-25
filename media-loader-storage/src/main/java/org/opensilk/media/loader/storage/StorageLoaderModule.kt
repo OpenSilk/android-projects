@@ -10,4 +10,6 @@ import dagger.Module
 abstract class StorageLoaderModule {
     @Binds
     abstract fun storageDeviceLoader(impl: StorageDeviceLoaderImpl): StorageDeviceLoader
+    @Binds
+    abstract fun storageLoader(impl: StorageLoaderImpl): StorageLoader
 }

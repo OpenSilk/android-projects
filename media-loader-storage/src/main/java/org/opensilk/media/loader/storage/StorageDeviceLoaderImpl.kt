@@ -27,13 +27,12 @@ class StorageDeviceLoaderImpl
         @ForApp private val mContext: Context
 ): StorageDeviceLoader {
 
-    override val storageDevices: Single<List<StorageDeviceRef>>
-        get() = if (Build.VERSION.SDK_INT >= 24) devicesApi24() else devicesApi21()
+    override val storageDevices: Single<List<StorageDeviceRef>> = Single.defer {
+        if (Build.VERSION.SDK_INT >= 24) devicesApi24() else devicesApi21()
+    }
 
-    private fun devicesApi21(): Single<List<StorageDeviceRef>> {
-        return if (!shouldShowPrimaryStorage()) {
-            Single.just<List<StorageDeviceRef>>(emptyList())
-        } else {
+    private fun devicesApi21(): Single<List<StorageDeviceRef>> = when {
+        mContext.canReadPrimaryStorage() -> {
             Single.create<List<StorageDeviceRef>> { s ->
                 val sm = mContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
                 val getVolumeList = StorageManager::class.java.getDeclaredMethod("getVolumeList")
@@ -85,12 +84,13 @@ class StorageDeviceLoaderImpl
                 )))
             }.onErrorReturn { emptyList() }
         }
+        else -> Single.just<List<StorageDeviceRef>>(emptyList())
     }
 
     @TargetApi(24)
     private fun devicesApi24(): Single<List<StorageDeviceRef>> = when {
-        hasAccessActivity() -> TODO()
-        shouldShowPrimaryStorage() ->
+        mContext.hasAccessActivity() -> TODO()
+        mContext.canReadPrimaryStorage() ->
             //we are likely on android tv device
             //on android tv we are granted access to all storage, not just primary
             Single.create<List<StorageDeviceRef>> { s ->
@@ -120,15 +120,6 @@ class StorageDeviceLoaderImpl
                 Timber.e(it, "devicesApi24()")
             }.onErrorReturn { emptyList() }
         else -> Single.just(emptyList())
-    }
-
-    private fun shouldShowPrimaryStorage(): Boolean = ContextCompat.checkSelfPermission(mContext,
-            Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-
-    private fun hasAccessActivity(): Boolean {
-        val activities = mContext.packageManager.queryIntentActivities(Intent(
-                "android.os.storage.action.OPEN_EXTERNAL_DIRECTORY"), PackageManager.MATCH_DEFAULT_ONLY)
-        return activities != null && activities.size > 0
     }
 
     private val mountedStates = arrayOf(
