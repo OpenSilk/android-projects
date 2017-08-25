@@ -12,6 +12,7 @@ import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.media.*
 import org.opensilk.reactivex2.cancellationSignal
 import org.opensilk.reactivex2.subscribeIgnoreError
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,11 +38,6 @@ class MediaDAO
 
     val changesObservable: Observable<DatabaseChange>
         get() = mChangesSubject.hide()
-
-    fun upnpVideoChanges(videoId: UpnpVideoId): Observable<UpnpVideoChange> {
-        return changesObservable.filter { it is UpnpVideoChange && it.videoId == videoId }
-                .map { it as UpnpVideoChange }
-    }
 
     fun postChange(event: DatabaseChange) {
         mChangesSubject.onNext(event)
@@ -93,6 +89,8 @@ class MediaDAO
             mediaId.isVideo -> getVideoDocument(mediaId)
             else -> TODO()
         }
+        is StorageFolderId -> getStorageFolder(mediaId)
+        is StorageVideoId -> getStorageVideo(mediaId)
         else -> TODO()
     }
 
@@ -102,6 +100,7 @@ class MediaDAO
             mediaId.isVideo -> getVideoDocumentOverview(mediaId)
             else -> TODO()
         }
+        is StorageVideoId -> getStorageVideoOverview(mediaId)
         else -> TODO()
     }
 
@@ -114,6 +113,10 @@ class MediaDAO
             is DocumentId -> {
                 setVideoDocumentTvEpisodeId(mediaId, episodeId)
                 postChange(VideoDocumentChange(mediaId))
+            }
+            is StorageVideoId -> {
+                setStorageVideoTvEpisodeId(mediaId, episodeId)
+                postChange(StorageVideoChange(mediaId))
             }
             else -> TODO()
         }
@@ -129,6 +132,10 @@ class MediaDAO
                 setVideoDocumentMovieId(mediaId, movieId)
                 postChange(VideoDocumentChange(mediaId))
             }
+            is StorageVideoId -> {
+                setStorageVideoMovieId(mediaId, movieId)
+                postChange(StorageVideoChange(mediaId))
+            }
             else -> TODO()
         }
     }
@@ -138,15 +145,25 @@ class MediaDAO
      */
     fun playableSiblingsOf(mediaId: MediaId): Observable<out MediaRef> = when (mediaId) {
         is UpnpFolderId -> {
-            getUpnpVideosUnder(UpnpFolderId(mediaId.deviceId, "", mediaId.parentId))
+            getUpnpVideosUnder(UpnpFolderId(deviceId = mediaId.deviceId,
+                    parentId = "", containerId = mediaId.parentId))
         }
         is UpnpVideoId -> {
-            getUpnpVideosUnder(UpnpFolderId(mediaId.deviceId, "", mediaId.parentId))
+            getUpnpVideosUnder(UpnpFolderId(deviceId = mediaId.deviceId,
+                    parentId = "", containerId = mediaId.parentId))
         }
         is DocumentId -> {
             if (mediaId.isVideo) {
                 getVideoDocumentsUnder(mediaId.copy(documentId = mediaId.parentId))
             } else TODO()
+        }
+        is StorageFolderId -> {
+            getStorageFoldersUnder(StorageFolderId(uuid = mediaId.uuid,
+                    path = mediaId.parent, parent = ""))
+        }
+        is StorageVideoId -> {
+            getStorageVideosUnder(StorageFolderId(uuid = mediaId.uuid,
+                    path = mediaId.parent, parent = ""))
         }
         else -> TODO()
     }
@@ -164,6 +181,11 @@ class MediaDAO
                 }
             }
             else -> TODO()
+        }
+        is StorageVideoId -> {
+            getStorageVideo(mediaId).flatMap { meta ->
+                lastPlaybackPosition(meta.meta.originalTitle)
+            }
         }
         else -> TODO()
     }
@@ -186,6 +208,11 @@ class MediaDAO
                 }
             }
             else -> TODO()
+        }
+        is StorageVideoId -> {
+            getStorageVideo(mediaId).flatMap { meta ->
+                lastPlaybackCompletion(meta.meta.originalTitle)
+            }
         }
         else -> TODO()
     }
@@ -215,6 +242,14 @@ class MediaDAO
                             })
                 } else TODO()
             }
+            is StorageVideoId -> {
+                getStorageVideo(mediaId)
+                        .subscribeIgnoreError(Consumer { meta ->
+                            mResolver.insert(mUris.playbackPosition(),
+                                    positionContentVals(meta.meta.originalTitle, position, duration))
+                            postChange(StorageVideoChange(mediaId))
+                        })
+            }
             else -> TODO()
         }
     }
@@ -228,6 +263,15 @@ class MediaDAO
         return values
     }
 
+    fun hideChildrenOf(mediaId: MediaId) {
+        when (mediaId) {
+            is UpnpContainerId -> hideChildrenOf(mediaId)
+            is DocumentId -> hideChildrenOf(mediaId)
+            is StorageContainerId -> hideChildrenOf(mediaId)
+            else -> TODO()
+        }
+    }
+
     /*
      * START UPNP
      */
@@ -236,9 +280,8 @@ class MediaDAO
      * Add a meta item describing a upnp device with a content directory service to the database
      * item should be created with Device.toMediaMeta
      */
-    fun addUpnpDevice(upnpDevice: UpnpDeviceRef): Boolean {
-        return mResolver.insert(mUris.upnpDevice(), upnpDevice.contentValues()) == URI_SUCCESS
-    }
+    fun addUpnpDevice(upnpDevice: UpnpDeviceRef) =
+            mResolver.insert(mUris.upnpDevice(), upnpDevice.contentValues()) == URI_SUCCESS
 
     /**
      * marks the upnp device with giving identity as unavailable
@@ -285,9 +328,8 @@ class MediaDAO
     /**
      * add a upnp folder to the database, item should be created with Container.toMediaMeta
      */
-    fun addUpnpFolder(folderRef: UpnpFolderRef): Boolean {
-        return mResolver.insert(mUris.upnpFolder(), folderRef.contentValues()) == URI_SUCCESS
-    }
+    fun addUpnpFolder(folderRef: UpnpFolderRef) =
+            mResolver.insert(mUris.upnpFolder(), folderRef.contentValues()) == URI_SUCCESS
 
     /**
      * retrieve direct decedents of parent folder that aren't hidden
@@ -309,9 +351,8 @@ class MediaDAO
     /**
      * Adds upnp video to database, item should be created with VideoItem.toMediaMeta
      */
-    fun addUpnpVideo(videoRef: UpnpVideoRef): Boolean {
-        return mResolver.insert(mUris.upnpVideo(), videoRef.contentValues()) == URI_SUCCESS
-    }
+    fun addUpnpVideo(videoRef: UpnpVideoRef) =
+            mResolver.insert(mUris.upnpVideo(), videoRef.contentValues()) == URI_SUCCESS
 
     /**
      * retrieve upnp videos, direct decedents of parent
@@ -401,9 +442,8 @@ class MediaDAO
      * START DOCUMENT
      */
 
-    fun addDirectoryDocument(documentRef: DirectoryDocumentRef): Boolean {
-        return mResolver.insert(mUris.documentDirectory(), documentRef.contentValues()) == URI_SUCCESS
-    }
+    fun addDirectoryDocument(documentRef: DirectoryDocumentRef) =
+            mResolver.insert(mUris.documentDirectory(), documentRef.contentValues()) == URI_SUCCESS
 
     fun getDirectoryDocumentsUnder(documentId: DocumentId): Observable<DirectoryDocumentRef> {
         return doQuery(mUris.documentDirectory(), directoryDocumentProjection,
@@ -419,9 +459,8 @@ class MediaDAO
                 { c -> c.toDirectoryDocument() })
     }
 
-    fun addVideoDocument(documentRef: VideoDocumentRef): Boolean {
-        return mResolver.insert(mUris.documentVideo(), documentRef.contentValues()) == URI_SUCCESS
-    }
+    fun addVideoDocument(documentRef: VideoDocumentRef) =
+            mResolver.insert(mUris.documentVideo(), documentRef.contentValues()) == URI_SUCCESS
 
     fun getVideoDocumentsUnder(documentId: DocumentId): Observable<VideoDocumentRef> {
         return doQuery(mUris.documentVideo(), videoDocumentProjection,
@@ -435,11 +474,6 @@ class MediaDAO
                 "tree_uri=? AND document_id=? AND parent_id=?",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId),
                 {c -> c.toVideoDocumentRef(mApiHelper) })
-    }
-
-    fun getRecentVideoDocuments(): Observable<VideoDocumentRef> {
-        return doQuery(mUris.documentVideo(), videoDocumentProjection, null, null,
-                "d.date_added DESC LIMIT 20", { c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
     fun getVideoDocumentOverview(documentId: DocumentId): Maybe<String> {
@@ -504,12 +538,106 @@ class MediaDAO
      */
 
     /*
+     * START STORAGE
+     */
+
+    fun addStorageFolder(folderRef: StorageFolderRef) =
+            mResolver.insert(mUris.storageFolder(), folderRef.contentValues()) == URI_SUCCESS
+
+    fun getStorageFoldersUnder(containerId: StorageContainerId): Observable<StorageFolderRef> {
+        return doQuery(mUris.storageFolder(), storageFolderProjection,
+                "path=? AND device_uuid=? AND hidden=0",
+                arrayOf(containerId.path, containerId.uuid),
+                "_display_name", { c ->c.toStorageFolder() })
+    }
+
+    fun getStorageFolder(folderId: StorageFolderId): Maybe<StorageFolderRef> {
+        return doGet(mUris.storageFolder(), storageFolderProjection,
+                "path=? AND device_uuid=?",
+                arrayOf(folderId.path, folderId.uuid),
+                { c -> c.toStorageFolder() })
+    }
+
+    fun addStorageVideo(videoRef: StorageVideoRef) =
+            mResolver.insert(mUris.storageVideo(), videoRef.contentValues()) == URI_SUCCESS
+
+    fun getStorageVideosUnder(containerId: StorageContainerId): Observable<StorageVideoRef> {
+        return doQuery(mUris.storageVideo(), storageVideoProjection,
+                "path=? AND device_uuid=? AND hidden=0",
+                arrayOf(containerId.path, containerId.uuid),
+                "d._display_name", { c -> c.toStorageVideo(mApiHelper) })
+    }
+
+    fun getStorageVideo(videoId: StorageVideoId): Maybe<StorageVideoRef> {
+        return doGet(mUris.storageVideo(), storageVideoProjection,
+                "path=? AND device_uuid=?",
+                arrayOf(videoId.path, videoId.uuid),
+                {c -> c.toStorageVideo(mApiHelper) })
+    }
+
+    fun getStorageVideoOverview(videoId: StorageVideoId): Maybe<String> {
+        return Maybe.create { s ->
+            mResolver.query(mUris.storageVideo(),
+                    arrayOf("e.overview as episode_overview",
+                            "m.overview as movie_overview"),
+                    "path=? AND device_uuid=?",
+                    arrayOf(videoId.path, videoId.uuid), null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    var overview = c.getString(0)
+                    if (overview.isNullOrBlank()) {
+                        overview = c.getString(1)
+                    }
+                    if (overview.isNullOrBlank()) {
+                        s.onComplete()
+                    } else {
+                        s.onSuccess(overview)
+                    }
+                } else {
+                    s.onComplete()
+                }
+            } ?: s.onError(VideoDatabaseMalfuction())
+        }
+    }
+
+    fun setStorageVideoTvEpisodeId(videoId: StorageVideoId, tvEpisodeId: TvEpisodeId): Boolean {
+        val values = ContentValues()
+        values.put("episode_id", tvEpisodeId.episodeId)
+        values.put("movie_id", "")
+        return mResolver.update(mUris.storageVideo(), values, "path=? AND device_uuid=?",
+                arrayOf(videoId.path, videoId.uuid)) != 0
+    }
+
+    fun setStorageVideoMovieId(videoId: StorageVideoId, movieId: MovieId): Boolean {
+        val values = ContentValues()
+        values.put("episode_id", "")
+        values.put("movie_id", movieId.movieId)
+        return mResolver.update(mUris.storageVideo(), values, "path=? AND device_uuid=?",
+                arrayOf(videoId.path, videoId.uuid)) != 0
+    }
+
+    fun hideChildrenOf(containerId: StorageContainerId): Boolean {
+        val values = ContentValues()
+        values.put("hidden", 1)
+        var num = 0
+        num += mResolver.update(mUris.storageFolder(), values,
+                "parent_path=? AND device_uuid=?",
+                arrayOf(containerId.path, containerId.uuid))
+        num += mResolver.update(mUris.storageVideo(), values,
+                "parent_path=? AND device_uuid=?",
+                arrayOf(containerId.path, containerId.uuid))
+        return num != 0
+    }
+
+    /*
+     * END STORAGE
+     */
+
+    /*
      * START TV
      */
 
-    fun addTvSeries(series: TvSeriesRef): Boolean {
-        return mResolver.insert(mUris.tvSeries(), series.contentValues()) == URI_SUCCESS
-    }
+    fun addTvSeries(series: TvSeriesRef) =
+            mResolver.insert(mUris.tvSeries(), series.contentValues()) == URI_SUCCESS
 
     fun getTvSeries(seriesId: TvSeriesId): Maybe<TvSeriesRef> {
         return doGet(mUris.tvSeries(), tvSeriesProjection,
@@ -563,9 +691,8 @@ class MediaDAO
      * START MOVIE
      */
 
-    fun addMovie(movie: MovieRef): Boolean {
-        return mResolver.insert(mUris.movie(), movie.contentValues()) == URI_SUCCESS
-    }
+    fun addMovie(movie: MovieRef) =
+            mResolver.insert(mUris.movie(), movie.contentValues()) == URI_SUCCESS
 
     fun getMovie(movieId: MovieId): Maybe<MovieRef> {
         return doGet(mUris.movie(), movieProjection,
@@ -882,6 +1009,129 @@ fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): VideoDocumentRef {
                     mediaUri = docid.mediaUri
                     //summary,
             )
+    )
+}
+
+fun StorageFolderRef.contentValues(): ContentValues {
+    val values = ContentValues(10)
+    values.put("path", id.path)
+    values.put("parent_path", id.parent)
+    values.put("device_uuid", id.uuid)
+    values.put("_display_name", meta.title)
+    values.put("hidden", 0)
+    return values
+}
+
+val storageFolderProjection = arrayOf("path", "device_uuid", "parent_path",
+        "_display_name")
+
+fun Cursor.toStorageFolder(): StorageFolderRef {
+    val path = getString(0)
+    val uuid = getString(1)
+    val parent = getString(2)
+    val title = getString(3)
+    return StorageFolderRef(
+            id = StorageFolderId(
+                    path = path,
+                    uuid = uuid,
+                    parent = parent
+            ),
+            meta = StorageFolderMeta(
+                    title = title
+            )
+    )
+}
+
+fun StorageVideoRef.contentValues(): ContentValues {
+    val values = ContentValues()
+    values.put("path", id.path)
+    values.put("parent_path", id.parent)
+    values.put("device_uuid", id.uuid)
+    values.put("_display_name", meta.originalTitle.elseIfBlank(meta.title))
+    values.put("mime_type", meta.mimeType)
+    values.put("last_modified", meta.lastMod)
+    values.put("_size", meta.size)
+    values.put("date_added", System.currentTimeMillis())
+    values.put("hidded", 0)
+    return values
+}
+
+val storageVideoProjection = arrayOf(
+        //video columns
+        "path", "parent_path", "device_uuid", "device_uuid", //3
+        "v._display_name", "v.mime_type", "v._size", "d._size", "v.last_modified", //8
+        //episode columns
+        "e._id as episode_id", "e._display_name as episode_title", //10
+        "episode_number", "season_number", //12
+        //series columns
+        "s._id as series_id", "s._display_name as series_title", //14
+        "s.poster as series_poster", "s.backdrop as series_backdrop", //16
+        //movie columns
+        "m._id as movie_id", "m._display_name as movie_title",  //18
+        "m.poster_path as movie_poster", //19
+        "m.backdrop_path as movie_backdrop", //20
+        //more episode columns
+        "e.poster as episode_poster", "e.backdrop as episode_backdrop" //22
+)
+
+fun Cursor.toStorageVideo(mApiHelper: ApiHelper): StorageVideoRef {
+    val path = getString(0)
+    val parent = getString(1)
+    val uuid = getString(2)
+    var title = getString(4)
+    val originalTitle = title
+    val mimeType = getString(5)
+    val mediaUri = Uri.parse(getString(0))
+    val size = getLong(6)
+    var subtitle = ""
+    var artworkUri = Uri.EMPTY
+    var backdropUri = Uri.EMPTY
+    var episodeId: TvEpisodeId? = null
+    var movieId: MovieId? = null
+    if (!isNull(9)) {
+        episodeId = TvEpisodeId(getLong(9), getLong(13))
+        title = getString(10)
+        subtitle = makeTvSubtitle(getString(14), getInt(12), getInt(11))
+        //prefer episode poster / backdrop over series
+        if (!isNull(21)) {
+            artworkUri = mApiHelper.tvImagePosterUri(getString(21))
+        } else if (!isNull(15)) {
+            artworkUri = mApiHelper.tvImagePosterUri(getString(15))
+        }
+        if (!isNull(22)) {
+            backdropUri = mApiHelper.tvImageBackdropUri(getString(22))
+        } else if (!isNull(16)) {
+            backdropUri = mApiHelper.tvImageBackdropUri(getString(16))
+        }
+    } else if (!isNull(17)) {
+        movieId = MovieId(getLong(17))
+        title = getString(18)
+        if (!isNull(19)) {
+            artworkUri = mApiHelper.movieImagePosterUri(getString(19))
+        }
+        if (!isNull(20)) {
+            backdropUri = mApiHelper.movieImageBackdropUri(getString(20))
+        }
+    }
+    return StorageVideoRef(
+            id = StorageVideoId(
+                    path = path,
+                    parent = parent,
+                    uuid = uuid
+            ),
+            tvEpisodeId = episodeId,
+            movieId = movieId,
+            meta = StorageVideoMeta(
+                    title = title,
+                    originalTitle = originalTitle,
+                    subtitle = subtitle,
+                    artworkUri = artworkUri,
+                    backdropUri = backdropUri,
+                    mimeType = mimeType,
+                    mediaUri = mediaUri,
+                    size = size
+            )
+
     )
 }
 

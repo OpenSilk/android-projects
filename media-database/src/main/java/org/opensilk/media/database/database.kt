@@ -258,6 +258,7 @@ internal class MediaDB
             db.execSQL("DROP TABLE IF EXISTS storage_directory")
             db.execSQL("CREATE TABLE storage_directory (" +
                     "path TEXT NOT NULL, " +
+                    "parent_path TEXT NOT NULL, " +
                     "device_uuid TEXT NOT NULL, " +
                     "_display_name TEXT NOT NULL, " +
 
@@ -267,6 +268,7 @@ internal class MediaDB
             db.execSQL("DROP TABLE IF EXISTS storage_video")
             db.execSQL("CREATE TABLE storage_video (" +
                     "path TEXT NOT NULL," +
+                    "parent_path TEXT NOT NULL, " +
                     "device_uuid TEXT NOT NULL," +
                     "_display_name TEXT NOT NULL," +
                     "mime_type TEXT," +
