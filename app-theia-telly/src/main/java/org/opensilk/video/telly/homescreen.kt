@@ -54,7 +54,7 @@ class HomeActivity : BaseVideoActivity() {
 /**
  *
  */
-class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner, OnItemViewClickedListener {
+class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
@@ -91,7 +91,7 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner, OnItemView
         mHomeAdapter.add(ListRow(newlyAddedHeader, mNewlyAddedAdapter))
 
         adapter = mHomeAdapter
-        onItemViewClickedListener = this
+        onItemViewClickedListener = mItemClickListener
 
     }
 
@@ -105,36 +105,6 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner, OnItemView
         brandColor = ContextCompat.getColor(context, R.color.fastlane_background)
         // set search icon color
         searchAffordanceColor = ContextCompat.getColor(context, R.color.search_opaque)
-    }
-
-    override fun onItemClicked(itemViewHolder: Presenter.ViewHolder, item: Any,
-                               rowViewHolder: RowPresenter.ViewHolder?, row: Row?) {
-        val mediaItem = item as MediaBrowser.MediaItem
-        val mediaId = parseMediaId(mediaItem.mediaId)
-        when (mediaId) {
-            is StorageDeviceId -> {
-                val intent = mediaItem.description.extras.getParcelable<Intent>("intent")
-                if (!mediaId.isPrimary && intent != EMPTY_INTENT) {
-                    //startActivityForResult(intent, Activity.RESULT_FIRST_USER + 1)
-                }
-            }
-            else -> mItemClickListener.onItemClicked(itemViewHolder, item,
-                    rowViewHolder, row)
-        }
-        TODO("not implemented")
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (resultCode != Activity.RESULT_OK) {
-            return
-        }
-        when (requestCode - Activity.RESULT_FIRST_USER) {
-            1 -> {
-                Timber.e("intent=$data")
-                Timber.d("uri=${data?.data}")
-            }
-            else -> super.onActivityResult(requestCode, resultCode, data)
-        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

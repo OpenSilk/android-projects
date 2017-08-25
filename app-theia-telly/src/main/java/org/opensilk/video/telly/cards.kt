@@ -77,12 +77,10 @@ class MediaItemPresenter
         val cardHeight = resources.getDimensionPixelSize(R.dimen.card_height)
         cardView.setMainImageDimensions(cardWidth, cardHeight)
 
-        val iconResource = if (mediaItem.isBrowsable) {
-            R.drawable.folder_48dp
-        } else if (mediaItem.isPlayable) {
-            R.drawable.movie_48dp
-        } else {
-            R.drawable.file_48dp
+        val iconResource = when {
+            mediaItem.isBrowsable -> R.drawable.folder_48dp
+            mediaItem.isPlayable -> R.drawable.movie_48dp
+            else -> R.drawable.file_48dp
         }
 
         if (description.iconUri != null) {
@@ -209,29 +207,33 @@ class MediaItemClickListener
         val mediaItem = item as MediaBrowser.MediaItem
         val mediaId = parseMediaId(mediaItem.mediaId)
         when (mediaId) {
-            is UpnpDeviceId, is UpnpFolderId -> {
+            is UpnpContainerId,
+            is StorageContainerId -> {
                 val intent = Intent(context, FolderActivity::class.java)
                 intent.putExtra(EXTRA_MEDIAID, mediaId.json)
                 context.startActivity(intent)
             }
-            is UpnpVideoId -> {
+            is UpnpVideoId,
+            is StorageVideoId -> {
                 val intent = Intent(context, DetailActivity::class.java)
                 intent.putExtra(EXTRA_MEDIAID, mediaId.json)
-                val bundle = if (itemViewHolder is MediaItemPresenter.ViewHolder) {
-                    val view = itemViewHolder.view as MediaItemImageCardView
-                    ActivityOptions.makeSceneTransitionAnimation(context,
-                            view.mainImageView, SHARED_ELEMENT_NAME).toBundle()
-                } else if (itemViewHolder is MediaItemListPresenter.ViewHolder) {
-                    val binding = itemViewHolder.binding
-                    ActivityOptions.makeSceneTransitionAnimation(context, binding.icon,
-                            SHARED_ELEMENT_NAME).toBundle()
-                } else {
-                    Bundle.EMPTY
+                val bundle = when (itemViewHolder) {
+                    is MediaItemPresenter.ViewHolder -> {
+                        val view = itemViewHolder.view as MediaItemImageCardView
+                        ActivityOptions.makeSceneTransitionAnimation(context,
+                                view.mainImageView, SHARED_ELEMENT_NAME).toBundle()
+                    }
+                    is MediaItemListPresenter.ViewHolder -> {
+                        val binding = itemViewHolder.binding
+                        ActivityOptions.makeSceneTransitionAnimation(context, binding.icon,
+                                SHARED_ELEMENT_NAME).toBundle()
+                    }
+                    else -> Bundle.EMPTY
                 }
                 context.startActivity(intent, bundle)
             }
             else -> {
-                Toast.makeText(context, "Unhandled ItemClick", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Unhandled ItemClick $mediaId", Toast.LENGTH_LONG).show()
             }
         }
     }
