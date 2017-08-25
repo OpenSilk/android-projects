@@ -24,19 +24,18 @@ private fun suitableFakeUuid2(emulated: Boolean, removable: Boolean): String = w
     else -> "FOO"
 }
 
-/**
- * Created by drew on 8/17/17.
- */
-interface StorageRef: MediaRef {
-    val meta: StorageMeta
-}
-
-interface StorageId: MediaId
-
 interface StorageMeta {
     val title: String
 }
 
+interface StorageId: MediaId {
+    val path: String
+    val uuid: String
+}
 
+interface StorageContainerId: StorageId
 
-
+interface StorageRef: MediaRef {
+    override val id: StorageId
+    val meta: StorageMeta
+}

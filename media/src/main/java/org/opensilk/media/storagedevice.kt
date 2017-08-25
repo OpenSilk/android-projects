@@ -7,10 +7,10 @@ import android.util.JsonWriter
  * Created by drew on 8/22/17.
  */
 data class StorageDeviceId(
-        val uuid: String,
-        val path: String,
+        override val uuid: String,
+        override val path: String,
         val isPrimary: Boolean
-): StorageId {
+): StorageContainerId {
     override val json: String
         get() = writeJson(StorageDeviceIdTransformer, this)
 }
