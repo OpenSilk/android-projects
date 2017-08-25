@@ -20,23 +20,19 @@ private val DOCUMENT_COLS = arrayOf(
         DocumentsContract.Document.COLUMN_FLAGS
 )
 
-private fun Cursor.toDocumentId(parentId: DocumentId): DocumentId {
-    return DocumentId(
-            treeUri = parentId.treeUri,
-            parentId = parentId.documentId,
-            documentId = getString(0),
-            mimeType = getString(2)
-    )
-}
-
-private fun Cursor.toDirectoryDocumentRef(documentId: DocumentId): DocDirectoryRef {
+private fun Cursor.toDirectoryDocumentRef(parentId: DocumentId): DocDirectoryRef {
+    val id = getString(0)
     val displayName = getString(1)
     val mimeType = getString(2)
     //val size = if (!isNull(3)) getLong(3) else 0L
     val lastMod = if (!isNull(4)) getLong(4) else 0L
     val flags = getLong(5)
     return DocDirectoryRef(
-            id = documentId,
+            id = DocDirectoryId(
+                    treeUri = parentId.treeUri,
+                    parentId = parentId.documentId,
+                    documentId = id
+            ),
             meta = DocDirectoryMeta(
                     title = displayName,
                     mimeType = mimeType,
@@ -46,21 +42,27 @@ private fun Cursor.toDirectoryDocumentRef(documentId: DocumentId): DocDirectoryR
     )
 }
 
-private fun Cursor.toVideoDocumentRef(documentId: DocumentId): DocVideoRef {
+private fun Cursor.toVideoDocumentRef(parentId: DocumentId): DocVideoRef {
+    val id = getString(0)
     val displayName = getString(1)
     val mimeType = getString(2)
     val size = if (!isNull(3)) getLong(3) else 0L
     val lastMod = if (!isNull(4)) getLong(4) else 0L
     val flags = getLong(5)
+    val vidId = DocVideoId(
+            treeUri = parentId.treeUri,
+            parentId = parentId.documentId,
+            documentId = id
+    )
     return DocVideoRef(
-            id = documentId,
+            id = vidId,
             meta = DocVideoMeta(
                     title = displayName,
                     mimeType = mimeType,
                     size = size,
                     lastMod = lastMod,
                     flags = flags,
-                    mediaUri = documentId.mediaUri
+                    mediaUri = vidId.mediaUri
             )
     )
 }
@@ -68,7 +70,9 @@ private fun Cursor.toVideoDocumentRef(documentId: DocumentId): DocVideoRef {
 /**
  * Created by drew on 8/9/17.
  */
-class DocumentLoaderImpl @Inject constructor(@ForApp val mContext: Context): DocumentLoader {
+class DocumentLoaderImpl @Inject constructor(
+        @ForApp private val mContext: Context
+): DocumentLoader {
 
     override fun document(documentId: DocumentId): Maybe<DocumentRef> {
         val uriPermission = mContext.contentResolver.persistedUriPermissions
@@ -81,14 +85,13 @@ class DocumentLoaderImpl @Inject constructor(@ForApp val mContext: Context): Doc
             mContext.contentResolver.query(documentId.mediaUri, DOCUMENT_COLS,
                     null, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME)?.use { c ->
                 if (c.moveToFirst()) {
-                    val id = c.toDocumentId(documentId)
-                    if (id.isDirectory) {
-                        s.onSuccess(c.toDirectoryDocumentRef(id))
-                    } else if (id.isVideo) {
-                        s.onSuccess(c.toVideoDocumentRef(id))
-                    } else {
-                        TODO()
+                    val mime = c.getString(2)
+                    val doc = when {
+                        mime == DocumentsContract.Document.MIME_TYPE_DIR -> c.toDirectoryDocumentRef(documentId)
+                        mime.startsWith("video") -> c.toVideoDocumentRef(documentId)
+                        else -> TODO()
                     }
+                    s.onSuccess(doc)
                 } else {
                     s.onComplete()
                 }
@@ -96,7 +99,7 @@ class DocumentLoaderImpl @Inject constructor(@ForApp val mContext: Context): Doc
         }
     }
 
-    override fun directChildren(documentId: DocumentId, wantVideoItems: Boolean,
+    override fun directChildren(documentId: DocDirectoryId, wantVideoItems: Boolean,
                                 wantAudioItems: Boolean): Single<out List<DocumentRef>> {
         if (!documentId.isFromTree) {
             return Single.error(Exception("Document does not represent a tree"))
@@ -112,14 +115,13 @@ class DocumentLoaderImpl @Inject constructor(@ForApp val mContext: Context): Doc
                     null, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME)?.use { c ->
                 val list = ArrayList<DocumentRef>()
                 while (c.moveToNext()) {
-                    val id = c.toDocumentId(documentId)
-                    if (id.isDirectory) {
-                        list.add(c.toDirectoryDocumentRef(id))
-                    } else if (wantVideoItems && id.isVideo) {
-                        list.add(c.toVideoDocumentRef(id))
-                    } else if (wantAudioItems && id.isAudio) {
-                        TODO()
-                    } //else ignore
+                    val mime = c.getString(2)
+                    val doc = when {
+                        mime == DocumentsContract.Document.MIME_TYPE_DIR -> c.toDirectoryDocumentRef(documentId)
+                        mime.startsWith("video") && wantVideoItems -> c.toVideoDocumentRef(documentId)
+                        else -> null
+                    } ?: continue
+                    list.add(doc)
                 }
                 s.onSuccess(list)
             } ?: s.onError(Exception("Unable to query document provider"))

@@ -48,13 +48,22 @@ interface MediaDeviceId: MediaId
  */
 interface MediaContainerId: MediaId
 
+interface MediaMeta
 
+interface MediaDeviceMeta {
+    val title: String
+}
 
 /**
  * Contains the media id and metadata
  */
 interface MediaRef {
     val id: MediaId
+}
+
+interface MediaDeviceRef: MediaRef {
+    override val id: MediaDeviceId
+    val meta: MediaDeviceMeta
 }
 
 /**
@@ -147,22 +156,14 @@ fun parseMediaId(json: String): MediaId {
 fun MediaRef.toMediaDescription(): MediaDescription {
     val bob = MediaDescription.Builder()
     when (this) {
-        is UpnpVideoRef -> {
-            bob.setTitle(meta.title.elseIfBlank(meta.originalTitle))
-                    .setSubtitle(meta.subtitle)
-                    .setIconUri(meta.artworkUri)
-                    .setMediaId(id.json)
-                    .setExtras(bundle(KEY_MEDIA_URI, meta.mediaUri)
-                            ._putLong(KEY_DURATION, meta.duration))
-        }
-        is UpnpFolderRef -> {
-            bob.setTitle(meta.title)
-                    .setMediaId(id.json)
-        }
         is UpnpDeviceRef -> {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
+                    .setMediaId(id.json)
+        }
+        is UpnpFolderRef -> {
+            bob.setTitle(meta.title)
                     .setMediaId(id.json)
         }
         is UpnpMusicTrackRef -> {
@@ -182,16 +183,22 @@ fun MediaRef.toMediaDescription(): MediaDescription {
             bob.setTitle(meta.title)
                     .setMediaId(id.json)
         }
-        is DocVideoRef -> {
+        is StorageDeviceRef -> {
+            bob.setTitle(meta.title)
+                    .setMediaId(id.json)
+        }
+        is StorageFolderRef -> {
+            bob.setTitle(meta.title)
+                    .setMediaId(id.json)
+        }
+        //override this above if need special handling
+        is VideoRef -> {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
                     .setMediaId(id.json)
-                    .setExtras(bundle(KEY_MEDIA_URI, id.mediaUri))
-        }
-        is StorageDeviceRef -> {
-            bob.setTitle(meta.title)
-                    .setMediaId(id.json)
+                    .setExtras(bundle(KEY_MEDIA_URI, meta.mediaUri)
+                            ._putLong(KEY_DURATION, meta.duration))
         }
         else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
     }
@@ -199,13 +206,10 @@ fun MediaRef.toMediaDescription(): MediaDescription {
 }
 
 fun MediaRef.toMediaItem(): MediaItem = when (this) {
-    is UpnpVideoRef -> {
-        MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
-    }
-    is UpnpFolderRef -> {
+    is UpnpDeviceRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
     }
-    is UpnpDeviceRef -> {
+    is UpnpFolderRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
     }
     is UpnpMusicTrackRef -> {
@@ -217,11 +221,15 @@ fun MediaRef.toMediaItem(): MediaItem = when (this) {
     is DocDirectoryRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
     }
-    is DocVideoRef -> {
-        MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
-    }
     is StorageDeviceRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+    }
+    is StorageFolderRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
+    }
+    //override this above if need special handling
+    is VideoRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
     }
     else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
 }

@@ -129,7 +129,7 @@ constructor(
      * AudioManager listener
      */
 
-    fun Int._stringifyAudioFocusChange(): String? {
+    private fun Int._stringifyAudioFocusChange(): String? {
         return AudioManager::class.java.declaredFields.filter {
             it.name.startsWith("AUDIOFOCUS_") && it.type == Int::class.java && it.get(null) == this
         }.firstOrNull()?.name
@@ -190,14 +190,12 @@ constructor(
         }
     }
 
-    fun Int._stringifyExoPlayerState(): String {
-        return when (this) {
-            Player.STATE_BUFFERING -> "STATE_BUFFERING"
-            Player.STATE_IDLE -> "STATE_IDLE"
-            Player.STATE_ENDED -> "STATE_ENDED"
-            Player.STATE_READY -> "STATE_READY"
-            else -> "UNKNOWN"
-        }
+    private fun Int._stringifyExoPlayerState() = when (this) {
+        Player.STATE_BUFFERING -> "STATE_BUFFERING"
+        Player.STATE_IDLE -> "STATE_IDLE"
+        Player.STATE_ENDED -> "STATE_ENDED"
+        Player.STATE_READY -> "STATE_READY"
+        else -> "UNKNOWN"
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
@@ -324,11 +322,7 @@ constructor(
         val mediaRef = parseMediaId(mediaId)
         val playbackExtras = extras._playbackExtras()
         when (mediaRef) {
-            is UpnpVideoId -> fetchAndPlaySiblingsOf(mediaRef, playbackExtras)
-            is DocumentId -> when {
-                mediaRef.isVideo -> fetchAndPlaySiblingsOf(mediaRef, playbackExtras)
-                else -> stopAndShowError("Unsupported media kind=${mediaRef.javaClass.name}")
-            }
+            is VideoId -> fetchAndPlaySiblingsOf(mediaRef, playbackExtras)
             else -> stopAndShowError("Unsupported media kind=${mediaRef.javaClass.name}")
         }
     }
@@ -426,7 +420,8 @@ constructor(
         //clear last pos for current item
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
             val ref = parseMediaId(item.description.mediaId)
-            mDbClient.setLastPlaybackPosition(ref, 0, 1)
+            mDbClient.setLastPlaybackPosition(ref,
+                    mExoPlayer.currentPosition, mExoPlayer.duration)
         })
         mQueue.goToNext().subscribe({
             pause()
@@ -446,7 +441,8 @@ constructor(
         //clear last pos for current item
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
             val ref = parseMediaId(item.description.mediaId)
-            mDbClient.setLastPlaybackPosition(ref, 0, 1)
+            mDbClient.setLastPlaybackPosition(ref,
+                    mExoPlayer.currentPosition, mExoPlayer.duration)
         })
         mQueue.goToPrevious().subscribe({
             pause()

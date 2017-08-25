@@ -6,6 +6,7 @@ import android.webkit.MimeTypeMap
 import io.reactivex.Single
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
+import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
@@ -28,6 +29,7 @@ class StorageLoaderImpl @Inject constructor(
                     val children = directory.listFiles() ?: emptyArray()
                     val list = ArrayList<StorageRef>()
                     children.mapNotNullTo(list, { f ->
+                        //Timber.d(f.path)
                         when {
                             f.isHidden -> null
                             f.isDirectory -> f.toDirectoryRef(parentId.uuid)

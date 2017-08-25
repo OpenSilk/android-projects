@@ -83,7 +83,8 @@ class MediaProvider : ContentProvider() {
                 table = "storage_device"
             }
             M.STORAGE_FOLDER -> {
-                table = "storage_directory"
+                table = "storage_directory f " +
+                        "JOIN storage_device d ON f.device_uuid = d.uuid "
             }
             M.STORAGE_VIDEO -> {
                 table = "storage_video v " +
@@ -323,7 +324,7 @@ class MediaProvider : ContentProvider() {
                 return db.update("storage_device", values, selection, selectionArgs)
             }
             M.STORAGE_FOLDER -> {
-                return db.update("storage_folder", values, selection, selectionArgs)
+                return db.update("storage_directory", values, selection, selectionArgs)
             }
             M.STORAGE_VIDEO -> {
                 return db.update("storage_video", values, selection, selectionArgs)

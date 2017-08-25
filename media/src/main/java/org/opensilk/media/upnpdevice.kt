@@ -7,25 +7,26 @@ import android.util.JsonWriter
 /**
  * Created by drew on 8/11/17.
  */
-data class UpnpDeviceId(override val deviceId: String): UpnpContainerId {
-
+data class UpnpDeviceId(
+        override val deviceId: String
+): UpnpContainerId, MediaDeviceId {
     override val parentId: String = UPNP_ROOT_ID
     override val containerId: String = UPNP_ROOT_ID
-
     override val json: String
         get() = writeJson(UpnpDeviceTransformer, this)
-
 }
 
 data class UpnpDeviceMeta(
         override val title: String,
         val subtitle: String = "",
         val artworkUri: Uri = Uri.EMPTY,
-        val updateId: Long = 0): UpnpMeta
+        val updateId: Long = 0
+): UpnpMeta, MediaDeviceMeta
 
 data class UpnpDeviceRef(
         override val id: UpnpDeviceId,
-        override val meta: UpnpDeviceMeta): UpnpContainerRef
+        override val meta: UpnpDeviceMeta
+): UpnpContainerRef, MediaDeviceRef
 
 internal object UpnpDeviceTransformer: MediaIdTransformer<UpnpDeviceId> {
     override val kind: String = UPNP_DEVICE

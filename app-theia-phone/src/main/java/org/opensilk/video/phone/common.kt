@@ -25,7 +25,7 @@ import dagger.Module
 import dagger.multibindings.IntoMap
 import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.VideoDocumentChange
+import org.opensilk.media.database.DocVideoChange
 import org.opensilk.media.loader.doc.DocumentLoader
 import org.opensilk.video.*
 import org.opensilk.video.phone.databinding.ActivityDrawerBinding
@@ -208,12 +208,12 @@ class DrawerActivityViewModel
                 .doOnSuccess {
                     when (it) {
                         is DocDirectoryRef -> {
-                            mDatabaseClient.addDirectoryDocument(it)
+                            mDatabaseClient.addDocDirectory(it)
                             //mDatabaseClient.postChange()
                         }
                         is DocVideoRef -> {
-                            mDatabaseClient.addVideoDocument(it)
-                            mDatabaseClient.postChange(VideoDocumentChange(it.id))
+                            mDatabaseClient.addDocVideo(it)
+                            mDatabaseClient.postChange(DocVideoChange(it.id))
                         }
                         else -> TODO()
                     }

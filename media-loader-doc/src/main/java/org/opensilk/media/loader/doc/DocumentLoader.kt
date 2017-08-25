@@ -2,6 +2,7 @@ package org.opensilk.media.loader.doc
 
 import io.reactivex.Maybe
 import io.reactivex.Single
+import org.opensilk.media.DocDirectoryId
 import org.opensilk.media.DocumentId
 import org.opensilk.media.DocumentRef
 
@@ -10,6 +11,6 @@ import org.opensilk.media.DocumentRef
  */
 interface DocumentLoader {
     fun document(documentId: DocumentId): Maybe<DocumentRef>
-    fun directChildren(documentId: DocumentId, wantVideoItems: Boolean = false,
+    fun directChildren(documentId: DocDirectoryId, wantVideoItems: Boolean = false,
                        wantAudioItems: Boolean = false): Single<out List<DocumentRef>>
 }

@@ -1,8 +1,8 @@
 package org.opensilk.video
 
+import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.Single
-import org.opensilk.media.MediaRef
+import org.opensilk.media.MediaDeviceRef
 import org.opensilk.media.StorageDeviceRef
 import org.opensilk.media.UpnpDeviceRef
 import org.opensilk.media.database.MediaDAO
@@ -18,27 +18,36 @@ class MediaDeviceLoader
         private val mDatabaseClient: MediaDAO,
         private val mStorageDeviceLoader: StorageDeviceLoader
 ){
-    val observable: Observable<out List<MediaRef>> by lazy {
+    val observable: Observable<out List<MediaDeviceRef>> by lazy {
         mDatabaseClient.changesObservable
                 .filter { it is UpnpDeviceChange }
                 .map { true }
                 .startWith(true)
                 .switchMapSingle {
-                    Observable.concat<MediaRef>(
-                            mDatabaseClient.getUpnpDevices(),
-                            mStorageDeviceLoader.storageDevices.flatMapObservable {
-                                Observable.fromIterable<MediaRef>(it)
-                            }
+                    Observable.concat<MediaDeviceRef>(
+                            upnpObservable,
+                            storageCompletable.andThen(storageObservable)
                     ).toList().subscribeOn(AppSchedulers.diskIo)
                 }
     }
 
-    private val doDatabase: Observable<UpnpDeviceRef> by lazy {
-        mDatabaseClient.getUpnpDevices()
+    private val upnpObservable: Observable<UpnpDeviceRef> by lazy {
+        mDatabaseClient.getAvailableUpnpDevices()
     }
 
-    private val doStorageReal: Single<List<StorageDeviceRef>> by lazy {
-        mStorageDeviceLoader.storageDevices
+    private val storageCompletable: Completable by lazy {
+        mStorageDeviceLoader.storageDevices.flatMapCompletable { deviceList ->
+            Completable.fromAction {
+                mDatabaseClient.hideAllStorageDevices()
+                deviceList.forEach {
+                    mDatabaseClient.addStorageDevice(it)
+                }
+            }
+        }
+    }
+
+    private val storageObservable: Observable<StorageDeviceRef> by lazy {
+        mDatabaseClient.getAvailableStorageDevices()
     }
 
 }

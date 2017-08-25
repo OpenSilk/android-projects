@@ -8,6 +8,7 @@ import org.opensilk.media.database.*
 import org.opensilk.media.loader.cds.UpnpBrowseLoader
 import org.opensilk.media.loader.doc.DocumentLoader
 import org.opensilk.media.loader.storage.StorageLoader
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -25,7 +26,7 @@ class FoldersLoader
     fun observable(mediaId: MediaId): Observable<out List<MediaRef>> = when (mediaId) {
         is UpnpContainerId -> upnpObservable(mediaId)
         is StorageContainerId -> storageObservable(mediaId)
-        is DocumentId -> documentObservable(mediaId)
+        is DocDirectoryId -> documentObservable(mediaId)
         else -> TODO("Unsupported mediaid")
     }
 
@@ -94,11 +95,11 @@ class FoldersLoader
         ).toList()
     }
 
-    private fun documentObservable(documentId: DocumentId): Observable<List<DocumentRef>> {
+    private fun documentObservable(documentId: DocDirectoryId): Observable<List<DocumentRef>> {
         //watch for system update id changes and re fetch list
         return mDatabaseClient.changesObservable
                 //during lookup we can be flooded
-                .filter { it is VideoDocumentChange && it.documentId.parentId == documentId.documentId }
+                .filter { it is DocVideoChange && it.videoId.parentId == documentId.documentId }
                 .map { true }
                 .sample(3, TimeUnit.SECONDS)
                 .startWith(true)
@@ -108,15 +109,15 @@ class FoldersLoader
                 }
     }
 
-    private fun documentCompletable(documentId: DocumentId): Completable {
+    private fun documentCompletable(documentId: DocDirectoryId): Completable {
         return mDocumentLoader.directChildren(documentId = documentId, wantVideoItems = true)
                 .flatMapCompletable({ insertItemsCompletable(documentId, it) })
     }
 
-    private fun documentDisk(documentId: DocumentId): Single<List<DocumentRef>> {
+    private fun documentDisk(documentId: DocDirectoryId): Single<List<DocumentRef>> {
         return Observable.concat<DocumentRef>(
-                mDatabaseClient.getDirectoryDocumentsUnder(documentId),
-                mDatabaseClient.getVideoDocumentsUnder(documentId)
+                mDatabaseClient.getDocDirectoryUnder(documentId),
+                mDatabaseClient.getDocVideosUnder(documentId)
         ).toList()
     }
 
@@ -124,14 +125,15 @@ class FoldersLoader
         return Completable.fromAction {
             mDatabaseClient.hideChildrenOf(parentId)
             itemList.forEach { item ->
+                Timber.v("Inserting $item")
                 when (item) {
                     is UpnpFolderRef -> mDatabaseClient.addUpnpFolder(item)
                     is UpnpVideoRef -> mDatabaseClient.addUpnpVideo(item)
                     is StorageFolderRef -> mDatabaseClient.addStorageFolder(item)
                     is StorageVideoRef -> mDatabaseClient.addStorageVideo(item)
-                    is DocDirectoryRef -> mDatabaseClient.addDirectoryDocument(item)
-                    is DocVideoRef -> mDatabaseClient.addVideoDocument(item)
-                    else -> TODO("${item::javaClass::name}")
+                    is DocDirectoryRef -> mDatabaseClient.addDocDirectory(item)
+                    is DocVideoRef -> mDatabaseClient.addDocVideo(item)
+                    else -> TODO("$item")
                 }
             }
         }

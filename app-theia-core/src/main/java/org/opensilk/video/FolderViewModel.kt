@@ -19,21 +19,23 @@ class FolderViewModel
     val mediaTitle = MutableLiveData<String>()
     val folderItems = MutableLiveData<List<MediaRef>>()
     val loadError = MutableLiveData<String>()
-    private val disposables = CompositeDisposable()
+
+    private val mDisposables = CompositeDisposable()
+
+    override fun onCleared() {
+        super.onCleared()
+        mDisposables.clear()
+    }
 
     fun onMediaId(mediaId: String) {
         Timber.d("onMediaId($mediaId)")
         val mediaRef = parseMediaId(mediaId)
         when (mediaRef) {
-            is UpnpContainerId,
-            is StorageContainerId -> {
+            is MediaDeviceId -> {
                 subscribeBrowseItems(mediaRef)
                 subscribeTitle(mediaRef)
             }
-            is DocumentId -> {
-                if (!mediaRef.isFromTree) {
-                    TODO("Document must be for tree $mediaRef")
-                }
+            is MediaContainerId -> {
                 subscribeBrowseItems(mediaRef)
                 subscribeTitle(mediaRef)
             }
@@ -49,20 +51,21 @@ class FolderViewModel
                     Timber.e(it, "Loader error msg=${it.message}.")
                     loadError.postValue(it.message.elseIfBlank("null"))
                 })
-        disposables.add(s)
+        mDisposables.add(s)
     }
 
     fun subscribeTitle(mediaId: MediaId) {
         val s = mDatabaseClient.getMediaRef(mediaId)
-                .map({ it.toMediaDescription() })
+                .map {
+                    when (it) {
+                        is MediaDeviceRef -> it.meta.title
+                        else -> it.toMediaDescription().title.toString()
+                    }
+                }
                 .subscribe({
-                    mediaTitle.postValue(it.title?.toString())
+                    mediaTitle.postValue(it)
                 })
-        disposables.add(s)
+        mDisposables.add(s)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        disposables.clear()
-    }
 }

@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.support.v4.content.ContextCompat
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.Disposables
 import io.reactivex.exceptions.Exceptions
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.MediaRef
@@ -23,11 +25,13 @@ class HomeViewModel
 ): ViewModel(), LifecycleObserver {
     val servers = MutableLiveData<List<MediaRef>>()
     val newlyAdded = MutableLiveData<List<UpnpVideoRef>>()
-    private val disposables = CompositeDisposable()
     val needPermissions = MutableLiveData<Array<String>>()
 
+    private val mDisposables = CompositeDisposable()
+    private var mServersSubscription = Disposables.disposed()
+
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun checkPermissions() {
+    internal fun checkPermissions() {
         val perms = ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
         if (perms != PackageManager.PERMISSION_GRANTED) {
             needPermissions.postValue(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
@@ -46,29 +50,30 @@ class HomeViewModel
     }
 
     fun subscribeServers() {
-        val s = mServersLoader.observable
+        mDisposables.remove(mServersSubscription)
+        mServersSubscription = mServersLoader.observable
                 .subscribe({
                     servers.postValue(it)
                 }, {
                     Exceptions.propagate(it) //TODO handle errors
                 }
         )
-        disposables.add(s)
+        mDisposables.add(mServersSubscription)
     }
 
-    fun subscribeNewlyAdded() {
+    private fun subscribeNewlyAdded() {
         val s = mNewlyAddedLoader.observable
                 .subscribe({
                     newlyAdded.postValue(it)
                 }, {
                     Exceptions.propagate(it)
                 })
-        disposables.add(s)
+        mDisposables.add(s)
     }
 
     override fun onCleared() {
         super.onCleared()
-        disposables.clear()
+        mDisposables.dispose()
     }
 
 }

@@ -1,17 +1,13 @@
 package org.opensilk.media
 
-import android.content.Intent
-import android.net.Uri
-import android.util.JsonReader
-import android.util.JsonWriter
-
-val EMPTY_INTENT = Intent()
-
 const val STORAGE_PRIMARY_PFX = "STORAGE_PRIMARY"
 const val STORAGE_SECONDARY_PFX = "STORAGE_SECONDARY"
 const val STORAGE_EMULATED = "_EMULATED"
 const val STORAGE_REMOVABLE = "_REMOVABLE"
 
+/**
+ * Generates a quasi unique identifier for (emulated) storage lacking a uuid.
+ */
 fun suitableFakeUuid(primary: Boolean, emulated: Boolean, removable: Boolean): String = when {
     primary -> STORAGE_PRIMARY_PFX + suitableFakeUuid2(emulated, removable)
     else -> STORAGE_SECONDARY_PFX + suitableFakeUuid2(emulated, removable)
@@ -24,17 +20,29 @@ private fun suitableFakeUuid2(emulated: Boolean, removable: Boolean): String = w
     else -> "FOO"
 }
 
+/**
+ * Top level meta for storage model
+ */
 interface StorageMeta {
     val title: String
 }
 
+/**
+ * Top level id for storage model
+ */
 interface StorageId: MediaId {
     val path: String
     val uuid: String
 }
 
-interface StorageContainerId: StorageId
+/**
+ * Identifies storage containers
+ */
+interface StorageContainerId: StorageId, MediaContainerId
 
+/**
+ * Top level ref for storage model
+ */
 interface StorageRef: MediaRef {
     override val id: StorageId
     val meta: StorageMeta

@@ -10,8 +10,7 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
 import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.UpnpVideoChange
-import org.opensilk.media.database.VideoDocumentChange
+import org.opensilk.media.database.VideoChange
 import org.opensilk.reactivex2.subscribeIgnoreError
 import timber.log.Timber
 import javax.inject.Inject
@@ -34,130 +33,76 @@ class DetailViewModel
     var mediaRef: MediaRef = NoMediaRef
     val lookupError = MutableLiveData<String>()
 
-    private val disponables = CompositeDisposable()
+    private val mDisposables = CompositeDisposable()
 
     override fun onCleared() {
         super.onCleared()
-        disponables.clear()
+        mDisposables.dispose()
     }
 
     fun setMediaId(mediaId: MediaId) {
-        disponables.clear()
+        mDisposables.clear()
         when (mediaId) {
-            is UpnpVideoId -> {
-                subscribeUpnpVideoRef(mediaId)
-            }
-            is DocumentId -> {
-                subscribeDocumentRef(mediaId)
+            is VideoId -> {
+                subscribeVideoRef(mediaId)
             }
             else -> TODO()
         }
     }
 
-    private fun subscribeUpnpVideoRef(mediaId: UpnpVideoId) {
+    private fun subscribeVideoRef(mediaId: VideoId) {
         //fetch mediaref
         val o = mClient.changesObservable
-                .filter { it is UpnpVideoChange && it.videoId == mediaId }
+                .filter { it is VideoChange && it.videoId == mediaId }
                 .map { true }
                 .startWith(true)
                 .flatMapMaybe {
-                    mClient.getUpnpVideo(mediaId).subscribeOn(AppSchedulers.diskIo)
+                    mClient.getMediaRef(mediaId)
+                            .map { it as VideoRef }
+                            .subscribeOn(AppSchedulers.diskIo)
                 }
                 .publish()
         //mediaref
-        disponables.add(o.subscribeIgnoreError(Consumer {
+        mDisposables.add(o.subscribeIgnoreError(Consumer {
             mediaRef = it
             hasDescription.postValue(it.tvEpisodeId != null || it.movieId != null)
         }))
         //overview
-        disponables.add(o.flatMapMaybe { meta ->
-            mClient.getMediaOverview(mediaId).defaultIfEmpty("").map { overview ->
-                VideoDescInfo(meta.meta.title.elseIfBlank(meta.meta.originalTitle), meta.meta.subtitle, overview)
-            }.subscribeOn(AppSchedulers.diskIo)
-        }.subscribeIgnoreError(Consumer {
-            videoDescription.postValue(it)
-        }))
-        //fileinfo
-        disponables.add(o.map { meta ->
-            VideoFileInfo(meta.meta.originalTitle.elseIfBlank(meta.meta.title), meta.meta.size, meta.meta.duration)
-        }.subscribeIgnoreError(Consumer {
-            fileInfo.postValue(it)
-        }))
-        //lastPosition
-        disponables.add(o.flatMapMaybe {
-            Maybe.zip<Long, Int, ResumeInfo>(
-                    mClient.getLastPlaybackPosition(mediaId),
-                    mClient.getLastPlaybackCompletion(mediaId),
-                    BiFunction { pos, comp -> ResumeInfo(pos, comp) }
-            ).defaultIfEmpty(ResumeInfo()).subscribeOn(AppSchedulers.diskIo)
-        }.subscribeIgnoreError(Consumer {
-            resumeInfo.postValue(it)
-        }))
-        //poster
-        disponables.add(o.map { it.meta.artworkUri }.filter { it != Uri.EMPTY }
-                .subscribeIgnoreError(Consumer {
-                    posterUri.postValue(it)
-                }))
-        //backdrop
-        disponables.add(o.map { it.meta.backdropUri }.filter { it != Uri.EMPTY }
-                .subscribeIgnoreError(Consumer {
-                    backdropUri.postValue(it)
-                }))
-        //connect after all listeners registered
-        disponables.add(o.connect())
-    }
-
-    private fun subscribeDocumentRef(mediaId: DocumentId) {
-        //fetch mediaref
-        val o = mClient.changesObservable
-                .filter { it is VideoDocumentChange && it.documentId == mediaId }
-                .map { true }
-                .startWith(true)
-                .flatMapMaybe {
-                    mClient.getVideoDocument(mediaId).subscribeOn(AppSchedulers.diskIo)
-                }
-                .publish()
-        //mediaref
-        disponables.add(o.subscribeIgnoreError(Consumer {
-            mediaRef = it
-            hasDescription.postValue(it.tvEpisodeId != null || it.movieId != null)
-        }))
-        //overview
-        disponables.add(o.flatMapMaybe { meta ->
-            mClient.getMediaOverview(mediaId).defaultIfEmpty("").map { overview ->
+        mDisposables.add(o.flatMapMaybe { meta ->
+            mClient.getVideoOverview(meta.id).defaultIfEmpty("").map { overview ->
                 VideoDescInfo(meta.meta.title, meta.meta.subtitle, overview)
             }.subscribeOn(AppSchedulers.diskIo)
         }.subscribeIgnoreError(Consumer {
             videoDescription.postValue(it)
         }))
         //fileinfo
-        disponables.add(o.map { meta ->
-            VideoFileInfo(title = meta.meta.title, sizeBytes = meta.meta.size)
+        mDisposables.add(o.map { meta ->
+            VideoFileInfo(meta.meta.originalTitle.elseIfBlank(meta.meta.title), meta.meta.size, meta.meta.duration)
         }.subscribeIgnoreError(Consumer {
             fileInfo.postValue(it)
         }))
         //lastPosition
-        disponables.add(o.flatMapMaybe {
+        mDisposables.add(o.flatMapMaybe { meta ->
             Maybe.zip<Long, Int, ResumeInfo>(
-                    mClient.getLastPlaybackPosition(mediaId),
-                    mClient.getLastPlaybackCompletion(mediaId),
+                    mClient.getLastPlaybackPosition(meta.id),
+                    mClient.getLastPlaybackCompletion(meta.id),
                     BiFunction { pos, comp -> ResumeInfo(pos, comp) }
             ).defaultIfEmpty(ResumeInfo()).subscribeOn(AppSchedulers.diskIo)
         }.subscribeIgnoreError(Consumer {
             resumeInfo.postValue(it)
         }))
         //poster
-        disponables.add(o.map { it.meta.artworkUri }.filter { it != Uri.EMPTY }
+        mDisposables.add(o.map { it.meta.artworkUri }.filter { it != Uri.EMPTY }
                 .subscribeIgnoreError(Consumer {
                     posterUri.postValue(it)
                 }))
         //backdrop
-        disponables.add(o.map { it.meta.backdropUri }.filter { it != Uri.EMPTY }
+        mDisposables.add(o.map { it.meta.backdropUri }.filter { it != Uri.EMPTY }
                 .subscribeIgnoreError(Consumer {
                     backdropUri.postValue(it)
                 }))
         //connect after all listeners registered
-        disponables.add(o.connect())
+        mDisposables.add(o.connect())
     }
 
     fun doLookup(context: Context) {
@@ -174,26 +119,28 @@ class DetailViewModel
     }
 
     private fun subscribeLookup(context: Context, mediaRef: MediaRef, title: String) {
-        if (matchesTvEpisode(title)) {
-            val name = extractSeriesName(title)
-            val seasonNum = extractSeasonNumber(title)
-            val episodeNum = extractEpisodeNumber(title)
-            if (name.isNullOrBlank() || seasonNum < 0 || episodeNum < 0) {
-                lookupError.postValue("Unable to parse $title as TV episode")
-                return
+        when {
+            matchesTvEpisode(title) -> {
+                val name = extractSeriesName(title)
+                val seasonNum = extractSeasonNumber(title)
+                val episodeNum = extractEpisodeNumber(title)
+                if (name.isBlank() || seasonNum < 0 || episodeNum < 0) {
+                    lookupError.postValue("Unable to parse $title as TV episode")
+                    return
+                }
+                subscribeTvLookup(context, LookupRequest(mediaRef = mediaRef, lookupName = name,
+                        seasonNumber = seasonNum, episodeNumber = episodeNum))
             }
-            subscribeTvLookup(context, LookupRequest(mediaRef = mediaRef, lookupName = name,
-                    seasonNumber = seasonNum, episodeNumber = episodeNum))
-        } else if (matchesMovie(title)) {
-            val name = extractMovieName(title)
-            val year = extractMovieYear(title)
-            if (name.isNullOrBlank()) {
-                lookupError.postValue("Unable to parse $title as movie name")
+            matchesMovie(title) -> {
+                val name = extractMovieName(title)
+                val year = extractMovieYear(title)
+                if (name.isBlank()) {
+                    lookupError.postValue("Unable to parse $title as movie name")
+                }
+                subscribeMovieLookup(LookupRequest(mediaRef = mediaRef, lookupName = name,
+                        releaseYear = year))
             }
-            subscribeMovieLookup(LookupRequest(mediaRef = mediaRef, lookupName = name,
-                    releaseYear = year))
-        } else {
-            lookupError.postValue("$title does not match movie or tv episode pattern")
+            else -> lookupError.postValue("$title does not match movie or tv episode pattern")
         }
 
     }
@@ -217,7 +164,7 @@ class DetailViewModel
                     Timber.w(err, "Error during lookup $mesg")
                     lookupError.postValue("Error during lookup $mesg")
                 })
-        disponables.add(s)
+        mDisposables.add(s)
     }
 
     private fun subscribeMovieLookup(lookupRequest: LookupRequest) {
@@ -238,7 +185,7 @@ class DetailViewModel
                     Timber.w(err, "Error during lookup $mesg")
                     lookupError.postValue("Error during lookup $mesg")
                 })
-        disponables.add(s)
+        mDisposables.add(s)
     }
 
 }

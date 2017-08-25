@@ -207,14 +207,12 @@ class MediaItemClickListener
         val mediaItem = item as MediaBrowser.MediaItem
         val mediaId = parseMediaId(mediaItem.mediaId)
         when (mediaId) {
-            is UpnpContainerId,
-            is StorageContainerId -> {
+            is MediaContainerId -> {
                 val intent = Intent(context, FolderActivity::class.java)
                 intent.putExtra(EXTRA_MEDIAID, mediaId.json)
                 context.startActivity(intent)
             }
-            is UpnpVideoId,
-            is StorageVideoId -> {
+            is VideoId -> {
                 val intent = Intent(context, DetailActivity::class.java)
                 intent.putExtra(EXTRA_MEDIAID, mediaId.json)
                 val bundle = when (itemViewHolder) {

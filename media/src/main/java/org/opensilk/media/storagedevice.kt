@@ -10,19 +10,19 @@ data class StorageDeviceId(
         override val uuid: String,
         override val path: String,
         val isPrimary: Boolean
-): StorageContainerId {
+): StorageContainerId, MediaDeviceId {
     override val json: String
         get() = writeJson(StorageDeviceIdTransformer, this)
 }
 
 data class StorageDeviceMeta(
         override val title: String
-): StorageMeta
+): StorageMeta, MediaDeviceMeta
 
 data class StorageDeviceRef(
         override val id: StorageDeviceId,
         override val meta: StorageDeviceMeta
-): StorageRef
+): StorageRef, MediaDeviceRef
 
 internal object StorageDeviceIdTransformer: MediaIdTransformer<StorageDeviceId> {
     override val kind: String = STORAGE_DEVICE
