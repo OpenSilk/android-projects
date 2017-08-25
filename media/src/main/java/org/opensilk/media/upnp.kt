@@ -42,19 +42,24 @@ interface UpnpItemId: MediaId {
 }
 
 /**
+ * top level upnp ref
+ */
+interface UpnpRef: MediaRef {
+    val meta: UpnpMeta
+}
+
+/**
  * ref representing upnp container
  */
-interface UpnpContainerRef: MediaRef {
+interface UpnpContainerRef: UpnpRef {
     override val id: UpnpContainerId
-    val meta: UpnpMeta
 }
 
 /**
  * ref representing upnp item
  */
-interface UpnpItemRef: MediaRef {
+interface UpnpItemRef: UpnpRef {
     override val id: UpnpItemId
-    val meta: UpnpMeta
 }
 
 /**
