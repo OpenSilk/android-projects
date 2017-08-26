@@ -103,12 +103,8 @@ class FolderFragment: RecyclerFragment() {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(FolderViewModel::class)
         mActivityViewModel = fetchActivityViewModel(FolderActivityViewModel::class)
-        mViewModel.onMediaId(arguments.getMediaId())
-    }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        mBinding.recycler.adapter = mAdapter
+        mViewModel.onMediaId(arguments.getMediaId())
 
         mViewModel.folderItems.observe(this, LiveDataObserver {
             mAdapter.swapList(it)
@@ -119,6 +115,11 @@ class FolderFragment: RecyclerFragment() {
         mViewModel.mediaTitle.observe(this, LiveDataObserver {
             mActivityViewModel.mediaTitle.value = it
         })
+    }
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mBinding.recycler.adapter = mAdapter
     }
 
 }

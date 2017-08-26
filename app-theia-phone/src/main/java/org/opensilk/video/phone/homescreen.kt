@@ -50,12 +50,8 @@ class HomeFragment: RecyclerFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(HomeViewModel::class)
-        mViewModel.subscribeData()
-    }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        mBinding.recycler.adapter = mAdapter
+        mViewModel.subscribeData()
 
         mViewModel.devices.observe(this, LiveDataObserver {
             mAdapter.swapList("devices", it)
@@ -65,7 +61,10 @@ class HomeFragment: RecyclerFragment() {
         })
     }
 
-
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mBinding.recycler.adapter = mAdapter
+    }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
