@@ -15,10 +15,12 @@ import org.opensilk.media.database.StorageDeviceChange
 import org.opensilk.media.loader.storage.StorageDeviceLoader
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Created by drew on 8/26/17.
  */
+@Singleton
 class StorageDevicesObserver @Inject constructor(
         @ForApp private val mContext: Context,
         private val mStorageDeviceLoader: StorageDeviceLoader,
@@ -54,7 +56,7 @@ class StorageDevicesObserver @Inject constructor(
         mContext.unregisterReceiver(this)
     }
 
-    private fun updateStorageDevices() {
+    fun updateStorageDevices() {
         mDisposable.dispose()
         mDisposable = storageCompletable.subscribeOn(AppSchedulers.diskIo).subscribe({
             mDatabaseClient.postChange(StorageDeviceChange())

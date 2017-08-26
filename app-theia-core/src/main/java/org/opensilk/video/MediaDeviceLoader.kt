@@ -17,14 +17,13 @@ class MediaDeviceLoader
 @Inject constructor(
         private val mDatabaseClient: MediaDAO
 ){
-    val observable: Observable<out List<MediaDeviceRef>> by lazy {
-        mDatabaseClient.changesObservable
-                .filter { it is DeviceChange }
-                .startWith(DeviceChange())
-                .switchMapSingle {
-                    concatSingle.subscribeOn(AppSchedulers.diskIo)
-                }
-    }
+    fun devices(): Observable<out List<MediaDeviceRef>> =
+            mDatabaseClient.changesObservable
+                    .filter { it is DeviceChange }
+                    .startWith(DeviceChange())
+                    .switchMapSingle {
+                        concatSingle.subscribeOn(AppSchedulers.diskIo)
+                    }
 
     private val upnpObservable: Observable<UpnpDeviceRef> by lazy {
         mDatabaseClient.getAvailableUpnpDevices()

@@ -6,11 +6,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.support.v4.content.ContextCompat
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import io.reactivex.disposables.Disposables
 import io.reactivex.exceptions.Exceptions
 import org.opensilk.dagger2.ForApp
-import org.opensilk.media.MediaRef
+import org.opensilk.media.MediaDeviceRef
 import org.opensilk.media.UpnpVideoRef
 import javax.inject.Inject
 
@@ -21,14 +19,15 @@ class HomeViewModel
 @Inject constructor(
         @ForApp private val mContext: Context,
         private val mServersLoader: MediaDeviceLoader,
-        private val mNewlyAddedLoader: NewlyAddedLoader
+        private val mNewlyAddedLoader: NewlyAddedLoader,
+        private val mStorageObserver: StorageDevicesObserver
 ): ViewModel(), LifecycleObserver {
-    val servers = MutableLiveData<List<MediaRef>>()
+    val devices = MutableLiveData<List<MediaDeviceRef>>()
     val newlyAdded = MutableLiveData<List<UpnpVideoRef>>()
     val needPermissions = MutableLiveData<Array<String>>()
 
     private val mDisposables = CompositeDisposable()
-    private var mServersSubscription = Disposables.disposed()
+    private val mSubscribeOnce = Once()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     internal fun checkPermissions() {
@@ -40,25 +39,26 @@ class HomeViewModel
 
     fun onGrantedPermissions(perms: List<String>) {
         if (perms.contains(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            subscribeServers()
+            mStorageObserver.updateStorageDevices()
         }
     }
 
-    fun fetchData() {
-        subscribeServers()
-        subscribeNewlyAdded()
+    fun subscribeData() {
+        mSubscribeOnce.Do {
+            subscribeServers()
+            subscribeNewlyAdded()
+        }
     }
 
-    fun subscribeServers() {
-        mDisposables.remove(mServersSubscription)
-        mServersSubscription = mServersLoader.observable
+    private fun subscribeServers() {
+        val s = mServersLoader.devices()
                 .subscribe({
-                    servers.postValue(it)
+                    devices.postValue(it)
                 }, {
                     Exceptions.propagate(it) //TODO handle errors
                 }
         )
-        mDisposables.add(mServersSubscription)
+        mDisposables.add(s)
     }
 
     private fun subscribeNewlyAdded() {
