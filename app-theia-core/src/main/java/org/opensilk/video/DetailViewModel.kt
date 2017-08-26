@@ -22,7 +22,8 @@ class DetailViewModel
 @Inject constructor(
         private val mClient: MediaDAO,
         private val mTVLookup: LookupTVDb,
-        private val mMovieLookup: LookupMovieDb
+        private val mMovieLookup: LookupMovieDb,
+        private val mAppJobScheduler: AppJobScheduler
 ): ViewModel() {
     val videoDescription = MutableLiveData<VideoDescInfo>()
     val fileInfo = MutableLiveData<VideoFileInfo>()
@@ -105,20 +106,20 @@ class DetailViewModel
         mDisposables.add(o.connect())
     }
 
-    fun doLookup(context: Context) {
+    fun doLookup() {
         if (mediaRef == NoMediaRef) {
             return
         }
         val ref = mediaRef
         when (ref) {
             is VideoRef -> {
-                subscribeLookup(context, ref, ref.meta.originalTitle.elseIfBlank(ref.meta.title))
+                subscribeLookup(ref, ref.meta.originalTitle.elseIfBlank(ref.meta.title))
             }
             else -> TODO()
         }
     }
 
-    private fun subscribeLookup(context: Context, mediaRef: MediaRef, title: String) {
+    private fun subscribeLookup(mediaRef: MediaRef, title: String) {
         when {
             matchesTvEpisode(title) -> {
                 val name = extractSeriesName(title)
@@ -128,7 +129,7 @@ class DetailViewModel
                     lookupError.postValue("Unable to parse $title as TV episode")
                     return
                 }
-                subscribeTvLookup(context, LookupRequest(mediaRef = mediaRef, lookupName = name,
+                subscribeTvLookup(LookupRequest(mediaRef = mediaRef, lookupName = name,
                         seasonNumber = seasonNum, episodeNumber = episodeNum))
             }
             matchesMovie(title) -> {
@@ -145,7 +146,7 @@ class DetailViewModel
 
     }
 
-    private fun subscribeTvLookup(context: Context, lookupRequest: LookupRequest) {
+    private fun subscribeTvLookup(lookupRequest: LookupRequest) {
         val s = mTVLookup.lookupObservable(lookupRequest)
                 .firstOrError()
                 .subscribeOn(AppSchedulers.networkIo)
@@ -155,7 +156,7 @@ class DetailViewModel
                         is VideoRef -> {
                             Timber.d("Located tv episode ${epiMeta.meta.title} for ${ref.meta.title}")
                             mClient.setVideoTvEpisodeId(ref.id, epiMeta.id)
-                            context.scheduleRelatedLookup(ref.id) //TODO import a jobscheduler helper
+                            mAppJobScheduler.scheduleRelatedLookup(ref.id)
                         }
                         else -> TODO()
                     }

@@ -100,12 +100,10 @@ open class VideoApp: DaggerApplication(),
         startService(Intent(this, ObserverHolderService::class.java))
     }
 
-    @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
     @Inject lateinit var mCommonGlideBuilder: VideoGlideLibraryComponent.Builder
 
     override fun injectFoo(foo: Any): Any {
         when (foo) {
-            is AppJobService -> mAppJobServiceBuilder.create(foo).inject(foo)
             is VideoGlideLibrary -> mCommonGlideBuilder.create(foo).inject(foo)
             else -> TODO("No builder for ${foo.javaClass.name}")
         }

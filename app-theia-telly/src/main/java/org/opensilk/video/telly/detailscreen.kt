@@ -214,7 +214,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
                 activity.startActivity(makePlayIntent().setAction(ACTION_RESUME))
             }
             ACTIONID_GET_DESCRIPTION -> {
-                mViewModel.doLookup(activity)
+                mViewModel.doLookup()
             }
             else -> {
                 Toast.makeText(activity, "UNIMPLEMENTED", Toast.LENGTH_LONG).show()

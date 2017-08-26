@@ -8,11 +8,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.PersistableBundle
 import dagger.Module
-import dagger.Subcomponent
+import dagger.android.AndroidInjection
+import dagger.android.ContributesAndroidInjector
 import io.reactivex.Maybe
 import io.reactivex.disposables.Disposables
-import org.opensilk.common.dagger.Injector
-import org.opensilk.common.dagger.injectMe
+import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
 import timber.log.Timber
@@ -21,26 +21,28 @@ import javax.inject.Inject
 
 const val JOB_RELATED_LOOKUP = 1
 
-@Subcomponent
-interface AppJobServiceComponent: Injector<AppJobService> {
-    @Subcomponent.Builder
-    abstract class Builder: Injector.Builder<AppJobService>()
+class AppJobScheduler @Inject constructor(
+        @ForApp private val mContext: Context
+) {
+
+    fun scheduleRelatedLookup(mediaId: MediaId) {
+        val sched = mContext.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        val comp = ComponentName(mContext, AppJobService::class.java)
+        val extras = PersistableBundle()
+        extras.putMediaId(mediaId)
+        val job = JobInfo.Builder(JOB_RELATED_LOOKUP, comp)
+                .setExtras(extras)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .build()
+        sched.schedule(job)
+    }
+
 }
 
-@Module(subcomponents = arrayOf(AppJobServiceComponent::class))
-abstract class AppJobServiceModule
-
-
-fun Context.scheduleRelatedLookup(mediaId: MediaId) {
-    val sched = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-    val comp = ComponentName(this, AppJobService::class.java)
-    val extras = PersistableBundle()
-    extras.putMediaId(mediaId)
-    val job = JobInfo.Builder(JOB_RELATED_LOOKUP, comp)
-            .setExtras(extras)
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .build()
-    sched.schedule(job)
+@Module
+abstract class AppJobServiceModule {
+    @ContributesAndroidInjector
+    abstract fun jobService(): AppJobService
 }
 
 /**
@@ -52,8 +54,8 @@ class AppJobService : JobService() {
     @Inject lateinit var mTvLookup: LookupTVDb
 
     override fun onCreate() {
+        AndroidInjection.inject(this)
         super.onCreate()
-        injectMe()
     }
 
     var relatedLookupSub = Disposables.disposed()
@@ -83,7 +85,7 @@ class AppJobService : JobService() {
         }
     }
 
-    fun subscribeLookupRelated(params: JobParameters): Boolean {
+    private fun subscribeLookupRelated(params: JobParameters): Boolean {
         val ref = params.extras.getMediaId()
         return when (ref) {
             is UpnpVideoId -> {
@@ -96,7 +98,7 @@ class AppJobService : JobService() {
 
     private data class MediaRefWithEpisode(val mediaRef: MediaRef, val episodeRef: TvEpisodeRef)
 
-    fun subscribeUpnpVideoLookupRelated(mediaId: UpnpVideoId, params: JobParameters) {
+    private fun subscribeUpnpVideoLookupRelated(mediaId: UpnpVideoId, params: JobParameters) {
         relatedLookupSub.dispose()
         relatedLookupSub = mDatabaseClient.playableSiblingsOf(mediaId)
                 .flatMapMaybe<MediaRefWithEpisode> { ref ->
