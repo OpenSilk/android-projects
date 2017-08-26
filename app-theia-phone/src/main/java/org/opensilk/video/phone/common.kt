@@ -106,10 +106,10 @@ abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationI
         mDrawerViewModel.newDocumentId.observe(this, LiveDataObserver { docId ->
             if (docId.isFromTree) {
                 startActivity(Intent(this, FolderActivity::class.java)
-                        .putExtra(EXTRA_MEDIAID, docId.json))
+                        .putMediaIdExtra(docId))
             } else {
                 startActivity(Intent(this, DetailActivity::class.java)
-                        .putExtra(EXTRA_MEDIAID, docId.json))
+                        .putMediaIdExtra(docId))
             }
         })
     }
@@ -162,23 +162,27 @@ abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationI
         }
         when (requestCode) {
             REQUEST_OPEN_FOLDER -> {
-                handleDocumentResult(data, DocumentsContract.Document.MIME_TYPE_DIR)
+                takeUri(data)?.let { uri ->
+                    mDrawerViewModel.addDocument(DocDirectoryId(treeUri = uri))
+                }
             } REQUEST_OPEN_FILE -> {
-                handleDocumentResult(data, "video/*")
+                takeUri(data)?.let { uri ->
+                    mDrawerViewModel.addDocument(DocVideoId(treeUri = uri))
+                }
             }
             else -> super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
-    protected fun handleDocumentResult(data: Intent?, mime: String) {
+    private fun takeUri(data: Intent?): Uri? {
         val uri = data?.data
         if (uri == null) {
             Snackbar.make(mBinding.coordinator, "Error. Null uri", Snackbar.LENGTH_INDEFINITE).show()
-            return
+            return null
         }
         contentResolver.takePersistableUriPermission(uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        mDrawerViewModel.addDocument(DocumentId(treeUri = uri, mimeType = mime))
+        return uri
     }
 
     protected fun createBackStack(intent: Intent) {
@@ -252,33 +256,23 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
 
     fun bind(mediaRef: MediaRef) {
         this.mediaRef = mediaRef
+        val desc = mediaRef.toMediaDescription()
+        val imageResource = when (mediaRef) {
+            is UpnpDeviceRef -> R.drawable.ic_lan_48dp
+            is MediaDeviceRef,
+            is FolderRef -> R.drawable.ic_folder_48dp
+            is VideoRef -> R.drawable.ic_movie_48dp
+            else -> R.drawable.ic_new_box_48dp
+        }
+
         binding.frame.setOnClickListener(this)
         //binding.frame.setOnLongClickListener(this)
-        when (mediaRef) {
-            is VideoRef -> {
-                binding.titleString = mediaRef.meta.title
-                binding.subTitleString = mediaRef.meta.subtitle
-                if (mediaRef.meta.artworkUri.isEmpty()) {
-                    binding.artworkThumb.setImageResource(R.drawable.ic_movie_48dp)
-                } else {
-                    loadArtwork(mediaRef.meta.artworkUri)
-                }
-            }
-            is FolderRef -> {
-                binding.titleString = mediaRef.meta.title
-                binding.subTitleString = ""
-                binding.artworkThumb.setImageResource(R.drawable.ic_folder_48dp)
-            }
-            is UpnpDeviceRef -> {
-                binding.titleString = mediaRef.meta.title
-                binding.subTitleString = mediaRef.meta.subtitle
-                if (mediaRef.meta.artworkUri.isEmpty()) {
-                    binding.artworkThumb.setImageResource(R.drawable.ic_lan_48dp)
-                } else {
-                    loadArtwork(mediaRef.meta.artworkUri)
-                }
-            }
-            else -> TODO("Unhandled mediaRef")
+        binding.titleString = desc.title.toString()
+        binding.subTitleString = desc.subtitle.toString()
+        if (!desc.iconUri.isEmpty()) {
+            loadArtwork(desc.iconUri)
+        } else {
+            binding.artworkThumb.setImageResource(imageResource)
         }
     }
 
@@ -302,14 +296,15 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
             return
         }
         when (ref) {
-            is UpnpDeviceRef, is UpnpFolderRef, is DocDirectoryRef -> {
+            is MediaDeviceRef,
+            is FolderRef -> {
                 val intent = Intent(activity, FolderActivity::class.java)
-                        .putExtra(EXTRA_MEDIAID, ref.id.json)
+                        .putMediaIdExtra(ref.id)
                 activity.startActivity(intent)
             }
-            is UpnpVideoRef, is DocVideoRef -> {
+            is VideoRef -> {
                 val intent = Intent(activity, DetailActivity::class.java)
-                        .putExtra(EXTRA_MEDIAID, ref.id.json)
+                        .putMediaIdExtra(ref.id)
                 activity.startActivity(intent)
             }
             else -> TODO()

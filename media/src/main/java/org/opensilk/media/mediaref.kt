@@ -1,7 +1,10 @@
 package org.opensilk.media
 
+import android.content.Intent
 import android.media.MediaDescription
 import android.media.browse.MediaBrowser.MediaItem
+import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.JsonReader
 import android.util.JsonWriter
 import java.io.StringReader
@@ -20,6 +23,8 @@ const val STORAGE_VIDEO = "storage_video"
 
 const val KEY_MEDIA_URI = "media_uri"
 const val KEY_DURATION = "media_duration"
+
+const val EXTRA_MEDIAID = "org.opensilk.extra.mediaid"
 
 object NoMediaId: MediaId {
     override val json: String = ""
@@ -91,10 +96,44 @@ private fun readVersion(jr: JsonReader): Int {
 fun String.toMediaId(): MediaId = parseMediaId(this)
 
 /**
+ * Place mediaId into Intent
+ */
+fun Intent.putMediaIdExtra(mediaId: MediaId) = putExtra(EXTRA_MEDIAID, mediaId.json)
+
+/**
+ * Retrieve mediaId from Intent
+ */
+fun Intent.getMediaIdExtra() = parseMediaId(getStringExtra(EXTRA_MEDIAID))
+
+/**
+ * Place mediaId into Bundle
+ */
+fun Bundle.putMediaId(mediaId: MediaId) = putString(EXTRA_MEDIAID, mediaId.json)
+
+/**
+ * Retrieve mediaId from Bundle
+ */
+fun Bundle.getMediaId() = parseMediaId(getString(EXTRA_MEDIAID))
+
+/**
+ * Place mediaId into Bundle
+ */
+fun PersistableBundle.putMediaId(mediaId: MediaId) = putString(EXTRA_MEDIAID, mediaId.json)
+
+/**
+ * Retrieve mediaId from Bundle
+ */
+fun PersistableBundle.getMediaId() = parseMediaId(getString(EXTRA_MEDIAID))
+
+/**
+ * Wrap the mediaId in a bundle
+ */
+fun MediaId.asBundle() = bundle(EXTRA_MEDIAID, this.json)
+
+/**
  * Recovers a MediaId from its json representation
  */
-@Deprecated(replaceWith = ReplaceWith("json.toMediaId()"), message = "Betterer way")
-fun parseMediaId(json: String): MediaId {
+internal fun parseMediaId(json: String): MediaId {
     return JsonReader(StringReader(json)).use { jr ->
         var mediaId: MediaId? = null
         jr.beginObject()

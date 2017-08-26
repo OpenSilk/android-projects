@@ -23,8 +23,7 @@ import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 import dagger.android.support.AndroidSupportInjection
 import org.opensilk.dagger2.ForApp
-import org.opensilk.media.bundle
-import org.opensilk.media.parseMediaId
+import org.opensilk.media.*
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.DetailsFileInfoRowBinding
 import java.lang.ref.WeakReference
@@ -86,16 +85,16 @@ class DetailActivity: BaseVideoActivity() {
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                     .replace(R.id.detail_fragment,
-                            newDetailFragment(intent.getStringExtra(EXTRA_MEDIAID)), "detail_frag")
+                            newDetailFragment(intent.getMediaIdExtra()), "detail_frag")
                     .commit()
         }
         BackgroundManager.getInstance(this).attach(window)
     }
 }
 
-fun newDetailFragment(mediaId: String): DetailFragment {
+fun newDetailFragment(mediaId: MediaId): DetailFragment {
     val f = DetailFragment()
-    f.arguments = bundle(EXTRA_MEDIAID, mediaId)
+    f.arguments = mediaId.asBundle()
     return f
 }
 
@@ -127,7 +126,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         mBackgroundManager = BackgroundManager.getInstance(activity)
 
         mViewModel = fetchViewModel(DetailViewModel::class)
-        mViewModel.setMediaId(parseMediaId(arguments.getString(EXTRA_MEDIAID)))
+        mViewModel.setMediaId(arguments.getMediaId())
         mViewModel.videoDescription.observe(this, LiveDataObserver {
             mOverviewRow.item = it
         })
@@ -225,7 +224,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
 
     private fun makePlayIntent() : Intent {
         return Intent(activity, PlaybackActivity::class.java)
-                .putExtra(EXTRA_MEDIAID, arguments.getString(EXTRA_MEDIAID))
+                .putMediaIdExtra(arguments.getMediaId())
     }
 
     fun setupDefaultActions() {

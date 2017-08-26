@@ -27,19 +27,18 @@ class FolderViewModel
         mDisposables.clear()
     }
 
-    fun onMediaId(mediaId: String) {
+    fun onMediaId(mediaId: MediaId) {
         Timber.d("onMediaId($mediaId)")
-        val mediaRef = parseMediaId(mediaId)
-        when (mediaRef) {
+        when (mediaId) {
             is MediaDeviceId -> {
-                subscribeBrowseItems(mediaRef)
-                subscribeTitle(mediaRef)
+                subscribeBrowseItems(mediaId)
+                subscribeTitle(mediaId)
             }
-            is MediaContainerId -> {
-                subscribeBrowseItems(mediaRef)
-                subscribeTitle(mediaRef)
+            is FolderId -> {
+                subscribeBrowseItems(mediaId)
+                subscribeTitle(mediaId)
             }
-            else -> TODO("Unsupported mediaId $mediaRef")
+            else -> TODO("Unsupported mediaId $mediaId")
         }
     }
 

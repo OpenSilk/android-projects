@@ -8,8 +8,9 @@ import org.assertj.core.api.Assertions
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.getMediaIdExtra
+import org.opensilk.media.putMediaIdExtra
 import org.opensilk.media.testdata.upnpDevice_all_meta
-import org.opensilk.video.EXTRA_MEDIAID
 
 /**
  * Created by drew on 6/1/17.
@@ -22,14 +23,14 @@ class FolderActivityUITest {
     @Rule @JvmField
     val mActivityRule = object : ActivityTestRule<FolderActivity>(FolderActivity::class.java) {
         override fun getActivityIntent(): Intent {
-            return Intent().putExtra(EXTRA_MEDIAID, mDevice.id.json)
+            return Intent().putMediaIdExtra(mDevice.id)
         }
     }
 
     @Test
     fun activityStarts() {
-        Assertions.assertThat(mActivityRule.activity.intent.getStringExtra(EXTRA_MEDIAID))
-                .isEqualTo(mDevice.id.json)
+        Assertions.assertThat(mActivityRule.activity.intent.getMediaIdExtra())
+                .isEqualTo(mDevice.id)
     }
 
 }

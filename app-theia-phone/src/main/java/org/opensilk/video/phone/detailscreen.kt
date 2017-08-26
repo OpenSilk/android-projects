@@ -68,8 +68,8 @@ class DetailActivity: BaseVideoActivity() {
             Snackbar.make(mBinding.coordinator, it, Snackbar.LENGTH_LONG).show()
         })
 
-        mAdapter.mediaId = parseMediaId(intent.getStringExtra(EXTRA_MEDIAID))
-        mViewModel.setMediaId(parseMediaId(intent.getStringExtra(EXTRA_MEDIAID)))
+        mAdapter.mediaId = intent.getMediaIdExtra()
+        mViewModel.setMediaId(intent.getMediaIdExtra())
     }
 }
 
@@ -179,14 +179,14 @@ class DetailPlayActionsViewHolder(val binding: DetailActionsCardBinding):
             DetailAction.RESUME -> {
                 val intent = Intent(binding.root.context, PlaybackActivity::class.java)
                         .setAction(ACTION_RESUME)
-                        .putExtra(EXTRA_MEDIAID, mediaId.json)
+                        .putMediaIdExtra(mediaId)
                 binding.root.context.startActivity(intent)
             }
             DetailAction.PLAY,
             DetailAction.START_OVER -> {
                 val intent = Intent(binding.root.context, PlaybackActivity::class.java)
                         .setAction(ACTION_PLAY)
-                        .putExtra(EXTRA_MEDIAID, mediaId.json)
+                        .putMediaIdExtra(mediaId)
                 binding.root.context.startActivity(intent)
             }
             else -> TODO()

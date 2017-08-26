@@ -8,10 +8,10 @@ import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.getMediaIdExtra
 import org.opensilk.media.testdata.upnpDevice_all_meta
 import org.opensilk.media.testdata.upnpFolders
 import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
-import org.opensilk.video.EXTRA_MEDIAID
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
@@ -41,7 +41,7 @@ class MediaRefClickListenerTest {
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
-        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.id.json)
+        assertThat(intent.getMediaIdExtra()).isEqualTo(item.id)
     }
 
     @Test
@@ -50,7 +50,7 @@ class MediaRefClickListenerTest {
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, FolderActivity::class.java))
-        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.id.json)
+        assertThat(intent.getMediaIdExtra()).isEqualTo(item.id)
     }
 
     @Test
@@ -59,7 +59,7 @@ class MediaRefClickListenerTest {
         mListener.onItemClicked(mItemViewHolder, item, null, null)
         val intent = Shadows.shadowOf(mActivity).nextStartedActivity
         assertThat(intent.component).isEqualTo(ComponentName(mActivity, DetailActivity::class.java))
-        assertThat(intent.getStringExtra(EXTRA_MEDIAID)).isEqualTo(item.id.json)
+        assertThat(intent.getMediaIdExtra()).isEqualTo(item.id)
     }
 
 }

@@ -35,7 +35,7 @@ fun Context.scheduleRelatedLookup(mediaId: MediaId) {
     val sched = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
     val comp = ComponentName(this, AppJobService::class.java)
     val extras = PersistableBundle()
-    extras.putString(EXTRA_MEDIAID, mediaId.json)
+    extras.putMediaId(mediaId)
     val job = JobInfo.Builder(JOB_RELATED_LOOKUP, comp)
             .setExtras(extras)
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -84,13 +84,13 @@ class AppJobService : JobService() {
     }
 
     fun subscribeLookupRelated(params: JobParameters): Boolean {
-        val ref = parseMediaId(params.extras.getString(EXTRA_MEDIAID))
-        when (ref) {
+        val ref = params.extras.getMediaId()
+        return when (ref) {
             is UpnpVideoId -> {
                 subscribeUpnpVideoLookupRelated(ref, params)
-                return true
+                true
             }
-            else -> return false
+            else -> false
         }
     }
 

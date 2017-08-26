@@ -11,8 +11,7 @@ import android.widget.Toast
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 import dagger.android.support.AndroidSupportInjection
-import org.opensilk.media.bundle
-import org.opensilk.video.EXTRA_MEDIAID
+import org.opensilk.media.*
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
 import javax.inject.Inject
@@ -37,16 +36,16 @@ class FolderActivity: BaseVideoActivity() {
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                     .replace(R.id.folder_browse_fragment,
-                            newFolderFragment(intent.getStringExtra(EXTRA_MEDIAID)), "folder_frag")
+                            newFolderFragment(intent.getMediaIdExtra()), "folder_frag")
                     .commit()
         }
     }
 
 }
 
-fun newFolderFragment(mediaId: String): FolderFragment {
+fun newFolderFragment(mediaId: MediaId): FolderFragment {
     val f = FolderFragment()
-    f.arguments = bundle(EXTRA_MEDIAID, mediaId)
+    f.arguments = mediaId.asBundle()
     return f
 }
 
@@ -69,7 +68,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(FolderViewModel::class)
-        mViewModel.onMediaId(arguments.getString(EXTRA_MEDIAID))
+        mViewModel.onMediaId(arguments.getMediaId())
         mViewModel.mediaTitle.observe(this, LiveDataObserver {
             title = it
         })

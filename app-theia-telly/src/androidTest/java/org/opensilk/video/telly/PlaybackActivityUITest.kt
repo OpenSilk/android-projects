@@ -12,8 +12,9 @@ import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensilk.media.getMediaIdExtra
+import org.opensilk.media.putMediaIdExtra
 import org.opensilk.media.testdata.upnpVideo_folder_1_no_association
-import org.opensilk.video.EXTRA_MEDIAID
 import org.opensilk.video.EXTRA_PLAY_WHEN_READY
 
 /**
@@ -26,14 +27,14 @@ class PlaybackActivityUITest {
     @Rule @JvmField
     val mActivity = object: ActivityTestRule<PlaybackActivity>(PlaybackActivity::class.java) {
         override fun getActivityIntent(): Intent {
-            return Intent().putExtra(EXTRA_MEDIAID, upnpVideo_folder_1_no_association().id.json)
+            return Intent().putMediaIdExtra(upnpVideo_folder_1_no_association().id)
                     .putExtra(EXTRA_PLAY_WHEN_READY, false)
         }
     }
 
     @Test
     fun test_activityStarts() {
-        val mediaId = mActivity.activity.intent.getStringExtra(EXTRA_MEDIAID)
+        val mediaId = mActivity.activity.intent.getMediaIdExtra()
         assertThat(mediaId).isEqualTo(upnpVideo_folder_1_no_association().id.json)
     }
 

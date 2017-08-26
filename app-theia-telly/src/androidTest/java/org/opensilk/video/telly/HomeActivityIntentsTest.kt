@@ -14,7 +14,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opensilk.media.testdata.upnpDevice_all_meta
-import org.opensilk.video.EXTRA_MEDIAID
+import org.opensilk.media.EXTRA_MEDIAID
 
 /**
  * Created by drew on 5/31/17.

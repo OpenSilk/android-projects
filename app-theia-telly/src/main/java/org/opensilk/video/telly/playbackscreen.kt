@@ -13,8 +13,9 @@ import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
-import org.opensilk.media.parseMediaId
+import org.opensilk.media.getMediaIdExtra
 import org.opensilk.media.playback.PlaybackExtras
+import org.opensilk.media.toMediaId
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.ActivityPlaybackBinding
 import timber.log.Timber
@@ -108,7 +109,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
     }
 
     private fun handleIntent(intent: Intent) {
-        val mediaRef = parseMediaId(intent.getStringExtra(EXTRA_MEDIAID))
+        val mediaRef = intent.getMediaIdExtra()
         val playbackExtras = PlaybackExtras()
         playbackExtras.playWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
         playbackExtras.resume = intent.action == ACTION_RESUME

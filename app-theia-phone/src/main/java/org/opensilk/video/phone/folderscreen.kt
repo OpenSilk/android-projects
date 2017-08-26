@@ -9,21 +9,17 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import dagger.Module
-import dagger.Subcomponent
 import dagger.android.AndroidInjection
 import dagger.android.ContributesAndroidInjector
 import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 import io.reactivex.disposables.Disposables
 import io.reactivex.functions.Consumer
-import org.opensilk.common.dagger.Injector
-import org.opensilk.common.dagger.injectMe
 import org.opensilk.media.MediaRef
+import org.opensilk.media.getMediaIdExtra
 import org.opensilk.video.AppSchedulers
-import org.opensilk.video.EXTRA_MEDIAID
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
-import org.opensilk.video.phone.databinding.ActivityDrawerBinding
 import javax.inject.Inject
 
 /**
@@ -59,7 +55,7 @@ class FolderActivity: DrawerActivity() {
             mBinding.toolbar.title = it
         })
 
-        mViewModel.onMediaId(intent.getStringExtra(EXTRA_MEDIAID))
+        mViewModel.onMediaId(intent.getMediaIdExtra())
 
     }
 

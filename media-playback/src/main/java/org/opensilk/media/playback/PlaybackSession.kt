@@ -211,7 +211,7 @@ constructor(
             Player.STATE_ENDED -> {
                 //update pos on last played
                 mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-                    val ref = parseMediaId(item.description.mediaId)
+                    val ref = item.description.mediaId.toMediaId()
                     mDbClient.setLastPlaybackPosition(ref, mExoPlayer.duration, mExoPlayer.duration)
                 })
                 mQueue.goToNext().subscribe({ item ->
@@ -319,7 +319,7 @@ constructor(
             }
             return
         }
-        val mediaRef = parseMediaId(mediaId)
+        val mediaRef = mediaId.toMediaId()
         val playbackExtras = extras._playbackExtras()
         when (mediaRef) {
             is VideoId -> fetchAndPlaySiblingsOf(mediaRef, playbackExtras)
@@ -342,7 +342,7 @@ constructor(
             }
             mMediaSession.setQueue(mQueue.get())
             val current = mQueue.get().first {
-                parseMediaId(it.description.mediaId) == mediaId
+                it.description.mediaId.toMediaId() == mediaId
             }
             mQueue.setCurrent(current.queueId)
             //play it
@@ -398,7 +398,7 @@ constructor(
         }
         //save current pos
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = parseMediaId(item.description.mediaId)
+            val ref = item.description.mediaId.toMediaId()
             mDbClient.setLastPlaybackPosition(ref,
                     mExoPlayer.currentPosition, mExoPlayer.duration)
         })
@@ -419,7 +419,7 @@ constructor(
         Timber.d("onSkipToNext()")
         //clear last pos for current item
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = parseMediaId(item.description.mediaId)
+            val ref = item.description.mediaId.toMediaId()
             mDbClient.setLastPlaybackPosition(ref,
                     mExoPlayer.currentPosition, mExoPlayer.duration)
         })
@@ -440,7 +440,7 @@ constructor(
         Timber.d("onSkipToPrevious()")
         //clear last pos for current item
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = parseMediaId(item.description.mediaId)
+            val ref = item.description.mediaId.toMediaId()
             mDbClient.setLastPlaybackPosition(ref,
                     mExoPlayer.currentPosition, mExoPlayer.duration)
         })
@@ -471,7 +471,7 @@ constructor(
         Timber.d("onStop()")
         //save current pos
         mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = parseMediaId(item.description.mediaId)
+            val ref = item.description.mediaId.toMediaId()
             mDbClient.setLastPlaybackPosition(ref,
                     mExoPlayer.currentPosition, mExoPlayer.duration)
         })

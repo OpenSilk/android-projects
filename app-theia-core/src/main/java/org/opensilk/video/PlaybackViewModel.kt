@@ -19,6 +19,7 @@ import org.opensilk.dagger2.ForApp
 import org.opensilk.media.MediaId
 import org.opensilk.media.bundle
 import org.opensilk.media.playback.*
+import org.opensilk.media.putMediaIdExtra
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -55,7 +56,7 @@ class PlaybackViewModel
         mTransportControls.playFromMediaId(mediaId.json, playbackExtras.bundle())
 
         val intent = Intent().setComponent(activityComponent)
-                .setAction(ACTION_RESUME).putExtra(EXTRA_MEDIAID, mediaId.json)
+                .setAction(ACTION_RESUME).putMediaIdExtra(mediaId)
         val pendingIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
         mPlaybackSession.session.setSessionActivity(pendingIntent)
     }

@@ -21,7 +21,6 @@ import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
 import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.video.AppSchedulers
-import org.opensilk.video.EXTRA_MEDIAID
 import org.opensilk.video.findActivity
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
 import timber.log.Timber
@@ -206,12 +205,12 @@ class MediaRefClickListener
             is MediaDeviceRef,
             is FolderRef -> {
                 val intent = Intent(context, FolderActivity::class.java)
-                intent.putExtra(EXTRA_MEDIAID, mediaRef.id.json)
+                intent.putMediaIdExtra(mediaRef.id)
                 context.startActivity(intent)
             }
             is VideoRef -> {
                 val intent = Intent(context, DetailActivity::class.java)
-                intent.putExtra(EXTRA_MEDIAID, mediaRef.id.json)
+                intent.putMediaIdExtra(mediaRef.id)
                 val bundle = when (itemViewHolder) {
                     is MediaRefPresenter.ViewHolder -> {
                         val view = itemViewHolder.view as MediaDescImageCardView
