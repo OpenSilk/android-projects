@@ -18,7 +18,7 @@ import javax.inject.Inject
 class HomeViewModel
 @Inject constructor(
         @ForApp private val mContext: Context,
-        private val mServersLoader: MediaDeviceLoader,
+        private val mServersLoader: DevicesLoader,
         private val mNewlyAddedLoader: NewlyAddedLoader,
         private val mStorageObserver: StorageDevicesObserver
 ): ViewModel(), LifecycleObserver {

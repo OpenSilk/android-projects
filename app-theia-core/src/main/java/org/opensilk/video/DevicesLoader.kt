@@ -13,7 +13,7 @@ import javax.inject.Inject
 /**
  * The Loader for the Media Servers row in the Home Activity
  */
-class MediaDeviceLoader
+class DevicesLoader
 @Inject constructor(
         private val mDatabaseClient: MediaDAO
 ){
