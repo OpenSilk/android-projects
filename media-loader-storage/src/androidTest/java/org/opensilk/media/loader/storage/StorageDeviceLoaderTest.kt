@@ -8,7 +8,6 @@ import android.util.Log
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensilk.media.EMPTY_INTENT
 import java.io.File
 import java.util.*
 
@@ -26,7 +25,7 @@ class StorageDeviceLoaderTest {
     }
 
     @Test
-    fun testItWorks() {
+    fun checkForRead() {
         val list = mLoader.storageDevices.blockingGet()
         list.forEach {
             Log.e("TEST", it.toString())
