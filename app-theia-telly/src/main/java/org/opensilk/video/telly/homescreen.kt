@@ -7,13 +7,15 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v17.leanback.app.BrowseFragment
 import android.support.v17.leanback.app.BrowseSupportFragment
-import android.support.v17.leanback.widget.*
+import android.support.v17.leanback.widget.ArrayObjectAdapter
+import android.support.v17.leanback.widget.HeaderItem
+import android.support.v17.leanback.widget.ListRow
+import android.support.v17.leanback.widget.ListRowPresenter
 import android.support.v4.content.ContextCompat
 import android.view.View
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 import dagger.android.support.AndroidSupportInjection
-import org.opensilk.media.*
 import org.opensilk.video.HomeViewModel
 import org.opensilk.video.LiveDataObserver
 import javax.inject.Inject
@@ -67,12 +69,10 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(HomeViewModel::class)
         mViewModel.servers.observe(this, LiveDataObserver { items ->
-            mServersAdapter.clear()
-            mServersAdapter.addAll(0, items)
+            mServersAdapter.swapList(items)
         })
         mViewModel.newlyAdded.observe(this, LiveDataObserver { items ->
-            mNewlyAddedAdapter.clear()
-            mNewlyAddedAdapter.addAll(0, items)
+            mNewlyAddedAdapter.swapList(items)
         })
         mViewModel.needPermissions.observe(this, LiveDataObserver { perms ->
             //TODO handleRationale
@@ -124,5 +124,5 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 }
 
 class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())
-class ServersAdapter @Inject constructor(presenter: MediaRefPresenter) : ArrayObjectAdapter(presenter)
-class NewlyAddedAdapter @Inject constructor(presenter: MediaRefPresenter): ArrayObjectAdapter(presenter)
+class ServersAdapter @Inject constructor(presenter: MediaRefPresenter) : SwappingObjectAdapter(presenter)
+class NewlyAddedAdapter @Inject constructor(presenter: MediaRefPresenter): SwappingObjectAdapter(presenter)

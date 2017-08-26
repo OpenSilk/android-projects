@@ -91,8 +91,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
             title = it
         })
         mViewModel.folderItems.observe(this, LiveDataObserver { items ->
-            mFolderAdapter.clear()
-            mFolderAdapter.addAll(0, items)
+            mFolderAdapter.swapList(items)
         })
         mViewModel.loadError.observe(this, LiveDataObserver {
             Toast.makeText(context, "An error occurred. msg=$it", Toast.LENGTH_LONG).show()
@@ -115,7 +114,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 /**
  *
  */
-class FolderAdapter @Inject constructor(presenter: MediaRefListPresenter) : ArrayObjectAdapter(presenter)
+class FolderAdapter @Inject constructor(presenter: MediaRefListPresenter) : SwappingObjectAdapter(presenter)
 
 /**
  *
