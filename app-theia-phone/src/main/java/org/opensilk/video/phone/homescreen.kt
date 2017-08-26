@@ -2,12 +2,12 @@ package org.opensilk.video.phone
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
+import android.view.View
 import dagger.Module
 import dagger.android.AndroidInjection
 import dagger.android.ContributesAndroidInjector
+import dagger.android.support.AndroidSupportInjection
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters
 import org.opensilk.dagger2.ForApp
 import org.opensilk.video.HomeViewModel
@@ -19,38 +19,53 @@ const val CODE_NEED_PERMS = 1020
 @Module
 abstract class HomeScreenModule {
     @ContributesAndroidInjector
-    abstract fun injector(): HomeActivity
+    abstract fun homeFragment(): HomeFragment
 }
 
 class HomeActivity : DrawerActivity() {
 
-    private lateinit var mViewModel: HomeViewModel
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        title = getString(R.string.title_my_library)
 
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                    .replace(R.id.coordinator, HomeFragment())
+                    .commit()
+        }
+    }
+
+}
+
+class HomeFragment: RecyclerFragment() {
+
+    private lateinit var mViewModel: HomeViewModel
     @Inject lateinit var mAdapter: HomeAdapter
 
+    override fun onAttach(context: Context?) {
+        AndroidSupportInjection.inject(this)
+        super.onAttach(context)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
-
-        mBinding.recycler.layoutManager = LinearLayoutManager(this)
-        mBinding.recycler.adapter = mAdapter
-
-        mBinding.toolbar.title = getString(R.string.title_my_library)
-
         mViewModel = fetchViewModel(HomeViewModel::class)
+        mViewModel.subscribeData()
+    }
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mBinding.recycler.adapter = mAdapter
 
         mViewModel.devices.observe(this, LiveDataObserver {
             mAdapter.swapList("devices", it)
         })
         mViewModel.needPermissions.observe(this, LiveDataObserver {
-            if (Build.VERSION.SDK_INT >= 23) {
-                requestPermissions(it, CODE_NEED_PERMS)
-            } // else pass
+            requestPermissions(it, CODE_NEED_PERMS)
         })
-
-        mViewModel.subscribeData()
-
     }
+
+
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
@@ -62,7 +77,6 @@ class HomeActivity : DrawerActivity() {
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
     }
-
 }
 
 class HomeAdapter @Inject constructor(

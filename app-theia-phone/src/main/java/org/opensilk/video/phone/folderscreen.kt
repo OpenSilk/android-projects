@@ -1,25 +1,29 @@
 package org.opensilk.video.phone
 
+import android.arch.lifecycle.LifecycleFragment
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.ViewModel
+import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.util.DiffUtil
-import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import dagger.Binds
 import dagger.Module
-import dagger.android.AndroidInjection
 import dagger.android.ContributesAndroidInjector
+import dagger.android.support.AndroidSupportInjection
+import dagger.multibindings.IntoMap
 import io.reactivex.Single
-import io.reactivex.disposables.Disposable
 import io.reactivex.disposables.Disposables
-import io.reactivex.functions.Consumer
-import org.opensilk.media.MediaRef
-import org.opensilk.media.getMediaIdExtra
+import org.opensilk.media.*
 import org.opensilk.video.AppSchedulers
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
+import org.opensilk.video.ViewModelKey
 import javax.inject.Inject
 
 /**
@@ -28,60 +32,131 @@ import javax.inject.Inject
 @Module
 abstract class FolderScreenModule {
     @ContributesAndroidInjector
-    abstract fun injector(): FolderActivity
+    abstract fun folderFragment(): FolderFragment
+    @Binds @IntoMap @ViewModelKey(FolderActivityViewModel::class)
+    abstract fun viewModel(vm: FolderActivityViewModel): ViewModel
 }
 
-class FolderActivity: DrawerActivity() {
+class FolderActivity: DrawerActivity(), MediaRefClickListener {
 
-    lateinit var mViewModel: FolderViewModel
-
-    @Inject lateinit var mAdapter: FolderAdapter
+    lateinit var mViewModel: FolderActivityViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
 
-        mBinding.recycler.layoutManager = LinearLayoutManager(this)
-        mBinding.recycler.adapter = mAdapter
+        mViewModel = fetchViewModel(FolderActivityViewModel::class)
 
-        mViewModel = fetchViewModel(FolderViewModel::class)
-        mViewModel.folderItems.observe(this, LiveDataObserver {
-            mAdapter.setList(it)
-        })
         mViewModel.loadError.observe(this, LiveDataObserver {
             Snackbar.make(mBinding.coordinator, it, Snackbar.LENGTH_INDEFINITE).show()
         })
         mViewModel.mediaTitle.observe(this, LiveDataObserver {
-            mBinding.toolbar.title = it
+            title = it
         })
 
-        mViewModel.onMediaId(intent.getMediaIdExtra())
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                    .replace(R.id.coordinator, newFolderFragment(intent.getMediaIdExtra()))
+                    .commit()
+        }
+    }
 
+    override fun onClick(mediaRef: MediaRef): Boolean = when (mediaRef) {
+        is MediaDeviceRef,
+        is FolderRef -> {
+            supportFragmentManager.beginTransaction()
+                    .replace(R.id.coordinator, newFolderFragment(mediaRef.id))
+                    .addToBackStack(null)
+                    .commit()
+            true
+        }
+        else -> false
+    }
+
+    override fun onLongClick(mediaRef: MediaRef): Boolean = false
+
+}
+
+class FolderActivityViewModel @Inject constructor(): ViewModel() {
+    val mediaTitle = MutableLiveData<String>()
+    val loadError = MutableLiveData<String>()
+}
+
+fun newFolderFragment(mediaId: MediaId): FolderFragment {
+    val f = FolderFragment()
+    f.arguments = mediaId.asBundle()
+    return f
+}
+
+class FolderFragment: RecyclerFragment() {
+
+    lateinit var mViewModel: FolderViewModel
+    lateinit var mActivityViewModel: FolderActivityViewModel
+
+    @Inject lateinit var mAdapter: FolderAdapter
+
+    override fun onAttach(context: Context?) {
+        AndroidSupportInjection.inject(this)
+        super.onAttach(context)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mViewModel = fetchViewModel(FolderViewModel::class)
+        mActivityViewModel = fetchViewModel(FolderActivityViewModel::class)
+        mViewModel.onMediaId(arguments.getMediaId())
+    }
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mBinding.recycler.adapter = mAdapter
+
+        mViewModel.folderItems.observe(this, LiveDataObserver {
+            mAdapter.swapList(it)
+        })
+        mViewModel.loadError.observe(this, LiveDataObserver {
+            mActivityViewModel.loadError.value = it
+        })
+        mViewModel.mediaTitle.observe(this, LiveDataObserver {
+            mActivityViewModel.mediaTitle.value = it
+        })
     }
 
 }
 
-class FolderAdapter
-@Inject constructor(): RecyclerView.Adapter<ListItemViewHolder>() {
+class FolderAdapter @Inject constructor(): RecyclerView.Adapter<ListItemViewHolder>() {
 
-    private val mList = ArrayList<MediaRef>()
-    private var mDiffDisposable = Disposables.disposed()
+    private var mList = emptyList<MediaRef>()
+    private var mDisposable = Disposables.disposed()
 
-    fun setList(newList: List<MediaRef>){
-        mDiffDisposable.dispose()
-        if (mList.isEmpty()) {
-            mList.addAll(newList)
-            notifyDataSetChanged()
+    fun swapList(newList: List<MediaRef>) {
+        handleSwap(ArrayList(mList), newList)
+    }
+
+    private fun handleSwap(oldList: List<MediaRef>, newList: List<MediaRef>) {
+        mDisposable.dispose()
+        if (oldList.isEmpty()) {
+            mList = newList
+            notifyItemRangeInserted(0, newList.size)
             return
         }
         if (newList.isEmpty()) {
-            mList.clear()
-            notifyDataSetChanged()
+            mList = emptyList()
+            notifyItemRangeRemoved(0, oldList.size)
             return
         }
-        mDiffDisposable = subscribeDiff(ArrayList(mList), newList, Consumer {
-            it.dispatchUpdatesTo(this)
-        })
+        mDisposable = Single.fromCallable {
+            DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                        oldList[oldItemPosition].id == newList[newItemPosition].id
+                override fun getOldListSize(): Int = oldList.size
+                override fun getNewListSize(): Int = newList.size
+                override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                        oldList[oldItemPosition] == newList[newItemPosition]
+            })
+        }.subscribeOn(AppSchedulers.background).observeOn(AppSchedulers.main).subscribe { result ->
+            mList = newList
+            result.dispatchUpdatesTo(this)
+        }
     }
 
     override fun onBindViewHolder(holder: ListItemViewHolder, position: Int) {
@@ -93,30 +168,5 @@ class FolderAdapter
                 R.layout.recycler_list_item, parent, false))
     }
 
-    override fun getItemCount(): Int {
-        return mList.size
-    }
-}
-
-fun subscribeDiff(oldList: List<MediaRef>, newList: List<MediaRef>, onSuccess: Consumer<DiffUtil.DiffResult>): Disposable {
-    return Single.create<DiffUtil.DiffResult> { s ->
-        val res = DiffUtil.calculateDiff(object: DiffUtil.Callback() {
-            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return oldList[oldItemPosition].id == newList[newItemPosition].id
-            }
-
-            override fun getOldListSize(): Int {
-                return oldList.size
-            }
-
-            override fun getNewListSize(): Int {
-                return newList.size
-            }
-
-            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return oldList[oldItemPosition] == newList[newItemPosition]
-            }
-        })
-        s.onSuccess(res)
-    }.subscribeOn(AppSchedulers.background).observeOn(AppSchedulers.main).subscribe(onSuccess)
+    override fun getItemCount(): Int = mList.size
 }

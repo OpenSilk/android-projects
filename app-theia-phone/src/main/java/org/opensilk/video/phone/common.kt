@@ -2,6 +2,7 @@ package org.opensilk.video.phone
 
 import android.app.TaskStackBuilder
 import android.arch.lifecycle.*
+import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
@@ -18,8 +19,10 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.util.DiffUtil
 import android.support.v7.util.ListUpdateCallback
 import android.support.v7.widget.RecyclerView
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import dagger.Binds
@@ -36,6 +39,7 @@ import org.opensilk.media.database.DocVideoChange
 import org.opensilk.media.loader.doc.DocumentLoader
 import org.opensilk.video.*
 import org.opensilk.video.phone.databinding.ActivityDrawerBinding
+import org.opensilk.video.phone.databinding.RecyclerBinding
 import org.opensilk.video.phone.databinding.RecyclerHeaderItemBinding
 import org.opensilk.video.phone.databinding.RecyclerListItemBinding
 import timber.log.Timber
@@ -105,8 +109,6 @@ abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationI
         if (mSelfNavActionId != 0) {
             mBinding.navView.setCheckedItem(mSelfNavActionId)
         }
-
-        mBinding.recycler.setHasFixedSize(true)
 
         mDrawerViewModel = fetchViewModel(DrawerActivityViewModel::class)
 
@@ -192,12 +194,12 @@ abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationI
         return uri
     }
 
-    protected fun createBackStack(intent: Intent) {
-        val bob = TaskStackBuilder.create(this)
-        bob.addNextIntentWithParentStack(intent)
-        bob.startActivities()
-    }
+}
 
+fun Context.createBackStack(intent: Intent) {
+    val bob = TaskStackBuilder.create(this)
+    bob.addNextIntentWithParentStack(intent)
+    bob.startActivities()
 }
 
 @Module
@@ -235,6 +237,29 @@ class DrawerActivityViewModel
                 }, {
                     TODO("${it.message}")
                 })
+    }
+
+}
+
+open class RecyclerFragment: LifecycleFragment() {
+    protected lateinit var mBinding: RecyclerBinding
+
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+        mBinding = DataBindingUtil.inflate(inflater, R.layout.recycler, container, false)
+        mBinding.recycler.setHasFixedSize(true)
+        return mBinding.root
+    }
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        Timber.d("onViewCreated()")
+    }
+
+    override fun onDestroyView() {
+        Timber.d("onDestroyView()")
+        super.onDestroyView()
+        mBinding.unbind()
     }
 
 }
@@ -301,7 +326,7 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
         val ref = mediaRef
         Timber.d("onClick($ref)")
         val activity = v.context.findActivity()
-        if (activity is MediaItemClickListener && activity.onClick(ref)) {
+        if (activity is MediaRefClickListener && activity.onClick(ref)) {
             return
         }
         when (ref) {
@@ -325,7 +350,7 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
     }
 }
 
-interface MediaItemClickListener {
+interface MediaRefClickListener {
     fun onClick(mediaRef: MediaRef): Boolean
     fun onLongClick(mediaRef: MediaRef): Boolean
 }
