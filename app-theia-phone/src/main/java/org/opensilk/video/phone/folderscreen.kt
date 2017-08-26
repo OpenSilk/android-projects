@@ -102,7 +102,7 @@ class FolderFragment: RecyclerFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(FolderViewModel::class)
-        mActivityViewModel = fetchViewModel(FolderActivityViewModel::class)
+        mActivityViewModel = fetchActivityViewModel(FolderActivityViewModel::class)
         mViewModel.onMediaId(arguments.getMediaId())
     }
 

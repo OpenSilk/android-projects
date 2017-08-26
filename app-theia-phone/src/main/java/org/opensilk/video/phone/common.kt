@@ -64,6 +64,9 @@ fun <T: ViewModel> Fragment.fetchViewModel(clazz: KClass<T>): T {
     return vm
 }
 
+fun <T: ViewModel> Fragment.fetchActivityViewModel(clazz: KClass<T>): T =
+        ViewModelProviders.of(activity, (activity.application) as ViewModelProvider.Factory).get(clazz.java)
+
 fun <T: ViewModel> BaseVideoActivity.fetchViewModel(clazz: KClass<T>): T {
     val vm = ViewModelProviders.of(this, (application as ViewModelProvider.Factory)).get(clazz.java)
     if (vm is LifecycleObserver) {
