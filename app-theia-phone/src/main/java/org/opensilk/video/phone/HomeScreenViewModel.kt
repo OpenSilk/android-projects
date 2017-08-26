@@ -3,6 +3,8 @@ package org.opensilk.video.phone
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import io.reactivex.disposables.CompositeDisposable
+import org.opensilk.media.MediaDeviceRef
+import org.opensilk.media.MediaRef
 import org.opensilk.media.UpnpDeviceRef
 import org.opensilk.video.MediaDeviceLoader
 import javax.inject.Inject
@@ -15,7 +17,7 @@ class HomeScreenViewModel
         private val mServersLoader: MediaDeviceLoader
 ): ViewModel() {
 
-    val servers = MutableLiveData<List<UpnpDeviceRef>>()
+    val servers = MutableLiveData<List<MediaDeviceRef>>()
     private val disposables = CompositeDisposable()
 
     fun fetchData() {
@@ -27,7 +29,6 @@ class HomeScreenViewModel
                 .subscribe({
                     servers.postValue(it)
                 })
-
         disposables.add(s)
     }
 

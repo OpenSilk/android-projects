@@ -19,6 +19,8 @@ import io.github.luizgrp.sectionedrecyclerviewadapter.Section
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter
 import org.opensilk.dagger2.ForApp
+import org.opensilk.media.MediaDeviceId
+import org.opensilk.media.MediaDeviceRef
 import org.opensilk.media.UpnpDeviceRef
 import org.opensilk.video.LiveDataObserver
 import org.opensilk.video.ViewModelKey
@@ -69,7 +71,7 @@ class HomeActivity : DrawerActivity() {
 
     }
 
-    private fun handleNewServersList(oldList: List<UpnpDeviceRef>, newList: List<UpnpDeviceRef>) {
+    private fun handleNewServersList(oldList: List<MediaDeviceRef>, newList: List<MediaDeviceRef>) {
         mDeviceSection.devices = newList
         DiffUtil.calculateDiff(object: DiffUtil.Callback() {
             override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
@@ -107,7 +109,7 @@ class DeviceSection @Inject constructor(
     private val serversHeader = HeaderItem(context.getString(R.string.header_devices),
             R.drawable.ic_server_network_48dp)
 
-    var devices = emptyList<UpnpDeviceRef>()
+    var devices = emptyList<MediaDeviceRef>()
 
     override fun getContentItemsTotal(): Int = devices.size
 

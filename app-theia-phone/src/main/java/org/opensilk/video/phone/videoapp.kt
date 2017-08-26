@@ -30,6 +30,7 @@ import org.opensilk.logging.installLogging
 import org.opensilk.media.database.MediaProviderModule
 import org.opensilk.media.loader.cds.UpnpBrowseLoaderModule
 import org.opensilk.media.loader.doc.DocumentLoaderModule
+import org.opensilk.media.loader.storage.StorageLoaderModule
 import org.opensilk.video.*
 import javax.inject.Inject
 import javax.inject.Named
@@ -45,6 +46,7 @@ import javax.inject.Singleton
         LookupConfigModule::class,
         UpnpBrowseLoaderModule::class,
         DocumentLoaderModule::class,
+        StorageLoaderModule::class,
         ViewModelModule::class,
         DrawerActivityViewModelModule::class,
         VideoGlideLibraryModule::class,
@@ -66,26 +68,19 @@ interface RootComponent: AndroidInjector<VideoApp> {
 object RootModule {
 
     @Provides @Named("VideoDatabaseAuthority") @JvmStatic
-    fun databaseAuthority(@ForApp context: Context): String {
-        return context.getString(R.string.videos_authority)
-    }
+    fun databaseAuthority(@ForApp context: Context): String = context.getString(R.string.videos_authority)
 
     @Provides @Named("MediaDatabaseAuthority") @JvmStatic
-    fun mediaDatabaseAuthority(@ForApp context: Context): String {
-        return context.getString(R.string.media_authority)
-    }
+    fun mediaDatabaseAuthority(@ForApp context: Context): String = context.getString(R.string.media_authority)
 
     @Provides @Singleton @JvmStatic
-    fun provideOkHttpClient(@ForApp context: Context): OkHttpClient {
-        return OkHttpClient.Builder()
-                .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
-                .build()
-    }
+    fun provideOkHttpClient(@ForApp context: Context): OkHttpClient =
+            OkHttpClient.Builder()
+                    .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
+                    .build()
 
     @Provides @JvmStatic
-    fun provideContentResolver(@ForApp context: Context): ContentResolver {
-        return context.contentResolver
-    }
+    fun provideContentResolver(@ForApp context: Context): ContentResolver = context.contentResolver
 
 }
 
@@ -95,9 +90,8 @@ object RootModule {
 open class VideoApp: DaggerApplication(),
         InjectionManager, ViewModelProvider.Factory {
 
-    override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
-        return DaggerRootComponent.builder().context(this).build()
-    }
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> =
+            DaggerRootComponent.builder().context(this).build()
 
     override fun onCreate() {
         super.onCreate()
@@ -129,9 +123,8 @@ open class VideoApp: DaggerApplication(),
 
     @Inject lateinit var mViewModelFactory: ViewModelFactoryFactory
 
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return mViewModelFactory.create(modelClass)
-    }
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            mViewModelFactory.create(modelClass)
 
 }
 
@@ -143,7 +136,5 @@ class GlideConfig: AppGlideModule() {
         builder.setDiskCache(DiskLruCacheFactory({ cacheDir }, 512 * 1024 * 1024))
     }
 
-    override fun isManifestParsingEnabled(): Boolean {
-        return false
-    }
+    override fun isManifestParsingEnabled(): Boolean = false
 }
