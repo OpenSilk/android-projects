@@ -1,13 +1,13 @@
 package org.opensilk.video
 
-import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
 import org.opensilk.media.MediaDeviceRef
 import org.opensilk.media.StorageDeviceRef
 import org.opensilk.media.UpnpDeviceRef
+import org.opensilk.media.database.DeviceChange
 import org.opensilk.media.database.MediaDAO
 import org.opensilk.media.database.UpnpDeviceChange
-import org.opensilk.media.loader.storage.StorageDeviceLoader
 import javax.inject.Inject
 
 /**
@@ -15,19 +15,14 @@ import javax.inject.Inject
  */
 class MediaDeviceLoader
 @Inject constructor(
-        private val mDatabaseClient: MediaDAO,
-        private val mStorageDeviceLoader: StorageDeviceLoader
+        private val mDatabaseClient: MediaDAO
 ){
     val observable: Observable<out List<MediaDeviceRef>> by lazy {
         mDatabaseClient.changesObservable
-                .filter { it is UpnpDeviceChange }
-                .map { true }
-                .startWith(true)
+                .filter { it is DeviceChange }
+                .startWith(DeviceChange())
                 .switchMapSingle {
-                    Observable.concat<MediaDeviceRef>(
-                            upnpObservable,
-                            storageCompletable.andThen(storageObservable)
-                    ).toList().subscribeOn(AppSchedulers.diskIo)
+                    concatSingle.subscribeOn(AppSchedulers.diskIo)
                 }
     }
 
@@ -35,19 +30,15 @@ class MediaDeviceLoader
         mDatabaseClient.getAvailableUpnpDevices()
     }
 
-    private val storageCompletable: Completable by lazy {
-        mStorageDeviceLoader.storageDevices.flatMapCompletable { deviceList ->
-            Completable.fromAction {
-                mDatabaseClient.hideAllStorageDevices()
-                deviceList.forEach {
-                    mDatabaseClient.addStorageDevice(it)
-                }
-            }
-        }
-    }
-
     private val storageObservable: Observable<StorageDeviceRef> by lazy {
         mDatabaseClient.getAvailableStorageDevices()
+    }
+
+    private val concatSingle: Single<out List<MediaDeviceRef>> by lazy {
+        Observable.concat<MediaDeviceRef>(
+                upnpObservable,
+                storageObservable
+        ).toList()
     }
 
 }

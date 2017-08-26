@@ -34,7 +34,7 @@
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"/>
 
-        <service android:name="org.opensilk.video.UpnpHolderService"/>
+        <service android:name="org.opensilk.video.ObserverHolderService"/>
         <service android:name="org.opensilk.video.AppJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"/>
 

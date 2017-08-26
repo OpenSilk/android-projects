@@ -38,7 +38,7 @@ import javax.inject.Singleton
 @Singleton
 @Component(modules = arrayOf(
         RootModule::class,
-        UpnpHolderServiceModule::class,
+        ObserverHolderServiceModule::class,
         AppJobServiceModule::class,
         MediaProviderModule::class,
         VideoAppProviderModule::class,
@@ -69,26 +69,21 @@ interface RootComponent: AndroidInjector<VideoApp> {
 object RootModule {
 
     @Provides @Named("VideoDatabaseAuthority") @JvmStatic
-    fun databaseAuthority(@ForApp context: Context): String {
-        return context.getString(R.string.videos_authority)
-    }
+    fun databaseAuthority(@ForApp context: Context): String =
+            context.getString(R.string.videos_authority)
 
     @Provides @Named("MediaDatabaseAuthority") @JvmStatic
-    fun mediaDatabaseAuthority(@ForApp context: Context): String {
-        return context.getString(R.string.media_authority)
-    }
+    fun mediaDatabaseAuthority(@ForApp context: Context): String =
+            context.getString(R.string.media_authority)
 
     @Provides @Singleton @JvmStatic
-    fun provideOkHttpClient(@ForApp context: Context): OkHttpClient {
-        return OkHttpClient.Builder()
-                .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
-                .build()
-    }
+    fun provideOkHttpClient(@ForApp context: Context): OkHttpClient =
+            OkHttpClient.Builder()
+                    .cache(Cache(context.suitableCacheDir("okhttp3"), (50 * 1024 * 1024).toLong()))
+                    .build()
 
     @Provides @JvmStatic
-    fun provideContentResolver(@ForApp context: Context): ContentResolver {
-        return context.contentResolver
-    }
+    fun provideContentResolver(@ForApp context: Context): ContentResolver = context.contentResolver
 
 }
 
@@ -97,48 +92,38 @@ object RootModule {
  */
 open class VideoApp: DaggerApplication(), InjectionManager, ViewModelProvider.Factory {
 
-    override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
-        return DaggerRootComponent.builder().context(this).build()
-    }
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> =
+            DaggerRootComponent.builder().context(this).build()
 
     override fun onCreate() {
         super.onCreate()
         installLogging(true)
 
-        startUpnpService()
+        startHolderService()
     }
 
-    open fun startUpnpService() {
-        //Start upnp service
-        startService(Intent(this, UpnpHolderService::class.java))
+    open fun startHolderService() {
+        startService(Intent(this, ObserverHolderService::class.java))
     }
 
-    @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
     @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
     @Inject lateinit var mCommonGlideBuilder: VideoGlideLibraryComponent.Builder
 
     /**
-     * Anything that is injectable needs to be injected here.
-     * They should not inject themselves, that's not how dependency injection
-     * is supposed to work.
+     * Injects things AndroidInjection doesn't support
      */
     override fun injectFoo(foo: Any) {
-        if (foo is UpnpHolderService) {
-            mUpnpHolderBuilder.build().inject(foo)
-        } else if (foo is AppJobService) {
-            mAppJobServiceBuilder.create(foo).inject(foo)
-        } else if (foo is VideoGlideLibrary) {
-            mCommonGlideBuilder.create(foo).inject(foo)
-        } else {
-            TODO("Don't have an injector for ${foo.javaClass}")
+        when (foo) {
+            is AppJobService -> mAppJobServiceBuilder.create(foo).inject(foo)
+            is VideoGlideLibrary -> mCommonGlideBuilder.create(foo).inject(foo)
+            else -> TODO("Don't have an injector for ${foo.javaClass.name}")
         }
     }
 
     @Inject lateinit var mViewModelFactory: ViewModelFactoryFactory
 
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return mViewModelFactory.create(modelClass)
-    }
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            mViewModelFactory.create(modelClass)
 
 }
 
@@ -153,7 +138,5 @@ class GlideConfig: AppGlideModule() {
         builder.setDiskCache(DiskLruCacheFactory({ cacheDir }, 512 * 1024 * 1024))
     }
 
-    override fun isManifestParsingEnabled(): Boolean {
-        return false
-    }
+    override fun isManifestParsingEnabled(): Boolean = false
 }

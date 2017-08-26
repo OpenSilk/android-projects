@@ -1,7 +1,5 @@
 package org.opensilk.video.phone
 
-import android.app.Activity
-import android.app.Application
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.content.ContentResolver
@@ -18,8 +16,6 @@ import dagger.Component
 import dagger.Module
 import dagger.Provides
 import dagger.android.AndroidInjector
-import dagger.android.DispatchingAndroidInjector
-import dagger.android.HasActivityInjector
 import dagger.android.support.AndroidSupportInjectionModule
 import dagger.android.support.DaggerApplication
 import okhttp3.Cache
@@ -39,7 +35,7 @@ import javax.inject.Singleton
 @Singleton
 @Component(modules = arrayOf(
         RootModule::class,
-        UpnpHolderServiceModule::class,
+        ObserverHolderServiceModule::class,
         AppJobServiceModule::class,
         MediaProviderModule::class,
         VideoAppProviderModule::class,
@@ -101,22 +97,17 @@ open class VideoApp: DaggerApplication(),
 
     open fun startUpnpService() {
         //Start upnp service
-        startService(Intent(this, UpnpHolderService::class.java))
+        startService(Intent(this, ObserverHolderService::class.java))
     }
 
-    @Inject lateinit var mUpnpHolderBuilder: UpnpHolderServiceComponent.Builder
     @Inject lateinit var mAppJobServiceBuilder: AppJobServiceComponent.Builder
     @Inject lateinit var mCommonGlideBuilder: VideoGlideLibraryComponent.Builder
 
     override fun injectFoo(foo: Any): Any {
-        if (foo is UpnpHolderService) {
-            mUpnpHolderBuilder.create(foo).inject(foo)
-        } else if (foo is AppJobService) {
-            mAppJobServiceBuilder.create(foo).inject(foo)
-        } else if (foo is VideoGlideLibrary) {
-            mCommonGlideBuilder.create(foo).inject(foo)
-        } else {
-            TODO("No builder for ${foo::class}")
+        when (foo) {
+            is AppJobService -> mAppJobServiceBuilder.create(foo).inject(foo)
+            is VideoGlideLibrary -> mCommonGlideBuilder.create(foo).inject(foo)
+            else -> TODO("No builder for ${foo.javaClass.name}")
         }
         return Any()
     }
