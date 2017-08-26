@@ -22,7 +22,7 @@ internal fun Context.hasAccessActivity(): Boolean {
     return activities != null && activities.size > 0
 }
 
-internal fun File.mimeType() = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+internal fun File.mimeType() = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "application/unknown"
 
 internal fun File.isVideoFile() = mimeType().startsWith("video")
 
