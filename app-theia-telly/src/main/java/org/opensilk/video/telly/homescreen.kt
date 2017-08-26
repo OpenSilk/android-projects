@@ -68,7 +68,7 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(HomeViewModel::class)
-        mViewModel.servers.observe(this, LiveDataObserver { items ->
+        mViewModel.devices.observe(this, LiveDataObserver { items ->
             mServersAdapter.swapList(items)
         })
         mViewModel.newlyAdded.observe(this, LiveDataObserver { items ->
@@ -78,7 +78,7 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
             //TODO handleRationale
             requestPermissions(perms, REQUEST_CODE_PERMS)
         })
-        mViewModel.fetchData()
+        mViewModel.subscribeData()
 
         val foldersHeader = HeaderItem("Media Servers")
         mHomeAdapter.add(ListRow(foldersHeader, mServersAdapter))
