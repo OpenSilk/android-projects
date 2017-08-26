@@ -7,8 +7,12 @@ import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.transition.TransitionManager
+import android.support.v4.app.FragmentTransaction
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
+import android.transition.Slide
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -84,6 +88,9 @@ class FolderActivityViewModel @Inject constructor(): ViewModel() {
 fun newFolderFragment(mediaId: MediaId): FolderFragment {
     val f = FolderFragment()
     f.arguments = mediaId.asBundle()
+    f.reenterTransition = Slide(Gravity.START)
+    f.exitTransition = Slide(Gravity.START)
+    f.returnTransition = Slide(Gravity.END)
     return f
 }
 
@@ -115,11 +122,14 @@ class FolderFragment: RecyclerFragment() {
         mViewModel.mediaTitle.observe(this, LiveDataObserver {
             mActivityViewModel.mediaTitle.value = it
         })
+
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.recycler.adapter = mAdapter
+
+        mActivityViewModel.mediaTitle.value = mViewModel.mediaTitle.value
     }
 
 }
