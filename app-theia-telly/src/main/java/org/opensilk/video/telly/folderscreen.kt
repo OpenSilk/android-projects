@@ -3,12 +3,13 @@ package org.opensilk.video.telly
 import android.arch.lifecycle.LifecycleRegistry
 import android.arch.lifecycle.LifecycleRegistryOwner
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v17.leanback.app.VerticalGridSupportFragment
-import android.support.v17.leanback.widget.ArrayObjectAdapter
-import android.support.v17.leanback.widget.VerticalGridPresenter
+import android.support.v17.leanback.widget.*
 import android.widget.Toast
 import dagger.Module
+import dagger.android.AndroidInjection
 import dagger.android.ContributesAndroidInjector
 import dagger.android.support.AndroidSupportInjection
 import org.opensilk.media.*
@@ -22,25 +23,43 @@ import javax.inject.Inject
 @Module
 abstract class FolderScreenModule {
     @ContributesAndroidInjector
-    abstract fun injector(): FolderFragment
+    abstract fun folderActivity(): FolderActivity
+    @ContributesAndroidInjector
+    abstract fun folderFragment(): FolderFragment
 }
 
 /**
  *
  */
-class FolderActivity: BaseVideoActivity() {
+class FolderActivity: BaseVideoActivity(), OnItemViewClickedListener {
+
+    @Inject lateinit var mDefaultClickListener: MediaRefClickListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_folder)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.folder_browse_fragment,
-                            newFolderFragment(intent.getMediaIdExtra()), "folder_frag")
+                    .replace(R.id.folder_browse_fragment, newFolderFragment(intent.getMediaIdExtra()))
                     .commit()
         }
     }
 
+    override fun onItemClicked(itemViewHolder: Presenter.ViewHolder, item: Any,
+                               rowViewHolder: RowPresenter.ViewHolder?, row: Row?) {
+        val mediaRef = item as MediaRef
+        when (mediaRef) {
+            is MediaDeviceRef,
+            is FolderRef -> {
+                supportFragmentManager.beginTransaction()
+                        .replace(R.id.folder_browse_fragment, newFolderFragment(mediaRef.id))
+                        .addToBackStack(null)
+                        .commit()
+            }
+            else -> mDefaultClickListener.onItemClicked(itemViewHolder, item, rowViewHolder, row)
+        }
+    }
 }
 
 fun newFolderFragment(mediaId: MediaId): FolderFragment {
@@ -56,7 +75,6 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mFolderAdapter: FolderAdapter
     @Inject lateinit var mFolderPresenter: FolderPresenter
-    @Inject lateinit var mRefClickListener: MediaRefClickListener
 
     lateinit var mViewModel: FolderViewModel
 
@@ -84,7 +102,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
         gridPresenter.numberOfColumns = 1
 
         adapter = mFolderAdapter
-        onItemViewClickedListener = mRefClickListener
+        onItemViewClickedListener = activity as OnItemViewClickedListener
 
     }
 
