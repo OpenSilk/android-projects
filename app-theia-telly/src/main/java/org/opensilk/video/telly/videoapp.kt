@@ -20,7 +20,7 @@ import dagger.android.support.AndroidSupportInjectionModule
 import dagger.android.support.DaggerApplication
 import okhttp3.Cache
 import okhttp3.OkHttpClient
-import org.opensilk.common.dagger.InjectionManager
+import org.opensilk.dagger2.InjectionManager
 import org.opensilk.dagger2.ForApp
 import org.opensilk.logging.installLogging
 import org.opensilk.media.database.MediaProviderModule

@@ -9,9 +9,8 @@ import com.bumptech.glide.module.LibraryGlideModule
 import dagger.Module
 import dagger.Subcomponent
 import okhttp3.OkHttpClient
-import org.opensilk.common.dagger.InjectionManager
-import org.opensilk.common.dagger.Injector
-import timber.log.Timber
+import org.opensilk.dagger2.Injector
+import org.opensilk.dagger2.injectMe
 import java.io.InputStream
 import javax.inject.Inject
 
@@ -33,14 +32,10 @@ class VideoGlideLibrary: LibraryGlideModule() {
     @Inject lateinit var mOkHttpClient: OkHttpClient
 
     override fun registerComponents(context: Context, registry: Registry) {
-        Timber.d("registerComponents()")
-        val app = context.applicationContext
-        if (app is InjectionManager) {
-            app.injectFoo(this)
-            //disable the cache, glide will handle
-            val okClient = mOkHttpClient.newBuilder().cache(null).build()
-            registry.replace(GlideUrl::class.java, InputStream::class.java, OkHttpUrlLoader.Factory(okClient))
-        }
+        injectMe(context)
+        //disable the cache, glide will handle
+        val okClient = mOkHttpClient.newBuilder().cache(null).build()
+        registry.replace(GlideUrl::class.java, InputStream::class.java, OkHttpUrlLoader.Factory(okClient))
     }
 }
 

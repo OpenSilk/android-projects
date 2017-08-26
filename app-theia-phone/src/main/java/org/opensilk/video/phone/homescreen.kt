@@ -19,9 +19,7 @@ import io.github.luizgrp.sectionedrecyclerviewadapter.Section
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter
 import org.opensilk.dagger2.ForApp
-import org.opensilk.media.MediaDeviceId
 import org.opensilk.media.MediaDeviceRef
-import org.opensilk.media.UpnpDeviceRef
 import org.opensilk.video.LiveDataObserver
 import org.opensilk.video.ViewModelKey
 import javax.inject.Inject

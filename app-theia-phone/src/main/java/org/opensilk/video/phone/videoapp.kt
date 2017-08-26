@@ -20,7 +20,7 @@ import dagger.android.support.AndroidSupportInjectionModule
 import dagger.android.support.DaggerApplication
 import okhttp3.Cache
 import okhttp3.OkHttpClient
-import org.opensilk.common.dagger.*
+import org.opensilk.dagger2.InjectionManager
 import org.opensilk.dagger2.ForApp
 import org.opensilk.logging.installLogging
 import org.opensilk.media.database.MediaProviderModule
@@ -102,12 +102,11 @@ open class VideoApp: DaggerApplication(),
 
     @Inject lateinit var mCommonGlideBuilder: VideoGlideLibraryComponent.Builder
 
-    override fun injectFoo(foo: Any): Any {
+    override fun injectFoo(foo: Any) {
         when (foo) {
             is VideoGlideLibrary -> mCommonGlideBuilder.create(foo).inject(foo)
             else -> TODO("No builder for ${foo.javaClass.name}")
         }
-        return Any()
     }
 
     @Inject lateinit var mViewModelFactory: ViewModelFactoryFactory
