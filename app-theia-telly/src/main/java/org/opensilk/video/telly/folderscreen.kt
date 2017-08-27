@@ -3,7 +3,6 @@ package org.opensilk.video.telly
 import android.arch.lifecycle.LifecycleRegistry
 import android.arch.lifecycle.LifecycleRegistryOwner
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v17.leanback.app.VerticalGridSupportFragment
 import android.support.v17.leanback.widget.*
@@ -86,7 +85,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(FolderViewModel::class)
-        mViewModel.onMediaId(arguments.getMediaId())
+        mViewModel.setMediaId(arguments.getMediaId())
         mViewModel.mediaTitle.observe(this, LiveDataObserver {
             title = it
         })

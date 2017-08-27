@@ -1,14 +1,11 @@
 package org.opensilk.video.phone
 
-import android.arch.lifecycle.LifecycleFragment
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.transition.TransitionManager
-import android.support.v4.app.FragmentTransaction
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.transition.Slide
@@ -89,6 +86,7 @@ fun newFolderFragment(mediaId: MediaId): FolderFragment {
     val f = FolderFragment()
     f.arguments = mediaId.asBundle()
     f.reenterTransition = Slide(Gravity.START)
+    f.enterTransition = Slide(Gravity.END)
     f.exitTransition = Slide(Gravity.START)
     f.returnTransition = Slide(Gravity.END)
     return f
@@ -111,7 +109,7 @@ class FolderFragment: RecyclerFragment() {
         mViewModel = fetchViewModel(FolderViewModel::class)
         mActivityViewModel = fetchActivityViewModel(FolderActivityViewModel::class)
 
-        mViewModel.onMediaId(arguments.getMediaId())
+        mViewModel.setMediaId(arguments.getMediaId())
 
         mViewModel.folderItems.observe(this, LiveDataObserver {
             mAdapter.swapList(it)

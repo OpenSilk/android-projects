@@ -22,4 +22,7 @@ object AppSchedulers {
         ExecutorScheduler(Executors.newSingleThreadExecutor())
     }
     val newThread: Scheduler = networkIo
+    val prefetch: Scheduler by lazy {
+        ExecutorScheduler(Executors.newFixedThreadPool(2))
+    }
 }

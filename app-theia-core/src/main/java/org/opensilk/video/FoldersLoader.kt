@@ -1,67 +1,121 @@
 package org.opensilk.video
 
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.opensilk.media.*
 import org.opensilk.media.database.*
-import org.opensilk.media.loader.cds.UpnpBrowseLoader
-import org.opensilk.media.loader.doc.DocumentLoader
-import org.opensilk.media.loader.storage.StorageLoader
-import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
- * The loader for the folder activity
+ * The loader for the folder activity. This pulls folders and videos from
+ * the database, inserted by the [FolderPrefetchLoader]. We initiate reloads whenever any
+ * of our children are changed, allowing the ui to refresh the completion indicator
+ * without listening for changes itself.
  */
 class FoldersLoader
 @Inject constructor(
-        private val mDatabaseClient: MediaDAO,
-        private val mBrowseLoader: UpnpBrowseLoader,
-        private val mDocumentLoader: DocumentLoader,
-        private val mStorageLoader: StorageLoader
+        private val mDatabaseClient: MediaDAO
 ) {
 
-    fun observable(mediaId: MediaId): Observable<out List<MediaRef>> = when (mediaId) {
-        is UpnpContainerId -> upnpObservable(mediaId)
-        is StorageContainerId -> storageObservable(mediaId)
-        is DocDirectoryId -> documentObservable(mediaId)
-        else -> TODO("Unsupported mediaid")
+    /**
+     * Retrieve direct children. This observable never completes
+     */
+    fun directChildren(deviceId: MediaDeviceId): Observable<out List<MediaRef>> {
+
+        val items = when (deviceId) {
+            is UpnpDeviceId -> upnpDisk(deviceId)
+            is StorageDeviceId -> storageDisk(deviceId)
+            else -> TODO()
+        }
+                //during lookup we can be flooded
+        return changesForDevice(deviceId)
+                .mergeWith(changesForDeviceChildren(deviceId))
+                .sample(3, TimeUnit.SECONDS)
+                .startWith(Change.SELF)
+                .switchMapSingle { _ ->
+                    items.subscribeOn(AppSchedulers.diskIo)
+                }
     }
 
-    private fun upnpObservable(folderId: UpnpContainerId): Observable<List<MediaRef>> {
-        //watch for system update id changes and re fetch list
+    /**
+     * Retrieve direct children. This observable never completes
+     */
+    fun directChildren(folderId: FolderId): Observable<out List<MediaRef>> {
+
+        val items = when (folderId) {
+            is UpnpFolderId -> upnpDisk(folderId)
+            is DocDirectoryId -> documentDisk(folderId)
+            is StorageFolderId -> storageDisk(folderId)
+            else -> TODO()
+        }
+
+        return changesForFolder(folderId)
+                .mergeWith(changesForFolderChildren(folderId))
+                .sample(3, TimeUnit.SECONDS)
+                .startWith(Change.SELF)
+                .switchMapSingle { _ ->
+                    items.subscribeOn(AppSchedulers.diskIo)
+                }
+    }
+
+    private enum class Change {
+        SELF,
+        CHILDREN
+    }
+
+    private fun changesForFolder(folderId: FolderId): Observable<Change> {
         return mDatabaseClient.changesObservable
-                .filter {
-                    when (it) {
-                        is UpnpUpdateIdChange -> true
+                .filter { it is FolderChange && it.folderId == folderId }
+                .map { Change.SELF }
+    }
+
+    private fun changesForFolderChildren(folderId: FolderId): Observable<Change> {
+        return mDatabaseClient.changesObservable
+                .filter { when (folderId) {
+                    is UpnpFolderId -> when (it) {
+                        is UpnpFolderChange -> it.folderId.parentId == folderId.containerId
                         is UpnpVideoChange -> it.videoId.parentId == folderId.containerId
                         else -> false
                     }
-                }
-                .map { it is UpnpUpdateIdChange }
-                //during lookup we can be flooded
-                .sample(3, TimeUnit.SECONDS)
-                .startWith(true)
-                .switchMapSingle { change ->
-                    //first fetch from network and stick in database
-                    //and then retrieve from the database to associate
-                    // any metadata stored in database with network items
-                    // we get new thread because of rather complex operation
-                    if (change) {
-                        upnpCompletable(folderId).andThen(upnpDisk(folderId))
-                                .subscribeOn(AppSchedulers.newThread)
-                    } else {
-                        upnpDisk(folderId)
-                                .subscribeOn(AppSchedulers.diskIo)
+                    is DocDirectoryId -> when (it) {
+                        is DocDirectoryChange -> it.folderId.parentId == folderId.documentId
+                        is DocVideoChange -> it.videoId.parentId == folderId.documentId
+                        else -> false
                     }
-                }
+                    is StorageFolderId -> when (it) {
+                        is StorageFolderChange -> it.folderId.parent == folderId.path
+                        is StorageVideoChange -> it.videoId.parent == folderId.path
+                        else -> false
+                    }
+                    else -> TODO()
+                } }.map { Change.CHILDREN }
     }
 
-    private fun upnpCompletable(folderId: UpnpContainerId): Completable {
-        return mBrowseLoader.directChildren(upnpFolderId = folderId, wantVideoItems = true)
-                .flatMapCompletable { insertItemsCompletable(folderId, it) }
+    private fun changesForDevice(deviceId: MediaDeviceId): Observable<Change> {
+        return mDatabaseClient.changesObservable
+                .filter { when (deviceId) {
+                    is UpnpDeviceId -> it is UpnpDeviceChange
+                    is StorageDeviceId -> it is StorageDeviceChange
+                    else -> false
+                } }.map { Change.SELF }
+    }
+
+    private fun changesForDeviceChildren(deviceId: MediaDeviceId): Observable<Change> {
+        return mDatabaseClient.changesObservable
+                .filter { when (deviceId) {
+                    is UpnpDeviceId -> when (it) {
+                        is UpnpFolderChange -> it.folderId.parentId == deviceId.containerId
+                        is UpnpVideoChange -> it.videoId.parentId == deviceId.containerId
+                        else -> false
+                    }
+                    is StorageDeviceId -> when (it) {
+                        is StorageFolderChange -> it.folderId.parent == deviceId.path
+                        is StorageVideoChange -> it.videoId.parent == deviceId.path
+                        else -> false
+                    }
+                    else -> TODO()
+                } }.map { Change.CHILDREN }
     }
 
     private fun upnpDisk(folderId: UpnpContainerId): Single<List<UpnpRef>> {
@@ -71,23 +125,6 @@ class FoldersLoader
         ).toList()
     }
 
-    private fun storageObservable(mediaId: StorageContainerId): Observable<List<StorageRef>> {
-        return mDatabaseClient.changesObservable
-                .filter { it is StorageVideoChange && it.videoId.parent == mediaId.path }
-                .map { true }
-                .sample(3, TimeUnit.SECONDS)
-                .startWith(true)
-                .switchMapSingle {
-                    storageCompletable(mediaId).andThen(storageDisk(mediaId))
-                            .subscribeOn(AppSchedulers.newThread)
-                }
-    }
-
-    private fun storageCompletable(containerId: StorageContainerId): Completable {
-        return mStorageLoader.directChildren(parentId = containerId, wantVideoItems = true)
-                .flatMapCompletable { insertItemsCompletable(containerId, it) }
-    }
-
     private fun storageDisk(containerId: StorageContainerId): Single<List<StorageRef>> {
         return Observable.concat(
                 mDatabaseClient.getStorageFoldersUnder(containerId),
@@ -95,48 +132,11 @@ class FoldersLoader
         ).toList()
     }
 
-    private fun documentObservable(documentId: DocDirectoryId): Observable<List<DocumentRef>> {
-        //watch for system update id changes and re fetch list
-        return mDatabaseClient.changesObservable
-                //during lookup we can be flooded
-                .filter { it is DocVideoChange && it.videoId.parentId == documentId.documentId }
-                .map { true }
-                .sample(3, TimeUnit.SECONDS)
-                .startWith(true)
-                .switchMapSingle {
-                    documentCompletable(documentId).andThen(documentDisk(documentId))
-                            .subscribeOn(AppSchedulers.newThread)
-                }
-    }
-
-    private fun documentCompletable(documentId: DocDirectoryId): Completable {
-        return mDocumentLoader.directChildren(documentId = documentId, wantVideoItems = true)
-                .flatMapCompletable({ insertItemsCompletable(documentId, it) })
-    }
-
     private fun documentDisk(documentId: DocDirectoryId): Single<List<DocumentRef>> {
         return Observable.concat<DocumentRef>(
                 mDatabaseClient.getDocDirectoryUnder(documentId),
                 mDatabaseClient.getDocVideosUnder(documentId)
         ).toList()
-    }
-
-    private fun insertItemsCompletable(parentId: MediaId, itemList: List<MediaRef>): Completable {
-        return Completable.fromAction {
-            mDatabaseClient.hideChildrenOf(parentId)
-            itemList.forEach { item ->
-                Timber.v("Inserting $item")
-                when (item) {
-                    is UpnpFolderRef -> mDatabaseClient.addUpnpFolder(item)
-                    is UpnpVideoRef -> mDatabaseClient.addUpnpVideo(item)
-                    is StorageFolderRef -> mDatabaseClient.addStorageFolder(item)
-                    is StorageVideoRef -> mDatabaseClient.addStorageVideo(item)
-                    is DocDirectoryRef -> mDatabaseClient.addDocDirectory(item)
-                    is DocVideoRef -> mDatabaseClient.addDocVideo(item)
-                    else -> TODO("$item")
-                }
-            }
-        }
     }
 
 }
