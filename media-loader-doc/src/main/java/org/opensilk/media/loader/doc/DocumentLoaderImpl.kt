@@ -111,6 +111,9 @@ class DocumentLoaderImpl @Inject constructor(
         mContext.contentResolver.takePersistableUriPermission(uriPermission.uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         return Single.create { s ->
+            if (s.isDisposed) {
+                return@create
+            }
             mContext.contentResolver.query(documentId.childrenUri, DOCUMENT_COLS,
                     null, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME)?.use { c ->
                 val list = ArrayList<DocumentRef>()
