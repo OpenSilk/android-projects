@@ -38,24 +38,28 @@ class StorageLoaderImpl @Inject constructor(
         else -> Single.just(emptyList())
     }
 
-    private fun directChildrenReadValidated(
-            parentId: StorageContainerId, opts: Opts): Single<List<StorageRef>> = Single.create { s ->
-        val directory = File(parentId.path)
-        if (!directory.isDirectory || !directory.exists() || !directory.canRead()) {
-            s.onError(Exception("Unable to access directory ${directory.path}"))
-        } else {
-            val children = directory.listFiles() ?: emptyArray()
-            val list = ArrayList<StorageRef>()
-            children.mapNotNullTo(list, { f ->
-                //Timber.d(f.path)
-                when {
-                    f.isHidden -> null
-                    f.isDirectory -> f.toDirectoryRef(parentId.uuid)
-                    f.isVideoFile() && opts.wantVideoItems -> f.toVideoRef(parentId.uuid)
-                    else -> null
-                }
-            })
-            s.onSuccess(list)
+    private fun directChildrenReadValidated(parentId: StorageContainerId, opts: Opts): Single<List<StorageRef>> {
+        return Single.create { s ->
+            if (s.isDisposed) {
+                return@create
+            }
+            val directory = File(parentId.path)
+            if (!directory.isDirectory || !directory.exists() || !directory.canRead()) {
+                s.onError(Exception("Unable to access directory ${directory.path}"))
+            } else {
+                val children = directory.listFiles() ?: emptyArray()
+                val list = ArrayList<StorageRef>()
+                children.mapNotNullTo(list, { f ->
+                    //Timber.d(f.path)
+                    when {
+                        f.isHidden -> null
+                        f.isDirectory -> f.toDirectoryRef(parentId.uuid)
+                        f.isVideoFile() && opts.wantVideoItems -> f.toVideoRef(parentId.uuid)
+                        else -> null
+                    }
+                })
+                s.onSuccess(list)
+            }
         }
     }
 }
