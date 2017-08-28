@@ -74,9 +74,10 @@ class FolderPrefetchLoader @Inject constructor(
 
     private fun insertItemsCompletable(parentId: MediaId, itemList: List<MediaRef>): Completable {
         return Completable.fromAction {
+            Timber.d("Inserting ${itemList.size} children of $parentId")
             mDatabaseClient.hideChildrenOf(parentId)
             itemList.forEach { item ->
-                Timber.v("Inserting $item")
+                //Timber.v("Inserting $item")
                 when (item) {
                     is UpnpFolderRef -> mDatabaseClient.addUpnpFolder(item)
                     is UpnpVideoRef -> mDatabaseClient.addUpnpVideo(item)
