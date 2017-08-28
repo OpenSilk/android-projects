@@ -58,8 +58,7 @@ constructor(
         mMediaSession.setPlaybackState(nv)
     })
     private val mTrackSelector: DefaultTrackSelector = DefaultTrackSelector()
-    private val mRenderersFactory = DefaultRenderersFactory(mContext, null,
-            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+    private val mRenderersFactory = ExoRenderersFactory(mContext)
     private var mExoPlayer: SimpleExoPlayer = ExoPlayerFactory.newSimpleInstance(mRenderersFactory, mTrackSelector)
     private val mAudioManager: AudioManager = mContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val mAudioBecomingNoisyIntentFilter: IntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
@@ -92,7 +91,8 @@ constructor(
     fun setVideoMode() {
         mExoPlayer.audioAttributes = AudioAttributes.Builder()
                 .setContentType(C.CONTENT_TYPE_MOVIE)
-                .setUsage(C.USAGE_MEDIA).build()
+                .setUsage(C.USAGE_MEDIA)
+                .build()
         mTrackSelector.setTunnelingAudioSessionId(C.generateAudioSessionIdV21(mContext))
     }
 
