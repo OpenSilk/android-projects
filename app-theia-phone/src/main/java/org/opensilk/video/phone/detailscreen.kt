@@ -14,10 +14,7 @@ import com.bumptech.glide.request.RequestOptions
 import dagger.Module
 import dagger.android.AndroidInjection
 import dagger.android.ContributesAndroidInjector
-import org.opensilk.media.MediaId
-import org.opensilk.media.getMediaIdExtra
-import org.opensilk.media.isEmpty
-import org.opensilk.media.putMediaIdExtra
+import org.opensilk.media.*
 import org.opensilk.video.*
 import org.opensilk.video.phone.databinding.ActivityDetailBinding
 import org.opensilk.video.phone.databinding.DetailActionsCardBinding
@@ -91,7 +88,7 @@ class DetailAdapter
     var posterUri: Uri by Delegates.observable(Uri.EMPTY, { _, _, _ ->
         notifyItemChanged(0)
     })
-    var resumeInfo: ResumeInfo by Delegates.observable(ResumeInfo(), { _, _, _ ->
+    var resumeInfo: VideoResumeInfo by Delegates.observable(VideoResumeInfo(), { _, _, _ ->
         notifyItemChanged(0)
     })
     var videoDesc: VideoDescInfo by Delegates.observable(VideoDescInfo(), { _, _, _ ->
@@ -113,30 +110,24 @@ class DetailAdapter
         }
     }
 
-    override fun getItemCount(): Int {
-        return 2//3
+    override fun getItemCount(): Int = 2//3
+
+    override fun getItemViewType(position: Int): Int = when (position) {
+        0 -> R.layout.detail_actions_card
+        1 -> R.layout.detail_overview_card
+        else -> TODO()
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when (position) {
-            0 -> R.layout.detail_actions_card
-            1 -> R.layout.detail_overview_card
-            else -> TODO()
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BoundViewHolder = when (viewType) {
+        R.layout.detail_actions_card -> {
+            DetailPlayActionsViewHolder(DataBindingUtil.inflate(LayoutInflater.from(
+                    parent.context), viewType, parent, false))
         }
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BoundViewHolder {
-        return when (viewType) {
-            R.layout.detail_actions_card -> {
-                DetailPlayActionsViewHolder(DataBindingUtil.inflate(LayoutInflater.from(
-                        parent.context), viewType, parent, false))
-            }
-            R.layout.detail_overview_card -> {
-                DetailOverviewViewHolder(DataBindingUtil.inflate(LayoutInflater.from(
-                        parent.context), viewType, parent, false))
-            }
-            else -> TODO()
+        R.layout.detail_overview_card -> {
+            DetailOverviewViewHolder(DataBindingUtil.inflate(LayoutInflater.from(
+                    parent.context), viewType, parent, false))
         }
+        else -> TODO()
     }
 
 }
@@ -146,7 +137,7 @@ class DetailPlayActionsViewHolder(val binding: DetailActionsCardBinding):
 
     lateinit var mediaId: MediaId
 
-    fun bind(posterUri: Uri, resumeInfo: ResumeInfo, mediaId: MediaId) {
+    fun bind(posterUri: Uri, resumeInfo: VideoResumeInfo, mediaId: MediaId) {
         this.mediaId = mediaId
         binding.actionHandler = this
         binding.actions = HashSet<DetailAction>()

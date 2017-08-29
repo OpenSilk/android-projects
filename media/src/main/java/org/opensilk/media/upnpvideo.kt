@@ -34,7 +34,8 @@ data class UpnpVideoRef(
         override val id: UpnpVideoId,
         override val tvEpisodeId: TvEpisodeId? = null,
         override val movieId: MovieId? = null,
-        override val meta: UpnpVideoMeta
+        override val meta: UpnpVideoMeta,
+        override val resumeInfo: VideoResumeInfo? = null
 ): UpnpItemRef, VideoRef
 
 internal object UpnpVideoTransformer: UpnpItemTransformer() {

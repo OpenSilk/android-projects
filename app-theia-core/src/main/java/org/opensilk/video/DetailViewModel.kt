@@ -2,11 +2,8 @@ package org.opensilk.video
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import android.content.Context
 import android.net.Uri
-import io.reactivex.Maybe
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
 import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
@@ -27,7 +24,7 @@ class DetailViewModel
 ): ViewModel() {
     val videoDescription = MutableLiveData<VideoDescInfo>()
     val fileInfo = MutableLiveData<VideoFileInfo>()
-    val resumeInfo = MutableLiveData<ResumeInfo>()
+    val resumeInfo = MutableLiveData<VideoResumeInfo>()
     val posterUri = MutableLiveData<Uri>()
     val backdropUri = MutableLiveData<Uri>()
     val hasDescription = MutableLiveData<Boolean>()
@@ -83,25 +80,29 @@ class DetailViewModel
             fileInfo.postValue(it)
         }))
         //lastPosition
-        mDisposables.add(o.flatMapMaybe { meta ->
-            Maybe.zip<Long, Int, ResumeInfo>(
-                    mClient.getLastPlaybackPosition(meta.id),
-                    mClient.getLastPlaybackCompletion(meta.id),
-                    BiFunction { pos, comp -> ResumeInfo(pos, comp) }
-            ).defaultIfEmpty(ResumeInfo()).subscribeOn(AppSchedulers.diskIo)
+        mDisposables.add(o.filter { meta ->
+            meta.resumeInfo != null
+        }.map { meta ->
+            meta.resumeInfo
         }.subscribeIgnoreError(Consumer {
             resumeInfo.postValue(it)
         }))
         //poster
-        mDisposables.add(o.map { it.meta.artworkUri }.filter { it != Uri.EMPTY }
-                .subscribeIgnoreError(Consumer {
-                    posterUri.postValue(it)
-                }))
+        mDisposables.add(o.map {
+            it.meta.artworkUri
+        }.filter {
+            it != Uri.EMPTY
+        }.subscribeIgnoreError(Consumer {
+            posterUri.postValue(it)
+        }))
         //backdrop
-        mDisposables.add(o.map { it.meta.backdropUri }.filter { it != Uri.EMPTY }
-                .subscribeIgnoreError(Consumer {
-                    backdropUri.postValue(it)
-                }))
+        mDisposables.add(o.map {
+            it.meta.backdropUri
+        }.filter {
+            it != Uri.EMPTY
+        }.subscribeIgnoreError(Consumer {
+            backdropUri.postValue(it)
+        }))
         //connect after all listeners registered
         mDisposables.add(o.connect())
     }

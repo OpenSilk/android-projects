@@ -33,7 +33,8 @@ data class StorageVideoRef(
         override val id: StorageVideoId,
         override val meta: StorageVideoMeta,
         override val movieId: MovieId? = null,
-        override val tvEpisodeId: TvEpisodeId? = null
+        override val tvEpisodeId: TvEpisodeId? = null,
+        override val resumeInfo: VideoResumeInfo? = null
 ): StorageRef, VideoRef
 
 internal object StorageVideoIdTransformer: MediaIdTransformer<StorageVideoId> {

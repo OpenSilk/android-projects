@@ -331,7 +331,7 @@ class MediaDAO
      */
     fun getUpnpVideosUnder(parentId: UpnpContainerId): Observable<UpnpVideoRef> {
         return doQuery(mUris.upnpVideo(), upnpVideoProjection,
-                "device_id=? AND parent_id=? AND hidden=0",
+                "v.device_id=? AND v.parent_id=? AND v.hidden=0",
                 arrayOf(parentId.deviceId, parentId.containerId),
                 "v._display_name", { c ->c.toUpnpVideoMediaMeta(mApiHelper) })
     }
@@ -341,7 +341,7 @@ class MediaDAO
      */
     fun getUpnpVideo(videoId: UpnpVideoId): Maybe<UpnpVideoRef> {
         return doGet(mUris.upnpVideo(), upnpVideoProjection,
-                "device_id=? AND parent_id=? AND item_id=?",
+                "v.device_id=? AND v.parent_id=? AND v.item_id=?",
                 arrayOf(videoId.deviceId, videoId.parentId, videoId.itemId),
                 {c -> c.toUpnpVideoMediaMeta(mApiHelper) })
     }
@@ -356,7 +356,7 @@ class MediaDAO
             mResolver.query(mUris.upnpVideo(),
                     arrayOf("e.overview as episode_overview",
                             "m.overview as movie_overview"),
-                    "device_id=? AND parent_id=? AND item_id=?",
+                    "v.device_id=? AND v.parent_id=? AND v.item_id=?",
                     arrayOf(videoId.deviceId, videoId.parentId, videoId.itemId),
                     null, null)?.use { c ->
                 if (c.moveToFirst()) {
@@ -556,7 +556,7 @@ class MediaDAO
 
     fun getStorageVideosUnder(containerId: StorageContainerId): Observable<StorageVideoRef> {
         return doQuery(mUris.storageVideo(), storageVideoProjection,
-                "v.parent_path=? AND device_uuid=? AND v.hidden=0",
+                "v.parent_path=? AND v.device_uuid=? AND v.hidden=0",
                 arrayOf(containerId.path, containerId.uuid),
                 "v._display_name",
                 { c -> c.toStorageVideo(mApiHelper) })
@@ -564,7 +564,7 @@ class MediaDAO
 
     fun getStorageVideo(videoId: StorageVideoId): Maybe<StorageVideoRef> {
         return doGet(mUris.storageVideo(), storageVideoProjection,
-                "v.path=? AND device_uuid=?",
+                "v.path=? AND v.device_uuid=?",
                 arrayOf(videoId.path, videoId.uuid),
                 {c -> c.toStorageVideo(mApiHelper) })
     }
@@ -574,7 +574,7 @@ class MediaDAO
             mResolver.query(mUris.storageVideo(),
                     arrayOf("e.overview as episode_overview",
                             "m.overview as movie_overview"),
-                    "v.path=? AND device_uuid=?",
+                    "v.path=? AND v.device_uuid=?",
                     arrayOf(videoId.path, videoId.uuid), null, null)?.use { c ->
                 if (c.moveToFirst()) {
                     var overview = c.getString(0)
@@ -788,20 +788,21 @@ fun UpnpVideoRef.contentValues(): ContentValues {
 
 val upnpVideoProjection = arrayOf(
         //upnp_video columns
-        "device_id", "device_id", "item_id", "parent_id", //3
-        "v._display_name", "mime_type", "media_uri", "duration", "file_size", //8
+        "v.device_id", "v.parent_id", "v.item_id", "d.available", //3
+        "v._display_name", "v.mime_type", "v.media_uri", "v.duration", "v.file_size", //8
         //episode columns
-        "e._id as episode_id", "e._display_name as episode_title", //10
-        "episode_number", "season_number", //12
+        "e._id", "e._display_name", //10
+        "e.episode_number", "e.season_number", //12
         //series columns
-        "s._id as series_id", "s._display_name as series_title", //14
-        "s.poster as series_poster", "s.backdrop as series_backdrop", //16
+        "s._id", "s._display_name", //14
+        "s.poster", "s.backdrop", //16
         //movie columns
-        "m._id as movie_id", "m._display_name as movie_title",  //18
-        "m.poster_path as movie_poster", //19
-        "m.backdrop_path as movie_backdrop", //20
+        "m._id", "m._display_name",  //18
+        "m.poster_path", "m.backdrop_path", //20
         //more episode columns
-        "e.poster as episode_poster", "e.backdrop as episode_backdrop" //22
+        "e.poster", "e.backdrop", //22
+        //completion info
+        "p.last_position", "p.last_completion" //24
 )
 
 /**
@@ -809,7 +810,7 @@ val upnpVideoProjection = arrayOf(
  */
 fun Cursor.toUpnpVideoMediaMeta(mApiHelper: ApiHelper): UpnpVideoRef {
     val c = this
-    val mediaId = UpnpVideoId(c.getString(1), c.getString(3), c.getString(2))
+    val mediaId = UpnpVideoId(c.getString(0), c.getString(1), c.getString(2))
     var title = c.getString(4)
     val originalTitle = title
     val mimeType = c.getString(5)
@@ -846,6 +847,10 @@ fun Cursor.toUpnpVideoMediaMeta(mApiHelper: ApiHelper): UpnpVideoRef {
             backdropUri = mApiHelper.movieImageBackdropUri(c.getString(20))
         }
     }
+    var resume: VideoResumeInfo? = null
+    if (!c.isNull(23) && !c.isNull(24)) {
+        resume = VideoResumeInfo(lastPosition = getLong(23), lastCompletion = getInt(24))
+    }
     return UpnpVideoRef(
             id = mediaId,
             tvEpisodeId =  episodeId,
@@ -861,7 +866,8 @@ fun Cursor.toUpnpVideoMediaMeta(mApiHelper: ApiHelper): UpnpVideoRef {
                     duration = duration,
                     size = size
                     //resolution =
-            )
+            ),
+            resumeInfo = resume
     )
 }
 
@@ -925,29 +931,30 @@ fun DocVideoRef.contentValues(): ContentValues {
 
 val videoDocumentProjection = arrayOf(
         //document columns
-        "tree_uri", "tree_uri", "document_id", "parent_id", //3
+        "tree_uri", "document_id", "parent_id", "parent_id", //3
         "d._display_name", "d.mime_type", "d._size", "d.flags", "d.last_modified", //8
         //episode columns
-        "e._id as episode_id", "e._display_name as episode_title", //10
-        "episode_number", "season_number", //12
+        "e._id", "e._display_name", //10
+        "e.episode_number", "e.season_number", //12
         //series columns
-        "s._id as series_id", "s._display_name as series_title", //14
-        "s.poster as series_poster", "s.backdrop as series_backdrop", //16
+        "s._id", "s._display_name", //14
+        "s.poster", "s.backdrop", //16
         //movie columns
-        "m._id as movie_id", "m._display_name as movie_title",  //18
-        "m.poster_path as movie_poster", //19
-        "m.backdrop_path as movie_backdrop", //20
+        "m._id", "m._display_name",  //18
+        "m.poster_path", "m.backdrop_path", //20
         //more episode columns
-        "e.poster as episode_poster", "e.backdrop as episode_backdrop" //22
+        "e.poster", "e.backdrop", //22
+        //completion info
+        "p.last_position", "p.last_completion" //24
 )
 
 /**
  * helper to convert cursor to mediameta using above projection
  */
 fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): DocVideoRef {
-    val treeUri = Uri.parse(getString(1))
-    val docId = getString(2)
-    val parentId = getString(3)
+    val treeUri = Uri.parse(getString(0))
+    val docId = getString(1)
+    val parentId = getString(2)
     val displayName = getString(4)
     var title = displayName
     val mimeType = getString(5)
@@ -984,6 +991,10 @@ fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): DocVideoRef {
             backdropUri = mApiHelper.movieImageBackdropUri(getString(20))
         }
     }
+    var resume: VideoResumeInfo? = null
+    if (!isNull(23) && !isNull(24)) {
+        resume = VideoResumeInfo(lastPosition = getLong(23), lastCompletion = getInt(24))
+    }
     val docid = DocVideoId(
             treeUri = treeUri,
             documentId = docId,
@@ -1004,7 +1015,8 @@ fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): DocVideoRef {
                     lastMod = lastMod,
                     mediaUri = docid.mediaUri
                     //summary,
-            )
+            ),
+            resumeInfo = resume
     )
 }
 
@@ -1086,20 +1098,21 @@ fun StorageVideoRef.contentValues(): ContentValues {
 
 val storageVideoProjection = arrayOf(
         //video columns
-        "v.path", "parent_path", "device_uuid", "device_uuid", //3
+        "v.path", "v.parent_path", "v.device_uuid", "d.hidden", //3
         "v._display_name", "v.mime_type", "v._size", "v._size", "v.last_modified", //8
         //episode columns
-        "e._id as episode_id", "e._display_name as episode_title", //10
-        "episode_number", "season_number", //12
+        "e._id", "e._display_name", //10
+        "e.episode_number", "e.season_number", //12
         //series columns
-        "s._id as series_id", "s._display_name as series_title", //14
-        "s.poster as series_poster", "s.backdrop as series_backdrop", //16
+        "s._id", "s._display_name", //14
+        "s.poster", "s.backdrop", //16
         //movie columns
-        "m._id as movie_id", "m._display_name as movie_title",  //18
-        "m.poster_path as movie_poster", //19
-        "m.backdrop_path as movie_backdrop", //20
+        "m._id", "m._display_name",  //18
+        "m.poster_path", "m.backdrop_path", //20
         //more episode columns
-        "e.poster as episode_poster", "e.backdrop as episode_backdrop" //22
+        "e.poster", "e.backdrop", //22
+        //completion info
+        "p.last_position", "p.last_completion" //24
 )
 
 fun Cursor.toStorageVideo(mApiHelper: ApiHelper): StorageVideoRef {
@@ -1141,6 +1154,10 @@ fun Cursor.toStorageVideo(mApiHelper: ApiHelper): StorageVideoRef {
             backdropUri = mApiHelper.movieImageBackdropUri(getString(20))
         }
     }
+    var resume: VideoResumeInfo? = null
+    if (!isNull(23) && !isNull(24)) {
+        resume = VideoResumeInfo(lastPosition = getLong(23), lastCompletion = getInt(24))
+    }
     return StorageVideoRef(
             id = StorageVideoId(
                     path = path,
@@ -1158,8 +1175,8 @@ fun Cursor.toStorageVideo(mApiHelper: ApiHelper): StorageVideoRef {
                     mimeType = mimeType,
                     mediaUri = mediaUri,
                     size = size
-            )
-
+            ),
+            resumeInfo = resume
     )
 }
 

@@ -36,7 +36,8 @@ data class DocVideoRef(
         override val id: DocVideoId,
         override val tvEpisodeId: TvEpisodeId? = null,
         override val movieId: MovieId? = null,
-        override val meta: DocVideoMeta
+        override val meta: DocVideoMeta,
+        override val resumeInfo: VideoResumeInfo? = null
 ): DocumentRef, VideoRef
 
 internal object DocVideoIdTransformer : DocumentIdTransformer() {

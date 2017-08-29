@@ -89,6 +89,7 @@ class DetailActivity: BaseVideoActivity() {
                     .commit()
         }
         BackgroundManager.getInstance(this).attach(window)
+        BackgroundManager.getInstance(this).isAutoReleaseOnStop = false
     }
 }
 
@@ -122,8 +123,6 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        mBackgroundManager = BackgroundManager.getInstance(activity)
 
         mViewModel = fetchViewModel(DetailViewModel::class)
         mViewModel.setMediaId(arguments.getMediaId())
@@ -161,8 +160,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
             activity.windowManager.defaultDisplay.getMetrics(metrics)
             Glide.with(this)
                     .asDrawable()
-                    .apply(RequestOptions().fitCenter()
-                            .placeholder(activity.getDrawable(R.drawable.default_background)))
+                    .apply(RequestOptions().fitCenter())
                     .load(it)
                     .into(object: SimpleTarget<Drawable>(metrics.widthPixels, metrics.heightPixels) {
                         override fun onResourceReady(resource: Drawable?, transition: Transition<in Drawable>?) {
@@ -200,11 +198,6 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         setupDefaultActions()
     }
 
-    override fun onStop() {
-        super.onStop()
-        mBackgroundManager.release()
-    }
-
     override fun onActionClicked(action: Action) {
         when (action.id) {
             ACTIONID_PLAY, ACTIONID_START_OVER -> {
@@ -238,9 +231,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
         LifecycleRegistry(this)
     }
 
-    override fun getLifecycle(): LifecycleRegistry {
-        return lifecycleRegistry
-    }
+    override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
 }
 
 

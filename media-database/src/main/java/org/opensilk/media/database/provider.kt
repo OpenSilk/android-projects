@@ -62,7 +62,9 @@ class MediaProvider : ContentProvider() {
                 table = "upnp_video v " +
                         "LEFT JOIN tv_episodes e ON v.episode_id = e._id " +
                         "LEFT JOIN tv_series s ON e.series_id = s._id " +
-                        "LEFT JOIN movies m ON v.movie_id = m._id "
+                        "LEFT JOIN movies m ON v.movie_id = m._id " +
+                        "LEFT JOIN media_position p ON v._display_name = p._display_name " +
+                        "JOIN upnp_device d ON v.device_id = d.device_id "
             }
             M.PLAYBACK_POSITION -> {
                 table = "media_position"
@@ -77,7 +79,8 @@ class MediaProvider : ContentProvider() {
                 table = "document_video d " +
                         "LEFT JOIN tv_episodes e ON d.episode_id = e._id " +
                         "LEFT JOIN tv_series s ON e.series_id = s._id " +
-                        "LEFT JOIN movies m ON d.movie_id = m._id "
+                        "LEFT JOIN movies m ON d.movie_id = m._id " +
+                        "LEFT JOIN media_position p ON v._display_name = p._display_name "
             }
             M.STORAGE_DEVICE -> {
                 table = "storage_device"
@@ -91,6 +94,7 @@ class MediaProvider : ContentProvider() {
                         "LEFT JOIN tv_episodes e ON v.episode_id = e._id " +
                         "LEFT JOIN tv_series s ON e.series_id = s._id " +
                         "LEFT JOIN movies m ON v.movie_id = m._id " +
+                        "LEFT JOIN media_position p ON v._display_name = p._display_name " +
                         "JOIN storage_device d ON v.device_uuid = d.uuid "
             }
             else -> TODO("Unmatched uri: $uri")

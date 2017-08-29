@@ -15,12 +15,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Consumer
 import org.opensilk.media.*
-import org.opensilk.media.database.MediaDAO
-import org.opensilk.reactivex2.subscribeIgnoreError
-import org.opensilk.video.AppSchedulers
 import org.opensilk.video.findActivity
 import org.opensilk.video.telly.databinding.MediaitemListCardBinding
 import timber.log.Timber
@@ -112,9 +107,7 @@ class MediaRefPresenter
  *
  */
 class MediaRefListPresenter
-@Inject constructor(
-        val mDatabaseClient: MediaDAO
-) : Presenter() {
+@Inject constructor() : Presenter() {
 
     override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -170,23 +163,12 @@ class MediaRefListPresenter
             }
 
             //set progress
-            binding.completion = 0
             when (mediaRef) {
-                is VideoRef -> {
-                    disposables.add(getCompletionProgress(mediaRef.id))
-                }
+                is VideoRef -> binding.completion = mediaRef.resumeInfo?.lastCompletion ?: 0
+                else -> binding.completion = 0
             }
 
         }
-
-        private fun getCompletionProgress(videoId: VideoId): Disposable {
-            return mDatabaseClient.getLastPlaybackCompletion(videoId)
-                    .subscribeOn(AppSchedulers.diskIo)
-                    .subscribeIgnoreError(Consumer {
-                        binding.completion = it
-                    })
-        }
-
     }
 }
 
