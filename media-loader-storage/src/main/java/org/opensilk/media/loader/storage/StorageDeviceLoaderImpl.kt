@@ -33,7 +33,10 @@ class StorageDeviceLoaderImpl
             Build.VERSION.SDK_INT >= 24 && mContext.hasAccessActivity() -> TODO()
             //on android tv and devices < api24 read permission grants access to all storage
             mContext.canReadPrimaryStorage() -> devicesReadValidated
-            else -> Single.just(emptyList())
+            else -> {
+                Timber.w("No access to storage. Returning empty list.")
+                Single.just(emptyList())
+            }
         }
     }
 
@@ -78,9 +81,11 @@ class StorageDeviceLoaderImpl
             val getPath = StorageVolume::class.java.getDeclaredMethod("getPath")
             getPath.isAccessible = true
             volumes.mapNotNullTo(list) { v ->
+                Timber.d("Found storage $v")
                 val directory = File(getPath.invoke(v) as String)
                 val isMounted = mountedStates.contains(v.state)
                 if (!isMounted || !directory.isDirectory || !directory.canRead()) {
+                    Timber.w("Skipping inaccessible storage. $v")
                     null
                 } else {
                     StorageDeviceRef(StorageDeviceId(
@@ -110,12 +115,14 @@ class StorageDeviceLoaderImpl
             val volumes = getVolumeList.invoke(sm) as Array<*>
             val list = ArrayList<StorageDeviceRef>()
             volumes.mapNotNullTo(list) { v ->
+                Timber.d("Found storage $v")
                 val isPrimary = getIsPrimary.invoke(v) as Boolean
                 val isRemovable = getIsRemovable.invoke(v) as Boolean
                 val isEmulated = getIsEmulated.invoke(v) as Boolean
                 val directory = File(getPath.invoke(v) as String)
                 val isMounted = mountedStates.contains(getState.invoke(v) as String)
                 if (!isMounted || !directory.isDirectory || !directory.canRead()) {
+                    Timber.w("Skipping inaccessible storage. $v")
                     null
                 } else {
                     StorageDeviceRef(StorageDeviceId(
