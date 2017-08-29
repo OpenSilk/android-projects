@@ -23,12 +23,14 @@ class ObserverHolderService : Service() {
 
     @Inject lateinit var mUpnpDevicesObserver: UpnpDevicesObserver
     @Inject lateinit var mStorageDevicesObserver: StorageDevicesObserver
+    @Inject lateinit var mUsbDevicesObserver: UsbDevicesObserver
 
     override fun onCreate() {
         AndroidInjection.inject(this)
         super.onCreate()
         lifecycle.addObserver(mUpnpDevicesObserver)
         lifecycle.addObserver(mStorageDevicesObserver)
+        lifecycle.addObserver(mUsbDevicesObserver)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

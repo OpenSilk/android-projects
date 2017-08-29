@@ -30,10 +30,10 @@ class StorageDevicesObserver @Inject constructor(
     var mDisposable = Disposables.disposed()
 
     override fun onReceive(context: Context, intent: Intent?) {
+        Timber.d("onReceive($intent)")
         if (intent == null) {
             return
         }
-        Timber.d("onReceive($intent)")
         updateStorageDevices()
     }
 
@@ -48,6 +48,7 @@ class StorageDevicesObserver @Inject constructor(
         filter.addAction(Intent.ACTION_MEDIA_BAD_REMOVAL)
         filter.addAction(Intent.ACTION_MEDIA_SHARED)
         //filter.addAction(Intent.ACTION_MEDIA_EJECT) TODO
+        //filter.addAction("android.os.storage.action.VOLUME_STATE_CHANGED")
         mContext.registerReceiver(this, filter)
     }
 
