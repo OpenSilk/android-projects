@@ -1,6 +1,5 @@
 package org.opensilk.video
 
-import io.reactivex.Completable
 import io.reactivex.disposables.Disposable
 import org.opensilk.media.*
 import org.opensilk.media.database.*
@@ -28,66 +27,54 @@ class FolderPrefetchLoader @Inject constructor(
     /**
      * Fetch children of [deviceId] and insert into database
      */
-    fun prefetch(deviceId: MediaDeviceId, now: Boolean = false): Disposable = when (deviceId) {
-        is UpnpDeviceId -> upnpCompletable(deviceId)
-        is StorageDeviceId -> storageCompletable(deviceId)
-        else -> TODO("$deviceId")
-    }.subscribeOn(if (now) AppSchedulers.newThread else AppSchedulers.prefetch).subscribe({
-        mDatabaseClient.postChange(when (deviceId) {
-            is UpnpDeviceId -> UpnpDeviceChange()
-            is StorageDeviceId -> StorageDeviceChange()
-            else -> TODO("$deviceId")
-        })
-    })
+    fun prefetch(deviceId: MediaDeviceId, now: Boolean = false): Disposable = prefetch_(deviceId, now)
 
     /**
      * Fetch children of [folderId] and insert into database
      */
-    fun prefetch(folderId: FolderId, now: Boolean = false): Disposable = when (folderId) {
-        is UpnpFolderId -> upnpCompletable(folderId)
-        is DocDirectoryId -> documentCompletable(folderId)
-        is StorageFolderId -> storageCompletable(folderId)
-        else -> TODO("$folderId")
-    }.subscribeOn(if (now) AppSchedulers.newThread else AppSchedulers.prefetch).subscribe({
-        mDatabaseClient.postChange(when (folderId) {
-            is UpnpFolderId -> UpnpFolderChange(folderId)
-            is DocDirectoryId -> DocDirectoryChange(folderId)
-            is StorageFolderId -> StorageFolderChange(folderId)
-            else -> TODO("$folderId")
-        })
+    fun prefetch(folderId: FolderId, now: Boolean = false): Disposable = prefetch_(folderId, now)
+
+
+    private fun prefetch_(mediaId: MediaId, now: Boolean = false): Disposable = when (mediaId) {
+        is UpnpDeviceId -> mBrowseLoader.directChildren(upnpFolderId = mediaId, wantVideoItems = true)
+        is StorageDeviceId -> mStorageLoader.directChildren(parentId = mediaId, wantVideoItems = true)
+
+        is UpnpFolderId -> mBrowseLoader.directChildren(upnpFolderId = mediaId, wantVideoItems = true)
+        is DocDirectoryId -> mDocumentLoader.directChildren(documentId = mediaId, wantVideoItems = true)
+        is StorageFolderId -> mStorageLoader.directChildren(parentId = mediaId, wantVideoItems = true)
+        else -> TODO("$mediaId")
+    }.subscribeOn(if (now) AppSchedulers.newThread else AppSchedulers.prefetch).subscribe({ itemList ->
+        insertItems(mediaId, itemList)
+        postChange(mediaId)
+    }, { e ->
+        Timber.e(e, "Unable to fetch items for $mediaId")
     })
 
-    private fun upnpCompletable(folderId: UpnpContainerId): Completable {
-        return mBrowseLoader.directChildren(upnpFolderId = folderId, wantVideoItems = true)
-                .flatMapCompletable { insertItemsCompletable(folderId, it) }
-    }
-
-    private fun storageCompletable(containerId: StorageContainerId): Completable {
-        return mStorageLoader.directChildren(parentId = containerId, wantVideoItems = true)
-                .flatMapCompletable { insertItemsCompletable(containerId, it) }
-    }
-
-    private fun documentCompletable(documentId: DocDirectoryId): Completable {
-        return mDocumentLoader.directChildren(documentId = documentId, wantVideoItems = true)
-                .flatMapCompletable({ insertItemsCompletable(documentId, it) })
-    }
-
-    private fun insertItemsCompletable(parentId: MediaId, itemList: List<MediaRef>): Completable {
-        return Completable.fromAction {
-            Timber.d("Inserting ${itemList.size} children of $parentId")
-            mDatabaseClient.hideChildrenOf(parentId)
-            itemList.forEach { item ->
-                //Timber.v("Inserting $item")
-                when (item) {
-                    is UpnpFolderRef -> mDatabaseClient.addUpnpFolder(item)
-                    is UpnpVideoRef -> mDatabaseClient.addUpnpVideo(item)
-                    is StorageFolderRef -> mDatabaseClient.addStorageFolder(item)
-                    is StorageVideoRef -> mDatabaseClient.addStorageVideo(item)
-                    is DocDirectoryRef -> mDatabaseClient.addDocDirectory(item)
-                    is DocVideoRef -> mDatabaseClient.addDocVideo(item)
-                    else -> TODO("$item")
-                }
+    private fun insertItems(parentId: MediaId, itemList: List<MediaRef>) {
+        Timber.d("Inserting ${itemList.size} children of $parentId")
+        mDatabaseClient.hideChildrenOf(parentId)
+        itemList.forEach { item ->
+            when (item) {
+                is UpnpFolderRef -> mDatabaseClient.addUpnpFolder(item)
+                is UpnpVideoRef -> mDatabaseClient.addUpnpVideo(item)
+                is StorageFolderRef -> mDatabaseClient.addStorageFolder(item)
+                is StorageVideoRef -> mDatabaseClient.addStorageVideo(item)
+                is DocDirectoryRef -> mDatabaseClient.addDocDirectory(item)
+                is DocVideoRef -> mDatabaseClient.addDocVideo(item)
+                else -> TODO("$item")
             }
         }
+    }
+
+    private fun postChange(parentId: MediaId) {
+        mDatabaseClient.postChange(when (parentId) {
+            is UpnpDeviceId -> UpnpDeviceChange()
+            is StorageDeviceId -> StorageDeviceChange()
+
+            is UpnpFolderId -> UpnpFolderChange(parentId)
+            is DocDirectoryId -> DocDirectoryChange(parentId)
+            is StorageFolderId -> StorageFolderChange(parentId)
+            else -> TODO("$parentId")
+        })
     }
 }
