@@ -56,6 +56,9 @@ class HomeFragment: RecyclerFragment() {
         mViewModel.devices.observe(this, LiveDataObserver {
             mAdapter.swapList("devices", it)
         })
+        mViewModel.recentlyPlayed.observe(this, LiveDataObserver {
+            mAdapter.swapList("recent", it)
+        })
         mViewModel.needPermissions.observe(this, LiveDataObserver {
             requestPermissions(it, CODE_NEED_PERMS)
         })
@@ -79,10 +82,12 @@ class HomeFragment: RecyclerFragment() {
 }
 
 class HomeAdapter @Inject constructor(
-        deviceSection: DeviceSection
+        deviceSection: DeviceSection,
+        recentSection: RecentSection
 ): SwappingSectionedAdapter() {
     init {
         addSection("devices", deviceSection)
+        addSection("recent", recentSection)
     }
 }
 
@@ -94,4 +99,14 @@ class DeviceSection @Inject constructor(
                 .build(),
         HeaderItem(context.getString(R.string.header_devices),
                 R.drawable.ic_server_network_48dp)
+)
+
+class RecentSection @Inject constructor(
+        @ForApp context: Context
+): SwappingSection(
+        SectionParameters.Builder(R.layout.recycler_list_item)
+                .headerResourceId(R.layout.recycler_header_item)
+                .build(),
+        HeaderItem(context.getString(R.string.header_recently_played),
+                R.drawable.ic_movie_48dp)
 )

@@ -2,8 +2,8 @@
     <string name="app_name">Theia</string>
 
     <string name="title_my_library">My videos</string>
-    <string name="header_devices">Media servers</string>
-    <string name="header_newly_added">Newly added</string>
+    <string name="header_devices">Media sources</string>
+    <string name="header_recently_played">Recently watched</string>
 
     <string name="action_play">Play</string>
     <string name="action_restart">Restart</string>
