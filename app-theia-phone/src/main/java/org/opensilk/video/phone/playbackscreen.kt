@@ -47,7 +47,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         Timber.d("onCreate()")
 
         windowManager.defaultDisplay.getMetrics(mScreenMetrics)
-        mOrientation = windowManager.defaultDisplay.rotation
 
         //npe if init-ed in declaration
         mGestureDetector = GestureDetector(this, this)
@@ -181,7 +180,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     override fun onConfigurationChanged(newConfig: Configuration) {
         Timber.d("onConfigurationChanged()")
         super.onConfigurationChanged(newConfig)
-        mOrientation = windowManager.defaultDisplay.rotation
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -211,7 +209,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     private var mDistanceX = 0f
     private var mScrollJump = 0
     private var mScreenMetrics = DisplayMetrics()
-    private var mOrientation = 0 //windowManager.defaultDisplay.rotation
     private val mScrollCommitRunnable = Runnable {
         mScrolling = false
         Timber.d("Commit Scroll dist=$mDistanceX jump=$mScrollJump")
@@ -239,19 +236,12 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         }
         mMainHandler.removeCallbacks(mScrollCommitRunnable)
         mMainHandler.postDelayed(mScrollCommitRunnable, 200)
-        mDistanceX += distanceX
+        mDistanceX -= distanceX
         //from vlc, supposed to give
         //10 min max, with bi-cubic progression for 8cm gesture
         val scrollSize = (mDistanceX / mScreenMetrics.xdpi) * 2.54f
         mScrollJump = ((Math.signum(scrollSize) * ((600_000 * Math.pow(
                 (scrollSize / 8).toDouble(), 4.toDouble())) + 3000))).toInt()
-        //fix if upside down
-        when (mOrientation) {
-            Surface.ROTATION_180,
-            Surface.ROTATION_270 -> {
-                mScrollJump *= -1
-            }
-        }
         showScrollJump()
         return true
     }
