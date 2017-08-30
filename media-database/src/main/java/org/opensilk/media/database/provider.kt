@@ -76,10 +76,10 @@ class MediaProvider : ContentProvider() {
                 TODO()
             }
             M.DOCUMENT_VIDEO -> {
-                table = "document_video d " +
-                        "LEFT JOIN tv_episodes e ON d.episode_id = e._id " +
+                table = "document_video v " +
+                        "LEFT JOIN tv_episodes e ON v.episode_id = e._id " +
                         "LEFT JOIN tv_series s ON e.series_id = s._id " +
-                        "LEFT JOIN movies m ON d.movie_id = m._id " +
+                        "LEFT JOIN movies m ON v.movie_id = m._id " +
                         "LEFT JOIN media_position p ON v._display_name = p._display_name "
             }
             M.STORAGE_DEVICE -> {

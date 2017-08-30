@@ -104,7 +104,8 @@ class MediaDAO
                 getRecentlyPlayedDocVideos(),
                 getRecentlyPlayedStorageVideos()
         ).sorted({ left, right ->
-            ((left.resumeInfo?.lastPlayed ?: 0L) - (right.resumeInfo?.lastPlayed ?: 0L)).toInt()
+            //decending
+            ((right.resumeInfo?.lastPlayed ?: 0L) - (left.resumeInfo?.lastPlayed ?: 0L)).toInt()
         }).take(10)
     }
 
@@ -448,7 +449,7 @@ class MediaDAO
         return doQuery(mUris.documentVideo(), videoDocumentProjection,
                 "tree_uri=? AND parent_id=? AND hidden=0",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId),
-                "d._display_name", { c -> c.toVideoDocumentRef(mApiHelper) })
+                "v._display_name", { c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
     fun getDocVideo(documentId: DocVideoId): Maybe<DocVideoRef> {
@@ -953,7 +954,7 @@ fun DocVideoRef.contentValues(): ContentValues {
 val videoDocumentProjection = arrayOf(
         //document columns
         "tree_uri", "document_id", "parent_id", "parent_id", //3
-        "d._display_name", "d.mime_type", "d._size", "d.flags", "d.last_modified", //8
+        "v._display_name", "v.mime_type", "v._size", "v.flags", "v.last_modified", //8
         //episode columns
         "e._id", "e._display_name", //10
         "e.episode_number", "e.season_number", //12
