@@ -38,7 +38,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
 
     lateinit var mBinding: ActivityPlaybackBinding
     lateinit var mViewModel: PlaybackViewModel
-    val mMainHandler = Handler(Looper.getMainLooper())
     val mTotalTimeStringBuilder = StringBuilder()
     val mCurrentTimeStringBuilder = StringBuilder()
     var mPlaybackState = PlaybackState.STATE_NONE
@@ -74,7 +73,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
             mBinding.isPlaying = state.state == PlaybackState.STATE_PLAYING
             when (state.state) {
                 PlaybackState.STATE_PLAYING -> {
-                    postOverlayHideRunner()
+                    animateOverlayOut()
                 }
                 PlaybackState.STATE_PAUSED -> {
                     animateOverlayIn()
@@ -122,7 +121,6 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         Timber.d("onDestroy()")
         mBinding.actionHandler = null
         mViewModel.detachSurface(mBinding.videoSurface)
-        mMainHandler.removeCallbacksAndMessages(null)
     }
 
     override fun onStart() {
@@ -163,7 +161,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
         if (isInPictureInPictureMode) {
-            animateOverlayOut()
+            animateOverlayOut(now = true)
         }
     }
 
@@ -184,7 +182,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         }
 
         if (isOverlayShowing()) {
-            postOverlayHideRunner()
+            animateOverlayOut()
             return super.onKeyDown(keyCode, event)
         } else {
             when (keyCode) {
@@ -207,7 +205,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
 
     override fun onBackPressed() {
         if (isOverlayShowing()) {
-            animateOverlayOut()
+            animateOverlayOut(now = true)
         } else {
             super.onBackPressed()
         }
@@ -249,7 +247,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
      * end playback actions handler
      */
 
-    fun animateOverlayIn() {
+    private fun animateOverlayIn() {
         mBinding.topBar.animate().cancel()
         if (mBinding.topBar.visibility != View.VISIBLE) {
             mBinding.topBar.translationY = -mBinding.topBar.height.toFloat()
@@ -281,12 +279,11 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         }
         mBinding.actionPlayPause.requestFocus()
 
-        postOverlayHideRunner()
+        animateOverlayOut()
         mViewModel.startProgressRunner()
     }
 
-    fun animateOverlayOut() {
-        mMainHandler.removeCallbacks(mAnimateOutRunner)
+    private fun animateOverlayOut(now: Boolean = false) {
         mViewModel.stopProgressRunner()
 
         if (mBinding.topBar.visibility != View.GONE) {
@@ -295,6 +292,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
                     .translationY(-mBinding.topBar.height.toFloat())
                     .alpha(0.0f)
                     .setDuration(OVERLAY_ANIM_DURATION)
+                    .setStartDelay(if (now) 0 else OVERLAY_SHOW_DURATION)
                     .setListener(object: DefaultAnimatorListener() {
                         override fun onAnimationEnd(animation: Animator?) {
                             mBinding.topBar.visibility = View.GONE
@@ -307,6 +305,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
                     .translationY(mBinding.bottomBar.height.toFloat())
                     .alpha(0.0f)
                     .setDuration(OVERLAY_ANIM_DURATION)
+                    .setStartDelay(if (now) 0 else OVERLAY_SHOW_DURATION)
                     .setListener(object: DefaultAnimatorListener() {
                         override fun onAnimationEnd(animation: Animator?) {
                             mBinding.bottomBar.visibility = View.GONE
@@ -315,14 +314,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler {
         }
     }
 
-    private val mAnimateOutRunner = Runnable { animateOverlayOut() }
-
-    fun postOverlayHideRunner() {
-        mMainHandler.removeCallbacks(mAnimateOutRunner)
-        mMainHandler.postDelayed(mAnimateOutRunner, OVERLAY_SHOW_DURATION)
-    }
-
-    fun isOverlayShowing(): Boolean {
+    private fun isOverlayShowing(): Boolean {
         return (mBinding.bottomBar.visibility != View.GONE) ||
                 (mBinding.topBar.visibility != View.GONE)
     }
