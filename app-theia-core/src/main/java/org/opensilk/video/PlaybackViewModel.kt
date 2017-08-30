@@ -94,18 +94,18 @@ class PlaybackViewModel
         mTransportControls.pause()
     }
 
-    fun skipAhead() {
+    fun skipAhead(time: Int = SKIP_AHEAD_MS) {
         if (mPlaybackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
             val offset = SystemClock.elapsedRealtime() - mPlaybackState.lastPositionUpdateTime
-            val seek = mPlaybackState.position + offset + SKIP_AHEAD_MS
+            val seek = mPlaybackState.position + offset + time
             mTransportControls.seekTo(seek)
         }
     }
 
-    fun skipBehind() {
+    fun skipBehind(time: Int = SKIP_BEHIND_MS) {
         if (mPlaybackState.hasAction(PlaybackState.ACTION_SEEK_TO)) {
             val offset = SystemClock.elapsedRealtime() - mPlaybackState.lastPositionUpdateTime
-            val seek = mPlaybackState.position + offset - SKIP_BEHIND_MS
+            val seek = mPlaybackState.position + offset - time
             mTransportControls.seekTo(seek)
         }
     }

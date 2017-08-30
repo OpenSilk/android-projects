@@ -10,6 +10,7 @@
     <string name="action_resume">Resume (%1$s)</string>
     <string name="action_get_desc">Get description</string>
     <string name="action_remove_desc">Remove description</string>
+    <string name="action_seek">Seek: %1$s</string>
 
     <string name="nav_drawer_open">Open drawer</string>
     <string name="nav_drawer_close">Close drawer</string>

@@ -10,11 +10,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.DisplayMetrics
 import android.view.*
 import android.widget.Toast
 import org.opensilk.media.getMediaIdExtra
 import org.opensilk.media.playback.PlaybackExtras
-import org.opensilk.media.toMediaId
 import org.opensilk.video.*
 import org.opensilk.video.phone.databinding.ActivityPlaybackBinding
 import timber.log.Timber
@@ -38,12 +38,16 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     val mMainHandler = Handler(Looper.getMainLooper())
     val mTotalTimeStringBuilder = StringBuilder()
     val mCurrentTimeStringBuilder = StringBuilder()
+    val mScrollJumpStringBuilder = StringBuilder()
     var mPlaybackState = PlaybackState.STATE_NONE
     lateinit var mGestureDetector: GestureDetector
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.d("onCreate()")
+
+        windowManager.defaultDisplay.getMetrics(mScreenMetrics)
+        mOrientation = windowManager.defaultDisplay.rotation
 
         //npe if init-ed in declaration
         mGestureDetector = GestureDetector(this, this)
@@ -177,6 +181,7 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     override fun onConfigurationChanged(newConfig: Configuration) {
         Timber.d("onConfigurationChanged()")
         super.onConfigurationChanged(newConfig)
+        mOrientation = windowManager.defaultDisplay.rotation
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -202,9 +207,53 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         return false
     }
 
+    private var mScrolling = false
+    private var mDistanceX = 0f
+    private var mScrollJump = 0
+    private var mScreenMetrics = DisplayMetrics()
+    private var mOrientation = 0 //windowManager.defaultDisplay.rotation
+    private val mScrollCommitRunnable = Runnable {
+        mScrolling = false
+        Timber.d("Commit Scroll dist=$mDistanceX jump=$mScrollJump")
+        if (mScrollJump < 0) {
+            mViewModel.skipBehind(Math.abs(mScrollJump))
+        } else {
+            mViewModel.skipAhead(mScrollJump)
+        }
+        mBinding.seekJump = ""
+    }
+
+    private fun showScrollJump() {
+        val neg = mScrollJump < 0
+        formatTime((Math.abs(mScrollJump) / 1000).toLong(), mScrollJumpStringBuilder)
+        if (neg) mScrollJumpStringBuilder.insert(0, "-")
+        Timber.d("dist=$mDistanceX jump=$mScrollJump time=$mScrollJumpStringBuilder")
+        mBinding.seekJump = mScrollJumpStringBuilder.toString()
+    }
+
     override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
         Timber.d("onScroll(dx=$distanceX, dy=$distanceY)")
-        return false
+        if (!mScrolling) {
+            mDistanceX = 0f
+            mScrolling = true
+        }
+        mMainHandler.removeCallbacks(mScrollCommitRunnable)
+        mMainHandler.postDelayed(mScrollCommitRunnable, 200)
+        mDistanceX += distanceX
+        //from vlc, supposed to give
+        //10 min max, with bi-cubic progression for 8cm gesture
+        val scrollSize = (mDistanceX / mScreenMetrics.xdpi) * 2.54f
+        mScrollJump = ((Math.signum(scrollSize) * ((600_000 * Math.pow(
+                (scrollSize / 8).toDouble(), 4.toDouble())) + 3000))).toInt()
+        //fix if upside down
+        when (mOrientation) {
+            Surface.ROTATION_180,
+            Surface.ROTATION_270 -> {
+                mScrollJump *= -1
+            }
+        }
+        showScrollJump()
+        return true
     }
 
     override fun onLongPress(e: MotionEvent) {
@@ -233,6 +282,8 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
         animateOverlayIn()
         return true
     }
+
+
 
     /*
      * start playback actions handler

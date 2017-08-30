@@ -44,6 +44,9 @@
         <variable
             name="isPlaying"
             type="boolean"/>
+        <variable
+            name="seekJump"
+            type="String"/>
     </data>
     <FrameLayout
         android:layout_width="match_parent"
@@ -203,7 +206,23 @@
 
         </FrameLayout>
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="@{(TextUtils.isEmpty(seekJump)) ? View.GONE : View.VISIBLE}"
+            >
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{@string/action_seek(seekJump)}"
+                android:textAppearance="?android:textAppearanceLarge"
+                />
+
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
