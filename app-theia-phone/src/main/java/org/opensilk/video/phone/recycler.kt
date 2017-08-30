@@ -15,6 +15,7 @@ import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapt
 import io.reactivex.Single
 import io.reactivex.disposables.Disposables
 import org.opensilk.media.*
+import org.opensilk.video.ACTION_RESUME
 import org.opensilk.video.AppSchedulers
 import org.opensilk.video.findActivity
 import org.opensilk.video.phone.databinding.RecyclerHeaderItemBinding
@@ -59,7 +60,9 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
         }
 
         binding.frame.setOnClickListener(this)
-        //binding.frame.setOnLongClickListener(this)
+        when (mediaRef) {
+            is VideoRef -> binding.frame.setOnLongClickListener(this)
+        }
         binding.titleString = desc.title.toString()
         binding.subTitleString = desc.subtitle?.toString() ?: ""
         if (!desc.iconUri.isEmpty()) {
@@ -96,7 +99,8 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
                 activity.startActivity(intent)
             }
             is VideoRef -> {
-                val intent = Intent(activity, DetailActivity::class.java)
+                val intent = Intent(activity, PlaybackActivity::class.java)
+                        .setAction(ACTION_RESUME)
                         .putMediaIdExtra(ref.id)
                 activity.startActivity(intent)
             }
@@ -110,6 +114,14 @@ class ListItemViewHolder(val binding: RecyclerListItemBinding): BoundViewHolder(
         val activity = v.context.findActivity()
         if (activity is MediaRefClickListener && activity.onLongClick(ref)) {
             return true
+        }
+        when (ref) {
+            is VideoRef -> {
+                val intent = Intent(activity, DetailActivity::class.java)
+                        .putMediaIdExtra(ref.id)
+                activity.startActivity(intent)
+            }
+            else -> TODO()
         }
         return false
     }
