@@ -87,7 +87,7 @@ class MediaDAOUpnpTest {
         val video = upnpVideo_folder_1_no_association()
         mClient.addUpnpVideo(video)
         //just check to make sure it works
-        assertThat(mClient.getRecentUpnpVideos().blockingFirst()).isEqualTo(video)
+        assertThat(mClient.getRecentlyPlayedUpnpVideos().blockingFirst()).isEqualTo(video)
     }
 
     @Test

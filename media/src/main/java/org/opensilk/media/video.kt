@@ -22,7 +22,10 @@ interface VideoMeta {
     val originalTitle: String
 }
 
-data class VideoResumeInfo(val lastPosition: Long = 0, val lastCompletion: Int = 0)
+data class VideoResumeInfo(
+        val lastPosition: Long = 0,
+        val lastCompletion: Int = 0,
+        val lastPlayed: Long = 0)
 
 /**
  * Video ref, may have movie or episode id associated to it

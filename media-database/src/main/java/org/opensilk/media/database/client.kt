@@ -98,6 +98,16 @@ class MediaDAO
         else -> TODO()
     }
 
+    fun getRecentlyPlayedVideos(): Observable<VideoRef> {
+        return Observable.merge(
+                getRecentlyPlayedUpnpVideos(),
+                getRecentlyPlayedDocVideos(),
+                getRecentlyPlayedStorageVideos()
+        ).sorted({ left, right ->
+            ((left.resumeInfo?.lastPlayed ?: 0L) - (right.resumeInfo?.lastPlayed ?: 0L)).toInt()
+        }).take(10)
+    }
+
     fun setVideoTvEpisodeId(mediaId: VideoId, episodeId: TvEpisodeId) {
         when (mediaId) {
             is UpnpVideoId -> {
@@ -346,9 +356,9 @@ class MediaDAO
                 {c -> c.toUpnpVideoMediaMeta(mApiHelper) })
     }
 
-    fun getRecentUpnpVideos(): Observable<UpnpVideoRef> {
-        return doQuery(mUris.upnpVideo(), upnpVideoProjection, null, null,
-                " v.date_added DESC LIMIT 20 ", { c -> c.toUpnpVideoMediaMeta(mApiHelper) })
+    fun getRecentlyPlayedUpnpVideos(): Observable<UpnpVideoRef> {
+        return doQuery(mUris.upnpVideo(), upnpVideoProjection, "p.last_played != ''", null,
+                " p.last_played DESC LIMIT 10 ", { c -> c.toUpnpVideoMediaMeta(mApiHelper) })
     }
 
     fun getUpnpVideoOverview(videoId: UpnpVideoId): Maybe<String> {
@@ -446,6 +456,11 @@ class MediaDAO
                 "tree_uri=? AND document_id=? AND parent_id=?",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId),
                 {c -> c.toVideoDocumentRef(mApiHelper) })
+    }
+
+    fun getRecentlyPlayedDocVideos(): Observable<DocVideoRef> {
+        return doQuery(mUris.documentVideo(), videoDocumentProjection, "p.last_played != ''", null,
+                " p.last_played DESC LIMIT 10 ", { c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
     fun getDocVideoOverview(documentId: DocVideoId): Maybe<String> {
@@ -567,6 +582,11 @@ class MediaDAO
                 "v.path=? AND v.device_uuid=?",
                 arrayOf(videoId.path, videoId.uuid),
                 {c -> c.toStorageVideo(mApiHelper) })
+    }
+
+    fun getRecentlyPlayedStorageVideos(): Observable<StorageVideoRef> {
+        return doQuery(mUris.storageVideo(), storageVideoProjection, "p.last_played != ''", null,
+                " p.last_played DESC LIMIT 10 ", { c -> c.toStorageVideo(mApiHelper) })
     }
 
     fun getStorageVideoOverview(videoId: StorageVideoId): Maybe<String> {
@@ -802,7 +822,7 @@ val upnpVideoProjection = arrayOf(
         //more episode columns
         "e.poster", "e.backdrop", //22
         //completion info
-        "p.last_position", "p.last_completion" //24
+        "p.last_position", "p.last_completion", "p.last_played" //25
 )
 
 /**
@@ -848,8 +868,9 @@ fun Cursor.toUpnpVideoMediaMeta(mApiHelper: ApiHelper): UpnpVideoRef {
         }
     }
     var resume: VideoResumeInfo? = null
-    if (!c.isNull(23) && !c.isNull(24)) {
-        resume = VideoResumeInfo(lastPosition = getLong(23), lastCompletion = getInt(24))
+    if (!isNull(23) && !isNull(24) && !isNull(25)) {
+        resume = VideoResumeInfo(lastPosition = getLong(23),
+                lastCompletion = getInt(24), lastPlayed = getLong(25))
     }
     return UpnpVideoRef(
             id = mediaId,
@@ -945,7 +966,7 @@ val videoDocumentProjection = arrayOf(
         //more episode columns
         "e.poster", "e.backdrop", //22
         //completion info
-        "p.last_position", "p.last_completion" //24
+        "p.last_position", "p.last_completion", "p.last_played" //25
 )
 
 /**
@@ -992,8 +1013,9 @@ fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): DocVideoRef {
         }
     }
     var resume: VideoResumeInfo? = null
-    if (!isNull(23) && !isNull(24)) {
-        resume = VideoResumeInfo(lastPosition = getLong(23), lastCompletion = getInt(24))
+    if (!isNull(23) && !isNull(24) && !isNull(25)) {
+        resume = VideoResumeInfo(lastPosition = getLong(23),
+                lastCompletion = getInt(24), lastPlayed = getLong(25))
     }
     val docid = DocVideoId(
             treeUri = treeUri,
@@ -1112,7 +1134,7 @@ val storageVideoProjection = arrayOf(
         //more episode columns
         "e.poster", "e.backdrop", //22
         //completion info
-        "p.last_position", "p.last_completion" //24
+        "p.last_position", "p.last_completion", "p.last_played" //25
 )
 
 fun Cursor.toStorageVideo(mApiHelper: ApiHelper): StorageVideoRef {
@@ -1155,8 +1177,9 @@ fun Cursor.toStorageVideo(mApiHelper: ApiHelper): StorageVideoRef {
         }
     }
     var resume: VideoResumeInfo? = null
-    if (!isNull(23) && !isNull(24)) {
-        resume = VideoResumeInfo(lastPosition = getLong(23), lastCompletion = getInt(24))
+    if (!isNull(23) && !isNull(24) && !isNull(25)) {
+        resume = VideoResumeInfo(lastPosition = getLong(23),
+                lastCompletion = getInt(24), lastPlayed = getLong(25))
     }
     return StorageVideoRef(
             id = StorageVideoId(
