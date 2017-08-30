@@ -1,3 +1,13 @@
 <resources>
 
+    <style name="App.Widget.PlaybackButton" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:background">?android:selectableItemBackgroundBorderless</item>
+        <item name="android:tint">@color/white</item>
+    </style>
+
 </resources>

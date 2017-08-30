@@ -157,69 +157,44 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@id/progress"
                     android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
                     android:orientation="horizontal"
                     android:gravity="center">
 
                     <ImageButton
                         android:id="@+id/action_captions"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
                         android:onClick="@{() -> actionHandler.toggleCaptions()}"
                         android:src="@drawable/ic_cc_48dp"
-                        style="?android:borderlessButtonStyle"
-                        android:tint="@color/white"
-                        android:paddingStart="24dp"
-                        android:paddingEnd="24dp"
-                        android:background="?android:selectableItemBackgroundBorderless"/>
+                        style="@style/App.Widget.PlaybackButton"
+                        />
 
                     <ImageButton
                         android:id="@+id/action_skip_previous"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
                         android:onClick="@{() -> actionHandler.skipPrevious()}"
                         android:src="@drawable/ic_skip_previous_48dp"
-                        style="?android:borderlessButtonStyle"
-                        android:tint="@color/white"
-                        android:paddingStart="24dp"
-                        android:paddingEnd="24dp"
-                        android:background="?android:selectableItemBackgroundBorderless"/>
+                        style="@style/App.Widget.PlaybackButton"
+                        />
 
                     <ImageButton
                         android:id="@+id/action_play_pause"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
                         android:onClick="@{() -> actionHandler.togglePlayPause()}"
                         android:src="@{isPlaying ? @drawable/ic_pause_circle_48dp : @drawable/ic_play_circle_48dp}"
-                        style="?android:borderlessButtonStyle"
-                        android:tint="@color/white"
-                        android:paddingStart="24dp"
-                        android:paddingEnd="24dp"
-                        android:background="?android:selectableItemBackgroundBorderless"
-                        tools:src="@drawable/ic_play_circle_48dp"/>
+                        style="@style/App.Widget.PlaybackButton"
+                        />
 
                     <ImageButton
                         android:id="@+id/action_skip_next"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
                         android:onClick="@{() -> actionHandler.skipNext()}"
                         android:src="@drawable/ic_skip_next_48dp"
-                        style="?android:borderlessButtonStyle"
-                        android:tint="@color/white"
-                        android:paddingStart="24dp"
-                        android:paddingEnd="24dp"
-                        android:background="?android:selectableItemBackgroundBorderless"/>
+                        style="@style/App.Widget.PlaybackButton"
+                        />
 
                     <ImageButton
                         android:id="@+id/action_pip"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
                         android:onClick="@{() -> actionHandler.enterPip()}"
                         android:src="@drawable/ic_pip_48dp"
-                        style="?android:borderlessButtonStyle"
-                        android:tint="@color/white"
-                        android:paddingStart="24dp"
-                        android:paddingEnd="24dp"
-                        android:background="?android:selectableItemBackgroundBorderless"/>
+                        style="@style/App.Widget.PlaybackButton"
+                        />
 
                 </LinearLayout>
 
