@@ -50,7 +50,7 @@ dependencies {
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    //compile 'org.videolan.libvlc:libvlc-x86:3.0.0-SNAPSHOT@aar'
+    compile "com.android.support:support-annotations:$supportLibVersion"
 
     compile "android.arch.lifecycle:runtime:$androidarchVersion"
     compile "android.arch.lifecycle:extensions:$androidarchVersion"

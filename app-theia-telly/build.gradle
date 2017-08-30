@@ -66,6 +66,7 @@ dependencies {
     compile "com.android.support:preference-leanback-v17:$supportLibVersion"
     compile "com.android.support:recommendation:$supportLibVersion"
     compile "com.android.support:recyclerview-v7:$supportLibVersion"
+    compile "com.android.support.constraint:constraint-layout:$constraintLayoutVersion"
 
     compile project(':app-theia-core')
 
