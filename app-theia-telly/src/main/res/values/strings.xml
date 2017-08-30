@@ -37,4 +37,7 @@
 
     <string name="err_pip_unsupported">PIP is not supported on this device</string>
 
+    <string name="header_media_sources">Media sources</string>
+    <string name="header_recently_played">Recently watched</string>
+
 </resources>

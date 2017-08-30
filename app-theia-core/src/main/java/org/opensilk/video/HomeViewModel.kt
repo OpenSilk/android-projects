@@ -10,6 +10,7 @@ import io.reactivex.exceptions.Exceptions
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.MediaDeviceRef
 import org.opensilk.media.UpnpVideoRef
+import org.opensilk.media.VideoRef
 import javax.inject.Inject
 
 /**
@@ -19,11 +20,11 @@ class HomeViewModel
 @Inject constructor(
         @ForApp private val mContext: Context,
         private val mServersLoader: DevicesLoader,
-        private val mNewlyAddedLoader: NewlyAddedLoader,
+        private val mRecentsLoader: RecentlyPlayedLoader,
         private val mStorageObserver: StorageDevicesObserver
 ): ViewModel(), LifecycleObserver {
     val devices = MutableLiveData<List<MediaDeviceRef>>()
-    val newlyAdded = MutableLiveData<List<UpnpVideoRef>>()
+    val recentlyPlayed = MutableLiveData<List<VideoRef>>()
     val needPermissions = MutableLiveData<Array<String>>()
 
     private val mDisposables = CompositeDisposable()
@@ -46,7 +47,7 @@ class HomeViewModel
     fun subscribeData() {
         mSubscribeOnce.Do {
             subscribeServers()
-            subscribeNewlyAdded()
+            subscribeRecents()
         }
     }
 
@@ -61,12 +62,10 @@ class HomeViewModel
         mDisposables.add(s)
     }
 
-    private fun subscribeNewlyAdded() {
-        val s = mNewlyAddedLoader.observable
+    private fun subscribeRecents() {
+        val s = mRecentsLoader.recentlyPlayed()
                 .subscribe({
-                    newlyAdded.postValue(it)
-                }, {
-                    Exceptions.propagate(it)
+                    recentlyPlayed.postValue(it)
                 })
         mDisposables.add(s)
     }

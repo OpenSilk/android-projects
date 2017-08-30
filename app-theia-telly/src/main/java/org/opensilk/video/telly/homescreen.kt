@@ -55,7 +55,7 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
-    @Inject lateinit var mNewlyAddedAdapter: NewlyAddedAdapter
+    @Inject lateinit var mRecentlyPlayedAdapter: RecentlyPlayedAdapter
     @Inject lateinit var mRefClickListener: MediaRefClickListener
 
     lateinit var mViewModel: HomeViewModel
@@ -71,8 +71,8 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
         mViewModel.devices.observe(this, LiveDataObserver { items ->
             mServersAdapter.swapList(items)
         })
-        mViewModel.newlyAdded.observe(this, LiveDataObserver { items ->
-            mNewlyAddedAdapter.swapList(items)
+        mViewModel.recentlyPlayed.observe(this, LiveDataObserver { items ->
+            mRecentlyPlayedAdapter.swapList(items)
         })
         mViewModel.needPermissions.observe(this, LiveDataObserver { perms ->
             //TODO handleRationale
@@ -80,10 +80,10 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
         })
         mViewModel.subscribeData()
 
-        val foldersHeader = HeaderItem("Media Servers")
+        val foldersHeader = HeaderItem(getString(R.string.header_media_sources))
         mHomeAdapter.add(ListRow(foldersHeader, mServersAdapter))
-        val newlyAddedHeader = HeaderItem("Newly Added")
-        mHomeAdapter.add(ListRow(newlyAddedHeader, mNewlyAddedAdapter))
+        val recentlyPlayedHeader = HeaderItem(getString(R.string.header_recently_played))
+        mHomeAdapter.add(ListRow(recentlyPlayedHeader, mRecentlyPlayedAdapter))
 
         adapter = mHomeAdapter
         onItemViewClickedListener = mRefClickListener
@@ -125,4 +125,4 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
 class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())
 class ServersAdapter @Inject constructor(presenter: MediaRefPresenter) : SwappingObjectAdapter(presenter)
-class NewlyAddedAdapter @Inject constructor(presenter: MediaRefPresenter): SwappingObjectAdapter(presenter)
+class RecentlyPlayedAdapter @Inject constructor(presenter: MediaRefPresenter): SwappingObjectAdapter(presenter)
