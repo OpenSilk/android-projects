@@ -129,12 +129,16 @@ class PlaybackViewModel
     fun skipPrevious() {
         if (mPlaybackState.hasAction(PlaybackState.ACTION_SKIP_TO_PREVIOUS)) {
             mTransportControls.skipToPrevious()
+        } else {
+            Timber.w("No previous action")
         }
     }
 
     fun skipNext() {
         if (mPlaybackState.hasAction(PlaybackState.ACTION_SKIP_TO_NEXT)) {
             mTransportControls.skipToNext()
+        } else {
+            Timber.w("No next action")
         }
     }
 
