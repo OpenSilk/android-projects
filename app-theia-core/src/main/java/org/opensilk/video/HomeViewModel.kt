@@ -23,6 +23,7 @@ class HomeViewModel
         private val mRecentsLoader: RecentlyPlayedLoader,
         private val mStorageObserver: StorageDevicesObserver
 ): ViewModel(), LifecycleObserver {
+
     val devices = MutableLiveData<List<MediaDeviceRef>>()
     val recentlyPlayed = MutableLiveData<List<VideoRef>>()
     val needPermissions = MutableLiveData<Array<String>>()
@@ -44,17 +45,24 @@ class HomeViewModel
         }
     }
 
-    fun subscribeData() {
+    fun subscribeData(includeDocuments: Boolean = false) {
         mSubscribeOnce.Do {
-            subscribeServers()
+            subscribeServers(includeDocuments)
             subscribeRecents()
         }
     }
 
-    private fun subscribeServers() {
-        val s = mServersLoader.devices()
-                .subscribe({
-                    devices.postValue(it)
+    private var firstList = true
+
+    private fun subscribeServers(includeDocuments: Boolean) {
+        val s = mServersLoader.devices(includeDocuments)
+                .subscribe({ list ->
+                    //first list might be empty since it comes from the database
+                    //don't post it, so the ui wont display empty
+                    if (!firstList || list.isNotEmpty()) {
+                        firstList = false
+                        devices.postValue(list)
+                    }
                 }, {
                     Exceptions.propagate(it) //TODO handle errors
                 }

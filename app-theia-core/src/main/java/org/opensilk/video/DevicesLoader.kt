@@ -2,12 +2,9 @@ package org.opensilk.video
 
 import io.reactivex.Observable
 import io.reactivex.Single
-import org.opensilk.media.MediaDeviceRef
-import org.opensilk.media.StorageDeviceRef
-import org.opensilk.media.UpnpDeviceRef
+import org.opensilk.media.*
 import org.opensilk.media.database.DeviceChange
 import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.UpnpDeviceChange
 import javax.inject.Inject
 
 /**
@@ -17,12 +14,16 @@ class DevicesLoader
 @Inject constructor(
         private val mDatabaseClient: MediaDAO
 ){
-    fun devices(): Observable<out List<MediaDeviceRef>> =
+    fun devices(includeDocuments: Boolean = false): Observable<out List<MediaDeviceRef>> =
             mDatabaseClient.changesObservable
                     .filter { it is DeviceChange }
                     .startWith(DeviceChange())
                     .switchMapSingle {
-                        concatSingle.subscribeOn(AppSchedulers.diskIo)
+                        if (includeDocuments) {
+                            concatSingleWithDocuments
+                        } else {
+                            concatSingle
+                        }.subscribeOn(AppSchedulers.diskIo)
                     }
 
     private val upnpObservable: Observable<UpnpDeviceRef> by lazy {
@@ -33,10 +34,22 @@ class DevicesLoader
         mDatabaseClient.getAvailableStorageDevices()
     }
 
+    private val docObservable: Observable<DocDeviceRef> by lazy {
+        Observable.just(DocTreeDeviceRef, DocFileDeviceRef)
+    }
+
     private val concatSingle: Single<out List<MediaDeviceRef>> by lazy {
         Observable.concat<MediaDeviceRef>(
                 upnpObservable,
                 storageObservable
+        ).toList()
+    }
+
+    private val concatSingleWithDocuments: Single<out List<MediaDeviceRef>> by lazy {
+        Observable.concat<MediaDeviceRef>(
+                upnpObservable,
+                storageObservable,
+                docObservable
         ).toList()
     }
 
