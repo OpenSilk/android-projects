@@ -7,15 +7,4 @@
             android:title="@string/nav_home"/>
     </group>
 
-    <item android:title="@string/nav_actions">
-        <menu>
-            <item
-                android:id="@+id/nav_pick_file"
-                android:title="@string/nav_pick_file"/>
-            <item
-                android:id="@+id/nav_pick_dir"
-                android:title="@string/nav_pick_dir"/>
-        </menu>
-    </item>
-
 </menu>

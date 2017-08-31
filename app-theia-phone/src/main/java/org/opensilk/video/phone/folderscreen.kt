@@ -1,11 +1,8 @@
 package org.opensilk.video.phone
 
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.transition.Slide
@@ -13,18 +10,15 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import dagger.Binds
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 import dagger.android.support.AndroidSupportInjection
-import dagger.multibindings.IntoMap
 import io.reactivex.Single
 import io.reactivex.disposables.Disposables
 import org.opensilk.media.*
 import org.opensilk.video.AppSchedulers
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
-import org.opensilk.video.ViewModelKey
 import javax.inject.Inject
 
 /**
@@ -34,29 +28,16 @@ import javax.inject.Inject
 abstract class FolderScreenModule {
     @ContributesAndroidInjector
     abstract fun folderFragment(): FolderFragment
-    @Binds @IntoMap @ViewModelKey(FolderActivityViewModel::class)
-    abstract fun viewModel(vm: FolderActivityViewModel): ViewModel
 }
 
 class FolderActivity: DrawerActivity(), MediaRefClickListener {
 
-    lateinit var mViewModel: FolderActivityViewModel
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        mViewModel = fetchViewModel(FolderActivityViewModel::class)
-
-        mViewModel.loadError.observe(this, LiveDataObserver {
-            Snackbar.make(mBinding.coordinator, it, Snackbar.LENGTH_INDEFINITE).show()
-        })
-        mViewModel.mediaTitle.observe(this, LiveDataObserver {
-            title = it
-        })
-
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.coordinator, newFolderFragment(intent.getMediaIdExtra()))
+                    .replace(R.id.swipe_refresh, newFolderFragment(intent.getMediaIdExtra()))
                     .commit()
         }
     }
@@ -65,7 +46,7 @@ class FolderActivity: DrawerActivity(), MediaRefClickListener {
         is MediaDeviceRef,
         is FolderRef -> {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.coordinator, newFolderFragment(mediaRef.id))
+                    .replace(R.id.swipe_refresh, newFolderFragment(mediaRef.id))
                     .addToBackStack(null)
                     .commit()
             true
@@ -75,11 +56,6 @@ class FolderActivity: DrawerActivity(), MediaRefClickListener {
 
     override fun onLongClick(mediaRef: MediaRef): Boolean = false
 
-}
-
-class FolderActivityViewModel @Inject constructor(): ViewModel() {
-    val mediaTitle = MutableLiveData<String>()
-    val loadError = MutableLiveData<String>()
 }
 
 fun newFolderFragment(mediaId: MediaId): FolderFragment {
@@ -95,7 +71,7 @@ fun newFolderFragment(mediaId: MediaId): FolderFragment {
 class FolderFragment: RecyclerFragment() {
 
     lateinit var mViewModel: FolderViewModel
-    lateinit var mActivityViewModel: FolderActivityViewModel
+    lateinit var mActivityViewModel: DrawerActivityViewModel
 
     @Inject lateinit var mAdapter: FolderAdapter
 
@@ -107,14 +83,16 @@ class FolderFragment: RecyclerFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(FolderViewModel::class)
-        mActivityViewModel = fetchActivityViewModel(FolderActivityViewModel::class)
+        mActivityViewModel = fetchActivityViewModel(DrawerActivityViewModel::class)
 
         mViewModel.setMediaId(arguments.getMediaId())
 
         mViewModel.folderItems.observe(this, LiveDataObserver {
+            mActivityViewModel.isRefreshing.value = false
             mAdapter.swapList(it)
         })
         mViewModel.loadError.observe(this, LiveDataObserver {
+            mActivityViewModel.isRefreshing.value = false
             mActivityViewModel.loadError.value = it
         })
         mViewModel.mediaTitle.observe(this, LiveDataObserver {

@@ -28,9 +28,12 @@ class HomeActivity : DrawerActivity() {
         super.onCreate(savedInstanceState)
         title = getString(R.string.title_my_library)
 
+        mBinding.swipeRefresh.isRefreshing = false
+        mBinding.swipeRefresh.isEnabled = false
+
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.coordinator, HomeFragment())
+                    .replace(R.id.swipe_refresh, HomeFragment())
                     .commit()
         }
     }
@@ -51,7 +54,7 @@ class HomeFragment: RecyclerFragment() {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(HomeViewModel::class)
 
-        mViewModel.subscribeData()
+        mViewModel.subscribeData(includeDocuments = true)
 
         mViewModel.devices.observe(this, LiveDataObserver {
             mAdapter.swapList("devices", it)

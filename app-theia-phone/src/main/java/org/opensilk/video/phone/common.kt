@@ -9,30 +9,19 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.DocumentsContract
 import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.util.DiffUtil
-import android.support.v7.util.ListUpdateCallback
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
-import io.github.luizgrp.sectionedrecyclerviewadapter.Section
-import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters
-import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter
-import io.reactivex.Single
-import io.reactivex.disposables.Disposables
 import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
 import org.opensilk.media.database.DocVideoChange
@@ -40,8 +29,6 @@ import org.opensilk.media.loader.doc.DocumentLoader
 import org.opensilk.video.*
 import org.opensilk.video.phone.databinding.ActivityDrawerBinding
 import org.opensilk.video.phone.databinding.RecyclerBinding
-import org.opensilk.video.phone.databinding.RecyclerHeaderItemBinding
-import org.opensilk.video.phone.databinding.RecyclerListItemBinding
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -88,7 +75,9 @@ abstract class BaseVideoActivity: AppCompatActivity(), LifecycleRegistryOwner {
 
 }
 
-abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationItemSelectedListener {
+abstract class DrawerActivity: BaseVideoActivity(),
+        NavigationView.OnNavigationItemSelectedListener,
+        MediaRefClickListener {
 
     protected var mMainHandler = Handler(Looper.getMainLooper())
     protected open var mSelfNavActionId: Int = 0
@@ -113,8 +102,19 @@ abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationI
             mBinding.navView.setCheckedItem(mSelfNavActionId)
         }
 
+        mBinding.swipeRefresh.isRefreshing = true
+
         mDrawerViewModel = fetchViewModel(DrawerActivityViewModel::class)
 
+        mDrawerViewModel.loadError.observe(this, LiveDataObserver {
+            Snackbar.make(mBinding.coordinator, it, Snackbar.LENGTH_INDEFINITE).show()
+        })
+        mDrawerViewModel.mediaTitle.observe(this, LiveDataObserver {
+            title = it
+        })
+        mDrawerViewModel.isRefreshing.observe(this, LiveDataObserver { refresh ->
+            mBinding.swipeRefresh.isRefreshing = refresh
+        })
         mDrawerViewModel.newDocumentId.observe(this, LiveDataObserver { docId ->
             if (docId.isFromTree) {
                 startActivity(Intent(this, FolderActivity::class.java)
@@ -149,18 +149,6 @@ abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationI
                 // change the active item on the list so the user can see the item changed
                 mBinding.navView.setCheckedItem(item.itemId)
             }
-            R.id.nav_pick_dir -> {
-                mMainHandler.post {
-                    startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE),
-                            REQUEST_OPEN_FOLDER)
-                }
-            }
-            R.id.nav_pick_file -> {
-                mMainHandler.post {
-                    startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT)
-                            .setType("video/*"), REQUEST_OPEN_FILE)
-                }
-            }
         }
 
         mBinding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -177,7 +165,8 @@ abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationI
                 takeUri(data)?.let { uri ->
                     mDrawerViewModel.addDocument(DocDirectoryId(treeUri = uri))
                 }
-            } REQUEST_OPEN_FILE -> {
+            }
+            REQUEST_OPEN_FILE -> {
                 takeUri(data)?.let { uri ->
                     mDrawerViewModel.addDocument(DocVideoId(treeUri = uri))
                 }
@@ -197,6 +186,19 @@ abstract class DrawerActivity: BaseVideoActivity(), NavigationView.OnNavigationI
         return uri
     }
 
+    override fun onClick(mediaRef: MediaRef): Boolean = when (mediaRef) {
+        is DocFileDeviceRef -> {
+            startActivityForResult(mediaRef.meta.intent, REQUEST_OPEN_FILE)
+            true
+        }
+        is DocTreeDeviceRef -> {
+            startActivityForResult(mediaRef.meta.intent, REQUEST_OPEN_FOLDER)
+            true
+        }
+        else -> false
+    }
+
+    override fun onLongClick(mediaRef: MediaRef): Boolean = false
 }
 
 fun Context.createBackStack(intent: Intent) {
@@ -216,6 +218,10 @@ class DrawerActivityViewModel
         private val mDocumentLoader: DocumentLoader,
         private val mDatabaseClient: MediaDAO
 ): ViewModel() {
+
+    val mediaTitle = MutableLiveData<String>()
+    val loadError = MutableLiveData<String>()
+    val isRefreshing = MutableLiveData<Boolean>()
 
     val newDocumentId = MutableLiveData<DocumentId>()
 
