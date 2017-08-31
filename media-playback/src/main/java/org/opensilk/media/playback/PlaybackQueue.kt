@@ -54,8 +54,7 @@ constructor() {
                 }
                 idx = 0
             }
-            val nxt = mQueue[idx]
-            s.onSuccess(nxt)
+            s.onSuccess(mQueue[idx])
         }
     }
 
@@ -73,8 +72,11 @@ constructor() {
                 s.onComplete()
                 return@create
             }
-            val id = mHistory.removeLast()
-            val nxt = mQueue.indexOfLast { it.queueId == id }
+            var nxt = -1
+            while (nxt < 0 && mHistory.isNotEmpty()) {
+                val id = mHistory.removeLast()
+                nxt = mQueue.indexOfLast { it.queueId == id }
+            }
             if (nxt < 0) {
                 s.onError(NoSuchElementException())
                 return@create
@@ -98,6 +100,7 @@ constructor() {
                 s.onError(NoCurrentItemException())
                 return@create
             }
+            maybeAddCurrentToHistory()
             var idx = mCurrent + 1
             if (idx >= mQueue.size) {
                 if (!mWrap) {
@@ -106,9 +109,8 @@ constructor() {
                 }
                 idx = 0
             }
-            mHistory.add(mQueue[mCurrent].queueId)
             mCurrent = idx
-            s.onSuccess(mQueue[mCurrent])
+            s.onSuccess(mQueue[idx])
         }
     }
 
@@ -118,15 +120,12 @@ constructor() {
         if (nxt < 0) {
             throw NoSuchElementException()
         }
-        if (mCurrent >= 0 && mCurrent < mQueue.size) {
-            mHistory.add(mQueue[mCurrent].queueId)
-        }
+        maybeAddCurrentToHistory()
         mCurrent = nxt
     }
 
-    fun newItem(mediaDescription: MediaDescription): QueueItem {
-        return QueueItem(mediaDescription, mIdGen.getAndIncrement())
-    }
+    fun newItem(mediaDescription: MediaDescription): QueueItem =
+            QueueItem(mediaDescription, mIdGen.getAndIncrement())
 
     fun add(item: QueueItem) : Boolean {
         val success = mQueue.add(item)
@@ -136,9 +135,7 @@ constructor() {
         return success
     }
 
-    fun add(desc: MediaDescription) : Boolean {
-        return add(newItem(desc))
-    }
+    fun add(desc: MediaDescription) : Boolean = add(newItem(desc))
 
     fun remove(itemId: Long) : Boolean {
         val idx = mQueue.indexOfFirst { it.queueId == itemId }
@@ -147,11 +144,7 @@ constructor() {
         }
         mQueue.removeAt(idx)
         if (mCurrent >= mQueue.size) {
-            if (mWrap) {
-                mCurrent = 0
-            } else {
-                mCurrent = -1
-            }
+            mCurrent = if (mWrap) 0 else -1
         }
         return true
     }
@@ -162,11 +155,13 @@ constructor() {
         mCurrent = -1
     }
 
-    fun get(): List<QueueItem> {
-        return ArrayList(mQueue)
-    }
+    fun get(): List<QueueItem> = ArrayList(mQueue)
 
-    fun notEmpty(): Boolean {
-        return !mQueue.isEmpty()
+    fun notEmpty(): Boolean = !mQueue.isEmpty()
+
+    private fun maybeAddCurrentToHistory() {
+        if (mCurrent >= 0 && mCurrent < mQueue.size) {
+            mHistory.add(mQueue[mCurrent].queueId)
+        }
     }
 }
