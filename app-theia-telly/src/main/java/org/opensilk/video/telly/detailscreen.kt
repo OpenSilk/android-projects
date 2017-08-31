@@ -24,6 +24,7 @@ import dagger.android.ContributesAndroidInjector
 import dagger.android.support.AndroidSupportInjection
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
+import org.opensilk.media.playback.PRETTY_MUCH_COMPLETE
 import org.opensilk.video.*
 import org.opensilk.video.telly.databinding.DetailsFileInfoRowBinding
 import java.lang.ref.WeakReference
@@ -133,7 +134,7 @@ class DetailFragment: DetailsSupportFragment(), LifecycleRegistryOwner, OnAction
             mFileInfoRow.fileInfo = it
         })
         mViewModel.resumeInfo.observe(this, LiveDataObserver { (lastPosition, lastCompletion) ->
-            if (lastCompletion in 1..979) {
+            if (lastCompletion in 1..PRETTY_MUCH_COMPLETE) {
                 mOverviewActionsAdapter.set(POS_RESUME, Action(ACTIONID_RESUME,
                         getString(R.string.btn_resume, humanReadableDuration(lastPosition))))
                 mOverviewActionsAdapter.set(POS_RESTART, Action(ACTIONID_START_OVER,

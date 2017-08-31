@@ -13,3 +13,5 @@ const val VAL_REPEAT_ON = 2 //default
 internal const val VOLUME_DUCK = 0.2f
 // The volume we set the media player when we have audio focus.
 internal const val VOLUME_NORMAL = 1.0f
+
+const val PRETTY_MUCH_COMPLETE = 975

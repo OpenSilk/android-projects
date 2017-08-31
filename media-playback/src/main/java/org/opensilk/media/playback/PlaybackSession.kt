@@ -25,8 +25,6 @@ import com.google.android.exoplayer2.source.UnrecognizedInputFormatException
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import io.reactivex.Single
-import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
 import okhttp3.OkHttpClient
 import org.opensilk.dagger2.ForApp
@@ -327,30 +325,37 @@ constructor(
         }
     }
 
-    private fun fetchAndPlaySiblingsOf(mediaId: MediaId, playbackExtras: PlaybackExtras) {
-        Single.zip<List<MediaRef>, Long, MetaWithPos>(
-                mDbClient.playableSiblingsOf(mediaId).toList(),
-                //get playback position for resume
-                mDbClient.getLastPlaybackPosition(mediaId)
-                        .defaultIfEmpty(0).toSingle(),
-                BiFunction { list, pos -> MetaWithPos(list, pos) }
-        ).subscribe({ mwp ->
-            val lastPlaybackPosition = if (playbackExtras.resume) mwp.pos else 0
-            //fixup the queue
-            mwp.list.forEach {
+    private fun fetchAndPlaySiblingsOf(mediaId: VideoId, playbackExtras: PlaybackExtras) {
+        mDbClient.playableSiblingsOf(mediaId).filter { it is VideoRef }.map { it as VideoRef }
+                .toList().subscribe({ metaList ->
+            //handle last playback position
+            val currentRef = metaList.first {
+                it.id == mediaId
+            }
+            val resumeInfo = currentRef.resumeInfo
+            val lastPlaybackPosition = if (resumeInfo != null && playbackExtras.resume) {
+                if (resumeInfo.lastCompletion < PRETTY_MUCH_COMPLETE) {
+                    resumeInfo.lastPosition
+                } else 0
+            } else 0
+
+            //populate the queue
+            metaList.forEach {
                 mQueue.add(it.toMediaDescription())
             }
-            mMediaSession.setQueue(mQueue.get())
-            val current = mQueue.get().first {
+            val queue = mQueue.get()
+            val currentQueueItem = queue.first {
                 it.description.mediaId.toMediaId() == mediaId
             }
-            mQueue.setCurrent(current.queueId)
+            mQueue.setCurrent(currentQueueItem.queueId)
+            mMediaSession.setQueue(queue)
+
             //play it
-            prepareMedia(current.description._getMediaUri(), lastPlaybackPosition)
+            prepareMedia(currentQueueItem.description._getMediaUri(), lastPlaybackPosition)
             if (playbackExtras.playWhenReady) {
                 play()
             }
-            updateMetadata(current.description)
+            updateMetadata(currentQueueItem.description)
         }, { t ->
             stop()
             changeState(STATE_ERROR) {
