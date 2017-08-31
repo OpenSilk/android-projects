@@ -204,6 +204,14 @@ fun MediaRef.toMediaDescription(): MediaDescription {
                     .setSubtitle(meta.creator)
                     .setMediaId(id.json)
         }
+        is DocTreeDeviceRef -> {
+            bob.setTitle(meta.title)
+                    .setMediaId(id.json)
+        }
+        is DocFileDeviceRef -> {
+            bob.setTitle(meta.title)
+                    .setMediaId(id.json)
+        }
         is DocDirectoryRef -> {
             bob.setTitle(meta.title)
                     .setMediaId(id.json)
@@ -225,7 +233,7 @@ fun MediaRef.toMediaDescription(): MediaDescription {
                     .setExtras(bundle(KEY_MEDIA_URI, meta.mediaUri)
                             ._putLong(KEY_DURATION, meta.duration))
         }
-        else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
+        else -> TODO("Unsupported mediaRef $this")
     }
     return bob.build()
 }
@@ -243,6 +251,10 @@ fun MediaRef.toMediaItem(): MediaItem = when (this) {
     is UpnpAudioRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
     }
+    is DocFileDeviceRef,
+    is DocTreeDeviceRef -> {
+        MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
+    }
     is DocDirectoryRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_BROWSABLE)
     }
@@ -256,5 +268,5 @@ fun MediaRef.toMediaItem(): MediaItem = when (this) {
     is VideoRef -> {
         MediaItem(toMediaDescription(), MediaItem.FLAG_PLAYABLE)
     }
-    else -> TODO("Unsupported mediaRef ${this::javaClass.name}")
+    else -> TODO("Unsupported mediaRef $this")
 }

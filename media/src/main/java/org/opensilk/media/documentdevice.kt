@@ -7,24 +7,24 @@ import android.util.JsonWriter
 const val DOCUMENT_TREE_ID = "tree"
 const val DOCUMENT_FILE_ID = "file"
 
-interface DocumentDeviceId: MediaDeviceId {
+interface DocDeviceId : MediaDeviceId {
     val id: String
 }
 
-interface DocumentDeviceMeta: MediaDeviceMeta {
+interface DocDeviceMeta : MediaDeviceMeta {
     val intent: Intent
 }
 
-interface DocumentDeviceRef: MediaDeviceRef
+interface DocDeviceRef : MediaDeviceRef
 
-object DocumentTreeDeviceId: DocumentDeviceId {
+object DocTreeDeviceId : DocDeviceId {
     override val id: String = DOCUMENT_TREE_ID
     override val json: String by lazy {
-        writeJson(DocumentDeviceIdTransformer, this)
+        writeJson(DocDeviceIdTransformer, this)
     }
 }
 
-object DocumentTreeDeviceMeta: DocumentDeviceMeta {
+object DocTreeDeviceMeta : DocDeviceMeta {
     override val title: String = "External directory"
     override val intent: Intent by lazy {
         Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
@@ -34,19 +34,19 @@ object DocumentTreeDeviceMeta: DocumentDeviceMeta {
 /**
  * Item representing access to directories in the SAF
  */
-object DocumentTreeDeviceRef: DocumentDeviceRef {
-    override val id = DocumentTreeDeviceId
-    override val meta = DocumentTreeDeviceMeta
+object DocTreeDeviceRef : DocDeviceRef {
+    override val id = DocTreeDeviceId
+    override val meta = DocTreeDeviceMeta
 }
 
-object DocumentFileDeviceId: DocumentDeviceId {
+object DocFileDeviceId : DocDeviceId {
     override val id: String = DOCUMENT_FILE_ID
     override val json: String by lazy {
-        writeJson(DocumentDeviceIdTransformer, this)
+        writeJson(DocDeviceIdTransformer, this)
     }
 }
 
-object DocumentFileDeviceMeta: DocumentDeviceMeta {
+object DocFileDeviceMeta : DocDeviceMeta {
     override val title: String = "External file"
     override val intent: Intent by lazy {
         Intent(Intent.ACTION_OPEN_DOCUMENT)
@@ -58,24 +58,24 @@ object DocumentFileDeviceMeta: DocumentDeviceMeta {
 /**
  * Item representing access to files in the SAF
  */
-object DocumentFileDeviceRef: DocumentDeviceRef {
-    override val id = DocumentFileDeviceId
-    override val meta = DocumentFileDeviceMeta
+object DocFileDeviceRef : DocDeviceRef {
+    override val id = DocFileDeviceId
+    override val meta = DocFileDeviceMeta
 }
 
 
 /**
  * transformer for document device ids
  */
-object DocumentDeviceIdTransformer: MediaIdTransformer<DocumentDeviceId> {
+object DocDeviceIdTransformer : MediaIdTransformer<DocDeviceId> {
     override val kind: String = DOCUMENT_DEVICE
     override val version: Int = 1
 
-    override fun write(jw: JsonWriter, item: DocumentDeviceId) {
+    override fun write(jw: JsonWriter, item: DocDeviceId) {
         jw.name("id").value(item.id)
     }
 
-    override fun read(jr: JsonReader, version: Int): DocumentDeviceId {
+    override fun read(jr: JsonReader, version: Int): DocDeviceId {
         var id = ""
         while (jr.hasNext()) {
             when (jr.nextName()) {
@@ -84,8 +84,8 @@ object DocumentDeviceIdTransformer: MediaIdTransformer<DocumentDeviceId> {
             }
         }
         return when (id) {
-            DOCUMENT_TREE_ID -> DocumentTreeDeviceId
-            DOCUMENT_FILE_ID -> DocumentFileDeviceId
+            DOCUMENT_TREE_ID -> DocTreeDeviceId
+            DOCUMENT_FILE_ID -> DocFileDeviceId
             else -> TODO()
         }
     }
