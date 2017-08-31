@@ -304,8 +304,6 @@ constructor(
         }
     }
 
-    private class MetaWithPos(val list: List<MediaRef>, val pos: Long)
-
     override fun onPlayFromMediaId(mediaId: String, extras: Bundle?) {
         Timber.d("onPlayFromMediaId(%s)", mediaId)
         pause()
