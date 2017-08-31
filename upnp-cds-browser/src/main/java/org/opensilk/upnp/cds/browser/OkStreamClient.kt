@@ -13,8 +13,6 @@ import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 
-private val log: Logger = Logger.getLogger(StreamClient::class.java.name)
-
 /**
  * Created by drew on 8/5/17.
  */
@@ -23,6 +21,10 @@ constructor(
         okClient: OkHttpClient,
         private val mConfiguration: OkStreamClientConfig
 ): AbstractStreamClient<OkStreamClientConfig, Call>() {
+
+    companion object {
+        private val log: Logger = Logger.getLogger(StreamClient::class.java.name)
+    }
 
     private val mOkClient = okClient.newBuilder()
             .connectTimeout(configuration.timeoutSeconds.toLong(), TimeUnit.SECONDS)
@@ -33,9 +35,7 @@ constructor(
         //nothing
     }
 
-    override fun getConfiguration(): OkStreamClientConfig {
-        return mConfiguration
-    }
+    override fun getConfiguration(): OkStreamClientConfig = mConfiguration
 
     override fun createRequest(message: StreamRequestMessage?): Call? {
         if (message == null) {
@@ -106,12 +106,13 @@ constructor(
             if (log.isLoggable(Level.FINE)) {
                 log.fine("Sending HTTP request: $message")
             }
-            val response = request.execute()
-            if (response.isSuccessful) {
-                return@Callable createResponse(response)
-            } else {
-                log.warning("Unsuccessful HTTP response: $response")
-                return@Callable null
+            return@Callable request.execute().use { response ->
+                if (response.isSuccessful) {
+                    createResponse(response)
+                } else {
+                    log.warning("Unsuccessful HTTP response: $response")
+                    null
+                }
             }
         }
     }
@@ -120,9 +121,7 @@ constructor(
         request?.cancel()
     }
 
-    override fun logExecutionException(t: Throwable?): Boolean {
-        return true
-    }
+    override fun logExecutionException(t: Throwable?): Boolean = true
 
     private fun createResponse(response: Response): StreamResponseMessage {
         // Status
