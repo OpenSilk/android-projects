@@ -21,7 +21,6 @@ import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
 import org.opensilk.media.UpnpDeviceId
 import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.UpnpDeviceChange
 import org.opensilk.media.database.UpnpUpdateIdChange
 import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.upnp.cds.browser.CDSGetSystemUpdateIDAction
@@ -52,7 +51,6 @@ class UpnpDevicesObserver
 
         //reset devices and post new search
         mDatabaseClient.hideAllUpnpDevices()
-        mDatabaseClient.postChange(UpnpDeviceChange())
         mUpnpService.registry.removeAllRemoteDevices()
         mUpnpService.registry.removeAllLocalDevices()
         mUpnpService.registry.addListener(this)
@@ -80,7 +78,6 @@ class UpnpDevicesObserver
             val metaDevice = service.device.toMediaMeta()
             Timber.d("Found new CDS ${metaDevice.meta.title}")
             mDatabaseClient.addUpnpDevice(metaDevice)
-            mDatabaseClient.postChange(UpnpDeviceChange())
             subscribeEvents(service)
         }
     }
@@ -91,7 +88,6 @@ class UpnpDevicesObserver
     override fun deviceRemoved(registry: Registry, device: Device<*, out Device<*, *, *>, out Service<*, *>>) {
         device.findService(CDSserviceType)?.let {
             mDatabaseClient.hideUpnpDevice(it.device.identity.udn.identifierString)
-            mDatabaseClient.postChange(UpnpDeviceChange())
             unsubscribeEvents(it)
         }
     }

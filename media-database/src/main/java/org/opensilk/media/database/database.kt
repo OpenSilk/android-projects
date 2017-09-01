@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.opensilk.dagger2.ForApp
 import javax.inject.Inject
 
-const private val VERSION = 4
+const private val VERSION = 5
 
 /**
  * Created by drew on 7/18/17.
@@ -286,10 +286,11 @@ internal class MediaDB
                     "UNIQUE(path, device_uuid)" +
                     ");")
         }
-        if (oldVersion < 4) {
+        if (oldVersion < 5) {
             db.execSQL("DROP TABLE IF EXISTS pinned")
             db.execSQL("CREATE TABLE pinned (" +
-                    "media_id TEXT UNIQUE NOT NULL " +
+                    "media_id TEXT UNIQUE NOT NULL, " +
+                    "pinned INTEGER DEFAULT 1 " +
                     ");")
         }
     }

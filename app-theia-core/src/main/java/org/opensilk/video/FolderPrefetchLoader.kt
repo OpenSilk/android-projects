@@ -76,8 +76,8 @@ class FolderPrefetchLoader @Inject constructor(
 
     private fun postChange(parentId: MediaId) {
         mDatabaseClient.postChange(when (parentId) {
-            is UpnpDeviceId -> UpnpDeviceChange()
-            is StorageDeviceId -> StorageDeviceChange()
+            is UpnpDeviceId -> UpnpDeviceChange(parentId)
+            is StorageDeviceId -> StorageDeviceChange(parentId)
 
             is UpnpFolderId -> UpnpFolderChange(parentId)
             is DocDirectoryId -> DocDirectoryChange(parentId)

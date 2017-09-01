@@ -14,6 +14,7 @@ import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.media.*
 import org.opensilk.reactivex2.cancellationSignal
 import org.opensilk.reactivex2.subscribeIgnoreError
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,17 +44,23 @@ class MediaDAO
 
     fun postChange(event: DatabaseChange) {
         mChangesScheduler.scheduleDirect {
+            when (event) {
+                is FolderChange -> Timber.d("onFolderChange(${event.folderId}")
+                is VideoChange -> Timber.d("onVideoChange(${event.videoId}")
+                is DeviceChange -> Timber.d("onDeviceChange(${event.deviceId})")
+                else -> Timber.d("onChange($event)")
+            }
             mChangesSubject.onNext(event)
         }
     }
 
     fun postChangeFor(mediaId: MediaId) {
-        when (mediaId) {
+        postChange(when (mediaId) {
             is FolderId -> FolderChange(mediaId)
             is VideoId -> VideoChange(mediaId)
-            is MediaDeviceId -> DeviceChange()
+            is MediaDeviceId -> DeviceChange(mediaId)
             else -> TODO("$mediaId")
-        }
+        })
     }
 
     private fun <T> doQuery(uri: Uri, projection: Array<out String>?, selection: String?,
@@ -281,11 +288,11 @@ class MediaDAO
                     { c -> c.getString(0).toMediaId() }
             ).flatMapMaybe { mediaId -> getMediaRef(mediaId) }
 
-    fun itemPinned(mediaId: MediaId): Single<Boolean> =
+    fun checkPinned(mediaId: MediaId): Single<Boolean> =
             Single.fromCallable {
-                mResolver.query(mUris.pins(), arrayOf("media_id"), null, null,
-                        null, null)?.use { c ->
-                    return@use c.count == 1
+                mResolver.query(mUris.pins(), arrayOf("media_id"), "media_id=?",
+                        arrayOf(mediaId.json), null, null)?.use { c ->
+                    return@use c.count > 0
                 } ?: false
             }
 
@@ -307,18 +314,21 @@ class MediaDAO
      * Add a meta item describing a upnp device with a content directory service to the database
      * item should be created with Device.toMediaMeta
      */
-    fun addUpnpDevice(upnpDevice: UpnpDeviceRef) =
-            mResolver.insert(mUris.upnpDevice(), upnpDevice.contentValues()) == URI_SUCCESS
+    fun addUpnpDevice(upnpDevice: UpnpDeviceRef) = mResolver.insert(mUris.upnpDevice(),
+            upnpDevice.contentValues()).apply {
+        postChangeFor(upnpDevice.id)
+    } == URI_SUCCESS
 
     /**
      * marks the upnp device with giving identity as unavailable
      */
-    fun hideUpnpDevice(identity: String): Boolean =
-            mResolver.update(mUris.upnpDevice(), contentValues("available", 0),
-                    "device_id=?", arrayOf(identity)) != 0
+    fun hideUpnpDevice(identity: String): Boolean = mResolver.update(mUris.upnpDevice(),
+            contentValues("available", 0), "device_id=?", arrayOf(identity)).apply {
+        postChangeFor(UpnpDeviceId(identity))
+    } != 0
 
-    fun hideAllUpnpDevices() =
-            mResolver.update(mUris.upnpDevice(), contentValues("available", 0), null, null)
+    fun hideAllUpnpDevices(): Boolean = mResolver.update(mUris.upnpDevice(),
+            contentValues("available", 0), null, null) != 0
 
     /**
      * retrieves all the upnp devices marked as available
@@ -563,10 +573,12 @@ class MediaDAO
      */
 
     fun addStorageDevice(deviceRef: StorageDeviceRef) =
-            mResolver.insert(mUris.storageDevice(), deviceRef.contentValues()) == URI_SUCCESS
+            mResolver.insert(mUris.storageDevice(), deviceRef.contentValues()).apply {
+                postChangeFor(deviceRef.id)
+            } == URI_SUCCESS
 
-    fun hideAllStorageDevices(): Boolean =
-            mResolver.update(mUris.storageDevice(), contentValues("hidden", 1), null, null) != 0
+    fun hideAllStorageDevices(): Boolean = mResolver.update(mUris.storageDevice(),
+            contentValues("hidden", 1), null, null) != 0
 
     fun getAvailableStorageDevices(): Observable<StorageDeviceRef> =
             doQuery(mUris.storageDevice(), storageDeviceProjection,

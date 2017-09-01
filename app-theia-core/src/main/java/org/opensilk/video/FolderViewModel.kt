@@ -5,6 +5,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposables
 import io.reactivex.functions.Consumer
 import org.opensilk.media.*
+import org.opensilk.media.database.DeviceChange
 import org.opensilk.media.database.FolderChange
 import org.opensilk.media.database.MediaDAO
 import timber.log.Timber
@@ -113,10 +114,14 @@ class FolderViewModel @Inject constructor(
     private fun subscribeActions() {
         val mediaId = mMediaId
         mDisposables.add(mDatabaseClient.changesObservable
-                .filter { it is FolderChange && it.folderId == mediaId }
+                .filter { when (it) {
+                    is FolderChange -> it.folderId == mediaId
+                    is DeviceChange -> it.deviceId == mediaId
+                    else -> false
+                } }
                 .startWith(FolderChange(NoFolderId))
                 .switchMapSingle {
-                    mDatabaseClient.itemPinned(mediaId).map { pinned ->
+                    mDatabaseClient.checkPinned(mediaId).map { pinned ->
                         listOf(if (pinned) FolderAction.UNPIN else FolderAction.PIN)
                     }
                 }.subscribe({ actionList ->

@@ -12,9 +12,9 @@ class UpnpUpdateIdChange(val updateId: Long): DatabaseChange()
 /**
  * Represents a change in media devices
  */
-open class DeviceChange: DatabaseChange()
-class UpnpDeviceChange: DeviceChange()
-class StorageDeviceChange: DeviceChange()
+open class DeviceChange(open val deviceId: MediaDeviceId = NoMediaDeviceId): DatabaseChange()
+class UpnpDeviceChange(override val deviceId: UpnpDeviceId): DeviceChange()
+class StorageDeviceChange(override val deviceId: StorageDeviceId): DeviceChange()
 
 /**
  * Represents a change in a video ref

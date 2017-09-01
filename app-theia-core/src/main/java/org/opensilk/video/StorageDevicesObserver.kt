@@ -11,7 +11,6 @@ import io.reactivex.Completable
 import io.reactivex.disposables.Disposables
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.StorageDeviceChange
 import org.opensilk.media.loader.storage.StorageDeviceLoader
 import timber.log.Timber
 import javax.inject.Inject
@@ -59,9 +58,7 @@ class StorageDevicesObserver @Inject constructor(
 
     fun updateStorageDevices() {
         mDisposable.dispose()
-        mDisposable = storageCompletable.subscribeOn(AppSchedulers.diskIo).subscribe({
-            mDatabaseClient.postChange(StorageDeviceChange())
-        })
+        mDisposable = storageCompletable.subscribeOn(AppSchedulers.diskIo).subscribe()
     }
 
     private val storageCompletable: Completable by lazy {

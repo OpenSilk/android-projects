@@ -5,6 +5,10 @@ package org.opensilk.media
  */
 interface MediaDeviceId: MediaId
 
+object NoMediaDeviceId: MediaDeviceId {
+    override val json: String = ""
+}
+
 /**
  * Basic meta for [MediaDeviceRef]
  */
