@@ -18,9 +18,7 @@ object AppSchedulers {
     }
     val networkIo: Scheduler = Schedulers.io()
     val main: Scheduler = AndroidSchedulers.mainThread()
-    val background: Scheduler by lazy {
-        ExecutorScheduler(Executors.newSingleThreadExecutor())
-    }
+    val background: Scheduler = Schedulers.single()
     val newThread: Scheduler = networkIo
     val prefetch: Scheduler by lazy {
         ExecutorScheduler(Executors.newFixedThreadPool(2))
