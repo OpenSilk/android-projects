@@ -9,6 +9,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.exceptions.Exceptions
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.MediaDeviceRef
+import org.opensilk.media.MediaRef
 import org.opensilk.media.UpnpVideoRef
 import org.opensilk.media.VideoRef
 import javax.inject.Inject
@@ -21,11 +22,13 @@ class HomeViewModel
         @ForApp private val mContext: Context,
         private val mServersLoader: DevicesLoader,
         private val mRecentsLoader: RecentlyPlayedLoader,
-        private val mStorageObserver: StorageDevicesObserver
+        private val mStorageObserver: StorageDevicesObserver,
+        private val mPinnedLoader: PinnedLoader
 ): ViewModel(), LifecycleObserver {
 
     val devices = MutableLiveData<List<MediaDeviceRef>>()
     val recentlyPlayed = MutableLiveData<List<VideoRef>>()
+    val pinnedContainers = MutableLiveData<List<MediaRef>>()
     val needPermissions = MutableLiveData<Array<String>>()
 
     private val mDisposables = CompositeDisposable()
@@ -49,33 +52,33 @@ class HomeViewModel
         mSubscribeOnce.Do {
             subscribeServers(includeDocuments)
             subscribeRecents()
+            subscribePinned()
         }
     }
 
     private var firstList = true
 
     private fun subscribeServers(includeDocuments: Boolean) {
-        val s = mServersLoader.devices(includeDocuments)
-                .subscribe({ list ->
-                    //first list might be empty since it comes from the database
-                    //don't post it, so the ui wont display empty
-                    if (!firstList || list.isNotEmpty()) {
-                        firstList = false
-                        devices.postValue(list)
-                    }
-                }, {
-                    Exceptions.propagate(it) //TODO handle errors
-                }
-        )
-        mDisposables.add(s)
+        mDisposables.add(mServersLoader.devices(includeDocuments).subscribe({ list ->
+            //first list might be empty since it comes from the database
+            //don't post it, so the ui wont display empty
+            if (!firstList || list.isNotEmpty()) {
+                firstList = false
+                devices.postValue(list)
+            }
+        }))
     }
 
     private fun subscribeRecents() {
-        val s = mRecentsLoader.recentlyPlayed()
-                .subscribe({
-                    recentlyPlayed.postValue(it)
-                })
-        mDisposables.add(s)
+        mDisposables.add(mRecentsLoader.recentlyPlayed().subscribe({
+            recentlyPlayed.postValue(it)
+        }))
+    }
+
+    private fun subscribePinned() {
+        mDisposables.add(mPinnedLoader.pinnedContainers().subscribe({
+            pinnedContainers.postValue(it)
+        }))
     }
 
     override fun onCleared() {
