@@ -31,7 +31,7 @@ class FoldersLoader
                 //during lookup we can be flooded
         return changesForDevice(deviceId)
                 .mergeWith(changesForDeviceChildren(deviceId))
-                .sample(3, TimeUnit.SECONDS)
+                .throttleFirst(3, TimeUnit.SECONDS, AppSchedulers.background)
                 .startWith(Change.SELF)
                 .switchMapSingle { _ ->
                     items.subscribeOn(AppSchedulers.diskIo)
@@ -52,7 +52,7 @@ class FoldersLoader
 
         return changesForFolder(folderId)
                 .mergeWith(changesForFolderChildren(folderId))
-                .sample(3, TimeUnit.SECONDS)
+                .throttleFirst(3, TimeUnit.SECONDS, AppSchedulers.background)
                 .startWith(Change.SELF)
                 .switchMapSingle { _ ->
                     items.subscribeOn(AppSchedulers.diskIo)

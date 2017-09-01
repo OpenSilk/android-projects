@@ -5,6 +5,7 @@ import io.reactivex.Single
 import org.opensilk.media.*
 import org.opensilk.media.database.DeviceChange
 import org.opensilk.media.database.MediaDAO
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
@@ -17,6 +18,7 @@ class DevicesLoader
     fun devices(includeDocuments: Boolean = false): Observable<out List<MediaDeviceRef>> =
             mDatabaseClient.changesObservable
                     .filter { it is DeviceChange }
+                    .throttleFirst(3, TimeUnit.SECONDS, AppSchedulers.background)
                     .startWith(DeviceChange())
                     .switchMapSingle {
                         if (includeDocuments) {

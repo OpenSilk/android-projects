@@ -8,6 +8,7 @@ import org.opensilk.media.MediaRef
 import org.opensilk.media.database.DeviceChange
 import org.opensilk.media.database.FolderChange
 import org.opensilk.media.database.MediaDAO
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
@@ -21,6 +22,7 @@ class PinnedLoader
     fun pinnedContainers(): Observable<List<MediaRef>> =
             mDatabaseClient.changesObservable
                     .filter { it is DeviceChange || it is FolderChange }
+                    .throttleFirst(3, TimeUnit.SECONDS, AppSchedulers.background)
                     .startWith(DeviceChange())
                     .switchMapSingle {
                         pinnedSingle.subscribeOn(AppSchedulers.diskIo)
