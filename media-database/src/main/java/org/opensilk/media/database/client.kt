@@ -7,7 +7,9 @@ import android.net.Uri
 import android.os.OperationCanceledException
 import io.reactivex.Maybe
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.functions.Consumer
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import org.opensilk.media.*
 import org.opensilk.reactivex2.cancellationSignal
@@ -34,12 +36,24 @@ class MediaDAO
 ) {
 
     private val mChangesSubject = BehaviorSubject.create<DatabaseChange>()
+    private val mChangesScheduler = Schedulers.single()
 
     val changesObservable: Observable<DatabaseChange>
         get() = mChangesSubject.hide()
 
     fun postChange(event: DatabaseChange) {
-        mChangesSubject.onNext(event)
+        mChangesScheduler.scheduleDirect {
+            mChangesSubject.onNext(event)
+        }
+    }
+
+    fun postChangeFor(mediaId: MediaId) {
+        when (mediaId) {
+            is FolderId -> FolderChange(mediaId)
+            is VideoId -> VideoChange(mediaId)
+            is MediaDeviceId -> DeviceChange()
+            else -> TODO("$mediaId")
+        }
     }
 
     private fun <T> doQuery(uri: Uri, projection: Array<out String>?, selection: String?,
@@ -258,6 +272,34 @@ class MediaDAO
     }
 
     /*
+     * START PINS
+     */
+
+    fun getPinnedItems(): Observable<MediaRef> =
+            doQuery(mUris.pins(), arrayOf("media_id"),
+                    null, null, null,
+                    { c -> c.getString(0).toMediaId() }
+            ).flatMapMaybe { mediaId -> getMediaRef(mediaId) }
+
+    fun itemPinned(mediaId: MediaId): Single<Boolean> =
+            Single.fromCallable {
+                mResolver.query(mUris.pins(), arrayOf("media_id"), null, null,
+                        null, null)?.use { c ->
+                    return@use c.count == 1
+                } ?: false
+            }
+
+    fun pinItem(mediaId: MediaId): Boolean =
+            mResolver.insert(mUris.pins(), contentValues("media_id", mediaId.json)).apply {
+                postChangeFor(mediaId)
+            } == URI_SUCCESS
+
+    fun unpinItem(mediaId: MediaId): Boolean =
+            mResolver.delete(mUris.pins(), "media_id=?", arrayOf(mediaId.json)).apply {
+                postChangeFor(mediaId)
+            } != 0
+
+    /*
      * START UPNP
      */
 
@@ -271,17 +313,12 @@ class MediaDAO
     /**
      * marks the upnp device with giving identity as unavailable
      */
-    fun hideUpnpDevice(identity: String): Boolean {
-        val cv = ContentValues()
-        cv.put("available", 0)
-        return mResolver.update(mUris.upnpDevice(), cv, "device_id=?", arrayOf(identity)) != 0
-    }
+    fun hideUpnpDevice(identity: String): Boolean =
+            mResolver.update(mUris.upnpDevice(), contentValues("available", 0),
+                    "device_id=?", arrayOf(identity)) != 0
 
-    fun hideAllUpnpDevices() {
-        val cv = ContentValues()
-        cv.put("available", 0)
-        mResolver.update(mUris.upnpDevice(), cv, null, null)
-    }
+    fun hideAllUpnpDevices() =
+            mResolver.update(mUris.upnpDevice(), contentValues("available", 0), null, null)
 
     /**
      * retrieves all the upnp devices marked as available
@@ -297,9 +334,7 @@ class MediaDAO
     }
 
     fun setUpnpDeviceSystemUpdateId(deviceId: UpnpDeviceId, updateId: Long): Boolean {
-        val values = ContentValues()
-        values.put("update_id", updateId)
-        return mResolver.update(mUris.upnpDevice(), values,
+        return mResolver.update(mUris.upnpDevice(), contentValues("update_id", updateId),
                 "device_id=?", arrayOf(deviceId.deviceId)) != 0
     }
 
@@ -409,8 +444,7 @@ class MediaDAO
      * Marks hidden column on upnp folders and videos with specified parent
      */
     fun hideChildrenOf(parentId: UpnpContainerId) {
-        val cv = ContentValues()
-        cv.put("hidden", "1")
+        val cv = contentValues("hidden", 1)
         mResolver.update(mUris.upnpFolder(), cv, "device_id=? AND parent_id=?",
                 arrayOf(parentId.deviceId, parentId.containerId))
         mResolver.update(mUris.upnpVideo(), cv, "device_id=? AND parent_id=?",
@@ -506,8 +540,7 @@ class MediaDAO
     }
 
     fun hideChildrenOf(documentId: DocDirectoryId): Boolean {
-        val values = ContentValues()
-        values.put("hidden", 1)
+        val values = contentValues("hidden", 1)
         var num = 0
         num += mResolver.update(mUris.documentDirectory(), values,
                 "tree_uri=? AND document_id=? AND parent_id=?",
@@ -532,63 +565,54 @@ class MediaDAO
     fun addStorageDevice(deviceRef: StorageDeviceRef) =
             mResolver.insert(mUris.storageDevice(), deviceRef.contentValues()) == URI_SUCCESS
 
-    fun hideAllStorageDevices(): Boolean {
-        val values = ContentValues()
-        values.put("hidden", 1)
-        return mResolver.update(mUris.storageDevice(), values, null, null) != 0
-    }
+    fun hideAllStorageDevices(): Boolean =
+            mResolver.update(mUris.storageDevice(), contentValues("hidden", 1), null, null) != 0
 
     fun getAvailableStorageDevices(): Observable<StorageDeviceRef> =
             doQuery(mUris.storageDevice(), storageDeviceProjection,
                 "hidden=0", null, "_display_name",
                 { c -> c.toStorageDevice() })
 
-    fun getStorageDevice(deviceId: StorageDeviceId): Maybe<StorageDeviceRef> {
-        return doGet(mUris.storageDevice(), storageDeviceProjection,
-                "uuid=?",
-                arrayOf(deviceId.uuid),
-                { c -> c.toStorageDevice() })
-    }
+    fun getStorageDevice(deviceId: StorageDeviceId): Maybe<StorageDeviceRef> =
+            doGet(mUris.storageDevice(), storageDeviceProjection,
+                    "uuid=?",
+                    arrayOf(deviceId.uuid),
+                    { c -> c.toStorageDevice() })
 
     fun addStorageFolder(folderRef: StorageFolderRef) =
             mResolver.insert(mUris.storageFolder(), folderRef.contentValues()) == URI_SUCCESS
 
-    fun getStorageFoldersUnder(containerId: StorageContainerId): Observable<StorageFolderRef> {
-        return doQuery(mUris.storageFolder(), storageFolderProjection,
+    fun getStorageFoldersUnder(containerId: StorageContainerId): Observable<StorageFolderRef> =
+            doQuery(mUris.storageFolder(), storageFolderProjection,
                 "f.parent_path=? AND device_uuid=? AND f.hidden=0",
                 arrayOf(containerId.path, containerId.uuid),
                 "f._display_name", { c ->c.toStorageFolder() })
-    }
 
-    fun getStorageFolder(folderId: StorageFolderId): Maybe<StorageFolderRef> {
-        return doGet(mUris.storageFolder(), storageFolderProjection,
+    fun getStorageFolder(folderId: StorageFolderId): Maybe<StorageFolderRef> =
+            doGet(mUris.storageFolder(), storageFolderProjection,
                 "f.path=? AND device_uuid=?",
                 arrayOf(folderId.path, folderId.uuid),
                 { c -> c.toStorageFolder() })
-    }
 
     fun addStorageVideo(videoRef: StorageVideoRef) =
             mResolver.insert(mUris.storageVideo(), videoRef.contentValues()) == URI_SUCCESS
 
-    fun getStorageVideosUnder(containerId: StorageContainerId): Observable<StorageVideoRef> {
-        return doQuery(mUris.storageVideo(), storageVideoProjection,
+    fun getStorageVideosUnder(containerId: StorageContainerId): Observable<StorageVideoRef> =
+            doQuery(mUris.storageVideo(), storageVideoProjection,
                 "v.parent_path=? AND v.device_uuid=? AND v.hidden=0",
                 arrayOf(containerId.path, containerId.uuid),
                 "v._display_name",
                 { c -> c.toStorageVideo(mApiHelper) })
-    }
 
-    fun getStorageVideo(videoId: StorageVideoId): Maybe<StorageVideoRef> {
-        return doGet(mUris.storageVideo(), storageVideoProjection,
+    fun getStorageVideo(videoId: StorageVideoId): Maybe<StorageVideoRef> =
+            doGet(mUris.storageVideo(), storageVideoProjection,
                 "v.path=? AND v.device_uuid=?",
                 arrayOf(videoId.path, videoId.uuid),
                 {c -> c.toStorageVideo(mApiHelper) })
-    }
 
-    fun getRecentlyPlayedStorageVideos(): Observable<StorageVideoRef> {
-        return doQuery(mUris.storageVideo(), storageVideoProjection, "p.last_played != ''", null,
+    fun getRecentlyPlayedStorageVideos(): Observable<StorageVideoRef> =
+            doQuery(mUris.storageVideo(), storageVideoProjection, "p.last_played != ''", null,
                 " p.last_played DESC LIMIT 10 ", { c -> c.toStorageVideo(mApiHelper) })
-    }
 
     fun getStorageVideoOverview(videoId: StorageVideoId): Maybe<String> {
         return Maybe.create { s ->
@@ -631,8 +655,7 @@ class MediaDAO
     }
 
     fun hideChildrenOf(containerId: StorageContainerId): Boolean {
-        val values = ContentValues()
-        values.put("hidden", 1)
+        val values = contentValues("hidden", 1)
         var num = 0
         num += mResolver.update(mUris.storageFolder(), values,
                 "parent_path=? AND device_uuid=?",
@@ -654,11 +677,10 @@ class MediaDAO
     fun addTvSeries(series: TvSeriesRef) =
             mResolver.insert(mUris.tvSeries(), series.contentValues()) == URI_SUCCESS
 
-    fun getTvSeries(seriesId: TvSeriesId): Maybe<TvSeriesRef> {
-        return doGet(mUris.tvSeries(), tvSeriesProjection,
+    fun getTvSeries(seriesId: TvSeriesId): Maybe<TvSeriesRef> =
+            doGet(mUris.tvSeries(), tvSeriesProjection,
                 "_id=?", arrayOf(seriesId.seriesId.toString()),
                 { c -> c.toTvSeries() })
-    }
 
     fun addTvEpisodes(episodes: List<TvEpisodeRef>): Int {
         val values = Array(episodes.size, { idx ->
@@ -667,17 +689,15 @@ class MediaDAO
         return mResolver.bulkInsert(mUris.tvEpisode(), values)
     }
 
-    fun getTvEpisodesForTvSeries(seriesId: TvSeriesId): Observable<TvEpisodeRef> {
-        return doQuery(mUris.tvEpisode(), tvEpisodesProjection,
+    fun getTvEpisodesForTvSeries(seriesId: TvSeriesId): Observable<TvEpisodeRef> =
+            doQuery(mUris.tvEpisode(), tvEpisodesProjection,
                 "series_id=?", arrayOf(seriesId.seriesId.toString()),
                 null, { c ->c.toTvEpisodeMediaMeta() })
-    }
 
-    fun getTvEpisode(episodeId: TvEpisodeId): Maybe<TvEpisodeRef> {
-        return doGet(mUris.tvEpisode(), tvEpisodesProjection,
+    fun getTvEpisode(episodeId: TvEpisodeId): Maybe<TvEpisodeRef> =
+            doGet(mUris.tvEpisode(), tvEpisodesProjection,
                 "_id=?", arrayOf(episodeId.episodeId.toString()),
                 { c -> c.toTvEpisodeMediaMeta() })
-    }
 
     fun addTvImages(banners: List<TvImageRef>): Int {
         val values = Array(banners.size, { idx ->
@@ -686,17 +706,15 @@ class MediaDAO
         return mResolver.bulkInsert(mUris.tvImage(), values)
     }
 
-    fun getTvPosters(seriesId: TvSeriesId): Observable<TvImageRef> {
-        return doQuery(mUris.tvImage(), tvBannerProjection,
+    fun getTvPosters(seriesId: TvSeriesId): Observable<TvImageRef> =
+            doQuery(mUris.tvImage(), tvBannerProjection,
                 "series_id=? and type=?", arrayOf(seriesId.seriesId.toString(), "poster"),
                 "rating DESC", { c ->c.toTvBannerMediaMeta() })
-    }
 
-    fun getTvBackdrops(seriesId: TvSeriesId): Observable<TvImageRef> {
-        return doQuery(mUris.tvImage(), tvBannerProjection,
+    fun getTvBackdrops(seriesId: TvSeriesId): Observable<TvImageRef> =
+            doQuery(mUris.tvImage(), tvBannerProjection,
                 "series_id=? and type=?", arrayOf(seriesId.seriesId.toString(), "fanart"),
                 "rating DESC", { c ->c.toTvBannerMediaMeta() })
-    }
 
     /*
      * END TV
@@ -709,11 +727,10 @@ class MediaDAO
     fun addMovie(movie: MovieRef) =
             mResolver.insert(mUris.movie(), movie.contentValues()) == URI_SUCCESS
 
-    fun getMovie(movieId: MovieId): Maybe<MovieRef> {
-        return doGet(mUris.movie(), movieProjection,
+    fun getMovie(movieId: MovieId): Maybe<MovieRef> =
+            doGet(mUris.movie(), movieProjection,
                 "_id=?", arrayOf(movieId.movieId.toString()),
                 { c -> c.toMovieRef() })
-    }
 
     fun addMovieImages(images: List<MovieImageRef>): Int {
         val contentValues = Array(images.size, { idx ->
@@ -1348,13 +1365,11 @@ fun MovieImageRef.contentValues(): ContentValues {
     return values
 }
 
-fun makeTvSubtitle(seriesName: String, seasonNumber: Int, episodeNumber: Int): String {
-    return "$seriesName - S${seasonNumber.zeroPad(2)}E${episodeNumber.zeroPad(2)}"
-}
+fun makeTvSubtitle(seriesName: String, seasonNumber: Int, episodeNumber: Int): String =
+        "$seriesName - S${seasonNumber.zeroPad(2)}E${episodeNumber.zeroPad(2)}"
 
-fun Int.zeroPad(len: Int): String {
-    return this.toString().padStart(len, '0')
-}
+fun Int.zeroPad(len: Int): String =
+        this.toString().padStart(len, '0')
 
 /**
  * scale is 0-1000
@@ -1362,4 +1377,22 @@ fun Int.zeroPad(len: Int): String {
  */
 fun calculateCompletion(current: Long, duration: Long): Int {
     return ((1000*current + duration/2)/duration).toInt()
+}
+
+fun contentValues(key: String, value: String): ContentValues {
+    val values = ContentValues()
+    values.put(key, value)
+    return values
+}
+
+fun contentValues(key: String, value: Int): ContentValues {
+    val values = ContentValues()
+    values.put(key, value)
+    return values
+}
+
+fun contentValues(key: String, value: Long): ContentValues {
+    val values = ContentValues()
+    values.put(key, value)
+    return values
 }

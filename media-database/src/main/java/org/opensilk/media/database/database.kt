@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.opensilk.dagger2.ForApp
 import javax.inject.Inject
 
-const private val VERSION = 3
+const private val VERSION = 4
 
 /**
  * Created by drew on 7/18/17.
@@ -284,6 +284,12 @@ internal class MediaDB
                     "custom_backdrop_uri TEXT, " +
 
                     "UNIQUE(path, device_uuid)" +
+                    ");")
+        }
+        if (oldVersion < 4) {
+            db.execSQL("DROP TABLE IF EXISTS pinned")
+            db.execSQL("CREATE TABLE pinned (" +
+                    "media_id TEXT UNIQUE NOT NULL " +
                     ");")
         }
     }

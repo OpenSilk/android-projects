@@ -32,6 +32,8 @@ internal object M {
     val STORAGE_DEVICE = 501
     val STORAGE_FOLDER = 502
     val STORAGE_VIDEO = 503
+
+    val PINS = 601
 }
 
 /**
@@ -66,6 +68,8 @@ class MediaDBUris
         matcher.addURI(mAuthority, "storage/device", M.STORAGE_DEVICE)
         matcher.addURI(mAuthority, "storage/folder", M.STORAGE_FOLDER)
         matcher.addURI(mAuthority, "storage/video", M.STORAGE_VIDEO)
+
+        matcher.addURI(mAuthority, "pins", M.PINS)
     }
 
     private fun base() = Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(mAuthority)
@@ -103,5 +107,7 @@ class MediaDBUris
     fun storageFolder() = base().appendPath("storage").appendPath("folder").build()
 
     fun storageVideo() = base().appendPath("storage").appendPath("video").build()
+
+    fun pins() = base().appendPath("pins").build()
 
 }

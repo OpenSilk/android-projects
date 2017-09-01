@@ -97,6 +97,9 @@ class MediaProvider : ContentProvider() {
                         "LEFT JOIN media_position p ON v._display_name = p._display_name " +
                         "JOIN storage_device d ON v.device_uuid = d.uuid "
             }
+            M.PINS -> {
+                table = "pinned"
+            }
             else -> TODO("Unmatched uri: $uri")
         }
         return mMediaDB.readableDatabase.query(table, projection, selection,
@@ -283,12 +286,22 @@ class MediaProvider : ContentProvider() {
                 return if (db.update("storage_video", values, "path=? AND device_uuid=?",
                         arrayOf(path, uuid)) != 0) URI_SUCCESS else URI_FAILURE
             }
+            M.PINS -> {
+                db.insertWithOnConflict("pinned", null, values, SQLiteDatabase.CONFLICT_IGNORE)
+                return URI_SUCCESS
+            }
             else -> TODO("Unmatched uri: $uri")
         }
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
-        TODO()
+        val db = mMediaDB.writableDatabase
+        return when (mUris.matcher.match(uri)) {
+            M.PINS -> {
+                db.delete("pinned", selection, selectionArgs)
+            }
+            else -> TODO("Unmatched uri: $uri")
+        }
     }
 
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<String>?): Int {
