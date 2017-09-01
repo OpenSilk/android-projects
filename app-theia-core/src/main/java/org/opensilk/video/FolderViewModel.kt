@@ -3,9 +3,11 @@ package org.opensilk.video
 import android.arch.lifecycle.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposables
+import io.reactivex.functions.Consumer
 import org.opensilk.media.*
 import org.opensilk.media.database.MediaDAO
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
@@ -40,8 +42,11 @@ class FolderViewModel @Inject constructor(
         subscribeTitle()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    internal fun runPrefetch() {
+    //@OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun runPrefetch() {
+        if (mMediaId == NoMediaId) {
+            throw IllegalStateException("MediaId not set")
+        }
         val mediaId = mMediaId
         //only fetch if previous fetch is completed
         if (mPrefetchDisposable.isDisposed) {
@@ -52,6 +57,9 @@ class FolderViewModel @Inject constructor(
                 else -> TODO("$mediaId")
             }
             mDisposables.add(mPrefetchDisposable)
+            mDisposables.add(mPrefetchLoader.errors(Consumer {
+                loadError.postValue(it)
+            }))
         }
     }
 
@@ -70,6 +78,8 @@ class FolderViewModel @Inject constructor(
         }
     }
 
+    private val isFirstLoad = AtomicBoolean(true)
+
     private fun subscribeChildren() {
         val mediaId = mMediaId
         mDisposables.add(when (mediaId) {
@@ -77,8 +87,11 @@ class FolderViewModel @Inject constructor(
             is FolderId -> mFolderLoader.directChildren(mediaId)
             else -> TODO("$mediaId")
         }.subscribe({ items ->
-            folderItems.postValue(items)
-            runChildPrefetch(items)
+            //ignore the first list if it is empty
+            if (!isFirstLoad.compareAndSet(true, false) || items.isNotEmpty()) {
+                folderItems.postValue(items)
+                runChildPrefetch(items)
+            }
         }, { e ->
             Timber.e(e, "Loader error msg=${e.message}.")
             loadError.postValue(e.message.elseIfBlank("null"))
@@ -88,10 +101,7 @@ class FolderViewModel @Inject constructor(
     private fun subscribeTitle() {
         val mediaId = mMediaId
         mDisposables.add(mDatabaseClient.getMediaRef(mediaId).map {
-            when (it) {
-                is MediaDeviceRef -> it.meta.title
-                else -> it.toMediaDescription().title.toString()
-            }
+            it.toMediaDescription().title.toString()
         }.subscribe({
             mediaTitle.postValue(it)
         }))

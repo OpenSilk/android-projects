@@ -1,6 +1,9 @@
 package org.opensilk.video
 
 import io.reactivex.disposables.Disposable
+import io.reactivex.exceptions.Exceptions
+import io.reactivex.functions.Consumer
+import io.reactivex.subjects.PublishSubject
 import org.opensilk.media.*
 import org.opensilk.media.database.*
 import org.opensilk.media.loader.cds.UpnpBrowseLoader
@@ -34,6 +37,10 @@ class FolderPrefetchLoader @Inject constructor(
      */
     fun prefetch(folderId: FolderId, now: Boolean = false): Disposable = prefetch_(folderId, now)
 
+    private val mErrorSubject = PublishSubject.create<String>()
+
+    fun errors(consumer: Consumer<String>): Disposable
+            = mErrorSubject.hide().distinctUntilChanged().subscribe(consumer)
 
     private fun prefetch_(mediaId: MediaId, now: Boolean = false): Disposable = when (mediaId) {
         is UpnpDeviceId -> mBrowseLoader.directChildren(upnpFolderId = mediaId, wantVideoItems = true)
@@ -48,6 +55,7 @@ class FolderPrefetchLoader @Inject constructor(
         postChange(mediaId)
     }, { e ->
         Timber.e(e, "Unable to fetch items for $mediaId")
+        mErrorSubject.onNext(e?.message ?: "Error loading items")
     })
 
     private fun insertItems(parentId: MediaId, itemList: List<MediaRef>) {
