@@ -4,6 +4,7 @@
     <string name="title_my_library">My videos</string>
     <string name="header_devices">Media sources</string>
     <string name="header_recently_played">Recently watched</string>
+    <string name="header_pinned_items">Pins</string>
 
     <string name="action_play">Play</string>
     <string name="action_restart">Restart</string>

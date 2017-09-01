@@ -52,6 +52,9 @@ class HomeFragment: RecyclerFragment() {
 
         mViewModel.subscribeData(includeDocuments = true)
 
+        mViewModel.pinnedContainers.observe(this, LiveDataObserver {
+            mAdapter.swapList("pinned", it)
+        })
         mViewModel.devices.observe(this, LiveDataObserver {
             mAdapter.swapList("devices", it)
         })
@@ -83,14 +86,26 @@ class HomeFragment: RecyclerFragment() {
 }
 
 class HomeAdapter @Inject constructor(
+        pinnedSection: PinnedSection,
         deviceSection: DeviceSection,
         recentSection: RecentSection
 ): SwappingSectionedAdapter() {
     init {
+        addSection("pinned", pinnedSection)
         addSection("devices", deviceSection)
         addSection("recent", recentSection)
     }
 }
+
+class PinnedSection @Inject constructor(
+        @ForApp context: Context
+): SwappingSection(
+        SectionParameters.Builder(R.layout.recycler_list_item)
+                .headerResourceId(R.layout.recycler_header_item)
+                .build(),
+        HeaderItem(context.getString(R.string.header_pinned_items),
+                R.drawable.ic_pin_48dp)
+)
 
 class DeviceSection @Inject constructor(
         @ForApp context: Context
