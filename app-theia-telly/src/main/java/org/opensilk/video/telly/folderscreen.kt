@@ -3,7 +3,7 @@ package org.opensilk.video.telly
 import android.arch.lifecycle.LifecycleRegistry
 import android.arch.lifecycle.LifecycleRegistryOwner
 import android.content.Context
-import android.graphics.drawable.Drawable
+import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v17.leanback.app.VerticalGridSupportFragment
 import android.support.v17.leanback.widget.*
@@ -11,10 +11,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
 import dagger.Module
 import dagger.android.AndroidInjection
 import dagger.android.ContributesAndroidInjector
@@ -23,7 +19,10 @@ import org.opensilk.media.*
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
 import javax.inject.Inject
-import android.support.v17.leanback.widget.TitleViewAdapter.*
+import android.support.v4.content.ContextCompat
+import android.widget.*
+import org.opensilk.video.FolderAction
+import org.opensilk.video.telly.databinding.FolderTitleBinding
 
 /**
  *
@@ -85,6 +84,7 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
     @Inject lateinit var mFolderPresenter: FolderPresenter
 
     lateinit var mViewModel: FolderViewModel
+    lateinit var mTitleBinding: FolderTitleBinding
 
     override fun onAttach(context: Context?) {
         AndroidSupportInjection.inject(this)
@@ -105,6 +105,14 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
         mViewModel.loadError.observe(this, LiveDataObserver {
             Toast.makeText(context, "An error occurred. msg=$it", Toast.LENGTH_LONG).show()
         })
+        mViewModel.actions.observe(this, LiveDataObserver { list ->
+            list.forEach { action ->
+                when (action) {
+                    FolderAction.PIN -> mTitleBinding.browseTitleGroup.setPinned(false)
+                    FolderAction.UNPIN -> mTitleBinding.browseTitleGroup.setPinned(true)
+                }
+            }
+        })
 
         gridPresenter = mFolderPresenter
         gridPresenter.numberOfColumns = 1
@@ -115,8 +123,29 @@ class FolderFragment: VerticalGridSupportFragment(), LifecycleRegistryOwner {
     }
 
     override fun onInflateTitleView(inflater: LayoutInflater, parent: ViewGroup,
-                                    savedInstanceState: Bundle?): View =
-            inflater.inflate(R.layout.folder_title, parent, false)
+                                    savedInstanceState: Bundle?): View {
+        mTitleBinding = DataBindingUtil.inflate(inflater, R.layout.folder_title, parent, false)
+        return mTitleBinding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setOnSearchClickedListener {
+            Toast.makeText(view.context, "TODO search", Toast.LENGTH_LONG).show()
+        }
+        mTitleBinding.browseTitleGroup.setPinClickListener(View.OnClickListener {
+            if (mTitleBinding.browseTitleGroup.isPinned()) {
+                mViewModel.unpinItem()
+            } else {
+                mViewModel.pinItem()
+            }
+        })
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mTitleBinding.unbind()
+    }
 
     private val lifecycleRegistry: LifecycleRegistry by lazy { LifecycleRegistry(this) }
 
@@ -135,18 +164,20 @@ class FolderAdapter @Inject constructor(presenter: MediaRefListPresenter) : Swap
 class FolderPresenter @Inject constructor(): VerticalGridPresenter()
 
 class FolderTitleView(context: Context, attrs: AttributeSet) :
-        FrameLayout(context, attrs), TitleViewAdapter.Provider {
+        RelativeLayout(context, attrs), TitleViewAdapter.Provider {
 
     private val mTextView: TextView
     private val mSearchOrbView: SearchOrbView
-    private var flags = FULL_VIEW_VISIBLE
+    private val mPinView: SearchOrbView
     private var mHasSearchListener = false
+    private var mIsPinned = false
     init {
         val inflater = LayoutInflater.from(context)
         val rootView = inflater.inflate(R.layout.folder_title_view, this)
 
         mTextView = rootView.findViewById(R.id.title_text) as TextView
         mSearchOrbView = rootView.findViewById(R.id.title_orb) as SearchOrbView
+        mPinView = rootView.findViewById(R.id.title_pin_orb) as SearchOrbView
 
         clipToPadding = false
         clipChildren = false
@@ -161,7 +192,6 @@ class FolderTitleView(context: Context, attrs: AttributeSet) :
     fun setOnSearchClickedListener(listener: View.OnClickListener?) {
         mHasSearchListener = listener != null
         mSearchOrbView.setOnOrbClickedListener(listener)
-        updateSearchOrbViewVisiblity()
     }
 
     fun getSearchAffordanceView(): View = mSearchOrbView
@@ -172,21 +202,19 @@ class FolderTitleView(context: Context, attrs: AttributeSet) :
 
     fun getSearchAffordanceColors(): SearchOrbView.Colors = mSearchOrbView.orbColors
 
+    fun setPinClickListener(listener: View.OnClickListener?) {
+        mPinView.setOnOrbClickedListener(listener)
+    }
+
+    fun setPinned(pinned: Boolean) {
+        mPinView.orbIcon = ContextCompat.getDrawable(mPinView.context,
+                if (pinned) R.drawable.unpin_36dp else R.drawable.pin_36dp)
+    }
+
+    fun isPinned(): Boolean = mIsPinned
+
     fun enableAnimation(enable: Boolean) {
         mSearchOrbView.enableOrbColorAnimation(enable && mSearchOrbView.hasFocus())
-    }
-
-    fun updateComponentsVisibility(flags: Int) {
-        this.flags = flags
-        updateSearchOrbViewVisiblity()
-    }
-
-    private fun updateSearchOrbViewVisiblity() {
-        val visibility = if (mHasSearchListener && flags and SEARCH_VIEW_VISIBLE == SEARCH_VIEW_VISIBLE)
-            View.VISIBLE
-        else
-            View.INVISIBLE
-        mSearchOrbView.visibility = visibility
     }
 
     override fun getTitleViewAdapter(): TitleViewAdapter = mTitleViewAdapter
@@ -201,10 +229,6 @@ class FolderTitleView(context: Context, attrs: AttributeSet) :
 
         override fun setOnSearchClickedListener(listener: OnClickListener?) {
             this@FolderTitleView.setOnSearchClickedListener(listener)
-        }
-
-        override fun updateComponentsVisibility(flags: Int) {
-            this@FolderTitleView.updateComponentsVisibility(flags)
         }
 
         override fun setAnimationEnabled(enable: Boolean) {
