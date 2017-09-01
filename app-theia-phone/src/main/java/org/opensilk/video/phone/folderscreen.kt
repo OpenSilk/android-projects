@@ -37,7 +37,7 @@ class FolderActivity: DrawerActivity(), MediaRefClickListener {
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.swipe_refresh, newFolderFragment(intent.getMediaIdExtra()))
+                    .replace(R.id.coordinator, newFolderFragment(intent.getMediaIdExtra()))
                     .commit()
         }
     }
@@ -46,7 +46,7 @@ class FolderActivity: DrawerActivity(), MediaRefClickListener {
         is MediaDeviceRef,
         is FolderRef -> {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.swipe_refresh, newFolderFragment(mediaRef.id))
+                    .replace(R.id.coordinator, newFolderFragment(mediaRef.id))
                     .addToBackStack(null)
                     .commit()
             true
@@ -82,17 +82,18 @@ class FolderFragment: RecyclerFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         mViewModel = fetchViewModel(FolderViewModel::class)
         mActivityViewModel = fetchActivityViewModel(DrawerActivityViewModel::class)
 
         mViewModel.setMediaId(arguments.getMediaId())
 
         mViewModel.folderItems.observe(this, LiveDataObserver {
-            mActivityViewModel.isRefreshing.value = false
+            mBinding.swipeRefresh.isRefreshing = false
             mAdapter.swapList(it)
         })
         mViewModel.loadError.observe(this, LiveDataObserver {
-            mActivityViewModel.isRefreshing.value = false
+            mBinding.swipeRefresh.isRefreshing = false
             mActivityViewModel.loadError.value = it
         })
         mViewModel.mediaTitle.observe(this, LiveDataObserver {
@@ -104,7 +105,12 @@ class FolderFragment: RecyclerFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.recycler.adapter = mAdapter
-
+        if (savedInstanceState == null) {
+            mBinding.swipeRefresh.isRefreshing = true
+        }
+        mBinding.swipeRefresh.setOnRefreshListener {
+            mViewModel.runPrefetch()
+        }
         mActivityViewModel.mediaTitle.value = mViewModel.mediaTitle.value
     }
 

@@ -5,10 +5,17 @@
     <data>
 
     </data>
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler"
+    <android.support.v4.widget.SwipeRefreshLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutManager="LinearLayoutManager"
-        style="@style/mtrl.List"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:id="@+id/swipe_refresh"
+        >
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="LinearLayoutManager"
+            style="@style/mtrl.List"/>
+    </android.support.v4.widget.SwipeRefreshLayout>
 </layout>

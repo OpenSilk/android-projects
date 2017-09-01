@@ -102,8 +102,6 @@ abstract class DrawerActivity: BaseVideoActivity(),
             mBinding.navView.setCheckedItem(mSelfNavActionId)
         }
 
-        mBinding.swipeRefresh.isRefreshing = true
-
         mDrawerViewModel = fetchViewModel(DrawerActivityViewModel::class)
 
         mDrawerViewModel.loadError.observe(this, LiveDataObserver {
@@ -111,9 +109,6 @@ abstract class DrawerActivity: BaseVideoActivity(),
         })
         mDrawerViewModel.mediaTitle.observe(this, LiveDataObserver {
             title = it
-        })
-        mDrawerViewModel.isRefreshing.observe(this, LiveDataObserver { refresh ->
-            mBinding.swipeRefresh.isRefreshing = refresh
         })
         mDrawerViewModel.newDocumentId.observe(this, LiveDataObserver { docId ->
             if (docId.isFromTree) {
@@ -221,7 +216,6 @@ class DrawerActivityViewModel
 
     val mediaTitle = MutableLiveData<String>()
     val loadError = MutableLiveData<String>()
-    val isRefreshing = MutableLiveData<Boolean>()
 
     val newDocumentId = MutableLiveData<DocumentId>()
 
@@ -268,6 +262,10 @@ open class RecyclerFragment: LifecycleFragment() {
     override fun onDestroyView() {
         Timber.d("onDestroyView()")
         super.onDestroyView()
+        mBinding.swipeRefresh.isRefreshing = false
+        //this prevents ghosting when popping the backstack while
+        //the loading indicator is showing
+        mBinding.swipeRefresh.removeAllViews()
         mBinding.unbind()
     }
 
