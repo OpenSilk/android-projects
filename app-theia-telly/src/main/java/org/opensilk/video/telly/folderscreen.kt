@@ -207,6 +207,7 @@ class FolderTitleView(context: Context, attrs: AttributeSet) :
     }
 
     fun setPinned(pinned: Boolean) {
+        mIsPinned = pinned
         mPinView.orbIcon = ContextCompat.getDrawable(mPinView.context,
                 if (pinned) R.drawable.unpin_36dp else R.drawable.pin_36dp)
     }

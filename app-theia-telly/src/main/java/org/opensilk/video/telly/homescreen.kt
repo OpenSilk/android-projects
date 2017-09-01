@@ -22,18 +22,12 @@ import javax.inject.Inject
 
 const val REQUEST_CODE_PERMS = 10302
 
-/**
- *
- */
 @Module
 abstract class HomeScreenModule {
     @ContributesAndroidInjector
     abstract fun injector(): HomeFragment
 }
 
-/**
- *
- */
 class HomeActivity : BaseVideoActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,14 +42,13 @@ class HomeActivity : BaseVideoActivity() {
 
 }
 
-/**
- *
- */
 class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 
     @Inject lateinit var mHomeAdapter: HomeAdapter
     @Inject lateinit var mServersAdapter: ServersAdapter
     @Inject lateinit var mRecentlyPlayedAdapter: RecentlyPlayedAdapter
+    @Inject lateinit var mPinnedAdapter: PinnedAdapter
+
     @Inject lateinit var mRefClickListener: MediaRefClickListener
 
     lateinit var mViewModel: HomeViewModel
@@ -68,6 +61,9 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mViewModel = fetchViewModel(HomeViewModel::class)
+        mViewModel.pinnedContainers.observe(this, LiveDataObserver { items ->
+            mPinnedAdapter.swapList(items)
+        })
         mViewModel.devices.observe(this, LiveDataObserver { items ->
             mServersAdapter.swapList(items)
         })
@@ -80,6 +76,8 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
         })
         mViewModel.subscribeData()
 
+        val pinnedHeader = HeaderItem(getString(R.string.header_pinned))
+        mHomeAdapter.add(ListRow(pinnedHeader, mPinnedAdapter))
         val foldersHeader = HeaderItem(getString(R.string.header_media_sources))
         mHomeAdapter.add(ListRow(foldersHeader, mServersAdapter))
         val recentlyPlayedHeader = HeaderItem(getString(R.string.header_recently_played))
@@ -126,3 +124,4 @@ class HomeFragment : BrowseSupportFragment(), LifecycleRegistryOwner {
 class HomeAdapter @Inject constructor(): ArrayObjectAdapter(ListRowPresenter())
 class ServersAdapter @Inject constructor(presenter: MediaRefPresenter) : SwappingObjectAdapter(presenter)
 class RecentlyPlayedAdapter @Inject constructor(presenter: MediaRefPresenter): SwappingObjectAdapter(presenter)
+class PinnedAdapter @Inject constructor(presenter: MediaRefPresenter): SwappingObjectAdapter(presenter)
