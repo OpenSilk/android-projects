@@ -4,6 +4,7 @@ import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
@@ -19,6 +20,7 @@ import org.opensilk.video.AppSchedulers
 import org.opensilk.video.FolderAction
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -70,7 +72,8 @@ fun newFolderFragment(mediaId: MediaId): FolderFragment {
     return f
 }
 
-class FolderFragment: RecyclerFragment(), Toolbar.OnMenuItemClickListener {
+class FolderFragment: RecyclerFragment(),
+        Toolbar.OnMenuItemClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     lateinit var mViewModel: FolderViewModel
 
@@ -99,14 +102,8 @@ class FolderFragment: RecyclerFragment(), Toolbar.OnMenuItemClickListener {
         mViewModel.mediaTitle.observe(this, LiveDataObserver {
             mBinding.toolbar.title = it
         })
-        mViewModel.actions.observe(this, LiveDataObserver { list ->
-            mBinding.toolbar.menu.clear()
-            list.forEach { action ->
-                mBinding.toolbar.inflateMenu(when (action) {
-                    FolderAction.PIN -> R.menu.pin_item
-                    FolderAction.UNPIN -> R.menu.unpin_item
-                })
-            }
+        mViewModel.actions.observe(this, LiveDataObserver {
+            applyMenuActions(it)
         })
 
     }
@@ -115,15 +112,21 @@ class FolderFragment: RecyclerFragment(), Toolbar.OnMenuItemClickListener {
         super.onViewCreated(view, savedInstanceState)
         mBinding.recycler.adapter = mAdapter
         mBinding.toolbar.setOnMenuItemClickListener(this)
+        mBinding.swipeRefresh.setOnRefreshListener(this)
+        //restore any state
         if (savedInstanceState == null) {
             mBinding.swipeRefresh.isRefreshing = true
-        }
-        mBinding.swipeRefresh.setOnRefreshListener {
-            mViewModel.runPrefetch()
         }
         mViewModel.mediaTitle.value?.let {
             mBinding.toolbar.title = it
         }
+        mViewModel.actions.value?.let {
+            applyMenuActions(it)
+        }
+    }
+
+    override fun onRefresh() {
+        mViewModel.runPrefetch()
     }
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
@@ -133,6 +136,16 @@ class FolderFragment: RecyclerFragment(), Toolbar.OnMenuItemClickListener {
             else -> TODO()
         }
         return true
+    }
+
+    private fun applyMenuActions(list: List<FolderAction>) {
+        mBinding.toolbar.menu.clear()
+        list.forEach { action ->
+            mBinding.toolbar.inflateMenu(when (action) {
+                FolderAction.PIN -> R.menu.pin_item
+                FolderAction.UNPIN -> R.menu.unpin_item
+            })
+        }
     }
 
 }
