@@ -3,13 +3,12 @@ package org.opensilk.video.phone
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.transition.Slide
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 import dagger.android.support.AndroidSupportInjection
@@ -17,6 +16,7 @@ import io.reactivex.Single
 import io.reactivex.disposables.Disposables
 import org.opensilk.media.*
 import org.opensilk.video.AppSchedulers
+import org.opensilk.video.FolderAction
 import org.opensilk.video.FolderViewModel
 import org.opensilk.video.LiveDataObserver
 import javax.inject.Inject
@@ -37,7 +37,8 @@ class FolderActivity: DrawerActivity(), MediaRefClickListener {
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.coordinator, newFolderFragment(intent.getMediaIdExtra()))
+                    .replace(DRAWER_FRAGMENT_CONTAINER,
+                            newFolderFragment(intent.getMediaIdExtra()))
                     .commit()
         }
     }
@@ -46,7 +47,8 @@ class FolderActivity: DrawerActivity(), MediaRefClickListener {
         is MediaDeviceRef,
         is FolderRef -> {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.coordinator, newFolderFragment(mediaRef.id))
+                    .replace(DRAWER_FRAGMENT_CONTAINER,
+                            newFolderFragment(mediaRef.id))
                     .addToBackStack(null)
                     .commit()
             true
@@ -68,10 +70,9 @@ fun newFolderFragment(mediaId: MediaId): FolderFragment {
     return f
 }
 
-class FolderFragment: RecyclerFragment() {
+class FolderFragment: RecyclerFragment(), Toolbar.OnMenuItemClickListener {
 
     lateinit var mViewModel: FolderViewModel
-    lateinit var mActivityViewModel: DrawerActivityViewModel
 
     @Inject lateinit var mAdapter: FolderAdapter
 
@@ -84,7 +85,6 @@ class FolderFragment: RecyclerFragment() {
         super.onCreate(savedInstanceState)
 
         mViewModel = fetchViewModel(FolderViewModel::class)
-        mActivityViewModel = fetchActivityViewModel(DrawerActivityViewModel::class)
 
         mViewModel.setMediaId(arguments.getMediaId())
 
@@ -94,10 +94,19 @@ class FolderFragment: RecyclerFragment() {
         })
         mViewModel.loadError.observe(this, LiveDataObserver {
             mBinding.swipeRefresh.isRefreshing = false
-            mActivityViewModel.loadError.value = it
+            Snackbar.make(mBinding.coordinator, "Error: $it", Snackbar.LENGTH_INDEFINITE)
         })
         mViewModel.mediaTitle.observe(this, LiveDataObserver {
-            mActivityViewModel.mediaTitle.value = it
+            mBinding.toolbar.title = it
+        })
+        mViewModel.actions.observe(this, LiveDataObserver { list ->
+            mBinding.toolbar.menu.clear()
+            list.forEach { action ->
+                mBinding.toolbar.inflateMenu(when (action) {
+                    FolderAction.PIN -> R.menu.pin_item
+                    FolderAction.UNPIN -> R.menu.unpin_item
+                })
+            }
         })
 
     }
@@ -105,13 +114,25 @@ class FolderFragment: RecyclerFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.recycler.adapter = mAdapter
+        mBinding.toolbar.setOnMenuItemClickListener(this)
         if (savedInstanceState == null) {
             mBinding.swipeRefresh.isRefreshing = true
         }
         mBinding.swipeRefresh.setOnRefreshListener {
             mViewModel.runPrefetch()
         }
-        mActivityViewModel.mediaTitle.value = mViewModel.mediaTitle.value
+        mViewModel.mediaTitle.value?.let {
+            mBinding.toolbar.title = it
+        }
+    }
+
+    override fun onMenuItemClick(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menu_pin -> mViewModel.pinItem()
+            R.id.menu_unpin -> mViewModel.unpinItem()
+            else -> TODO()
+        }
+        return true
     }
 
 }

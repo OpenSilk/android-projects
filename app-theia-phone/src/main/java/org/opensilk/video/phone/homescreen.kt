@@ -26,11 +26,10 @@ class HomeActivity : DrawerActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        title = getString(R.string.title_my_library)
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.coordinator, HomeFragment())
+                    .replace(DRAWER_FRAGMENT_CONTAINER, HomeFragment())
                     .commit()
         }
     }
@@ -68,6 +67,7 @@ class HomeFragment: RecyclerFragment() {
         super.onViewCreated(view, savedInstanceState)
         mBinding.recycler.adapter = mAdapter
         mBinding.swipeRefresh.isEnabled = false
+        mBinding.toolbar.title = getString(R.string.title_my_library)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

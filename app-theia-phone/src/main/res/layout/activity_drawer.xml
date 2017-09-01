@@ -12,33 +12,12 @@
         android:fitsSystemWindows="true"
         tools:openDrawer="start">
 
-        <android.support.design.widget.CoordinatorLayout
-            android:id="@+id/coordinator"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <android.support.design.widget.AppBarLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:theme="@style/AppTheme.AppBarOverlay">
-
-                <android.support.v7.widget.Toolbar
-                    android:id="@+id/toolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="?attr/actionBarSize"
-                    android:background="?attr/colorPrimary"
-                    app:layout_scrollFlags="scroll|enterAlways"
-                    app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-            </android.support.design.widget.AppBarLayout>
-
-            <!--recycler injected here-->
-
-        </android.support.design.widget.CoordinatorLayout>
+        <!--content injected by fragment-->
 
         <android.support.design.widget.NavigationView
             android:id="@+id/nav_view"
             android:layout_width="match_parent"
+            android:maxWidth="320dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:fitsSystemWindows="true"

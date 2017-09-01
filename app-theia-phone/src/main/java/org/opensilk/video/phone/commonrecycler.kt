@@ -1,12 +1,17 @@
 package org.opensilk.video.phone
 
+import android.arch.lifecycle.LifecycleFragment
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
+import android.os.Bundle
+import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.util.DiffUtil
 import android.support.v7.util.ListUpdateCallback
 import android.support.v7.widget.RecyclerView
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import io.github.luizgrp.sectionedrecyclerviewadapter.Section
@@ -18,11 +23,43 @@ import org.opensilk.media.*
 import org.opensilk.video.ACTION_RESUME
 import org.opensilk.video.AppSchedulers
 import org.opensilk.video.findActivity
+import org.opensilk.video.phone.databinding.RecyclerBinding
 import org.opensilk.video.phone.databinding.RecyclerHeaderItemBinding
 import org.opensilk.video.phone.databinding.RecyclerListItemBinding
 import timber.log.Timber
 import javax.inject.Inject
 
+
+open class RecyclerFragment: LifecycleFragment() {
+    protected lateinit var mBinding: RecyclerBinding
+
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+        mBinding = DataBindingUtil.inflate(inflater, R.layout.recycler, container, false)
+        mBinding.recycler.setHasFixedSize(true)
+        return mBinding.root
+    }
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        Timber.d("onViewCreated()")
+        drawerActivity().setToolbar(mBinding.toolbar)
+    }
+
+    override fun onDestroyView() {
+        Timber.d("onDestroyView()")
+        super.onDestroyView()
+        drawerActivity().clearToolbar(mBinding.toolbar)
+        mBinding.swipeRefresh.isRefreshing = false
+        //this prevents ghosting when popping the backstack while
+        //the loading indicator is showing
+        mBinding.swipeRefresh.removeAllViews()
+        mBinding.unbind()
+    }
+
+    protected fun drawerActivity() = activity as DrawerActivity
+
+}
 
 data class HeaderItem(val title: String, val icon: Int)
 

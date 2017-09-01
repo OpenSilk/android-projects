@@ -22,4 +22,7 @@
     <string name="err_playback">Playback error</string>
     <string name="err_unknown">Unknown error</string>
     <string name="err_pip_unsupported">Picture in picture not supported</string>
+
+    <string name="menu_pin_item">Pin</string>
+    <string name="menu_unpin_item">Unpin</string>
 </resources>
