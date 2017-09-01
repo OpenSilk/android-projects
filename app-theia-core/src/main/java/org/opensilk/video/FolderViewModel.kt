@@ -5,6 +5,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposables
 import io.reactivex.functions.Consumer
 import org.opensilk.media.*
+import org.opensilk.media.database.FolderChange
 import org.opensilk.media.database.MediaDAO
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
@@ -22,6 +23,7 @@ class FolderViewModel @Inject constructor(
     val mediaTitle = MutableLiveData<String>()
     val folderItems = MutableLiveData<List<MediaRef>>()
     val loadError = MutableLiveData<String>()
+    val actions = MutableLiveData<List<FolderAction>>()
 
     private var mMediaId: MediaId = NoMediaId
     private var mPrefetchDisposable = Disposables.disposed()
@@ -40,6 +42,7 @@ class FolderViewModel @Inject constructor(
         runPrefetch()
         subscribeChildren()
         subscribeTitle()
+        subscribeActions()
     }
 
     //@OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -105,6 +108,28 @@ class FolderViewModel @Inject constructor(
         }.subscribe({
             mediaTitle.postValue(it)
         }))
+    }
+
+    private fun subscribeActions() {
+        val mediaId = mMediaId
+        mDisposables.add(mDatabaseClient.changesObservable
+                .filter { it is FolderChange && it.folderId == mediaId }
+                .startWith(FolderChange(NoFolderId))
+                .switchMapSingle {
+                    mDatabaseClient.itemPinned(mediaId).map { pinned ->
+                        listOf(if (pinned) FolderAction.UNPIN else FolderAction.PIN)
+                    }
+                }.subscribe({ actionList ->
+            actions.postValue(actionList)
+        }))
+    }
+
+    fun pinItem() {
+        mDatabaseClient.pinItem(mMediaId)
+    }
+
+    fun unpinItem() {
+        mDatabaseClient.unpinItem(mMediaId)
     }
 
 }
