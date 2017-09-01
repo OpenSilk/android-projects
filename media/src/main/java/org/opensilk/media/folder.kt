@@ -5,6 +5,10 @@ package org.opensilk.media
  */
 interface FolderId: MediaId
 
+object NoFolderId: FolderId {
+    override val json: String = ""
+}
+
 /**
  * Folder metadata
  */
