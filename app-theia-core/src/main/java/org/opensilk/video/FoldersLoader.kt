@@ -22,13 +22,7 @@ class FoldersLoader
      * Retrieve direct children. This observable never completes
      */
     fun directChildren(deviceId: MediaDeviceId): Observable<out List<MediaRef>> {
-
-        val items = when (deviceId) {
-            is UpnpDeviceId -> upnpDisk(deviceId)
-            is StorageDeviceId -> storageDisk(deviceId)
-            else -> TODO()
-        }
-
+        val items = directChildrenSingle(deviceId)
         return changesForDevice(deviceId)
                 .mergeWith(changesForDeviceChildren(deviceId))
                 //protect flood, but remain responsive
@@ -43,14 +37,7 @@ class FoldersLoader
      * Retrieve direct children. This observable never completes
      */
     fun directChildren(folderId: FolderId): Observable<out List<MediaRef>> {
-
-        val items = when (folderId) {
-            is UpnpFolderId -> upnpDisk(folderId)
-            is DocDirectoryId -> documentDisk(folderId)
-            is StorageFolderId -> storageDisk(folderId)
-            else -> TODO()
-        }
-
+        val items = directChildrenSingle(folderId)
         return changesForFolder(folderId)
                 .mergeWith(changesForFolderChildren(folderId))
                 //protect flood, but remain responsive
@@ -59,6 +46,15 @@ class FoldersLoader
                 .switchMapSingle { _ ->
                     items.subscribeOn(AppSchedulers.diskIo)
                 }
+    }
+
+    fun directChildrenSingle(parentId: MediaId): Single<out List<MediaRef>> = when (parentId) {
+        is UpnpDeviceId -> upnpDisk(parentId)
+        is UpnpFolderId -> upnpDisk(parentId)
+        is DocDirectoryId -> documentDisk(parentId)
+        is StorageDeviceId -> storageDisk(parentId)
+        is StorageFolderId -> storageDisk(parentId)
+        else -> TODO()
     }
 
     private enum class Change {
