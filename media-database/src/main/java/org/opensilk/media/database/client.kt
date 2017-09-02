@@ -203,7 +203,7 @@ class MediaDAO
             Observable.just(IntentDataVideoRef(
                     id = videoId,
                     meta = IntentDataVideoMeta(
-                            title = "Unknown Video",
+                            title = "Video",
                             mimeType = "video/*",
                             mediaUri = videoId.uri)))
         }
