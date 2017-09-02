@@ -18,8 +18,8 @@ class RecentlyPlayedLoader
 
     fun recentlyPlayed(): Observable<List<VideoRef>> {
         return mDatabaseClient.changesObservable
-                //we accept any change and can easily be flooded
-                .throttleFirst(5, TimeUnit.SECONDS)
+                //comes straight from db, delay longer
+                .sample(3, TimeUnit.SECONDS, AppSchedulers.background)
                 .startWith(DeviceChange())
                 .switchMapSingle { _ ->
                     recents.subscribeOn(AppSchedulers.diskIo)

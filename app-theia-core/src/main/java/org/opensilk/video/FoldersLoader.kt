@@ -28,10 +28,11 @@ class FoldersLoader
             is StorageDeviceId -> storageDisk(deviceId)
             else -> TODO()
         }
-                //during lookup we can be flooded
+
         return changesForDevice(deviceId)
                 .mergeWith(changesForDeviceChildren(deviceId))
-                .throttleFirst(3, TimeUnit.SECONDS, AppSchedulers.background)
+                //protect flood, but remain responsive
+                .sample(1, TimeUnit.SECONDS, AppSchedulers.background)
                 .startWith(Change.SELF)
                 .switchMapSingle { _ ->
                     items.subscribeOn(AppSchedulers.diskIo)
@@ -52,7 +53,8 @@ class FoldersLoader
 
         return changesForFolder(folderId)
                 .mergeWith(changesForFolderChildren(folderId))
-                .throttleFirst(3, TimeUnit.SECONDS, AppSchedulers.background)
+                //protect flood, but remain responsive
+                .sample(1, TimeUnit.SECONDS, AppSchedulers.background)
                 .startWith(Change.SELF)
                 .switchMapSingle { _ ->
                     items.subscribeOn(AppSchedulers.diskIo)

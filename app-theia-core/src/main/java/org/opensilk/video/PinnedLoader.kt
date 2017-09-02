@@ -22,7 +22,8 @@ class PinnedLoader
     fun pinnedContainers(): Observable<List<MediaRef>> =
             mDatabaseClient.changesObservable
                     .filter { it is DeviceChange || it is FolderChange }
-                    .throttleFirst(3, TimeUnit.SECONDS, AppSchedulers.background)
+                    //comes straight from db, delay longer
+                    .sample(3, TimeUnit.SECONDS, AppSchedulers.background)
                     .startWith(DeviceChange())
                     .switchMapSingle {
                         pinnedSingle.subscribeOn(AppSchedulers.diskIo)

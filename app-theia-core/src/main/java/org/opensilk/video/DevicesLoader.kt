@@ -18,7 +18,8 @@ class DevicesLoader
     fun devices(includeDocuments: Boolean = false): Observable<out List<MediaDeviceRef>> =
             mDatabaseClient.changesObservable
                     .filter { it is DeviceChange }
-                    .throttleFirst(3, TimeUnit.SECONDS, AppSchedulers.background)
+                    //protect flood, but remain responsive
+                    .sample(1, TimeUnit.SECONDS, AppSchedulers.background)
                     .startWith(DeviceChange())
                     .switchMapSingle {
                         if (includeDocuments) {
