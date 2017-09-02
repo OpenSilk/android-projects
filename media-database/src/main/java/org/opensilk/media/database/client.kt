@@ -101,14 +101,25 @@ class MediaDAO
     }
 
     fun getMediaRef(mediaId: MediaId): Maybe<out MediaRef> = when (mediaId) {
-        is UpnpFolderId -> getUpnpFolder(mediaId)
-        is UpnpVideoId -> getUpnpVideo(mediaId)
         is UpnpDeviceId -> getUpnpDevice(mediaId)
-        is DocDirectoryId -> getDocDirectory(mediaId)
-        is DocVideoId -> getDocVideo(mediaId)
         is StorageDeviceId -> getStorageDevice(mediaId)
-        is StorageFolderId -> getStorageFolder(mediaId)
-        is StorageVideoId -> getStorageVideo(mediaId)
+
+        is FolderId -> getFolderRef(mediaId)
+        is VideoId -> getVideoRef(mediaId)
+        else -> TODO()
+    }
+
+    fun getVideoRef(videoId: VideoId): Maybe<out VideoRef> = when (videoId) {
+        is UpnpVideoId -> getUpnpVideo(videoId)
+        is DocVideoId -> getDocVideo(videoId)
+        is StorageVideoId -> getStorageVideo(videoId)
+        else -> TODO()
+    }
+
+    fun getFolderRef(folderId: FolderId): Maybe<out FolderRef> = when (folderId) {
+        is UpnpFolderId -> getUpnpFolder(folderId)
+        is DocDirectoryId -> getDocDirectory(folderId)
+        is StorageFolderId -> getStorageFolder(folderId)
         else -> TODO()
     }
 
