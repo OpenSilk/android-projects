@@ -26,6 +26,7 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import io.reactivex.functions.Consumer
+import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import org.opensilk.dagger2.ForApp
 import org.opensilk.media.*
@@ -72,6 +73,7 @@ constructor(
     private var mPlayOnFocusGain: Boolean = false
     private val mWakeLock: PowerManager.WakeLock = (mContext.getSystemService(Context.POWER_SERVICE)
             as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, mContext.packageName)
+    private val mBackgroundScheduler = Schedulers.single()
 
 
     val session: MediaSession
@@ -251,6 +253,7 @@ constructor(
 
     override fun onPositionDiscontinuity() {
         changeState(mPlaybackState.state)
+        saveCurrentPosition()
     }
 
     override fun onTimelineChanged(timeline: Timeline, manifest: Any?) {
@@ -371,6 +374,14 @@ constructor(
         }
     }
 
+    private fun saveCurrentPosition() {
+        //clear last pos for current item
+        mQueue.getCurrent().observeOn(mBackgroundScheduler).subscribeIgnoreError(Consumer { item ->
+            val ref = item.description.mediaId.toMediaId()
+            mDbClient.setLastPlaybackPosition(ref, mExoPlayer.currentPosition, mExoPlayer.duration)
+        })
+    }
+
     private fun stopAndShowError(msg: String) {
         stop()
         changeState(STATE_ERROR) {
@@ -399,12 +410,7 @@ constructor(
             Timber.i("Ignoring duplicate pause() call")
             return
         }
-        //save current pos
-        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = item.description.mediaId.toMediaId()
-            mDbClient.setLastPlaybackPosition(ref,
-                    mExoPlayer.currentPosition, mExoPlayer.duration)
-        })
+        saveCurrentPosition()
         pause()
         changeState(STATE_PAUSED)
     }
@@ -420,12 +426,7 @@ constructor(
 
     override fun onSkipToNext() {
         Timber.d("onSkipToNext()")
-        //clear last pos for current item
-        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = item.description.mediaId.toMediaId()
-            mDbClient.setLastPlaybackPosition(ref,
-                    mExoPlayer.currentPosition, mExoPlayer.duration)
-        })
+        saveCurrentPosition()
         mQueue.goToNext().subscribe({
             pause()
             prepareMedia(it.description._getMediaUri())
@@ -441,12 +442,7 @@ constructor(
 
     override fun onSkipToPrevious() {
         Timber.d("onSkipToPrevious()")
-        //clear last pos for current item
-        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = item.description.mediaId.toMediaId()
-            mDbClient.setLastPlaybackPosition(ref,
-                    mExoPlayer.currentPosition, mExoPlayer.duration)
-        })
+        saveCurrentPosition()
         mQueue.goToPrevious().subscribe({
             pause()
             prepareMedia(it.description._getMediaUri())
@@ -472,12 +468,7 @@ constructor(
 
     override fun onStop() {
         Timber.d("onStop()")
-        //save current pos
-        mQueue.getCurrent().subscribeIgnoreError(Consumer { item ->
-            val ref = item.description.mediaId.toMediaId()
-            mDbClient.setLastPlaybackPosition(ref,
-                    mExoPlayer.currentPosition, mExoPlayer.duration)
-        })
+        saveCurrentPosition()
         stop()
         changeState(STATE_STOPPED)
     }
