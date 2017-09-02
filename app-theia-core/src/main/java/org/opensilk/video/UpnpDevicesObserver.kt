@@ -21,7 +21,6 @@ import org.fourthline.cling.registry.DefaultRegistryListener
 import org.fourthline.cling.registry.Registry
 import org.opensilk.media.UpnpDeviceId
 import org.opensilk.media.database.MediaDAO
-import org.opensilk.media.database.UpnpUpdateIdChange
 import org.opensilk.reactivex2.subscribeIgnoreError
 import org.opensilk.upnp.cds.browser.CDSGetSystemUpdateIDAction
 import org.opensilk.upnp.cds.browser.CDSUpnpService
