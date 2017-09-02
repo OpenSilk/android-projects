@@ -25,6 +25,7 @@ import com.google.android.exoplayer2.source.UnrecognizedInputFormatException
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
@@ -49,7 +50,6 @@ constructor(
 ) : MediaSession.Callback(), AudioManager.OnAudioFocusChangeListener, Player.EventListener {
 
     private val mMediaSession: MediaSession = MediaSession(mContext, BuildConfig.APPLICATION_ID)
-    private var mMainHandler: Handler = Handler(Looper.getMainLooper())
     private val mDataSourceFactory = DefaultDataSourceFactory(mContext,
             null, OkHttpDataSourceFactory(okHttpClient, "${mContext.packageName}/ExoPlayer", null))
     private val mExtractorFactory = DefaultExtractorsFactory()
@@ -74,7 +74,7 @@ constructor(
     private val mWakeLock: PowerManager.WakeLock = (mContext.getSystemService(Context.POWER_SERVICE)
             as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, mContext.packageName)
     private val mBackgroundScheduler = Schedulers.single()
-
+    private val mMainScheduler = AndroidSchedulers.mainThread()
 
     val session: MediaSession
         get() = mMediaSession
@@ -109,7 +109,7 @@ constructor(
 
         mWakeLock.setReferenceCounted(false)
 
-        mMediaSession.setCallback(this, mMainHandler)
+        mMediaSession.setCallback(this)
         mMediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS)
         //TODO mediaButtons
     }
@@ -321,14 +321,14 @@ constructor(
         val mediaRef = mediaId.toMediaId()
         val playbackExtras = extras._playbackExtras()
         when (mediaRef) {
-            is VideoId -> fetchAndPlaySiblingsOf(mediaRef, playbackExtras)
+            is VideoId -> fetchAndPlaySiblingVideos(mediaRef, playbackExtras)
             else -> stopAndShowError("Unsupported media kind=${mediaRef.javaClass.name}")
         }
     }
 
-    private fun fetchAndPlaySiblingsOf(mediaId: VideoId, playbackExtras: PlaybackExtras) {
-        mDbClient.playableSiblingsOf(mediaId).filter { it is VideoRef }.map { it as VideoRef }
-                .toList().subscribe({ metaList ->
+    private fun fetchAndPlaySiblingVideos(mediaId: VideoId, playbackExtras: PlaybackExtras) {
+        mDbClient.playableSiblingVideos(mediaId).toList()
+                .subscribeOn(mBackgroundScheduler).observeOn(mMainScheduler).subscribe({ metaList ->
             //handle last playback position
             val currentRef = metaList.first {
                 it.id == mediaId
@@ -357,6 +357,7 @@ constructor(
                 play()
             }
             updateMetadata(currentQueueItem.description)
+
         }, { t ->
             stop()
             changeState(STATE_ERROR) {

@@ -100,7 +100,7 @@ class AppJobService : JobService() {
 
     private fun subscribeUpnpVideoLookupRelated(mediaId: UpnpVideoId, params: JobParameters) {
         relatedLookupSub.dispose()
-        relatedLookupSub = mDatabaseClient.playableSiblingsOf(mediaId)
+        relatedLookupSub = mDatabaseClient.playableSiblingMedias(mediaId)
                 .flatMapMaybe<MediaRefWithEpisode> { ref ->
                     val title = when (ref) {
                         is VideoRef -> ref.meta.originalTitle.elseIfBlank(ref.meta.title)

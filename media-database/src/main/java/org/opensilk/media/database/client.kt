@@ -166,18 +166,23 @@ class MediaDAO
         }
     }
 
-    fun playableSiblingsOf(mediaId: MediaId): Observable<out MediaRef> = when (mediaId) {
+    fun playableSiblingMedias(mediaId: MediaId): Observable<out MediaRef> = when (mediaId) {
+        is VideoId -> playableSiblingVideos(mediaId)
+        else -> TODO()
+    }
+
+    fun playableSiblingVideos(videoId: VideoId): Observable<out VideoRef> = when (videoId) {
         is UpnpVideoId -> {
-            getUpnpVideosUnder(UpnpFolderId(deviceId = mediaId.deviceId,
-                    parentId = "", containerId = mediaId.parentId))
+            getUpnpVideosUnder(UpnpFolderId(deviceId = videoId.deviceId,
+                    parentId = "", containerId = videoId.parentId))
         }
         is DocVideoId -> {
-            getDocVideosUnder(DocDirectoryId(treeUri = mediaId.treeUri,
-                    documentId = mediaId.parentId, parentId = ""))
+            getDocVideosUnder(DocDirectoryId(treeUri = videoId.treeUri,
+                    documentId = videoId.parentId, parentId = ""))
         }
         is StorageVideoId -> {
-            getStorageVideosUnder(StorageFolderId(uuid = mediaId.uuid,
-                    path = mediaId.parent, parent = ""))
+            getStorageVideosUnder(StorageFolderId(uuid = videoId.uuid,
+                    path = videoId.parent, parent = ""))
         }
         else -> TODO()
     }
