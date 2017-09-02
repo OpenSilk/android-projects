@@ -7,8 +7,6 @@ import org.opensilk.media.*
  */
 sealed class DatabaseChange
 
-class UpnpUpdateIdChange(val updateId: Long): DatabaseChange()
-
 /**
  * Represents a change in media devices
  */

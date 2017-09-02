@@ -218,11 +218,11 @@ class DrawerActivityViewModel
                     when (it) {
                         is DocDirectoryRef -> {
                             mDatabaseClient.addDocDirectory(it)
-                            //mDatabaseClient.postChangeFor()
+                            mDatabaseClient.postChangeFor(it.id)
                         }
                         is DocVideoRef -> {
                             mDatabaseClient.addDocVideo(it)
-                            mDatabaseClient.postChange(DocVideoChange(it.id))
+                            mDatabaseClient.postChangeFor(it.id)
                         }
                         else -> TODO()
                     }

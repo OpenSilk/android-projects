@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
 import android.os.OperationCanceledException
+import android.provider.DocumentsContract
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -42,7 +43,7 @@ class MediaDAO
     val changesObservable: Observable<DatabaseChange>
         get() = mChangesSubject.hide()
 
-    fun postChange(event: DatabaseChange) {
+    internal fun postChange(event: DatabaseChange) {
         mChangesScheduler.scheduleDirect {
             when (event) {
                 is FolderChange -> Timber.d("onFolderChange(${event.folderId}")
@@ -56,9 +57,14 @@ class MediaDAO
 
     fun postChangeFor(mediaId: MediaId) {
         postChange(when (mediaId) {
-            is FolderId -> FolderChange(mediaId)
-            is VideoId -> VideoChange(mediaId)
-            is MediaDeviceId -> DeviceChange(mediaId)
+            is UpnpDeviceId -> UpnpDeviceChange(mediaId)
+            is StorageDeviceId -> StorageDeviceChange(mediaId)
+            is UpnpFolderId -> UpnpFolderChange(mediaId)
+            is DocDirectoryId -> DocDirectoryChange(mediaId)
+            is StorageFolderId -> StorageFolderChange(mediaId)
+            is UpnpVideoId -> UpnpVideoChange(mediaId)
+            is DocVideoId -> DocVideoChange(mediaId)
+            is StorageVideoId -> StorageVideoChange(mediaId)
             else -> TODO("$mediaId")
         })
     }
@@ -145,15 +151,15 @@ class MediaDAO
         when (mediaId) {
             is UpnpVideoId -> {
                 setUpnpVideoTvEpisodeId(mediaId, episodeId)
-                postChange(UpnpVideoChange(mediaId))
+                postChangeFor(mediaId)
             }
             is DocVideoId -> {
                 setDocVideoTvEpisodeId(mediaId, episodeId)
-                postChange(DocVideoChange(mediaId))
+                postChangeFor(mediaId)
             }
             is StorageVideoId -> {
                 setStorageVideoTvEpisodeId(mediaId, episodeId)
-                postChange(StorageVideoChange(mediaId))
+                postChangeFor(mediaId)
             }
             else -> TODO()
         }
@@ -163,25 +169,23 @@ class MediaDAO
         when (mediaId) {
             is UpnpVideoId -> {
                 setUpnpVideoMovieId(mediaId, movieId)
-                postChange(UpnpVideoChange(mediaId))
+                postChangeFor(mediaId)
             }
             is DocVideoId -> {
                 setDocVideoMovieId(mediaId, movieId)
-                postChange(DocVideoChange(mediaId))
+                postChangeFor(mediaId)
             }
             is StorageVideoId -> {
                 setStorageVideoMovieId(mediaId, movieId)
-                postChange(StorageVideoChange(mediaId))
+                postChangeFor(mediaId)
             }
             else -> TODO()
         }
     }
 
-    fun playableSiblingMedias(mediaId: MediaId): Observable<out MediaRef> = when (mediaId) {
-        is VideoId -> playableSiblingVideos(mediaId)
-        else -> TODO()
-    }
-
+    /**
+     * Used by [PlaybackSession]
+     */
     fun playableSiblingVideos(videoId: VideoId): Observable<out VideoRef> = when (videoId) {
         is UpnpVideoId -> {
             getUpnpVideosUnder(UpnpFolderId(deviceId = videoId.deviceId,
@@ -195,33 +199,48 @@ class MediaDAO
             getStorageVideosUnder(StorageFolderId(uuid = videoId.uuid,
                     path = videoId.parent, parent = ""))
         }
+        is IntentDataVideoId -> {
+            Observable.just(IntentDataVideoRef(
+                    id = videoId,
+                    meta = IntentDataVideoMeta(
+                            title = "Unknown Video",
+                            mimeType = "video/*",
+                            mediaUri = videoId.uri)))
+        }
         else -> TODO()
     }
 
+    /**
+     * Used by [PlaybackSession]
+     */
     fun setLastPlaybackPosition(mediaId: MediaId, position: Long, duration: Long) {
         val values = positionContentVals(position, duration)
         when (mediaId) {
             is UpnpVideoId -> {
                 setUpnpVideoLastPlayed(videoId = mediaId, lastPlayed = values.getAsLong("last_played"))
+                setVideoLastPlaybackPosition(mediaId, values)
             }
             is DocVideoId -> {
                 setDocVideoLastPlayed(documentId = mediaId, lastPlayed = values.getAsLong("last_played"))
+                setVideoLastPlaybackPosition(mediaId, values)
             }
             is StorageVideoId -> {
                 setStorageVideoLastPlayed(videoId = mediaId, lastPlayed = values.getAsLong("last_played"))
+                setVideoLastPlaybackPosition(mediaId, values)
+            }
+            is IntentDataVideoId -> {
+                Timber.i("Ignoring last playback position on ephemeral video $mediaId")
             }
             else -> TODO()
         }
-        when (mediaId) {
-            is VideoId -> {
-                getMediaRef(mediaId = mediaId).map { it as VideoRef }.subscribeIgnoreError(Consumer { meta ->
-                    values.put("_display_name", meta.meta.title)
-                    mResolver.insert(mUris.playbackPosition(), values)
-                    postChangeFor(mediaId = mediaId)
-                })
-            }
-            else -> TODO()
-        }
+    }
+
+    private fun setVideoLastPlaybackPosition(videoId: VideoId, values: ContentValues) {
+        getVideoRef(videoId).subscribeIgnoreError(Consumer { meta ->
+            values.put("_display_name", meta.meta.title)
+            mResolver.insert(mUris.playbackPosition(), values)
+            postChangeFor(videoId)
+        })
     }
 
     fun hideChildrenOf(mediaId: MediaId) {

@@ -179,8 +179,7 @@ class UpnpDevicesObserver
                 .subscribeIgnoreError(Consumer { oldId ->
                     if (oldId != updateId) {
                         mDatabaseClient.setUpnpDeviceSystemUpdateId(deviceId, updateId)
-                        //TODO attach the deviceId to the change
-                        mDatabaseClient.postChange(UpnpUpdateIdChange(updateId))
+                        mDatabaseClient.postChangeFor(deviceId)
                     }
                 })
     }
