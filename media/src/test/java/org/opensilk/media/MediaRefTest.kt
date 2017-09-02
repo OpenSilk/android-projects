@@ -81,4 +81,10 @@ class MediaRefTest {
         assertThat(newRef).isEqualTo(ref)
     }
 
+    @Test
+    fun intentDataVideoId_toJson() {
+        val ref = IntentDataVideoId(Uri.parse("https://foo.com/test"))
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
+    }
 }

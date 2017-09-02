@@ -21,6 +21,7 @@ const val DOCUMENT_VIDEO = "document_video"
 const val STORAGE_DEVICE = "storage_device"
 const val STORAGE_FOLDER = "storage_folder"
 const val STORAGE_VIDEO = "storage_video"
+const val INTENT_DATA_VIDEO = "intent_data_video"
 
 const val KEY_MEDIA_URI = "media_uri"
 const val KEY_DURATION = "media_duration"
@@ -169,6 +170,9 @@ internal fun parseMediaId(json: String): MediaId {
                 }
                 STORAGE_VIDEO -> {
                     mediaId = StorageVideoIdTransformer.read(jr, readVersion(jr))
+                }
+                INTENT_DATA_VIDEO -> {
+                    mediaId = IntentDataVideoIdTransformer.read(jr, readVersion(jr))
                 }
                 else -> jr.skipValue()
             }
