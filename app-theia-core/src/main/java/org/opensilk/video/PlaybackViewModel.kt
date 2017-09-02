@@ -52,7 +52,7 @@ class PlaybackViewModel
         mTransportControls.sendCustomAction(ACTION_SET_REPEAT, bundle(KEY_REPEAT, VAL_REPEAT_OFF))
     }
 
-    fun onMediaRef(mediaId: MediaId, playbackExtras: PlaybackExtras, activityComponent: ComponentName) {
+    fun onMediaId(mediaId: MediaId, playbackExtras: PlaybackExtras, activityComponent: ComponentName) {
         mTransportControls.playFromMediaId(mediaId.json, playbackExtras.bundle())
 
         val intent = Intent().setComponent(activityComponent)

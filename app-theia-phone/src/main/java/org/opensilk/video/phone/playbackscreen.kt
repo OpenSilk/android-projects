@@ -6,13 +6,17 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.databinding.DataBindingUtil
 import android.media.session.PlaybackState
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.util.DisplayMetrics
 import android.view.*
 import android.widget.Toast
+import org.opensilk.media.IntentDataVideoId
 import org.opensilk.media.getMediaIdExtra
 import org.opensilk.media.playback.PlaybackExtras
 import org.opensilk.video.*
@@ -121,12 +125,18 @@ class PlaybackActivity: BaseVideoActivity(), PlaybackActionsHandler,
     }
 
     private fun handleIntent(intent: Intent) {
-        val mediaRef = intent.getMediaIdExtra()
+        val action = intent.action ?: ""
         val playbackExtras = PlaybackExtras()
         playbackExtras.playWhenReady = intent.getBooleanExtra(EXTRA_PLAY_WHEN_READY, true)
-        playbackExtras.resume = intent.action == ACTION_RESUME
-        mViewModel.onMediaRef(mediaRef, playbackExtras,
-                ComponentName(this, PlaybackActivity::class.java))
+        playbackExtras.resume = action == ACTION_RESUME
+        val component = ComponentName(this, PlaybackActivity::class.java)
+        val mediaId = when (action) {
+            Intent.ACTION_VIEW -> IntentDataVideoId(intent.data)
+            ACTION_PLAY,
+            ACTION_RESUME -> intent.getMediaIdExtra()
+            else -> TODO("Unhandled action $action")
+        }
+        mViewModel.onMediaId(mediaId, playbackExtras, component)
     }
 
     override fun onDestroy() {
