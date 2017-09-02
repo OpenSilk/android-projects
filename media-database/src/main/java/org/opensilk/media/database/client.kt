@@ -182,91 +182,30 @@ class MediaDAO
         else -> TODO()
     }
 
-    fun getLastPlaybackPosition(mediaId: MediaId): Maybe<Long> = when (mediaId) {
-        is UpnpVideoId -> {
-            getUpnpVideo(mediaId).flatMap { meta ->
-                lastPlaybackPosition(meta.meta.originalTitle)
-            }
-        }
-        is DocVideoId -> {
-            getDocVideo(mediaId).flatMap { meta ->
-                lastPlaybackPosition(meta.meta.originalTitle)
-            }
-        }
-        is StorageVideoId -> {
-            getStorageVideo(mediaId).flatMap { meta ->
-                lastPlaybackPosition(meta.meta.originalTitle)
-            }
-        }
-        else -> TODO()
-    }
-
-    fun lastPlaybackPosition(mediaTitle: String): Maybe<Long> {
-        return doGet(mUris.playbackPosition(), arrayOf("last_position"),
-                    "_display_name=?", arrayOf(mediaTitle), {c -> c.getLong(0)})
-    }
-
-    fun getLastPlaybackCompletion(mediaId: MediaId): Maybe<Int> = when (mediaId) {
-        is UpnpVideoId -> {
-            getUpnpVideo(mediaId).flatMap { meta ->
-                lastPlaybackCompletion(meta.meta.originalTitle)
-            }
-        }
-        is DocVideoId -> {
-            getDocVideo(mediaId).flatMap { meta ->
-                lastPlaybackCompletion(meta.meta.originalTitle)
-            }
-        }
-        is StorageVideoId -> {
-            getStorageVideo(mediaId).flatMap { meta ->
-                lastPlaybackCompletion(meta.meta.originalTitle)
-            }
-        }
-        else -> TODO()
-    }
-
-    private fun lastPlaybackCompletion(mediaTitle: String): Maybe<Int> {
-        return doGet(mUris.playbackPosition(), arrayOf("last_completion"),
-                "_display_name=?", arrayOf(mediaTitle),{ c -> c.getInt(0) })
-    }
-
     fun setLastPlaybackPosition(mediaId: MediaId, position: Long, duration: Long) {
+        val values = positionContentVals(position, duration)
         when (mediaId) {
             is UpnpVideoId -> {
-                getUpnpVideo(mediaId)
-                        .subscribeIgnoreError(Consumer { meta ->
-                            mResolver.insert(mUris.playbackPosition(),
-                                    positionContentVals(meta.meta.originalTitle, position, duration))
-                            postChange(UpnpVideoChange(mediaId))
-                        })
+                setUpnpVideoLastPlayed(videoId = mediaId, lastPlayed = values.getAsLong("last_played"))
             }
             is DocVideoId -> {
-                getDocVideo(mediaId)
-                        .subscribeIgnoreError(Consumer { meta ->
-                            mResolver.insert(mUris.playbackPosition(),
-                                    positionContentVals(meta.meta.originalTitle, position, duration))
-                            postChange(DocVideoChange(mediaId))
-                        })
+                setDocVideoLastPlayed(documentId = mediaId, lastPlayed = values.getAsLong("last_played"))
             }
             is StorageVideoId -> {
-                getStorageVideo(mediaId)
-                        .subscribeIgnoreError(Consumer { meta ->
-                            mResolver.insert(mUris.playbackPosition(),
-                                    positionContentVals(meta.meta.originalTitle, position, duration))
-                            postChange(StorageVideoChange(mediaId))
-                        })
+                setStorageVideoLastPlayed(videoId = mediaId, lastPlayed = values.getAsLong("last_played"))
             }
             else -> TODO()
         }
-    }
-
-    private fun positionContentVals(mediaTitle: String, position: Long, duration: Long): ContentValues {
-        val values = ContentValues()
-        values.put("_display_name", mediaTitle)
-        values.put("last_played", System.currentTimeMillis())
-        values.put("last_position", position)
-        values.put("last_completion", calculateCompletion(position, duration))
-        return values
+        when (mediaId) {
+            is VideoRef -> {
+                getMediaRef(mediaId = mediaId).map { it as VideoRef }.subscribeIgnoreError(Consumer { meta ->
+                    values.put("_display_name", meta.meta.title)
+                    mResolver.insert(mUris.playbackPosition(), values)
+                    postChangeFor(mediaId = mediaId)
+                })
+            }
+            else -> TODO()
+        }
     }
 
     fun hideChildrenOf(mediaId: MediaId) {
@@ -402,9 +341,14 @@ class MediaDAO
                 {c -> c.toUpnpVideoMediaMeta(mApiHelper) })
     }
 
+    fun setUpnpVideoLastPlayed(videoId: UpnpVideoId, lastPlayed: Long): Boolean =
+            mResolver.update(mUris.upnpVideo(), contentValues("last_played", lastPlayed),
+                    "device_id=? AND parent_id=? AND item_id=?",
+                    arrayOf(videoId.deviceId, videoId.parentId, videoId.itemId)) != 0
+
     fun getRecentlyPlayedUpnpVideos(): Observable<UpnpVideoRef> {
-        return doQuery(mUris.upnpVideo(), upnpVideoProjection, "p.last_played != ''", null,
-                " p.last_played DESC LIMIT 10 ", { c -> c.toUpnpVideoMediaMeta(mApiHelper) })
+        return doQuery(mUris.upnpVideo(), upnpVideoProjection, "v.last_played > 0", null,
+                " v.last_played DESC LIMIT 10 ", { c -> c.toUpnpVideoMediaMeta(mApiHelper) })
     }
 
     fun getUpnpVideoOverview(videoId: UpnpVideoId): Maybe<String> {
@@ -503,9 +447,14 @@ class MediaDAO
                 {c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
+    fun setDocVideoLastPlayed(documentId: DocVideoId, lastPlayed: Long): Boolean =
+            mResolver.update(mUris.documentVideo(), contentValues("last_played", lastPlayed),
+                    "tree_uri=? AND document_id=? AND parent_id=?", arrayOf(documentId.treeUri.toString(),
+                    documentId.documentId, documentId.parentId)) != 0
+
     fun getRecentlyPlayedDocVideos(): Observable<DocVideoRef> {
-        return doQuery(mUris.documentVideo(), videoDocumentProjection, "p.last_played != ''", null,
-                " p.last_played DESC LIMIT 10 ", { c -> c.toVideoDocumentRef(mApiHelper) })
+        return doQuery(mUris.documentVideo(), videoDocumentProjection, "v.last_played > 0", null,
+                " v.last_played DESC LIMIT 10 ", { c -> c.toVideoDocumentRef(mApiHelper) })
     }
 
     fun getDocVideoOverview(documentId: DocVideoId): Maybe<String> {
@@ -622,9 +571,13 @@ class MediaDAO
                 arrayOf(videoId.path, videoId.uuid),
                 {c -> c.toStorageVideo(mApiHelper) })
 
+    fun setStorageVideoLastPlayed(videoId: StorageVideoId, lastPlayed: Long): Boolean =
+            mResolver.update(mUris.storageVideo(), contentValues("last_played", lastPlayed),
+                    "path=? AND device_uuid=?", arrayOf(videoId.path, videoId.uuid)) != 0
+
     fun getRecentlyPlayedStorageVideos(): Observable<StorageVideoRef> =
-            doQuery(mUris.storageVideo(), storageVideoProjection, "p.last_played != ''", null,
-                " p.last_played DESC LIMIT 10 ", { c -> c.toStorageVideo(mApiHelper) })
+            doQuery(mUris.storageVideo(), storageVideoProjection, "v.last_played > 0", null,
+                " v.last_played DESC LIMIT 10 ", { c -> c.toStorageVideo(mApiHelper) })
 
     fun getStorageVideoOverview(videoId: StorageVideoId): Maybe<String> {
         return Maybe.create { s ->
@@ -1374,6 +1327,14 @@ fun MovieImageRef.contentValues(): ContentValues {
     values.put("resolution", image.meta.resolution)
     values.put("vote_average", image.meta.rating)
     values.put("vote_count", image.meta.ratingCount)
+    return values
+}
+
+fun positionContentVals(position: Long, duration: Long): ContentValues {
+    val values = ContentValues()
+    values.put("last_played", System.currentTimeMillis())
+    values.put("last_position", position)
+    values.put("last_completion", calculateCompletion(position, duration))
     return values
 }
 

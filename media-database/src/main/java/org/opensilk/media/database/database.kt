@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.opensilk.dagger2.ForApp
 import javax.inject.Inject
 
-const private val VERSION = 5
+const private val VERSION = 6
 
 /**
  * Created by drew on 7/18/17.
@@ -292,6 +292,11 @@ internal class MediaDB
                     "media_id TEXT UNIQUE NOT NULL, " +
                     "pinned INTEGER DEFAULT 1 " +
                     ");")
+        }
+        if (oldVersion < 6) {
+            db.execSQL("ALTER TABLE upnp_video ADD COLUMN last_played INTEGER DEFAULT 0")
+            db.execSQL("ALTER TABLE document_video ADD COLUMN last_played INTEGER DEFAULT 0" )
+            db.execSQL("ALTER TABLE storage_video ADD COLUMN last_played INTEGER DEFAULT 0")
         }
     }
 }
