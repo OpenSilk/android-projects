@@ -197,7 +197,7 @@ class MediaDAO
             else -> TODO()
         }
         when (mediaId) {
-            is VideoRef -> {
+            is VideoId -> {
                 getMediaRef(mediaId = mediaId).map { it as VideoRef }.subscribeIgnoreError(Consumer { meta ->
                     values.put("_display_name", meta.meta.title)
                     mResolver.insert(mUris.playbackPosition(), values)
