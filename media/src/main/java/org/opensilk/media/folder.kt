@@ -12,11 +12,9 @@ object NoFolderId: FolderId {
 /**
  * Folder metadata
  */
-interface FolderMeta {
-    val title: String
-}
+interface FolderMeta: MediaMeta
 
 interface FolderRef: MediaRef {
     override val id: FolderId
-    val meta: FolderMeta
+    override val meta: FolderMeta
 }

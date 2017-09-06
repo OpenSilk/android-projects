@@ -6,12 +6,14 @@ import android.util.JsonWriter
 
 const val UPNP_ROOT_ID = "0"
 
+interface UpnpId: MediaId {
+    val deviceId: String
+}
+
 /**
  * Meta all upnp objects have
  */
-interface UpnpMeta {
-    val title: String
-}
+interface UpnpMeta: MediaMeta
 
 /**
  * Meta representing upnp item with resource
@@ -26,8 +28,7 @@ interface UpnpItemMeta: UpnpMeta {
 /**
  * id representing upnp container
  */
-interface UpnpContainerId: MediaId {
-    val deviceId: String
+interface UpnpContainerId: UpnpId {
     val parentId: String
     val containerId: String
 }
@@ -35,8 +36,7 @@ interface UpnpContainerId: MediaId {
 /**
  * id representing upnp item
  */
-interface UpnpItemId: MediaId {
-    val deviceId: String
+interface UpnpItemId: UpnpId {
     val parentId: String
     val itemId: String
 }
@@ -45,7 +45,8 @@ interface UpnpItemId: MediaId {
  * top level upnp ref
  */
 interface UpnpRef: MediaRef {
-    val meta: UpnpMeta
+    override val id: UpnpId
+    override val meta: UpnpMeta
 }
 
 /**

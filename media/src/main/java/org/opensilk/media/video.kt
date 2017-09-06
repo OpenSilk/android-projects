@@ -10,8 +10,7 @@ interface VideoId: MediaId
 /**
  * Video metadata
  */
-interface VideoMeta {
-    val title: String
+interface VideoMeta: MediaMeta {
     val subtitle: String
     val artworkUri: Uri
     val backdropUri: Uri
@@ -34,7 +33,7 @@ interface VideoRef: MediaRef {
     override val id: VideoId
     val tvEpisodeId: TvEpisodeId?
     val movieId: MovieId?
-    val meta: VideoMeta
+    override val meta: VideoMeta
     val resumeInfo: VideoResumeInfo?
 }
 

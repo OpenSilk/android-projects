@@ -23,9 +23,7 @@ private fun suitableFakeUuid2(emulated: Boolean, removable: Boolean): String = w
 /**
  * Top level meta for storage model
  */
-interface StorageMeta {
-    val title: String
-}
+interface StorageMeta: MediaMeta
 
 /**
  * Top level id for storage model
@@ -45,5 +43,5 @@ interface StorageContainerId: StorageId
  */
 interface StorageRef: MediaRef {
     override val id: StorageId
-    val meta: StorageMeta
+    override val meta: StorageMeta
 }

@@ -9,8 +9,7 @@ import android.util.JsonWriter
 
 const val ROOTS_PARENT_ID = "\u2605G\u2605O\u2605D\u2605"
 
-interface DocumentMeta {
-    val title: String
+interface DocumentMeta: MediaMeta {
     val mimeType: String
     val lastMod: Long
     val flags: Long
@@ -18,7 +17,7 @@ interface DocumentMeta {
 
 interface DocumentRef: MediaRef {
     override val id: DocumentId
-    val meta: DocumentMeta
+    override val meta: DocumentMeta
 }
 
 interface DocumentId: MediaId {

@@ -9,7 +9,7 @@ data class UpnpMusicTrackId(
         override val deviceId: String,
         override val parentId: String,
         override val itemId: String
-): UpnpItemId {
+): UpnpItemId, MusicId {
     override val json: String
         get() = writeJson(UpnpMusicTrackTransformer, this)
 }
@@ -18,22 +18,25 @@ data class UpnpMusicTrackMeta(
         override val title: String = "",
         val creator: String = "",
         val date: String = "",
-        val artist: String = "",
-        val album: String = "",
-        val genre: String = "",
-        val trackNum: Int = 0,
+        override val artist: String = "",
+        override val album: String = "",
+        override val genre: String = "",
+        override val trackNum: Int = 0,
         override val size: Long = 0,
         override val duration: Long = 0,
-        val bitrate: Long = 0,
+        override val bitrate: Long = 0,
         val nrAudioChan: Int = 0,
         val sampleFreq: Long = 0,
         override val mediaUri: Uri,
         override val mimeType: String,
-        val originalArtworkUri: Uri = Uri.EMPTY,
-        val artworkUri: Uri = Uri.EMPTY,
-        val backdropUri: Uri = Uri.EMPTY,
-        val originalTitle: String = ""
-): UpnpItemMeta
+        override val originalArtworkUri: Uri = Uri.EMPTY,
+        override val artworkUri: Uri = Uri.EMPTY,
+        override val backdropUri: Uri = Uri.EMPTY,
+        override val originalTitle: String = "",
+        override val albumArtist: String = "",
+        override val discNumber: Int = 1,
+        override val isCompilation: Boolean = false
+): UpnpItemMeta, MusicMeta
 
 data class UpnpMusicTrackRef(
         override val id: UpnpMusicTrackId,

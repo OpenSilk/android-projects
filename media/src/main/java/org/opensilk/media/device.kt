@@ -12,14 +12,12 @@ object NoMediaDeviceId: MediaDeviceId {
 /**
  * Basic meta for [MediaDeviceRef]
  */
-interface MediaDeviceMeta {
-    val title: String
-}
+interface MediaDeviceMeta: MediaMeta
 
 /**
  * Basic media device
  */
 interface MediaDeviceRef: MediaRef {
     override val id: MediaDeviceId
-    val meta: MediaDeviceMeta
+    override val meta: MediaDeviceMeta
 }

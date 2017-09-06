@@ -32,8 +32,13 @@ object NoMediaId: MediaId {
     override val json: String = ""
 }
 
+object NoMediaMeta: MediaMeta {
+    override val title: String = ""
+}
+
 object NoMediaRef: MediaRef {
     override val id: MediaId = NoMediaId
+    override val meta: MediaMeta = NoMediaMeta
 }
 
 /**
@@ -47,10 +52,18 @@ interface MediaId {
 }
 
 /**
+ * Basic metadata common to all types of media
+ */
+interface MediaMeta {
+    val title: String
+}
+
+/**
  * Contains the media id and metadata
  */
 interface MediaRef {
     val id: MediaId
+    val meta: MediaMeta
 }
 
 /**
