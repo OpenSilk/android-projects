@@ -1,31 +1,16 @@
 package org.opensilk.music.data
 
-import android.content.Intent
-import android.media.MediaDescription
-import android.media.browse.MediaBrowser
-import android.net.Uri
-import android.os.Bundle
-import android.os.ResultReceiver
 import android.support.test.InstrumentationRegistry
 import android.support.test.rule.ServiceTestRule
 import android.support.test.runner.AndroidJUnit4
-
-import org.assertj.core.api.Assertions.*
-import org.junit.After
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okio.Buffer
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-
-import java.io.IOException
-import java.io.InputStream
-
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import okio.Buffer
-import org.opensilk.media._getMediaMeta
-import rx.exceptions.Exceptions
-import rx.schedulers.Schedulers
 import timber.log.Timber
 
 /**
@@ -42,8 +27,6 @@ class ScannerServiceTest {
     fun setUp() {
         Timber.uprootAll()
         Timber.plant(Timber.DebugTree())
-        ScannerService.sObserveOn = Schedulers.immediate()
-        ScannerService.sSubscribeOn = Schedulers.immediate()
     }
 
     @Test
@@ -57,42 +40,6 @@ class ScannerServiceTest {
                 "Music/Aurora-Album1/05 Winter Bird.mp3",
                 "Music/Aurora-Album1/06 I Went Too Far.mp3"
         )
-
-        val mConnection = IScannerService.Stub.asInterface(mServiceRule.bindService(
-                Intent(InstrumentationRegistry.getTargetContext(), ScannerService::class.java)))
-        assertThat(mConnection).isNotNull()
-
-        for (file in files) {
-            enqueueItem(file)
-            val item = TestDocuments.getItem(mWebServer.url("/testItem").toString(), file)
-            assertThat(item).isNotNull()
-            val goodMeta = item._getMediaMeta()
-            val subscriber = object : ScannerService.ScannerSubscriber() {
-                var successCalled = false
-                override fun onSuccess(value: MediaBrowser.MediaItem) {
-                    successCalled = true
-                    val scannedMeta = value._getMediaMeta()
-                    assertThat(scannedMeta.albumName).isEqualTo(goodMeta.albumName)
-                    assertThat(scannedMeta.albumArtistName).isEqualTo(goodMeta.albumArtistName)
-                    assertThat(scannedMeta.artistName).isEqualTo(goodMeta.artistName)
-                    assertThat(scannedMeta.bitrate).isEqualTo(goodMeta.bitrate)
-                    assertThat(scannedMeta.trackNumber).isEqualTo(goodMeta.trackNumber)
-                    assertThat(scannedMeta.isCompilation).isEqualTo(goodMeta.isCompilation)
-                    assertThat(scannedMeta.discNumber).isEqualTo(goodMeta.discNumber)
-                    assertThat(scannedMeta.duration).isEqualTo(goodMeta.duration)
-                    assertThat(scannedMeta.genreName).isEqualTo(goodMeta.genreName)
-                    assertThat(scannedMeta.mimeType).isEqualTo(goodMeta.mimeType)
-                    assertThat(scannedMeta.title).isEqualTo(goodMeta.title)
-                }
-
-                override fun onError(error: Throwable) {
-                    throw Exceptions.propagate(error)
-                }
-            }
-            val s = ScannerService.ScannerSubscription(mConnection.scanItem(item, subscriber.cb))
-            assertThat(s).isNotNull()
-            assertThat(subscriber.successCalled).isTrue()
-        }
     }
 
     private fun enqueueItem(file: String) {

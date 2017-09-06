@@ -1,7 +1,5 @@
 package org.opensilk.music.data
 
-import android.content.ContentProvider
-import android.content.Context
 import android.content.pm.ProviderInfo
 import android.database.Cursor
 import android.database.MatrixCursor
@@ -9,26 +7,14 @@ import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsProvider
 import android.util.JsonReader
-
 import org.apache.commons.io.IOUtils
-import org.apache.commons.lang3.StringUtils
-import org.bouncycastle.asn1.x9.X9ObjectIdentifiers
-import org.opensilk.media.MediaMeta
+import org.opensilk.media.NoMediaRef
 import org.robolectric.Robolectric
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.shadows.ShadowContentResolver
-
-import java.io.File
+import timber.log.Timber
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.io.InputStream
 import java.io.InputStreamReader
-import java.io.OutputStream
-import java.lang.reflect.Method
-import java.util.ArrayList
-import java.util.HashMap
-
-import timber.log.Timber
+import java.util.*
 
 /**
  * Created by drew on 6/27/16.
@@ -36,9 +22,7 @@ import timber.log.Timber
 class TestDataProvider : DocumentsProvider() {
 
     @Throws(FileNotFoundException::class)
-    override fun queryRoots(projection: Array<String>): Cursor? {
-        return null
-    }
+    override fun queryRoots(projection: Array<String>): Cursor? = null
 
     @Throws(FileNotFoundException::class)
     override fun queryDocument(documentId: String, projection: Array<String>): Cursor {
@@ -94,15 +78,10 @@ class TestDataProvider : DocumentsProvider() {
     }
 
     override fun isChildDocument(parentDocumentId: String, documentId: String): Boolean {
-        for (item in TEST_DATA) {
-            if (documentId == item["document_id"].toString()
-                    && parentDocumentId == item["parent_document_id"].toString()) {
-                return true
-            }
+        return TEST_DATA.any {
+            documentId == it["document_id"].toString() && parentDocumentId == it["parent_document_id"].toString()
         }
-        return false
     }
-
 
     private lateinit var TEST_DATA: List<Map<String, Any>>
 
@@ -124,7 +103,7 @@ class TestDataProvider : DocumentsProvider() {
                     "parent_document_id", "_display_name", "document_id",
                     "mime_type" -> entry[name] = jr.nextString()
                     "_size" -> entry[name] = jr.nextLong()
-                    "meta" -> entry[name] = loadTestMeta(jr)
+                    "meta" -> entry[name] = NoMediaRef// loadTestMeta(jr)
                     else -> jr.skipValue()
                 }
             }
@@ -136,6 +115,7 @@ class TestDataProvider : DocumentsProvider() {
         return testData
     }
 
+    /*
     fun loadTestMeta(jsonReader: JsonReader): MediaMeta {
         val m = MediaMeta()
         jsonReader.beginObject()
@@ -158,6 +138,7 @@ class TestDataProvider : DocumentsProvider() {
         jsonReader.endObject()
         return m
     }
+    */
 
     companion object {
 

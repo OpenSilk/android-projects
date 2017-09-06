@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2016 OpenSilk Productions LLC
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <import type="android.text.TextUtils"/>
+        <import type="android.view.View"/>
+        <variable
+            name="item"
+            type="android.media.MediaDescription"/>
+    </data>
+    <org.opensilk.common.widget.ForegroundLinearLayout
+        android:id="@+id/frame"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:foreground="?selectableItemBackground"
+        style="@style/mtrl.TwoLineListItem"
+        >
+
+        <ImageView
+            android:id="@+id/artwork_thumb"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            style="@style/mtrl.TwoLineListItemInner.Avatar"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            style="@style/mtrl.TwoLineListItemTextContainer">
+
+            <TextView
+                android:id="@+id/tile_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:textAppearance"
+                android:textSize="16sp"
+                tools:text="Title"
+                android:text="@{item.title}"
+                style="@style/mtrl.TwoLineListItemInner.Text1"/>
+
+            <TextView
+                android:id="@+id/tile_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:textSize="14sp"
+                tools:text="SubTitle"
+                android:text="@{item.subtitle}"
+                android:visibility="@{TextUtils.isEmpty(item.subtitle) ? View.GONE : View.VISIBLE}"
+                style="@style/mtrl.TwoLineListItemInner.Text2"/>
+
+        </LinearLayout>
+
+    </org.opensilk.common.widget.ForegroundLinearLayout>
+</layout>

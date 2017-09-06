@@ -11,7 +11,7 @@
         <menu>
             <item
                 android:id="@+id/nav_add_root"
-                android:icon="@drawable/ic_folder_black_48dp"
+                android:icon="@drawable/ic_folder_48dp"
                 android:title="@string/menu_add_root"/>
         </menu>
     </item>

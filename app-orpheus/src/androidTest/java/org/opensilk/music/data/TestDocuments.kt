@@ -6,8 +6,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.support.test.InstrumentationRegistry
 import android.util.JsonReader
-import org.opensilk.media.*
-import org.opensilk.music.data.ref.DocumentRef
+import org.opensilk.media.DocumentRef
 import java.io.InputStreamReader
 import java.util.*
 
@@ -16,6 +15,8 @@ import java.util.*
  */
 object TestDocuments {
 
+    val sItems: Map<String, MediaBrowser.MediaItem> = emptyMap()
+    /*
     private val sAccessUri = DocumentsContract.buildTreeDocumentUri("foo.test.provider", "Music")
 
     val sItems: Map<String, MediaBrowser.MediaItem> by lazy {
@@ -24,7 +25,6 @@ object TestDocuments {
                 val bob = MediaDescription.Builder()
                 when (it["kind"]) {
                     "directory" -> {
-                        val meta = MediaMeta()
                         bob.setMediaId(DocumentRef(sAccessUri, it["document_id"] as String).mediaId)
                         bob.setTitle(it["_display_name"] as String)
                         meta.displayName = it["_display_name"] as String
@@ -105,4 +105,5 @@ object TestDocuments {
         jsonReader.endObject()
         return m
     }
+    */
 }

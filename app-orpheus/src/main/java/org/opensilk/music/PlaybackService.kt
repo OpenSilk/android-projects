@@ -6,9 +6,17 @@ import android.media.browse.MediaBrowser
 import android.os.Bundle
 import android.service.media.MediaBrowserService
 import android.support.v4.content.WakefulBroadcastReceiver
-import org.opensilk.common.dagger.getDaggerComponent
+import dagger.Module
+import dagger.android.AndroidInjection
+import dagger.android.ContributesAndroidInjector
 import org.opensilk.media.playback.PlaybackSession
 import javax.inject.Inject
+
+@Module
+abstract class PlaybackServiceComponent {
+    @ContributesAndroidInjector
+    abstract fun playbackService(): PlaybackService
+}
 
 /**
  * Created by drew on 3/12/17.
@@ -18,12 +26,9 @@ class PlaybackService: MediaBrowserService() {
     @Inject internal lateinit var mService: PlaybackSession
 
     override fun onCreate() {
+        AndroidInjection.inject(this)
         super.onCreate()
-         val cmp = DaggerPlaybackServiceComponent.builder()
-                .rootComponent(applicationContext.getDaggerComponent<RootComponent>())
-                .build()
-        cmp.inject(this)
-        sessionToken = mService.sessionToken
+        sessionToken = mService.token
     }
 
     override fun onDestroy() {
