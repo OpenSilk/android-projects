@@ -87,8 +87,7 @@ fun AudioItem.toUpnpAudioTrack(deviceId: UpnpDeviceId): UpnpAudioRef {
 fun MusicTrack.toUpnpMusicTrack(deviceId: UpnpDeviceId): UpnpMusicTrackRef {
     val mediaId = UpnpMusicTrackId(deviceId = deviceId.deviceId, parentId = this.parentID, itemId = this.id)
     val title = this.title
-    val creator = this.creator ?: ""
-    val artist = this.firstArtist?.name ?: ""
+    val artist = this.firstArtist?.name ?: this.creator ?: ""
     val res = this.firstResource
     val mediaUri = Uri.parse(res.value)
     val mimeType = res.protocolInfo.contentFormat
@@ -108,7 +107,6 @@ fun MusicTrack.toUpnpMusicTrack(deviceId: UpnpDeviceId): UpnpMusicTrackRef {
             id = mediaId,
             meta = UpnpMusicTrackMeta(
                     title = title,
-                    creator = creator,
                     artist = artist,
                     mediaUri = mediaUri,
                     mimeType = mimeType,
