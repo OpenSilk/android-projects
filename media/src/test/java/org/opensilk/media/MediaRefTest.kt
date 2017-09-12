@@ -61,6 +61,13 @@ class MediaRefTest {
     }
 
     @Test
+    fun docMusicTrackId_toJson() {
+        val ref = DocMusicTrackId(Uri.parse("/foo"), "baoe", "onut")
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
+    }
+
+    @Test
     fun storageDeviceId_toJson() {
         val ref = StorageDeviceId("andountu", "bouneot", true)
         val newRef = parseMediaId(ref.json)
@@ -77,6 +84,13 @@ class MediaRefTest {
     @Test
     fun storageVideoId_toJson() {
         val ref = StorageVideoId("ontu", "eontu", "ountou")
+        val newRef = parseMediaId(ref.json)
+        assertThat(newRef).isEqualTo(ref)
+    }
+
+    @Test
+    fun storageMusicTrackId_toJson() {
+        val ref = StorageMusicTrackId("ount", "ooeuth", "uoutuo")
         val newRef = parseMediaId(ref.json)
         assertThat(newRef).isEqualTo(ref)
     }

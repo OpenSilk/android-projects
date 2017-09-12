@@ -33,7 +33,7 @@ val DocumentId.authority: String
     get() = treeUri.authority
 
 /**
- * if this is the top most uri we have access to
+ * true if this is the top most uri we have access to
  */
 val DocumentId.isRoot: Boolean
     get() = if (isTreeUri(treeUri)) {
@@ -66,7 +66,7 @@ val DocumentId.childrenUri: Uri
  * documents can represent either a single document
  * or a single document made accessible through a tree,
  *
- * if this was created using [Intent.ACTION_OPEN_DOCUMENT_TREE]
+ * true if this was created using [Intent.ACTION_OPEN_DOCUMENT_TREE]
  */
 val DocumentId.isFromTree: Boolean
     get() = isTreeUri(treeUri)
@@ -109,6 +109,10 @@ internal abstract class DocumentIdTransformer: MediaIdTransformer<DocumentId> {
                     documentId = docStr,
                     parentId = parent)
             DOCUMENT_VIDEO -> DocVideoId(
+                    treeUri = Uri.parse(treeStr),
+                    documentId = docStr,
+                    parentId = parent)
+            DOCUMENT_MUSIC_TRACK -> DocMusicTrackId(
                     treeUri = Uri.parse(treeStr),
                     documentId = docStr,
                     parentId = parent)

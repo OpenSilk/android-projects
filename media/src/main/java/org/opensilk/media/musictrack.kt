@@ -5,9 +5,9 @@ import android.net.Uri
 /**
  * Created by drew on 9/6/17.
  */
-interface MusicId: AudioId
+interface MusicTrackId : AudioId
 
-interface MusicMeta: AudioMeta {
+interface MusicTrackMeta : AudioMeta {
     val album: String
     val albumArtist: String
     val artist: String
@@ -16,6 +16,7 @@ interface MusicMeta: AudioMeta {
     val isCompilation: Boolean
     val discNumber: Int
     val duration: Long
+    val size: Long
     val genre: String
     val mimeType: String
     val mediaUri: Uri
@@ -25,8 +26,8 @@ interface MusicMeta: AudioMeta {
     val backdropUri: Uri
 }
 
-interface MusicRef: AudioRef {
-    override val id: MusicId
-    override val meta: MusicMeta
+interface MusicTrackRef : AudioRef {
+    override val id: MusicTrackId
+    override val meta: MusicTrackMeta
 }
 

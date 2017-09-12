@@ -18,9 +18,11 @@ const val UPNP_AUDIO = "upnp_audio"
 const val DOCUMENT_DEVICE = "document_device"
 const val DOCUMENT_DIRECTORY = "document_directory"
 const val DOCUMENT_VIDEO = "document_video"
+const val DOCUMENT_MUSIC_TRACK = "document_music_track"
 const val STORAGE_DEVICE = "storage_device"
 const val STORAGE_FOLDER = "storage_folder"
 const val STORAGE_VIDEO = "storage_video"
+const val STORAGE_MUSIC_TRACK = "storage_music_track"
 const val INTENT_DATA_VIDEO = "intent_data_video"
 
 const val KEY_MEDIA_URI = "media_uri"
@@ -175,6 +177,9 @@ internal fun parseMediaId(json: String): MediaId {
                 DOCUMENT_VIDEO -> {
                     mediaId = DocVideoIdTransformer.read(jr, readVersion(jr))
                 }
+                DOCUMENT_MUSIC_TRACK -> {
+                    mediaId = DocMusicTrackIdTransformer.read(jr, readVersion(jr))
+                }
                 STORAGE_DEVICE -> {
                     mediaId = StorageDeviceIdTransformer.read(jr, readVersion(jr))
                 }
@@ -183,6 +188,9 @@ internal fun parseMediaId(json: String): MediaId {
                 }
                 STORAGE_VIDEO -> {
                     mediaId = StorageVideoIdTransformer.read(jr, readVersion(jr))
+                }
+                STORAGE_MUSIC_TRACK -> {
+                    mediaId = StorageMusicTrackIdTransformer.read(jr, readVersion(jr))
                 }
                 INTENT_DATA_VIDEO -> {
                     mediaId = IntentDataVideoIdTransformer.read(jr, readVersion(jr))
@@ -207,14 +215,6 @@ fun MediaRef.toMediaDescription(): MediaDescription {
         is UpnpFolderRef -> {
             bob.setTitle(meta.title)
                     .setMediaId(id.json)
-        }
-        is UpnpMusicTrackRef -> {
-            bob.setTitle(meta.title.elseIfBlank(meta.originalTitle))
-                    .setSubtitle(meta.artist.elseIfBlank(meta.creator))
-                    .setIconUri(meta.artworkUri.elseIfEmpty(meta.originalArtworkUri))
-                    .setMediaId(id.json)
-                    .setExtras(bundle(KEY_MEDIA_URI, meta.mediaUri)
-                            ._putLong(KEY_DURATION, meta.duration))
         }
         is UpnpAudioRef -> {
             bob.setTitle(meta.title)
@@ -241,11 +241,19 @@ fun MediaRef.toMediaDescription(): MediaDescription {
             bob.setTitle(meta.title)
                     .setMediaId(id.json)
         }
-        //override this above if need special handling
+        //override these above if need special handling
         is VideoRef -> {
             bob.setTitle(meta.title)
                     .setSubtitle(meta.subtitle)
                     .setIconUri(meta.artworkUri)
+                    .setMediaId(id.json)
+                    .setExtras(bundle(KEY_MEDIA_URI, meta.mediaUri)
+                            ._putLong(KEY_DURATION, meta.duration))
+        }
+        is MusicTrackRef -> {
+            bob.setTitle(meta.title.elseIfBlank(meta.originalTitle))
+                    .setSubtitle(meta.albumArtist.elseIfBlank(meta.artist))
+                    .setIconUri(meta.artworkUri.elseIfEmpty(meta.originalArtworkUri))
                     .setMediaId(id.json)
                     .setExtras(bundle(KEY_MEDIA_URI, meta.mediaUri)
                             ._putLong(KEY_DURATION, meta.duration))

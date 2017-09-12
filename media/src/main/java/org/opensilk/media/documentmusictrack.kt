@@ -3,20 +3,23 @@ package org.opensilk.media
 import android.net.Uri
 
 /**
- * Created by drew on 8/11/17.
+ * Created by drew on 8/22/17.
  */
-data class UpnpMusicTrackId(
-        override val deviceId: String,
+data class DocMusicTrackId(
+        override val treeUri: Uri,
         override val parentId: String,
-        override val itemId: String
-): UpnpItemId, MusicTrackId {
-    override val json: String
-        get() = writeJson(UpnpMusicTrackTransformer, this)
+        override val documentId: String
+): DocumentId, MusicTrackId {
+    override val json: String by lazy {
+        writeJson(DocMusicTrackIdTransformer, this)
+    }
 }
 
-data class UpnpMusicTrackMeta(
-        override val title: String = "",
-        val date: String = "",
+data class DocMusicTrackMeta(
+        override val title: String,
+        override val flags: Long,
+        override val lastMod: Long,
+        override val mimeType: String,
         override val artist: String = "",
         override val album: String = "",
         override val genre: String = "",
@@ -24,10 +27,7 @@ data class UpnpMusicTrackMeta(
         override val size: Long = 0,
         override val duration: Long = 0,
         override val bitrate: Long = 0,
-        val nrAudioChan: Int = 0,
-        val sampleFreq: Long = 0,
         override val mediaUri: Uri,
-        override val mimeType: String,
         override val originalArtworkUri: Uri = Uri.EMPTY,
         override val artworkUri: Uri = Uri.EMPTY,
         override val backdropUri: Uri = Uri.EMPTY,
@@ -35,13 +35,13 @@ data class UpnpMusicTrackMeta(
         override val albumArtist: String = "",
         override val discNumber: Int = 1,
         override val isCompilation: Boolean = false
-): UpnpItemMeta, MusicTrackMeta
+): DocumentMeta, MusicTrackMeta
 
-data class UpnpMusicTrackRef(
-        override val id: UpnpMusicTrackId,
-        override val meta: UpnpMusicTrackMeta
-): UpnpItemRef, MusicTrackRef
+data class DocMusicTrackRef(
+        override val id: DocMusicTrackId,
+        override val meta: DocMusicTrackMeta
+): DocumentRef, MusicTrackRef
 
-internal object UpnpMusicTrackTransformer: UpnpItemTransformer() {
-    override val kind: String = UPNP_MUSIC_TRACK
+internal object DocMusicTrackIdTransformer: DocumentIdTransformer() {
+    override val kind: String = DOCUMENT_MUSIC_TRACK
 }
