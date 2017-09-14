@@ -429,6 +429,29 @@ class MediaDAO
                 arrayOf(videoId.deviceId, videoId.parentId, videoId.itemId)) != 0
     }
 
+    fun addUpnpMusicTrack(track: UpnpMusicTrackRef): Boolean =
+            mResolver.insert(mUris.upnpMusicTrack(), track.contentValues()) == URI_SUCCESS
+
+    /**
+     * retrieve upnp videos, direct decedents of parent
+     */
+    fun getUpnpMusicTracksUnder(parentId: UpnpContainerId): Observable<UpnpMusicTrackRef> {
+        return doQuery(mUris.upnpMusicTrack(), upnpMusicTrackProjection,
+                "t.device_id=? AND t.parent_id=? AND t.hidden=0",
+                arrayOf(parentId.deviceId, parentId.containerId),
+                "t._display_name", { c ->c.toUpnpMusicTrackMediaMeta(mApiHelper) })
+    }
+
+    /**
+     * retrieve specified upnp video
+     */
+    fun getUpnpMusicTrack(trackId: UpnpMusicTrackId): Maybe<UpnpMusicTrackRef> {
+        return doGet(mUris.upnpMusicTrack(), upnpMusicTrackProjection,
+                "t.device_id=? AND t.parent_id=? AND t.item_id=?",
+                arrayOf(trackId.deviceId, trackId.parentId, trackId.itemId),
+                {c -> c.toUpnpMusicTrackMediaMeta(mApiHelper) })
+    }
+
     /**
      * Marks hidden column on upnp folders and videos with specified parent
      */
@@ -437,6 +460,8 @@ class MediaDAO
         mResolver.update(mUris.upnpFolder(), cv, "device_id=? AND parent_id=?",
                 arrayOf(parentId.deviceId, parentId.containerId))
         mResolver.update(mUris.upnpVideo(), cv, "device_id=? AND parent_id=?",
+                arrayOf(parentId.deviceId, parentId.containerId))
+        mResolver.update(mUris.upnpMusicTrack(), cv, "device_id=? AND parent_id=?",
                 arrayOf(parentId.deviceId, parentId.containerId))
     }
 
@@ -533,6 +558,23 @@ class MediaDAO
                 arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId)) != 0
     }
 
+    fun addDocMusicTrack(documentRef: DocMusicTrackRef) =
+            mResolver.insert(mUris.documentMusicTrack(), documentRef.contentValues()) == URI_SUCCESS
+
+    fun getDocMusicTracksUnder(documentId: DocDirectoryId): Observable<DocMusicTrackRef> {
+        return doQuery(mUris.documentMusicTrack(), docMusicTrackProjection,
+                "t.tree_uri=? AND t.parent_id=? AND t.hidden=0",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId),
+                "t._display_name", { c -> c.toDocMusicTrackRef(mApiHelper) })
+    }
+
+    fun getDocMusicTrack(documentId: DocMusicTrackId): Maybe<DocMusicTrackRef> {
+        return doGet(mUris.documentMusicTrack(), docMusicTrackProjection,
+                "t.tree_uri=? AND t.document_id=? AND t.parent_id=?",
+                arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId),
+                {c -> c.toDocMusicTrackRef(mApiHelper) })
+    }
+
     fun hideChildrenOf(documentId: DocDirectoryId): Boolean {
         val values = contentValues("hidden", 1)
         var num = 0
@@ -542,7 +584,7 @@ class MediaDAO
         num += mResolver.update(mUris.documentVideo(), values,
                 "tree_uri=? AND document_id=? AND parent_id=?",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId))
-        num += mResolver.update(mUris.documentAudio(), values,
+        num += mResolver.update(mUris.documentMusicTrack(), values,
                 "tree_uri=? AND document_id=? AND parent_id=?",
                 arrayOf(documentId.treeUri.toString(), documentId.documentId, documentId.parentId))
         return num != 0
@@ -653,6 +695,22 @@ class MediaDAO
         return mResolver.update(mUris.storageVideo(), values, "path=? AND device_uuid=?",
                 arrayOf(videoId.path, videoId.uuid)) != 0
     }
+
+    fun addStorageMusicTrack(videoRef: StorageMusicTrackRef) =
+            mResolver.insert(mUris.storageMusicTrack(), videoRef.contentValues()) == URI_SUCCESS
+
+    fun getStorageMusicTracksUnder(containerId: StorageContainerId): Observable<StorageMusicTrackRef> =
+            doQuery(mUris.storageMusicTrack(), storageMusicTrackProjection,
+                    "t.parent_path=? AND t.device_uuid=? AND t.hidden=0",
+                    arrayOf(containerId.path, containerId.uuid),
+                    "t._display_name",
+                    { c -> c.toStorageMusicTrack(mApiHelper) })
+
+    fun getStorageMusicTrack(trackId: StorageMusicTrackId): Maybe<StorageMusicTrackRef> =
+            doGet(mUris.storageMusicTrack(), storageMusicTrackProjection,
+                    "t.path=? AND t.device_uuid=?",
+                    arrayOf(trackId.path, trackId.uuid),
+                    {c -> c.toStorageMusicTrack(mApiHelper) })
 
     fun hideChildrenOf(containerId: StorageContainerId): Boolean {
         val values = contentValues("hidden", 1)
@@ -910,6 +968,84 @@ fun Cursor.toUpnpVideoMediaMeta(mApiHelper: ApiHelper): UpnpVideoRef {
     )
 }
 
+fun UpnpMusicTrackRef.contentValues(): ContentValues {
+    val values = ContentValues()
+    values.put("device_id", id.deviceId)
+    values.put("parent_id", id.parentId)
+    values.put("item_id", id.itemId)
+    values.put("_display_name", meta.originalTitle.elseIfBlank(meta.title))
+    values.put("genre", meta.genre)
+    values.put("artist", meta.artist)
+    values.put("album", meta.album)
+    values.put("date", meta.date)
+    values.put("track_num", meta.trackNum)
+    values.put("mime_type", meta.mimeType)
+    values.put("media_uri", meta.mediaUri.toString())
+    values.put("duration", meta.duration)
+    values.put("bitrate", meta.bitrate)
+    values.put("file_size", meta.size)
+    values.put("n_channels", meta.nrAudioChan)
+    values.put("s_freq", meta.sampleFreq)
+    if (meta.originalArtworkUri != Uri.EMPTY) {
+        values.put("artwork_uri", meta.originalArtworkUri.toString())
+    }
+    values.put("date_added", System.currentTimeMillis())
+    values.put("hidden", 0)
+    return values
+}
+
+val upnpMusicTrackProjection = arrayOf(
+        //upnp_music_track columns
+        "t.device_id", "t.parent_id", "t.item_id", //2
+        "t._display_name", "t.genre", "t.artist", "t.album", //6
+        "t.date", "t.track_num", "t.mime_type", "t.media_uri", //10
+        "t.duration", "t.bitrate", "t.file_size", "n_channels", //14
+        "t.s_freq", "t.artwork_uri" //16
+)
+
+fun Cursor.toUpnpMusicTrackMediaMeta(helper: ApiHelper): UpnpMusicTrackRef {
+    val device_id = getString(0)
+    val parent_id = getString(1)
+    val item_id = getString(2)
+    val title = getString(3)
+    val genre = getString(4)
+    val artist = getString(5)
+    val album = getString(6)
+    val date = getString(7)
+    val track_num = getInt(8)
+    val mime = getString(9)
+    val media_uri = Uri.parse(getString(10))
+    val duration = getLong(11)
+    val bitrate = getLong(12)
+    val size = getLong(13)
+    val n_chan = getInt(14)
+    val s_freq = getLong(15)
+    val artwork_uri = if (!isNull(16)) Uri.parse(getString(16)) else Uri.EMPTY
+    return UpnpMusicTrackRef(
+            id = UpnpMusicTrackId(
+                    deviceId = device_id,
+                    parentId = parent_id,
+                    itemId = item_id
+            ),
+            meta = UpnpMusicTrackMeta(
+                    title = title,
+                    genre = genre,
+                    artist = artist,
+                    album = album,
+                    date = date,
+                    trackNum = track_num,
+                    mimeType = mime,
+                    mediaUri = media_uri,
+                    duration = duration,
+                    bitrate = bitrate,
+                    size = size,
+                    nrAudioChan = n_chan,
+                    sampleFreq = s_freq,
+                    artworkUri = artwork_uri
+            )
+    )
+}
+
 fun DocDirectoryRef.contentValues(): ContentValues {
     val values = ContentValues()
     values.put("authority", id.treeUri.authority)
@@ -1057,6 +1193,56 @@ fun Cursor.toVideoDocumentRef(mApiHelper: ApiHelper): DocVideoRef {
                     //summary,
             ),
             resumeInfo = resume
+    )
+}
+
+fun DocMusicTrackRef.contentValues(): ContentValues {
+    val values = ContentValues()
+    values.put("authority", id.treeUri.authority)
+    values.put("tree_uri", id.treeUri.toString())
+    values.put("parent_id", id.parentId)
+    values.put("document_id", id.documentId)
+    values.put("_display_name", meta.originalTitle.elseIfBlank(meta.title))
+    values.put("mime_type", meta.mimeType)
+    values.put("last_modified", meta.lastMod)
+    values.put("flags", meta.flags)
+    values.put("_size", meta.size)
+    values.put("date_added", System.currentTimeMillis())
+    values.put("hidden", 0)
+    return values
+}
+
+val docMusicTrackProjection = arrayOf(
+        //upnp_music_track columns
+        "t.tree_uri", "t.parent_id", "t.document_id", //2
+        "t._display_name", "t.mime_type", "t.last_modified", "t.flags", //6
+        "t._size" //7
+)
+
+fun Cursor.toDocMusicTrackRef(helper: ApiHelper): DocMusicTrackRef {
+    val tree_uri = Uri.parse(getString(0))
+    val parent_id = getString(1)
+    val document_id = getString(2)
+    val title = getString(3)
+    val mime = getString(4)
+    val last_mod = getLong(5)
+    val flags = getLong(6)
+    val size = getLong(7)
+    val id = DocMusicTrackId(
+            treeUri = tree_uri,
+            parentId = parent_id,
+            documentId = document_id
+    )
+    return DocMusicTrackRef(
+            id = id,
+            meta = DocMusicTrackMeta(
+                    title = title,
+                    mimeType = mime,
+                    lastMod = last_mod,
+                    flags = flags,
+                    size = size,
+                    mediaUri = id.mediaUri
+            )
     )
 }
 
@@ -1218,6 +1404,51 @@ fun Cursor.toStorageVideo(mApiHelper: ApiHelper): StorageVideoRef {
                     size = size
             ),
             resumeInfo = resume
+    )
+}
+
+fun StorageMusicTrackRef.contentValues(): ContentValues {
+    val values = ContentValues()
+    values.put("path", id.path)
+    values.put("parent_path", id.parent)
+    values.put("device_uuid", id.uuid)
+    values.put("_display_name", meta.originalTitle.elseIfBlank(meta.title))
+    values.put("mime_type", meta.mimeType)
+    values.put("last_modified", meta.lastMod)
+    values.put("_size", meta.size)
+    values.put("date_added", System.currentTimeMillis())
+    values.put("hidden", 0)
+    return values
+}
+
+val storageMusicTrackProjection = arrayOf(
+        //upnp_music_track columns
+        "t.path", "t.parent_path", "t.device_uuid", //2
+        "t._display_name", "t.mime_type", "t.last_modified", "t._size" //6
+)
+
+fun Cursor.toStorageMusicTrack(helper: ApiHelper): StorageMusicTrackRef {
+    val path = getString(0)
+    val parent = getString(1)
+    val uuid = getString(2)
+    val title = getString(3)
+    val mime = getString(4)
+    val last_mod = getLong(5)
+    val size = getLong(6)
+    val uri = Uri.parse(path)
+    return StorageMusicTrackRef(
+            id = StorageMusicTrackId(
+                    uuid = uuid,
+                    path = path,
+                    parent = parent
+            ),
+            meta = StorageMusicTrackMeta(
+                    title = title,
+                    mimeType = mime,
+                    lastMod = last_mod,
+                    size = size,
+                    mediaUri = uri
+            )
     )
 }
 

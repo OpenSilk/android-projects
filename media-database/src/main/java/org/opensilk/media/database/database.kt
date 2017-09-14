@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.opensilk.dagger2.ForApp
 import javax.inject.Inject
 
-const private val VERSION = 6
+const private val VERSION = 7
 
 /**
  * Created by drew on 7/18/17.
@@ -94,63 +94,6 @@ internal class MediaDB
                     "hidden INTEGER DEFAULT 0," +
                     "UNIQUE(device_id,folder_id,parent_id) " + //milli
                     ");")
-            db.execSQL("DROP TABLE IF EXISTS upnp_audio")
-            db.execSQL("CREATE TABLE upnp_audio (" +
-                    "device_id TEXT NOT NULL, " +
-                    "item_id TEXT NOT NULL, " +
-                    "parent_id TEXT NOT NULL, " +
-                    "_display_name TEXT NOT NULL, " +
-                    "creator TEXT, " +
-                    "genre TEXT, " +
-                    "mime_type TEXT NOT NULL, " +
-                    "media_uri TEXT NOT NULL, " +
-                    "duration INTEGER DEFAULT 0, " + //milli
-                    "bitrate INTEGER DEFAULT 0, " +
-                    "file_size INTEGER DEFAULT 0, " +
-                    "n_channels INTEGER DEFAULT 0, " +
-                    "s_freq INTEGER DEFAULT 0, " +
-
-                    "date_added INTEGER NOT NULL, " + //milli
-                    "hidden INTEGER DEFAULT 0," +
-
-                    "album_id INTEGER, " +
-                    "artist_id INTEGER, " +
-                    "custom_artwork_uri TEXT, " +
-                    "custom_backdrop_uri TEXT, " +
-
-                    "UNIQUE(device_id,item_id,parent_id) " +
-                    ");")
-            db.execSQL("DROP TABLE IF EXISTS upnp_music_track")
-            db.execSQL("CREATE TABLE upnp_music_track (" +
-                    "device_id TEXT NOT NULL, " +
-                    "item_id TEXT NOT NULL, " +
-                    "parent_id TEXT NOT NULL, " +
-                    "_display_name TEXT NOT NULL, " +
-                    "creator TEXT, " +
-                    "genre TEXT, " +
-                    "artist TEXT, " +
-                    "album TEXT, " +
-                    "date TEXT, " +
-                    "track_num INTEGER DEFAULT 0, " +
-                    "mime_type TEXT NOT NULL, " +
-                    "media_uri TEXT NOT NULL, " +
-                    "duration INTEGER DEFAULT 0, " + //milli
-                    "bitrate INTEGER DEFAULT 0, " +
-                    "file_size INTEGER DEFAULT 0, " +
-                    "n_channels INTEGER DEFAULT 0, " +
-                    "s_freq INTEGER DEFAULT 0, " +
-                    "artwork_uri TEXT, " +
-
-                    "date_added INTEGER NOT NULL, " + //milli
-                    "hidden INTEGER DEFAULT 0," +
-
-                    "album_id INTEGER, " +
-                    "artist_id INTEGER, " +
-                    "custom_artwork_uri TEXT, " +
-                    "custom_backdrop_uri TEXT, " +
-
-                    "UNIQUE(device_id,item_id,parent_id) " +
-                    ");")
             db.execSQL("DROP TABLE IF EXISTS upnp_video")
             db.execSQL("CREATE TABLE upnp_video (" +
                     "device_id TEXT NOT NULL, " +
@@ -220,30 +163,6 @@ internal class MediaDB
 
                     "UNIQUE(tree_uri, document_id, parent_id)" +
                     ");")
-            db.execSQL("DROP TABLE IF EXISTS document_audio")
-            db.execSQL("CREATE TABLE document_audio (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "authority TEXT NOT NULL," +
-                    "tree_uri TEXT NOT NULL," +
-                    "document_id TEXT NOT NULL," +
-                    "parent_id TEXT NOT NULL," +
-                    "_display_name TEXT NOT NULL," +
-                    "mime_type TEXT," +
-                    "last_modified INTEGER DEFAULT 0," +
-                    "flags INTEGER DEFAULT 0," +
-                    "_size INTEGER DEFAULT 0," +
-                    "summary TEXT," +
-
-                    "date_added INTEGER NOT NULL, " +
-                    "hidden INTEGER DEFAULT 0, " +
-
-                    "album_id INTEGER, " +
-                    "artist_id INTEGER, " +
-                    "custom_artwork_uri TEXT, " +
-                    "custom_backdrop_uri TEXT, " +
-
-                    "UNIQUE(tree_uri, document_id, parent_id)" +
-                    ");")
         }
         if (oldVersion < 3) {
             db.execSQL("DROP TABLE IF EXISTS storage_device")
@@ -297,6 +216,84 @@ internal class MediaDB
             db.execSQL("ALTER TABLE upnp_video ADD COLUMN last_played INTEGER DEFAULT 0")
             db.execSQL("ALTER TABLE document_video ADD COLUMN last_played INTEGER DEFAULT 0" )
             db.execSQL("ALTER TABLE storage_video ADD COLUMN last_played INTEGER DEFAULT 0")
+        }
+        if (oldVersion < 7) {
+            db.execSQL("DROP TABLE IF EXISTS document_music_track")
+            db.execSQL("CREATE TABLE document_music_track (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "authority TEXT NOT NULL," +
+                    "tree_uri TEXT NOT NULL," +
+                    "document_id TEXT NOT NULL," +
+                    "parent_id TEXT NOT NULL," +
+
+                    "_display_name TEXT NOT NULL," +
+                    "mime_type TEXT," +
+                    "last_modified INTEGER DEFAULT 0," +
+                    "flags INTEGER DEFAULT 0," +
+                    "_size INTEGER DEFAULT 0," +
+                    "summary TEXT," +
+
+                    "date_added INTEGER NOT NULL, " + //milli
+                    "hidden INTEGER DEFAULT 0," +
+
+                    "album_id INTEGER, " +
+                    "artist_id INTEGER, " +
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+
+                    "UNIQUE(tree_uri, document_id, parent_id) " +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS storage_music_track")
+            db.execSQL("CREATE TABLE storage_music_track (" +
+                    "path TEXT NOT NULL," +
+                    "parent_path TEXT NOT NULL, " +
+                    "device_uuid TEXT NOT NULL," +
+
+                    "_display_name TEXT NOT NULL, " +
+                    "mime_type TEXT," +
+                    "last_modified INTEGER DEFAULT 0," +
+                    "_size INTEGER DEFAULT 0," +
+
+                    "date_added INTEGER NOT NULL, " + //milli
+                    "hidden INTEGER DEFAULT 0," +
+
+                    "album_id INTEGER, " +
+                    "artist_id INTEGER, " +
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+
+                    "UNIQUE(path, device_uuid) " +
+                    ");")
+            db.execSQL("DROP TABLE IF EXISTS upnp_music_track")
+            db.execSQL("CREATE TABLE upnp_music_track (" +
+                    "device_id TEXT NOT NULL, " +
+                    "item_id TEXT NOT NULL, " +
+                    "parent_id TEXT NOT NULL, " +
+                    "_display_name TEXT NOT NULL, " +
+                    "genre TEXT, " +
+                    "artist TEXT, " +
+                    "album TEXT, " +
+                    "date TEXT, " +
+                    "track_num INTEGER DEFAULT 0, " +
+                    "mime_type TEXT NOT NULL, " +
+                    "media_uri TEXT NOT NULL, " +
+                    "duration INTEGER DEFAULT 0, " + //milli
+                    "bitrate INTEGER DEFAULT 0, " +
+                    "file_size INTEGER DEFAULT 0, " +
+                    "n_channels INTEGER DEFAULT 0, " +
+                    "s_freq INTEGER DEFAULT 0, " +
+                    "artwork_uri TEXT, " +
+
+                    "date_added INTEGER NOT NULL, " + //milli
+                    "hidden INTEGER DEFAULT 0," +
+
+                    "album_id INTEGER, " +
+                    "artist_id INTEGER, " +
+                    "custom_artwork_uri TEXT, " +
+                    "custom_backdrop_uri TEXT, " +
+
+                    "UNIQUE(device_id,item_id,parent_id) " +
+                    ");")
         }
     }
 }
