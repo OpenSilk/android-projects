@@ -34,7 +34,8 @@ data class StorageMusicTrackMeta(
         override val originalTitle: String = "",
         override val albumArtist: String = "",
         override val discNumber: Int = 1,
-        override val isCompilation: Boolean = false
+        override val isCompilation: Boolean = false,
+        val lastMod: Long = 0
 ): StorageMeta, MusicTrackMeta
 
 data class StorageMusicTrackRef(
