@@ -1,0 +1,65 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "org.opensilk.traveltime"
+        minSdkVersion 23
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+}
+
+dependencies {
+    kapt "com.google.guava:guava:$kapt_guavaVersion"
+    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
+    kapt "com.android.databinding:compiler:$gradleToolsVersion"
+    kapt "android.arch.lifecycle:compiler:$androidarchVersion"
+    kapt "android.arch.persistence.room:compiler:$androidarchVersion"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    implementation "android.arch.lifecycle:runtime:$androidarchVersion"
+    implementation "android.arch.lifecycle:extensions:$androidarchVersion"
+    implementation "android.arch.persistence.room:runtime:$androidarchVersion"
+    implementation "android.arch.persistence.room:rxjava2:$androidarchVersion"
+
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+    implementation "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
+
+    implementation "com.android.support:appcompat-v7:$supportLibVersion"
+
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+
+    implementation project(':dagger2')
+    implementation project(':reactivex2')
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+}
