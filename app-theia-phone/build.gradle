@@ -28,6 +28,7 @@ android {
             initWith debug
             applicationIdSuffix ".mock"
             versionNameSuffix "-mock-" + rootProject.gitSha()
+            matchingFallbacks = [ "debug" ]
         }
     }
 

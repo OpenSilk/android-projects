@@ -22,7 +22,7 @@ class FragmentViewModelDelegate<out T: ViewModel>(private val clazz: KClass<T>):
 fun <T: ViewModel> Fragment.fetchViewModel(clazz: KClass<T>): T {
     val factory = activity.application as ViewModelProvider.Factory
     val vm = ViewModelProviders.of(this, factory).get(clazz.java)
-    if (this is LifecycleRegistryOwner && vm is LifecycleObserver) {
+    if (vm is LifecycleObserver) {
         this.lifecycle.addObserver(vm)
     }
     return vm

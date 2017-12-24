@@ -140,14 +140,15 @@ class DetailPlayActionsViewHolder(val binding: DetailActionsCardBinding):
     fun bind(posterUri: Uri, resumeInfo: VideoResumeInfo, mediaId: MediaId) {
         this.mediaId = mediaId
         binding.actionHandler = this
-        binding.actions = HashSet<DetailAction>()
+        val actions = HashSet<DetailAction>()
         if (resumeInfo.lastCompletion in 1..979) {
-            binding.actions.add(DetailAction.RESUME)
-            binding.actions.add(DetailAction.START_OVER)
+            actions.add(DetailAction.RESUME)
+            actions.add(DetailAction.START_OVER)
             binding.resumeTime = humanReadableDuration(resumeInfo.lastPosition)
         } else {
-            binding.actions.add(DetailAction.PLAY)
+            actions.add(DetailAction.PLAY)
         }
+        binding.actions = actions
         if (!posterUri.isEmpty()) {
             Glide.with(binding.root.context)
                     .asDrawable()

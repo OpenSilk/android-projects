@@ -36,7 +36,7 @@ import javax.inject.Inject
 open class RecyclerFragment: BaseMusicFragment() {
     protected lateinit var mBinding: RecyclerBinding
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         mBinding = RecyclerBinding.inflate(inflater, container, false)
         mBinding.recycler.setHasFixedSize(true)

@@ -37,7 +37,7 @@ import kotlin.reflect.KClass
 
 fun <T: ViewModel> Fragment.fetchViewModel(clazz: KClass<T>): T {
     val vm = ViewModelProviders.of(this, (activity.application as ViewModelProvider.Factory)).get(clazz.java)
-    if (this is LifecycleRegistryOwner && vm is LifecycleObserver) {
+    if (vm is LifecycleObserver) {
         this.lifecycle.addObserver(vm)
     }
     return vm
@@ -57,7 +57,7 @@ fun <T: ViewModel> BaseVideoActivity.fetchViewModel(clazz: KClass<T>): T {
 /**
  * Created by drew on 6/1/17.
  */
-abstract class BaseVideoActivity: AppCompatActivity(), LifecycleRegistryOwner {
+abstract class BaseVideoActivity: AppCompatActivity() {
 
     private val lifecycleRegistry by lazy {
         LifecycleRegistry(this)

@@ -1,15 +1,15 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.1.4-3'
+    ext.kotlin_version = '1.1.60'
     ext {
-        compileSdkVersion = 25
-        targetSdkVersion = 25
-        buildToolsVersion = "26.0.1"
-        gradleToolsVersion = "2.3.3"
+        compileSdkVersion = 26
+        targetSdkVersion = 26
+        buildToolsVersion = "26.0.3"
+        gradleToolsVersion = "3.0.1"
 
-        supportLibVersion = "25.4.0"
-        androidarchVersion = "1.0.0-alpha5"
+        supportLibVersion = "26.1.0"
+        androidarchVersion = "1.0.0"
         constraintLayoutVersion = "1.0.2"
 
         dagger2Version = "2.11"
@@ -47,7 +47,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.android.tools.build:gradle:$gradleToolsVersion"
+        classpath 'com.android.tools.build:gradle:3.0.1'
     }
 }
 
@@ -55,9 +55,9 @@ allprojects {
     repositories {
         jcenter()
         mavenCentral()
+        google()
         maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
         maven { url 'http://4thline.org/m2' }
-        maven { url "https://maven.google.com/" }
         maven { url "file:///Users/drew/workspace/Opensilk/m2/repository" }
         //maven { url "https://opensilk.org/opensilk/m2/raw/master/repository" }
     }

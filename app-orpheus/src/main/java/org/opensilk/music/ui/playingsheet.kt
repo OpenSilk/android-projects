@@ -66,7 +66,7 @@ class PlayingSheetFragment: BaseMusicFragment() {
 
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mBinding = SheetPlayingBinding.inflate(inflater, container, false)
         return mBinding.root
     }

@@ -175,9 +175,9 @@ class FolderTitleView(context: Context, attrs: AttributeSet) :
         val inflater = LayoutInflater.from(context)
         val rootView = inflater.inflate(R.layout.folder_title_view, this)
 
-        mTextView = rootView.findViewById(R.id.title_text) as TextView
-        mSearchOrbView = rootView.findViewById(R.id.title_orb) as SearchOrbView
-        mPinView = rootView.findViewById(R.id.title_pin_orb) as SearchOrbView
+        mTextView = rootView.findViewById(R.id.title_text)
+        mSearchOrbView = rootView.findViewById(R.id.title_orb)
+        mPinView = rootView.findViewById(R.id.title_pin_orb)
 
         clipToPadding = false
         clipChildren = false
