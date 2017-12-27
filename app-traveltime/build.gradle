@@ -13,6 +13,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -29,6 +30,33 @@ android {
 
     dataBinding {
         enabled = true
+    }
+
+    if (file('../../KeyStore').exists()) {
+        signingConfigs {
+            release {
+                def Properties keyProps = new Properties()
+                keyProps.load(new FileInputStream(file('../../KeyStore/release2.properties')))
+                storeFile file(keyProps["store"])
+                keyAlias keyProps["alias"]
+                storePassword keyProps["storePass"]
+                keyPassword keyProps["pass"]
+            }
+        }
+        buildTypes.release.signingConfig signingConfigs.release
+        signingConfigs {
+            debug {
+                def Properties keyProps = new Properties()
+                keyProps.load(new FileInputStream(file('../../KeyStore/debug2.properties')))
+                storeFile file(keyProps["store"])
+                keyAlias keyProps["alias"]
+                storePassword keyProps["storePass"]
+                keyPassword keyProps["pass"]
+            }
+        }
+        buildTypes.debug.signingConfig signingConfigs.debug
+    } else {
+        println "No KeyStore directory found! (You can ignore this warning if your name is not drew)"
     }
 
 }
@@ -59,7 +87,37 @@ dependencies {
     implementation project(':dagger2')
     implementation project(':reactivex2')
 
-    testImplementation 'junit:junit:4.12'
+    //play services
+    implementation 'com.google.android.gms:play-services-auth:11.4.2'
+    implementation 'com.google.android.gms:play-services-places:11.4.2'
+    implementation 'com.google.firebase:firebase-messaging:11.4.2'
+
+    //maps stuff
+    implementation 'com.google.maps:google-maps-services:0.2.4'
+    implementation 'org.slf4j:slf4j-nop:1.7.25'
+
+    //calendar
+    implementation('com.google.api-client:google-api-client-android:1.23.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    implementation('com.google.apis:google-api-services-calendar:v3-rev263-1.23.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+
+    //fixups
+    implementation "com.google.code.findbugs:jsr305:3.0.1"
+    androidTestImplementation "com.google.code.findbugs:jsr305:3.0.1"
+
+    //tests
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation "org.assertj:assertj-core:2.8.0"
+
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.robolectric:robolectric:3.5.1"
+    testImplementation "org.mockito:mockito-core:2.12.0"
+    testImplementation "org.assertj:assertj-core:3.8.0"
 }
+
+//firebase stuffs
+apply plugin: 'com.google.gms.google-services'

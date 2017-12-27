@@ -47,6 +47,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:3.1.1'
         classpath 'com.android.tools.build:gradle:3.0.1'
     }
 }
@@ -58,7 +59,7 @@ allprojects {
         google()
         maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
         maven { url 'http://4thline.org/m2' }
-        maven { url "file:///Users/drew/workspace/Opensilk/m2/repository" }
+        maven { url "../../m2/repository" }
         //maven { url "https://opensilk.org/opensilk/m2/raw/master/repository" }
     }
 }

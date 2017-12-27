@@ -1,0 +1,9 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Preference android:title="@string/pref_home_addr"
+        android:key="home_place"/>
+
+    <Preference android:title="@string/pref_work_addr"
+        android:key="work_place"/>
+
+</PreferenceScreen>
