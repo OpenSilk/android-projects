@@ -1,7 +1,9 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.1.60'
+    ext.kotlin_version = '1.2.10'
+    ext.serialization_version = '0.4'
+    ext.ktor_version = '0.9.1-alpha-8'
     ext {
         compileSdkVersion = 26
         targetSdkVersion = 26
@@ -44,11 +46,14 @@ buildscript {
     }
     repositories {
         jcenter()
+        google()
+        maven { url "https://kotlin.bintray.com/kotlinx" }
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.gms:google-services:3.1.1'
         classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
+        classpath 'com.google.gms:google-services:3.1.1'
     }
 }
 
@@ -60,7 +65,8 @@ allprojects {
         maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
         maven { url 'http://4thline.org/m2' }
         maven { url "../../m2/repository" }
-        //maven { url "https://opensilk.org/opensilk/m2/raw/master/repository" }
+        maven { url "https://kotlin.bintray.com/kotlinx" }
+        maven { url "https://kotlin.bintray.com/ktor" }
     }
 }
 
