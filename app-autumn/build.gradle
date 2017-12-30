@@ -42,10 +42,9 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    implementation "android.arch.lifecycle:runtime:$androidarchVersion"
+    implementation "android.arch.lifecycle:runtime:$androidarchRuntimeVersion"
     implementation "android.arch.lifecycle:extensions:$androidarchVersion"
     implementation "android.arch.persistence.room:runtime:$androidarchVersion"
-    //implementation "android.arch.persistence.room:rxjava2:$androidarchVersion"
 
     implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"

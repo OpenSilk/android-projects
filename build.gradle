@@ -12,6 +12,7 @@ buildscript {
 
         supportLibVersion = "26.1.0"
         androidarchVersion = "1.0.0"
+        androidarchRuntimeVersion = "1.0.3"
         constraintLayoutVersion = "1.0.2"
 
         dagger2Version = "2.11"
@@ -50,7 +51,7 @@ buildscript {
         maven { url "https://kotlin.bintray.com/kotlinx" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath "com.android.tools.build:gradle:$gradleToolsVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
         classpath 'com.google.gms:google-services:3.1.1'

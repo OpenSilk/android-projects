@@ -69,6 +69,8 @@ dependencies {
     implementation "com.android.support:recyclerview-v7:$supportLibVersion"
     implementation "com.android.support.constraint:constraint-layout:$constraintLayoutVersion"
 
+    implementation "android.arch.lifecycle:runtime:$androidarchRuntimeVersion"
+
     implementation project(':app-theia-core')
 
     mockCompile project(':media-testdata')
