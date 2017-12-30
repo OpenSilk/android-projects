@@ -29,13 +29,13 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
     kapt "com.google.dagger:dagger-android-processor:$dagger2Version"
 
-    compile "com.jakewharton.timber:timber:$timberVersion"
+    implementation "com.jakewharton.timber:timber:$timberVersion"
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    compile project(':dagger2')
-    compile project(':media')
-    compile project(':reactivex2')
+    implementation project(':dagger2')
+    implementation project(':media')
+    implementation project(':reactivex2')
 
     testCompile project(':media-testdata')
     testCompile "junit:junit:$test_junitVersion"

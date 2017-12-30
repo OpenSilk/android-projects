@@ -32,9 +32,9 @@ dependencies {
 
     testCompile "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
 
-    compile "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
-    compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
-    compile "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
-    compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
+    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

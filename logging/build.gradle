@@ -24,6 +24,6 @@ android {
 }
 
 dependencies {
-    compile "com.jakewharton.timber:timber:$timberVersion"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

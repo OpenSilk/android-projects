@@ -24,9 +24,9 @@ android {
 }
 
 dependencies {
-    compile "com.jakewharton.timber:timber:$timberVersion"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile project(':reactivex2')
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation project(':reactivex2')
 
     testCompile "junit:junit:$test_junitVersion"
     testCompile "org.robolectric:robolectric:$test_robolectricVersion"

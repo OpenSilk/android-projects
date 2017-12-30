@@ -29,10 +29,10 @@ dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    compile project(':media')
-    compile project(':dagger2')
+    implementation project(':media')
+    implementation project(':dagger2')
 
     androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
     androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"

@@ -27,15 +27,15 @@ dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
-    compile "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
-    compile "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
-    compile "com.google.android.exoplayer:extension-ffmpeg:${exoPlayerVersion}-SNAPSHOT"
-    compile "com.google.android.exoplayer:extension-okhttp:$exoPlayerVersion"
+    implementation "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
+    implementation "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
+    implementation "com.google.android.exoplayer:extension-ffmpeg:${exoPlayerVersion}-SNAPSHOT"
+    implementation "com.google.android.exoplayer:extension-okhttp:$exoPlayerVersion"
 
-    compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
-    compile project(':dagger2')
-    compile project(':media-database')
+    implementation project(':dagger2')
+    implementation project(':media-database')
 
     testCompile "junit:junit:$test_junitVersion"
 

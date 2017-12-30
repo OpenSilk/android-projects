@@ -28,11 +28,11 @@ dependencies {
     kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    compile project(':media')
-    compile project(':upnp-cds-browser')
-    compile project(':upnp-cds-featurelist')
+    implementation project(':media')
+    implementation project(':upnp-cds-browser')
+    implementation project(':upnp-cds-featurelist')
 
     testCompile project(':media-testdata')
     testCompile "junit:junit:$test_junitVersion"

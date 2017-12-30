@@ -48,32 +48,32 @@ dependencies {
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
     kapt "android.arch.lifecycle:compiler:$androidarchVersion"
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    compile "com.android.support:support-annotations:$supportLibVersion"
+    implementation "com.android.support:support-annotations:$supportLibVersion"
 
-    compile "android.arch.lifecycle:runtime:$androidarchVersion"
-    compile "android.arch.lifecycle:extensions:$androidarchVersion"
+    implementation "android.arch.lifecycle:runtime:$androidarchVersion"
+    implementation "android.arch.lifecycle:extensions:$androidarchVersion"
 
     //for tv/movie db api
-    compile "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
+    implementation "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
 
-    compile "com.github.bumptech.glide:glide:$glideVersion"
-    compile "com.github.bumptech.glide:okhttp3-integration:$glideVersion@jar"
+    implementation "com.github.bumptech.glide:glide:$glideVersion"
+    implementation "com.github.bumptech.glide:okhttp3-integration:$glideVersion@jar"
 
-    compile project(':dagger2')
-    compile project(':reactivex2')
-    compile project(':media')
-    compile project(':media-loader-cds')
-    compile project(':media-loader-doc')
-    compile project(':media-loader-storage')
-    compile project(':media-playback')
-    compile project(':media-database')
-    compile project(':libtvdb2')
-    compile project(':libtmdb')
-    compile project(':logging')
-    compile project(':upnp-cds-browser')
-    compile project(':upnp-cds-featurelist')
+    implementation project(':dagger2')
+    implementation project(':reactivex2')
+    implementation project(':media')
+    implementation project(':media-loader-cds')
+    implementation project(':media-loader-doc')
+    implementation project(':media-loader-storage')
+    implementation project(':media-playback')
+    implementation project(':media-database')
+    implementation project(':libtvdb2')
+    implementation project(':libtmdb')
+    implementation project(':logging')
+    implementation project(':upnp-cds-browser')
+    implementation project(':upnp-cds-featurelist')
 
     testCompile project(':media-testdata')
     testCompile "junit:junit:$test_junitVersion"

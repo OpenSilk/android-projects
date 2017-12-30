@@ -38,28 +38,28 @@ dependencies {
     kapt "android.arch.lifecycle:compiler:$androidarchVersion"
     kapt "android.arch.persistence.room:compiler:$androidarchVersion"
 
-    compile "com.android.support:leanback-v17:$supportLibVersion"
+    implementation "com.android.support:leanback-v17:$supportLibVersion"
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    compile "android.arch.lifecycle:runtime:$androidarchVersion"
-    compile "android.arch.lifecycle:extensions:$androidarchVersion"
-    compile "android.arch.persistence.room:runtime:$androidarchVersion"
-    //compile "android.arch.persistence.room:rxjava2:$androidarchVersion"
+    implementation "android.arch.lifecycle:runtime:$androidarchVersion"
+    implementation "android.arch.lifecycle:extensions:$androidarchVersion"
+    implementation "android.arch.persistence.room:runtime:$androidarchVersion"
+    //implementation "android.arch.persistence.room:rxjava2:$androidarchVersion"
 
-    compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
-    compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
-    compile "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
-    compile "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+    implementation "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
 
-    compile "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
-    compile "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
-    compile "com.google.android.exoplayer:extension-okhttp:$exoPlayerVersion"
+    implementation "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
+    implementation "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
+    implementation "com.google.android.exoplayer:extension-okhttp:$exoPlayerVersion"
 
-    compile "com.jakewharton.timber:timber:$timberVersion"
+    implementation "com.jakewharton.timber:timber:$timberVersion"
 
-    compile project(':dagger2')
-    compile project(':reactivex2')
+    implementation project(':dagger2')
+    implementation project(':reactivex2')
 
     testCompile "junit:junit:$test_junitVersion"
     testCompile "org.robolectric:robolectric:$test_robolectricVersion"
