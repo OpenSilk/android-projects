@@ -43,7 +43,7 @@ android {
 
 
 dependencies {
-    kapt "com.google.guava:guava:$kapt_guavaVersion"
+    //kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

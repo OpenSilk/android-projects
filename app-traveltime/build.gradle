@@ -62,7 +62,7 @@ android {
 }
 
 dependencies {
-    kapt "com.google.guava:guava:$kapt_guavaVersion"
+    //kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
     kapt "com.android.databinding:compiler:$gradleToolsVersion"
     kapt "android.arch.lifecycle:compiler:$androidarchVersion"
