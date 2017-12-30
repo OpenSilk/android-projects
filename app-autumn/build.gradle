@@ -61,11 +61,11 @@ dependencies {
     implementation project(':dagger2')
     implementation project(':reactivex2')
 
-    testCompile "junit:junit:$test_junitVersion"
-    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
-    testCompile "org.assertj:assertj-core:$test_assertJVersion"
-    testCompile "org.apache.commons:commons-lang3:$commonsLangVersion"
-    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
-    testCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    testImplementation "junit:junit:$test_junitVersion"
+    testImplementation "org.robolectric:robolectric:$test_robolectricVersion"
+    testImplementation "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testImplementation "org.assertj:assertj-core:$test_assertJVersion"
+    testImplementation "org.apache.commons:commons-lang3:$commonsLangVersion"
+    testImplementation "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

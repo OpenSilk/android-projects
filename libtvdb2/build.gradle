@@ -25,12 +25,12 @@ android {
 }
 
 dependencies {
-    testCompile "junit:junit:$test_junitVersion"
-    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
-    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testImplementation "junit:junit:$test_junitVersion"
+    testImplementation "org.robolectric:robolectric:$test_robolectricVersion"
+    testImplementation "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testImplementation "org.assertj:assertj-core:$test_assertJVersion"
 
-    testCompile "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
+    testImplementation "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
 
     implementation "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"

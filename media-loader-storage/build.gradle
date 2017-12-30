@@ -34,15 +34,15 @@ dependencies {
     implementation project(':media')
     implementation project(':dagger2')
 
-    androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
-    androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
-    androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"
+    androidTestImplementation "com.android.support.test:runner:$test_supportTestVersion"
+    androidTestImplementation "com.android.support.test:rules:$test_supportTestVersion"
+    androidTestImplementation "org.assertj:assertj-core:$test_assertJVersion"
 
-    testCompile project(':media-testdata')
-    testCompile "junit:junit:$test_junitVersion"
-    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
-    testCompile "org.assertj:assertj-core:$test_assertJVersion"
-    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
+    testImplementation project(':media-testdata')
+    testImplementation "junit:junit:$test_junitVersion"
+    testImplementation "org.robolectric:robolectric:$test_robolectricVersion"
+    testImplementation "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testImplementation "org.assertj:assertj-core:$test_assertJVersion"
+    testImplementation "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
 
 }

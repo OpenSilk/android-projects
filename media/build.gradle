@@ -28,9 +28,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation project(':reactivex2')
 
-    testCompile "junit:junit:$test_junitVersion"
-    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    //testCompile 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
-    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
-    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testImplementation "junit:junit:$test_junitVersion"
+    testImplementation "org.robolectric:robolectric:$test_robolectricVersion"
+    //testImplementation 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
+    testImplementation "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testImplementation "org.assertj:assertj-core:$test_assertJVersion"
 }

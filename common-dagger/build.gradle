@@ -48,5 +48,5 @@ dependencies {
     implementation "javax.annotation:javax.annotation-api:1.2"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    testCompile "junit:junit:$test_junitVersion"
+    testImplementation "junit:junit:$test_junitVersion"
 }

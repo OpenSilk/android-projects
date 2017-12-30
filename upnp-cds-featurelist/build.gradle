@@ -52,11 +52,11 @@ dependencies {
 
 //    implementation 'org.seamless:seamless-xml:1.0-alpha3'
 
-    testCompile "junit:junit:$test_junitVersion"
-    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
-    testCompile "org.assertj:assertj-core:$test_assertJVersion"
-    testCompile "commons-io:commons-io:$commonsIOVersion"
+    testImplementation "junit:junit:$test_junitVersion"
+    testImplementation "org.robolectric:robolectric:$test_robolectricVersion"
+    testImplementation "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testImplementation "org.assertj:assertj-core:$test_assertJVersion"
+    testImplementation "commons-io:commons-io:$commonsIOVersion"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 

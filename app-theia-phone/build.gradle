@@ -73,18 +73,18 @@ dependencies {
 
     implementation project(':app-theia-core')
 
-    androidTestCompile "com.android.support.test.espresso:espresso-core:$test_espressoVersion"
-    androidTestCompile "com.android.support.test.espresso:espresso-intents:$test_espressoVersion"
+    androidTestImplementation "com.android.support.test.espresso:espresso-core:$test_espressoVersion"
+    androidTestImplementation "com.android.support.test.espresso:espresso-intents:$test_espressoVersion"
     androidTestCompile("com.android.support.test.espresso:espresso-contrib:$test_espressoVersion") {
         exclude(group: "com.android.support")
     }
-    androidTestCompile "com.android.support:support-annotations:$supportLibVersion"
-    androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
-    androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
-    androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"
+    androidTestImplementation "com.android.support:support-annotations:$supportLibVersion"
+    androidTestImplementation "com.android.support.test:runner:$test_supportTestVersion"
+    androidTestImplementation "com.android.support.test:rules:$test_supportTestVersion"
+    androidTestImplementation "org.assertj:assertj-core:$test_assertJVersion"
 
-    testCompile "junit:junit:$test_junitVersion"
-    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
-    testCompile "org.assertj:assertj-core:$test_assertJVersion"
+    testImplementation "junit:junit:$test_junitVersion"
+    testImplementation "org.robolectric:robolectric:$test_robolectricVersion"
+    testImplementation "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testImplementation "org.assertj:assertj-core:$test_assertJVersion"
 }

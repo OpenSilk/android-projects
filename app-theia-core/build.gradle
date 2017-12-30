@@ -75,14 +75,14 @@ dependencies {
     implementation project(':upnp-cds-browser')
     implementation project(':upnp-cds-featurelist')
 
-    testCompile project(':media-testdata')
-    testCompile "junit:junit:$test_junitVersion"
-    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    //testCompile 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
-    testCompile "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
-    testCompile "org.assertj:assertj-core:$test_assertJVersion"
-    testCompile "org.apache.commons:commons-lang3:$commonsLangVersion"
-    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
+    testImplementation project(':media-testdata')
+    testImplementation "junit:junit:$test_junitVersion"
+    testImplementation "org.robolectric:robolectric:$test_robolectricVersion"
+    //testImplementation 'com.squareup.okhttp:okhttp-testing-support:2.7.5'
+    testImplementation "com.squareup.okhttp3:mockwebserver:$test_mockwebserverVersion"
+    testImplementation "org.assertj:assertj-core:$test_assertJVersion"
+    testImplementation "org.apache.commons:commons-lang3:$commonsLangVersion"
+    testImplementation "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
 
 }
 

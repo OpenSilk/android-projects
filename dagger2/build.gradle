@@ -37,5 +37,5 @@ dependencies {
     implementation "javax.annotation:javax.annotation-api:1.2"
     implementation "com.android.support:support-fragment:$supportLibVersion"
 
-    testCompile "junit:junit:$test_junitVersion"
+    testImplementation "junit:junit:$test_junitVersion"
 }

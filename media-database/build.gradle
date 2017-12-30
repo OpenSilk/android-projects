@@ -37,9 +37,9 @@ dependencies {
     implementation project(':media')
     implementation project(':reactivex2')
 
-    testCompile project(':media-testdata')
-    testCompile "junit:junit:$test_junitVersion"
-    testCompile "org.robolectric:robolectric:$test_robolectricVersion"
-    testCompile "org.assertj:assertj-core:$test_assertJVersion"
-    testCompile "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
+    testImplementation project(':media-testdata')
+    testImplementation "junit:junit:$test_junitVersion"
+    testImplementation "org.robolectric:robolectric:$test_robolectricVersion"
+    testImplementation "org.assertj:assertj-core:$test_assertJVersion"
+    testImplementation "com.nhaarman:mockito-kotlin:$test_mockitokotlinVersion"
 }

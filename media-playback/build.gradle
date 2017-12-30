@@ -37,9 +37,9 @@ dependencies {
     implementation project(':dagger2')
     implementation project(':media-database')
 
-    testCompile "junit:junit:$test_junitVersion"
+    testImplementation "junit:junit:$test_junitVersion"
 
-    androidTestCompile "com.android.support.test:runner:$test_supportTestVersion"
-    androidTestCompile "com.android.support.test:rules:$test_supportTestVersion"
-    androidTestCompile "org.assertj:assertj-core:$test_assertJVersion"
+    androidTestImplementation "com.android.support.test:runner:$test_supportTestVersion"
+    androidTestImplementation "com.android.support.test:rules:$test_supportTestVersion"
+    androidTestImplementation "org.assertj:assertj-core:$test_assertJVersion"
 }

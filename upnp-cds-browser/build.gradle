@@ -63,5 +63,5 @@ dependencies {
 
     implementation project(':dagger2')
 
-    testCompile "junit:junit:$test_junitVersion"
+    testImplementation "junit:junit:$test_junitVersion"
 }
