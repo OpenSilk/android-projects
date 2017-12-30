@@ -26,8 +26,8 @@ android {
 }
 
 dependencies {
-    implementation "io.reactivex.rxjava2:rxjava:$rootProject.ext.rxJavaVersion"
-    implementation "io.reactivex.rxjava2:rxkotlin:$rootProject.ext.rxKotlinVersion"
-    implementation "io.reactivex.rxjava2:rxandroid:$rootProject.ext.rxAndroidVersion"
+    api "io.reactivex.rxjava2:rxjava:$rootProject.ext.rxJavaVersion"
+    api "io.reactivex.rxjava2:rxkotlin:$rootProject.ext.rxKotlinVersion"
+    api "io.reactivex.rxjava2:rxandroid:$rootProject.ext.rxAndroidVersion"
     testImplementation "junit:junit:$test_junitVersion"
 }

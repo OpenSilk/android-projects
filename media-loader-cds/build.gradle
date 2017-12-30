@@ -30,7 +30,11 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+
+    implementation project(':dagger2')
     implementation project(':media')
+    implementation project(':reactivex2')
     implementation project(':upnp-cds-browser')
     implementation project(':upnp-cds-featurelist')
 

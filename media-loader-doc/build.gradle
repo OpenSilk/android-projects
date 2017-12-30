@@ -30,7 +30,10 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    implementation project(':media')
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+
     implementation project(':dagger2')
+    implementation project(':media')
+    implementation project(':reactivex2')
 
 }

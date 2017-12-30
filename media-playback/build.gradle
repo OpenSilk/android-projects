@@ -27,15 +27,19 @@ dependencies {
     //kapt "com.google.guava:guava:$kapt_guavaVersion"
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
 
-    implementation "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
-    implementation "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
+    api "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
+    api "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
     implementation "com.google.android.exoplayer:extension-ffmpeg:${exoPlayerVersion}-SNAPSHOT"
     implementation "com.google.android.exoplayer:extension-okhttp:$exoPlayerVersion"
 
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+
     implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
-    implementation project(':dagger2')
+    implementation project(':media')
     implementation project(':media-database')
+    implementation project(':dagger2')
+    implementation project(':reactivex2')
 
     testImplementation "junit:junit:$test_junitVersion"
 

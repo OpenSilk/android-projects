@@ -31,8 +31,11 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    implementation project(':media')
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+
     implementation project(':dagger2')
+    implementation project(':media')
+    implementation project(':reactivex2')
 
     androidTestImplementation "com.android.support.test:runner:$test_supportTestVersion"
     androidTestImplementation "com.android.support.test:rules:$test_supportTestVersion"

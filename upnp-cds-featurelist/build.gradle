@@ -41,8 +41,8 @@ android {
 }
 
 dependencies {
-    implementation "org.fourthline.cling:cling-core:$clingVersion"
-    implementation "org.fourthline.cling:cling-support:$clingVersion"
+    api "org.fourthline.cling:cling-core:$clingVersion"
+    api "org.fourthline.cling:cling-support:$clingVersion"
 
     implementation "org.eclipse.jetty:jetty-server:8.1.22.v20160922"
     implementation "org.eclipse.jetty:jetty-servlet:8.1.22.v20160922"

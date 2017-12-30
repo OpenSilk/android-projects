@@ -35,15 +35,6 @@ fun Fragment.injectMe() {
 
 }
 
-fun android.support.v4.app.Fragment.injectMe() {
-    val app = activity.application
-    if (app is InjectionManager) {
-        app.injectFoo(this)
-    } else {
-        TODO("App needs to be an InjectionManager")
-    }
-}
-
 fun Service.injectMe() {
     val app = application
     if (app is InjectionManager) {

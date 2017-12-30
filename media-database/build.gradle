@@ -29,9 +29,9 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$dagger2Version"
     kapt "com.google.dagger:dagger-android-processor:$dagger2Version"
 
-    implementation "com.jakewharton.timber:timber:$timberVersion"
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    implementation "com.jakewharton.timber:timber:$timberVersion"
 
     implementation project(':dagger2')
     implementation project(':media')

@@ -21,6 +21,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v7.graphics.Palette;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.GlideBuilder;
 import com.bumptech.glide.Registry;
 import com.bumptech.glide.module.GlideModule;
@@ -35,7 +36,7 @@ public class PalettizedBitmapGlideModule implements GlideModule {
     }
 
     @Override
-    public void registerComponents(Context context, Registry registry) {
+    public void registerComponents(Context context, Glide glide, Registry registry) {
         registry.register(Bitmap.class, PalettizedBitmapDrawable.class,
                 PalettizedBitmapDrawableTranscoder.create(context));
         registry.register(Bitmap.class, Palette.class,

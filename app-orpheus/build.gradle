@@ -64,6 +64,10 @@ dependencies {
     implementation "com.android.support.constraint:constraint-layout:1.0.2"
     implementation 'io.github.luizgrp.sectionedrecyclerviewadapter:sectionedrecyclerviewadapter:1.1.3'
 
+
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+    implementation "org.apache.commons:commons-lang3:$commonsLangVersion"
+
     implementation "android.arch.lifecycle:runtime:$androidarchVersion"
     implementation "android.arch.lifecycle:extensions:$androidarchVersion"
 

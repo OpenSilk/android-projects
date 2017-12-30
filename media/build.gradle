@@ -24,8 +24,10 @@ android {
 }
 
 dependencies {
-    implementation "com.jakewharton.timber:timber:$timberVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+
     implementation project(':reactivex2')
 
     testImplementation "junit:junit:$test_junitVersion"

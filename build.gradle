@@ -27,7 +27,7 @@ buildscript {
         mortarVersion = "0.19"
         test_mockwebserverVersion = "3.8.1"
 
-        glideVersion = '4.0.0-RC0'
+        glideVersion = '4.0.0'
 
         commonsIOVersion = "2.5"
         commonsLangVersion = "3.4"

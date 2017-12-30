@@ -52,26 +52,32 @@ dependencies {
 
     implementation "com.android.support:support-annotations:$supportLibVersion"
 
-    implementation "android.arch.lifecycle:extensions:$androidarchVersion"
+    api "android.arch.lifecycle:extensions:$androidarchVersion"
+
+    api "com.jakewharton.timber:timber:$timberVersion"
+    implementation "org.apache.commons:commons-lang3:$commonsLangVersion"
+    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+    api "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
     //for tv/movie db api
     implementation "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
 
-    implementation "com.github.bumptech.glide:glide:$glideVersion"
-    implementation "com.github.bumptech.glide:okhttp3-integration:$glideVersion@jar"
+    api "com.github.bumptech.glide:glide:$glideVersion"
+    api "com.github.bumptech.glide:okhttp3-integration:$glideVersion@jar"
 
-    implementation project(':dagger2')
-    implementation project(':reactivex2')
-    implementation project(':media')
-    implementation project(':media-loader-cds')
-    implementation project(':media-loader-doc')
-    implementation project(':media-loader-storage')
-    implementation project(':media-playback')
-    implementation project(':media-database')
-    implementation project(':libtvdb2')
-    implementation project(':libtmdb')
-    implementation project(':logging')
-    implementation project(':upnp-cds-browser')
+    api project(':dagger2')
+    api project(':reactivex2')
+    api project(':media')
+    api project(':media-loader-cds')
+    api project(':media-loader-doc')
+    api project(':media-loader-storage')
+    api project(':media-playback')
+    api project(':media-database')
+    api project(':libtvdb2')
+    api project(':libtmdb')
+    api project(':logging')
+    api project(':upnp-cds-browser')
     implementation project(':upnp-cds-featurelist')
 
     testImplementation project(':media-testdata')
