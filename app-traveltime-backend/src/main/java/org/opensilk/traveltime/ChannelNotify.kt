@@ -3,6 +3,7 @@ package org.opensilk.traveltime
 import dagger.BindsInstance
 import dagger.Subcomponent
 import io.ktor.application.ApplicationCall
+import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.locations.Location
 import io.ktor.locations.post
@@ -12,12 +13,12 @@ import javax.inject.Inject
 /**
  * Created by drew on 12/28/17.
  */
-@Location("/channel/notify/{encodedUserId}/{encodedChannelId}")
-data class ChannelNotify(val encodedUserId: String, val encodedChannelId: String)
+@Location("/channel/notify/{encodedChannelId}")
+data class ChannelNotify(val encodedChannelId: String)
 
 fun Route.channelNotify() {
     post<ChannelNotify> { channelNotify ->
-        call.appInjection.appComponent
+        application.appComponent
                 .channelNotifyBob().channelNotify(channelNotify).build()
                 .handler().handle(call)
     }

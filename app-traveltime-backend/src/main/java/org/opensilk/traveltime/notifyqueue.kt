@@ -1,9 +1,5 @@
 package org.opensilk.traveltime
 
-import io.ktor.application.Application
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.serialization.Serializable
 
 /**

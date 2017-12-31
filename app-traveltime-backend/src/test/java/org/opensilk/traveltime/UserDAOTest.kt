@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mapdb.Atomic
+import org.mapdb.HTreeMap
+import org.mapdb.Serializer
 
 /**
  * Created by drew on 12/28/17.
@@ -18,5 +20,13 @@ class UserDAOTest {
         val hexStamp = java.lang.Long.toHexString(stamp)
         val hexWant = java.lang.Long.toHexString(want)
         Assertions.assertThat(java.lang.Long.toHexString(makeId(stamp, id))).isEqualTo(hexWant)
+    }
+
+    @Test
+    fun testOneId() {
+        val dao = UserDAO(HTreeMap.make(keySerializer = Serializer.LONG,
+                valueSerializer = UserInfoSerializer), HTreeMap.make(keySerializer = Serializer.LONG,
+                valueSerializer = ChannelInfoSerializer))
+        Assertions.assertThat(dao.encodeId(1)).isEqualTo("pmnyadz0B75G")
     }
 }

@@ -2,16 +2,16 @@ package org.opensilk.traveltime
 
 import dagger.Subcomponent
 import io.ktor.application.ApplicationCall
+import io.ktor.application.application
 import io.ktor.application.call
+import io.ktor.auth.authentication
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.locations.Location
-import io.ktor.locations.post
-import io.ktor.request.contentType
-import io.ktor.request.receiveText
-import io.ktor.response.respond
+import io.ktor.locations.*
 import io.ktor.response.respondText
 import io.ktor.routing.Route
+import io.ktor.routing.method
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
 import javax.inject.Inject
@@ -24,10 +24,13 @@ import javax.inject.Named
 class ChannelNew
 
 fun Route.channelNew() {
-    post<ChannelNew> {
-        call.appInjection.appComponent
-                .channelNewBob().build()
-                .handler().handle(call)
+    location<ChannelNew> {
+        restricted()
+        method(HttpMethod.Post) {
+            handle<ChannelNew> {
+                application.appComponent.channelNewBob().build().handler().handle(call)
+            }
+        }
     }
 }
 
@@ -41,48 +44,42 @@ interface ChannelNewCmp {
     }
 }
 
-@Serializable
-data class ChannelReq(
-        val firebaseToken: String
-)
-
-@Serializable
-data class ChannelResp(
-        val channelId: String,
-        val address: String,
-        val token: String,
-        val expiration: Long
-)
-
+/**
+ * Handles creating new users
+ */
 class ChannelNewHandler @Inject constructor(
         @Named("base-url") private val baseUrl: String,
         private var userDAO: UserDAO
 ): CallHandler {
 
     override suspend fun handle(call: ApplicationCall) {
-        if (call.request.contentType() != ContentType.Application.Json) {
-            call.respond(HttpStatusCode.BadRequest, "Illegal content")
-            return
-        }
+        val userInfo = call.authentication.principal<UserInfo>()!!
+        //create new channel
+        val channelInfo = userDAO.makeChannel()
+        val newUserInfo = userInfo.copy(channels = userInfo.channels.toMutableList().apply { add(channelInfo.id) })
+        userDAO.saveUserInfo(newUserInfo)
 
-        val req = JSON.parse<ChannelReq>(ChannelReq.serializer(), call.receiveText())
-
-        val userId = userDAO.newId()
-        val channelId = userDAO.newId()
-        val channelExpiry = System.currentTimeMillis() + 600_000_000 //one week
-
-        val userInfo = UserInfo(req.firebaseToken, listOf(ChannelInfo(channelId, channelExpiry)))
-        userDAO.saveUserInfo(userId, userInfo)
-
-        val channelResp = ChannelResp(
-                channelId = userDAO.encodeId(channelId),
-                address = "$baseUrl/channel/notify/${userDAO.encodeId(userId)}/${userDAO.encodeId(channelId)}",
-                token = "uid=$userId&cid=$channelId",
-                expiration = channelExpiry
+        //build response
+        val encodedChannel = userDAO.encodeId(channelInfo.id)
+        val channelResp = ChannelNewResp(
+                channelId = encodedChannel,
+                address = "$baseUrl/channel/notify/$encodedChannel",
+                token = "uid=${userInfo.id}&cid=${channelInfo.id}", //TODO remove
+                expiration = channelInfo.expiry
         )
 
-        call.respondText(JSON.stringify(ChannelResp.serializer(), channelResp), ContentType.Application.Json, HttpStatusCode.OK)
-        return
+        call.respondText(JSON.stringify(channelResp), ContentType.Application.Json, HttpStatusCode.OK)
     }
 }
+
+/**
+ * Information required by client to setup the notification channel with gcal
+ */
+@Serializable
+data class ChannelNewResp(
+        val channelId: String,
+        val address: String,
+        val token: String,
+        val expiration: Long
+)
 

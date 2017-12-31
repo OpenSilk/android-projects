@@ -1,8 +1,10 @@
 package org.opensilk.traveltime
 
+import io.ktor.auth.Principal
 import kotlinx.serialization.Serializable
 import org.hashids.Hashids
 import org.mapdb.HTreeMap
+import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -12,11 +14,22 @@ import javax.inject.Singleton
  */
 @Singleton
 class UserDAO @Inject constructor(
-        private val userMap: HTreeMap<Long, UserInfo>
+        private val userMap: HTreeMap<Long, UserInfo>,
+        private val channelMap: HTreeMap<Long, ChannelInfo>
 ) {
 
     private val hashId = Hashids("TODO make private", 12)
     private val idCounter = AtomicLong(1)
+
+    init {
+        val info = UserInfo(
+                id = 1,
+                apiKey = "pass",
+                firebaseToken = "token",
+                channels = emptyList()
+        )
+        saveUserInfo(info)
+    }
 
     fun newId(): Long {
         return makeId(System.currentTimeMillis(), idCounter.getAndIncrement())
@@ -30,25 +43,43 @@ class UserDAO @Inject constructor(
         return hashId.decode(userId)?.firstOrNull()
     }
 
+    fun makeUser(firebaseToken: String): UserInfo {
+        val userInfo = UserInfo(
+                id = newId(),
+                apiKey = UUID.randomUUID().toString(),
+                firebaseToken =  firebaseToken,
+                channels = emptyList()
+        )
+        userMap.put(userInfo.id, userInfo)
+        return userInfo
+    }
+
     fun getUserInfo(userId: Long): UserInfo? {
         return userMap[userId]
     }
 
-    fun saveUserInfo(userId: Long, userInfo: UserInfo) {
-        userMap.put(userId, userInfo)
+    fun saveUserInfo(userInfo: UserInfo) {
+        userMap.put(userInfo.id, userInfo)
     }
 
+    fun makeChannel(): ChannelInfo {
+        val channel = ChannelInfo(newId(), System.currentTimeMillis() + 600_000_000) //one week
+        channelMap.put(channel.id, channel)
+        return channel
+    }
 }
 
 @Serializable
 data class UserInfo(
-        val firebaseId: String,
-        val channels: List<ChannelInfo>
-)
+        val id: Long,
+        val apiKey: String,
+        val firebaseToken: String,
+        val channels: List<Long>
+): Principal
 
 @Serializable
 data class ChannelInfo(
-        val channelId: Long,
+        val id: Long,
         val expiry: Long
 )
 
