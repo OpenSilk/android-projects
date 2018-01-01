@@ -49,6 +49,9 @@ interface ChannelUnsubCmp {
     }
 }
 
+/**
+ * Handles unsubscribe for channel
+ */
 class ChannelUnsubHandler @Inject constructor(
     private val userDAO: UserDAO,
     private val channelUnsub: ChannelUnsub

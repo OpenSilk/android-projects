@@ -4,10 +4,9 @@ import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import io.ktor.application.Application
-import io.ktor.application.ApplicationCall
-import io.ktor.application.call
-import io.ktor.application.install
+import io.ktor.application.*
+import io.ktor.client.utils.Url
+import io.ktor.client.utils.UrlBuilder
 import io.ktor.features.CallLogging
 import io.ktor.features.DefaultHeaders
 import io.ktor.locations.Locations
@@ -19,9 +18,9 @@ import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.jetty.Jetty
 import io.ktor.util.AttributeKey
-import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.serialization.json.JSON
 import org.mapdb.*
+import org.slf4j.Logger
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -48,15 +47,27 @@ interface AppComponent {
 @Module
 object AppModule {
 
-    @Singleton @Provides @JvmStatic
-    fun provideJobChannel(): Channel<NotifyJob> {
-        return Channel()
-    }
-
     @Singleton @Provides @Named("base-url") @JvmStatic
-    fun baseUrl(): String {
-        return "http://localhost:8989"
-    }
+    fun baseUrl(): String = "http://localhost:8989"
+
+    @Singleton @Provides @Named("firebase-key") @JvmStatic
+    fun firebaseKey(): String = "foo"
+
+    private val testEndpoint = UrlBuilder().apply {
+        scheme = "http"
+        host = "localhost"
+        path = "/log"
+        port = 43545
+    }.build()
+
+    private val firebaseEndpoint = UrlBuilder().apply {
+        scheme = "https"
+        host = "fcm.googleapis.com"
+        path = "/fcm/send"
+    }.build()
+
+    @Singleton @Provides @Named("firebase-endpoint") @JvmStatic
+    fun firebaseEndpoint(): Url = testEndpoint //firebaseEndpoint
 
     @Singleton @Provides @JvmStatic
     fun db(): DB {
@@ -68,20 +79,21 @@ object AppModule {
     }
 
     @Singleton @Provides @JvmStatic
-    fun users(db: DB): HTreeMap<Long, UserInfo> {
-        return db.hashMap("user-info")
+    fun users(db: DB): HTreeMap<Long, UserInfo> =
+            db.hashMap("user-info")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(UserInfoSerializer)
                 .createOrOpen()
-    }
 
     @Singleton @Provides @JvmStatic
-    fun channels(db: DB): HTreeMap<Long, ChannelInfo> {
-        return db.hashMap("channel-info")
+    fun channels(db: DB): HTreeMap<Long, ChannelInfo> =
+            db.hashMap("channel-info")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(ChannelInfoSerializer)
                 .createOrOpen()
-    }
+
+    @Singleton @Provides @JvmStatic
+    fun logger(app: Application): Logger = app.log
 
 }
 

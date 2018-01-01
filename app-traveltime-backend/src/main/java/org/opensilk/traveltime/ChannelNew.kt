@@ -8,7 +8,9 @@ import io.ktor.auth.authentication
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.locations.*
+import io.ktor.locations.Location
+import io.ktor.locations.handle
+import io.ktor.locations.location
 import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.method
@@ -45,11 +47,11 @@ interface ChannelNewCmp {
 }
 
 /**
- * Handles creating new users
+ * Handles creating new channels
  */
 class ChannelNewHandler @Inject constructor(
-        @Named("base-url") private val baseUrl: String,
-        private var userDAO: UserDAO
+        private var userDAO: UserDAO,
+        @Named("base-url") private val baseUrl: String
 ): CallHandler {
 
     override suspend fun handle(call: ApplicationCall) {

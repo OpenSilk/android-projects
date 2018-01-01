@@ -42,10 +42,12 @@ dependencies {
     implementation "io.ktor:ktor-server-jetty:$ktor_version"
     implementation "io.ktor:ktor-auth:$ktor_version"
     implementation "io.ktor:ktor-locations:$ktor_version"
+    implementation "io.ktor:ktor-client-jetty:$ktor_version"
     implementation "org.mapdb:mapdb:3.0.5"
     implementation "org.hashids:hashids:1.0.3"
 
     testImplementation "junit:junit:$test_junitVersion"
     testImplementation "org.assertj:assertj-core:$test_assertJVersion"
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-alpha02"
 }

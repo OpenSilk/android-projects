@@ -2,9 +2,7 @@ package org.opensilk.traveltime
 
 import dagger.BindsInstance
 import dagger.Subcomponent
-import io.ktor.application.Application
 import io.ktor.application.install
-import io.ktor.application.log
 import io.ktor.auth.Authentication
 import io.ktor.auth.UserPasswordCredential
 import io.ktor.auth.basicAuthentication
@@ -40,13 +38,11 @@ interface AuthCmp {
 class Auth @Inject constructor(
         private val userDAO: UserDAO,
         private val credential: UserPasswordCredential
-        //private val app: Application
 ) {
     suspend fun validate(): UserInfo? {
         val info = userDAO.decodeId(credential.name)?.let {
             userDAO.getUserInfo(it)
         }
-        //app.log.debug("User info for ${credential.name} :: ${credential.password} = $info")
         val normalizedPass = credential.password.trim(' ', '\n', '\t')
         return if (normalizedPass == info?.apiKey) info else null
     }

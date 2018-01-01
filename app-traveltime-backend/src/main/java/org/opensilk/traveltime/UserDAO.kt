@@ -67,6 +67,10 @@ class UserDAO @Inject constructor(
         channelMap.put(channel.id, channel)
         return channel
     }
+
+    fun getChannelInfo(channelId: Long): ChannelInfo? {
+        return channelMap[channelId]
+    }
 }
 
 @Serializable

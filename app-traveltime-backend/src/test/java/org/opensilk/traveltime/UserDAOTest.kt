@@ -22,11 +22,13 @@ class UserDAOTest {
         Assertions.assertThat(java.lang.Long.toHexString(makeId(stamp, id))).isEqualTo(hexWant)
     }
 
-    @Test
-    fun testOneId() {
-        val dao = UserDAO(HTreeMap.make(keySerializer = Serializer.LONG,
-                valueSerializer = UserInfoSerializer), HTreeMap.make(keySerializer = Serializer.LONG,
-                valueSerializer = ChannelInfoSerializer))
-        Assertions.assertThat(dao.encodeId(1)).isEqualTo("pmnyadz0B75G")
-    }
 }
+
+fun makeUserDAO(): UserDAO {
+    return  UserDAO(
+            HTreeMap.make(keySerializer = Serializer.LONG, valueSerializer = UserInfoSerializer),
+            HTreeMap.make(keySerializer = Serializer.LONG, valueSerializer = ChannelInfoSerializer)
+    )
+}
+
+val userOneEncoded = "pmnyadz0B75G"
