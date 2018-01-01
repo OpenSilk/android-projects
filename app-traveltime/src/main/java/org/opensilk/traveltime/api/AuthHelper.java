@@ -1,4 +1,4 @@
-package org.opensilk.traveltime.data;
+package org.opensilk.traveltime.api;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +12,7 @@ import com.google.api.services.calendar.CalendarScopes;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.opensilk.dagger2.ForApp;
+import org.opensilk.traveltime.data.Settings;
 
 import java.util.Arrays;
 

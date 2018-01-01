@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import javax.inject.Inject;
 
 import dagger.android.AndroidInjection;
-import org.opensilk.traveltime.data.ChannelService;
 
 /**
  * Initializes the push notifications for the backend

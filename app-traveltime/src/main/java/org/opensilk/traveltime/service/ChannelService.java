@@ -1,4 +1,4 @@
-package org.opensilk.traveltime.data;
+package org.opensilk.traveltime.service;
 
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
@@ -7,8 +7,10 @@ import android.util.Log;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Channel;
 
+import org.opensilk.traveltime.api.AuthHelper;
 import org.opensilk.traveltime.api.BackendApi;
 import org.opensilk.traveltime.api.ChannelNewResp;
+import org.opensilk.traveltime.data.Settings;
 
 import java.io.IOException;
 

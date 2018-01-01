@@ -1,10 +1,12 @@
-package org.opensilk.traveltime.data;
+package org.opensilk.traveltime.api;
 
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.maps.DistanceMatrixApi;
 import com.google.maps.GeoApiContext;
+
+import org.opensilk.traveltime.data.Settings;
 
 import javax.inject.Inject;
 

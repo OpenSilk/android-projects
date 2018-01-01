@@ -1,4 +1,4 @@
-package org.opensilk.traveltime.data;
+package org.opensilk.traveltime.service;
 
 import android.text.TextUtils;
 import android.util.Log;
@@ -8,6 +8,9 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
 import org.opensilk.traveltime.api.CalendarApi;
+import org.opensilk.traveltime.api.MapsApi;
+import org.opensilk.traveltime.data.CalendarDAO;
+import org.opensilk.traveltime.data.CalendarEvent;
 
 import java.io.IOException;
 import java.util.ArrayList;

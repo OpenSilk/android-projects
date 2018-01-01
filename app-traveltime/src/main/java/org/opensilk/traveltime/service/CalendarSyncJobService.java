@@ -17,7 +17,6 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
 import io.reactivex.functions.Action;
 import io.reactivex.schedulers.Schedulers;
-import org.opensilk.traveltime.data.CalendarSync;
 
 /**
  * Runs the calendar sync job.

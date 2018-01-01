@@ -17,7 +17,7 @@ import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import org.opensilk.traveltime.data.AuthHelper
+import org.opensilk.traveltime.api.AuthHelper
 import org.opensilk.traveltime.api.CalendarApi
 import org.opensilk.traveltime.data.Settings
 
