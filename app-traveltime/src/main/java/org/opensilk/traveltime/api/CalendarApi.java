@@ -1,10 +1,12 @@
-package org.opensilk.traveltime.data;
+package org.opensilk.traveltime.api;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 import com.google.api.services.calendar.model.Setting;
+
+import org.opensilk.traveltime.data.AuthHelper;
 
 import java.io.IOException;
 import java.util.ArrayList;

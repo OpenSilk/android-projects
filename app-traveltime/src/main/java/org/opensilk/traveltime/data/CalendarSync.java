@@ -7,6 +7,8 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
+import org.opensilk.traveltime.api.CalendarApi;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;

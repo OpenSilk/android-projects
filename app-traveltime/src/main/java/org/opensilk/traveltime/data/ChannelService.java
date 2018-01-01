@@ -7,6 +7,9 @@ import android.util.Log;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Channel;
 
+import org.opensilk.traveltime.api.BackendApi;
+import org.opensilk.traveltime.api.ChannelNewResp;
+
 import java.io.IOException;
 
 import javax.inject.Inject;
@@ -37,10 +40,10 @@ public class ChannelService {
         }
         //asks the backend for information to build the watch channel
         //then subscribes to the watch
-        ChannelReq req = new ChannelReq();
-        req.firebaseToken = authHelper.getFirebaseToken();
-        req.googleId = authHelper.getAccountId();
-        req.resourceId = AuthHelper.CALENDAR_ID;
+        //ChannelNewReq req = new ChannelNewReq();
+        //req.setFirebaseToken(authHelper.getFirebaseToken());
+        //req.setGoogleId(authHelper.getAccountId());
+        //req.setResourceId(AuthHelper.CALENDAR_ID);
         /*
         backendApi.prepareChannel(req).subscribe(resp -> {
             Channel channel = performWatch(buildChannel(resp));
@@ -63,12 +66,12 @@ public class ChannelService {
     }
 
     @VisibleForTesting
-    Channel buildChannel(ChannelResp resp) {
+    Channel buildChannel(ChannelNewResp resp) {
         Channel channel = new Channel();
-        channel.setId(resp.channelId);
+        channel.setId(resp.getChannelId());
         channel.setType("web_hook");
-        channel.setAddress(resp.address);
-        channel.setToken(resp.token);
+        channel.setAddress(resp.getAddress());
+        channel.setToken(resp.getToken());
         channel.setExpiration(System.currentTimeMillis() + 1000000000L);
         return channel;
     }
